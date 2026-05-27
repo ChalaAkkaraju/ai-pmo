@@ -11,9 +11,9 @@
  *   - Does well / Doesn't do cards with check / cross icons
  *   - "Try asking" example + "Based on" methodology footer
  *
- * Layout is compacted + top-aligned so each agent fits one screen without
- * internal scrolling. Navigation: scroll-snap, Up/Down (PageUp/PageDown) keys,
- * side dots, top arrows.
+ * Layout is compacted + top-aligned so each agent fits one screen.
+ * Navigation: big Prev/Next buttons in the left & right margins, a horizontal
+ * jump-dot row at the bottom, scroll-snap, and Up/Down (PageUp/PageDown) keys.
  *
  * Server wrapper (app/access/[token]/agents/page.tsx) validates the token and
  * passes all catalog entries. This is an education surface — every role sees
@@ -39,6 +39,8 @@ import {
   Check,
   X,
   MessageCircle,
+  ChevronLeft,
+  ChevronRight,
   type LucideIcon,
 } from 'lucide-react';
 import type { AgentCatalogEntry, AgentScope } from '@/lib/agent-catalog';
@@ -137,10 +139,10 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
   // Keyboard navigation.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
         e.preventDefault();
         jumpTo(active + 1);
-      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
         e.preventDefault();
         jumpTo(active - 1);
       }
@@ -149,9 +151,12 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [active, jumpTo]);
 
+  const atStart = active === 0;
+  const atEnd = active === total - 1;
+
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)] flex-col">
-      {/* Top strip — breadcrumb + label + navigator */}
+      {/* Top strip — breadcrumb + label + counter */}
       <div className="flex flex-none items-center justify-between gap-4 border-b bg-background px-6 py-2.5">
         <div className="flex items-center gap-3 text-sm">
           <Link href={`/access/${token}`} className="text-muted-foreground hover:text-foreground">
@@ -160,31 +165,9 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           <span className="text-muted-foreground/40">·</span>
           <span className="text-xs text-muted-foreground">Agent catalog</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="tabular-nums text-xs font-medium text-muted-foreground">
-            {active + 1} / {total}
-          </span>
-          <div className="hidden gap-1 sm:flex">
-            <button
-              type="button"
-              onClick={() => jumpTo(active - 1)}
-              disabled={active === 0}
-              className="rounded border px-2 py-0.5 text-xs text-muted-foreground transition hover:bg-muted disabled:opacity-30"
-              aria-label="Previous agent"
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              onClick={() => jumpTo(active + 1)}
-              disabled={active === total - 1}
-              className="rounded border px-2 py-0.5 text-xs text-muted-foreground transition hover:bg-muted disabled:opacity-30"
-              aria-label="Next agent"
-            >
-              ↓
-            </button>
-          </div>
-        </div>
+        <span className="tabular-nums text-xs font-medium text-muted-foreground">
+          {active + 1} / {total}
+        </span>
       </div>
 
       {/* Thin progress bar */}
@@ -299,10 +282,35 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
         })}
       </div>
 
-      {/* Side dot navigation */}
+      {/* Big Prev / Next buttons hugging the content card (desktop).
+          The band is centered and sized just wider than the slide content
+          (max-w-4xl) so the arrows sit right beside it, not at the screen edge.
+          pointer-events-none on the band lets scrolling work in the gaps. */}
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 z-10 hidden w-full max-w-[64rem] -translate-x-1/2 items-center justify-between lg:flex">
+        <button
+          type="button"
+          onClick={() => jumpTo(active - 1)}
+          disabled={atStart}
+          aria-label="Previous agent"
+          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-slate-600 shadow-lg transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-25"
+        >
+          <ChevronLeft size={26} strokeWidth={2.5} />
+        </button>
+        <button
+          type="button"
+          onClick={() => jumpTo(active + 1)}
+          disabled={atEnd}
+          aria-label="Next agent"
+          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-slate-600 shadow-lg transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-25"
+        >
+          <ChevronRight size={26} strokeWidth={2.5} />
+        </button>
+      </div>
+
+      {/* Jump-dot row, bottom-center */}
       <nav
-        className="absolute right-3 top-1/2 z-10 hidden -translate-y-1/2 flex-col gap-2 md:flex"
-        aria-label="Agent navigation"
+        className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border bg-background/80 px-3 py-2 shadow-sm backdrop-blur"
+        aria-label="Jump to agent"
       >
         {entries.map((entry, idx) => {
           const s = scopeStyle(entry.scope);
@@ -314,20 +322,13 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               onClick={() => jumpTo(idx)}
               title={entry.name}
               aria-label={`Go to ${entry.name}`}
-              className="group flex items-center justify-end gap-2"
-            >
-              <span className="pointer-events-none whitespace-nowrap rounded bg-foreground/90 px-2 py-0.5 text-[10px] font-medium text-background opacity-0 transition group-hover:opacity-100">
-                {entry.name}
-              </span>
-              <span
-                className="block rounded-full transition-all"
-                style={{
-                  width: isActive ? 12 : 8,
-                  height: isActive ? 12 : 8,
-                  backgroundColor: isActive ? s.accent : 'rgb(203 213 225)',
-                }}
-              />
-            </button>
+              className="rounded-full transition-all hover:scale-125"
+              style={{
+                width: isActive ? 11 : 8,
+                height: isActive ? 11 : 8,
+                backgroundColor: isActive ? s.accent : 'rgb(203 213 225)',
+              }}
+            />
           );
         })}
       </nav>
