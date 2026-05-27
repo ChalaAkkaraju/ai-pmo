@@ -1,86 +1,90 @@
-# Seed scripts
+# scripts/
 
-## What this does
+Operational and one-off scripts for seeding, generating, and evaluating the AI PMO system.
 
-Populates the Supabase database with the Phase 2.2 demo state — Mariposa Wind Farm Phase 1 (the lifecycle simulation's anchor project) plus, in subsequent sub-tasks, three placeholder projects, narrative content (variance reports, agent outputs), and the worked-examples library with pgvector embeddings.
+## What lives here
 
-The seed is **idempotent** — each row upserts by its natural key (project code, issue ID within project, etc.), so re-running won't duplicate.
+```
+scripts/
+├── seed.ts                  Main seed orchestrator (Supabase → Postgres)
+├── seeds/                   Individual seed modules (projects, risks, issues, ...)
+├── seed-content/            Worked-example library
+│   ├── archive/             Three Phase-1 reference projects (Riverside Water,
+│   │                          Skyhawk Solar, Ironvale Smelter) + portfolio review.
+│   │                          Used by agents as worked-example anchors.
+│   └── mariposa/runs/       31 Phase 0/1 lifecycle outputs that seed
+│                              Mariposa Wind Farm's project state.
+├── generators/              Procedural-variation scripts that expanded the
+│                              portfolio from 4 → 100 projects.
+├── lib/                     Shared helpers (supabase admin client, logger)
+├── consistency-test.mjs     Agent reliability test runner (5+ runs against
+│                              the same prompt, captures outputs for comparison).
+│                              See docs/eval/consistency-2026-05-27/ for an
+│                              example run + analysis.
+└── test-agent.ts            CLI invocation of a single agent (handy for
+                               debugging without using the web UI).
+```
 
-## What sub-task 1 ships (this session)
+## Common tasks
 
-- `seed.ts` — orchestrator
-- `lib/supabase-admin.ts` — service-role client (full database access, never use in browser code)
-- `lib/log.ts` — minimal coloured logger
-- `seeds/01-mariposa-project.ts` — Mariposa project row at Week 78 SC state ($148.85M post-CO-001, 9.5% margin)
-- `seeds/02-mariposa-issues.ts` — all 31 issues from the lifecycle simulation, every one Closed at SC
-- `seeds/03-mariposa-risks.ts` — all 12 risks with three-category closeout disposition (3 Realised / 8 Mitigated / 1 Not Materialised)
-- `seeds/04-mariposa-change-orders.ts` — CO-001 with full four-frame commercial dynamics analysis as JSONB
+All commands run from the repo root in **Windows PowerShell** (`cd "C:\Claude\Projects\PMO LLM\pmo-llm-demo"`):
 
-After running, the Supabase tables `projects` / `issues` / `risks` / `change_orders` will contain Mariposa's structured state. Variance reports, agent outputs, portfolio patterns, placeholder projects, and worked examples come in subsequent sub-tasks.
+### Seed Supabase from scratch
 
-## How to run
-
-```bash
-# From the repo root
-cd ~/code/pmo-llm-demo
-
-# Make sure dependencies are installed (dotenv was added for this sub-task)
-pnpm install
-
-# Make sure .env.local is filled in with Supabase service-role key
-cat .env.local | grep SUPABASE_SERVICE_ROLE_KEY
-
-# Run the seed
+```powershell
 pnpm seed
 ```
 
-Expected output (idempotent — second run shows the same):
+The seed is **idempotent** — every row upserts by its natural key, so re-running won't duplicate. Mariposa state + worked examples + the procedurally-generated 96-project portfolio all land in Supabase.
 
-```
-════ PMO LLM Demo — Phase 2.2 seed ════
+### Run a one-off agent invocation from the CLI
 
-· Connected to Supabase. Found 4 role rows (expect 4).
-
-1. Mariposa project row
-✓ Mariposa project row seeded (id=abcdef12…)
-
-2. Mariposa issues (31 rows)
-✓ Seeded 31 issues, 0 updated.
-
-3. Mariposa risks (12 rows)
-✓ Seeded 12 risks, 0 updated.
-
-4. Mariposa change orders (CO-001)
-✓ Seeded 1 change orders, 0 updated.
-
-════ Phase 2.2 sub-task 1 complete ════
+```powershell
+pnpm test:agent
 ```
 
-## Verification in Supabase
+Useful for testing prompt or routing changes without going through the browser.
 
-After `pnpm seed` completes, in the Supabase dashboard → Table Editor:
+### Run the consistency test
 
-- `projects` — 1 row, code `NW-REN-2511`, status `SC`, current_week `78`, contract_value_current `148850000`
-- `issues` — 31 rows, all with status `Closed`; H-severity count = 7 (I-001, I-002, I-003, I-004, I-005, I-021, I-026)
-- `risks` — 12 rows; 3 Realised, 8 Mitigated, 1 Not Materialised
-- `change_orders` — 1 row, CO-001, $850k revenue / $780k cost / 8.2% margin
+```powershell
+node scripts/consistency-test.mjs
+```
+
+Defaults to Risk Analyst × 5 runs against project `NW-PWR-2686`, quick mode. Outputs land in `consistency-test/` (gitignored — preserved evaluations should be moved into `docs/eval/<date>/`).
+
+Override via env vars: `AGENT_TYPE`, `PROJECT_CODE`, `RUNS`, `CONCISE`, `PROMPT`, `BASE_URL`.
+
+```powershell
+$env:PROJECT_CODE = "NW-IND-2508"; $env:RUNS = "10"; node scripts/consistency-test.mjs
+```
+
+### Regenerate the procedural portfolio
+
+```powershell
+pnpm tsx scripts/generators/01-archetypes.ts        # Define 10 project archetypes
+pnpm tsx scripts/generators/02-procedural.ts        # Generate 96 project variations
+pnpm tsx scripts/generators/03-insert-generated.ts  # Insert into Supabase
+pnpm tsx scripts/generators/04-bulk-agent-outputs.ts # Charter + Stakeholders + WBS + Risk × 96
+pnpm tsx scripts/generators/05-bulk-deep-fill.ts    # Schedule + Budget + Comms + Lessons + Closeout × 10
+```
+
+This is a one-time setup — once Supabase is populated, you don't re-run these unless you're starting over.
+
+## Prerequisites
+
+A working `.env.local` with these keys (see `.env.local.example`):
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only — never expose to the browser)
+- `OPENROUTER_API_KEY`
+
+For the consistency test specifically, the dev server must also be running (`pnpm dev` in a separate PowerShell window) since the test calls `http://localhost:3000/api/agent`.
 
 ## Troubleshooting
 
-**`Missing Supabase env vars` error.** Make sure `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` filled in. The seed script auto-loads `.env.local` via `dotenv/config`.
-
-**`Could not read roles table` error.** The 0001_init.sql migration hasn't been applied to your Supabase project. Apply it via the Supabase dashboard SQL editor or `supabase db push`. Then apply 0002_seed_roles.sql.
-
-**Upsert error on `cross_cutting_class` check constraint.** A risk row has a class value that doesn't match the closed taxonomy. The 6 valid values plus `Project-specific` are encoded in TypeScript and match the schema CHECK constraint exactly. If this fires, somebody edited the seed data; cross-check against `lib/types.ts CrossCuttingClass`.
-
-**TypeScript path-resolution error.** `tsx` should resolve relative imports without issues. If you see a path error, ensure you're running from the repo root (`pnpm seed` from `~/code/pmo-llm-demo`).
-
-## What's next
-
-After this seed completes successfully, the next sub-task (1b) adds:
-
-- 4 variance reports (Week 0 framework + Week 28 + Week 52 + Week 78 final SC)
-- 31 agent outputs as audit log entries (full markdown content per run)
-- 4 portfolio patterns (Pattern 1 / 2 / 3 / 4 with closeout state)
-
-After 1b, the Mariposa column of the eventual UI dashboard will have everything it needs to render. Sub-task 2 then adds three placeholder projects to demonstrate portfolio mode; sub-task 3 loads the worked-examples library.
+- **`Missing Supabase env vars`** — `.env.local` not loaded. Confirm the file exists and contains the four required keys.
+- **`Could not read roles table`** — Supabase migrations haven't been applied. Run `pnpm supabase db push` (or apply via the Supabase dashboard SQL editor).
+- **`ERR_PNPM_IGNORED_BUILDS`** — pnpm 11 wants explicit permission for native build scripts. Run `pnpm approve-builds` and approve `esbuild`, `sharp`, `unrs-resolver`, and `core-js`.
+- **Consistency test gets HTTP errors** — the dev server isn't running, or `PROJECT_CODE` isn't a real project code. Confirm `pnpm dev` is live and the URL `http://localhost:3000/access/demo-pm-token-replace-me` loads.
