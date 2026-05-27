@@ -39,5 +39,11 @@ supabase/.branches/
 # consistency-test script output — preserved evaluations live in docs/eval/
 consistency-test/
 
+# .docx files are derived artefacts (regenerated from .md via pandoc).
+# Kept local on Windows for email/portfolio delivery; not tracked in git.
+# Source of truth is the paired .md file. To regenerate locally:
+#   pandoc input.md -o input.docx
+*.docx
+
 # OS
 Thumbs.db
