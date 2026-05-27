@@ -92,9 +92,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
             ← Dashboard
           </Link>
           <span className="text-muted-foreground/40">·</span>
-          <span className="text-xs text-muted-foreground">
-            <strong className="text-foreground">{total}</strong> specialist agents
-          </span>
+          <span className="text-xs text-muted-foreground">Agent catalog</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="tabular-nums text-xs font-medium text-muted-foreground">
@@ -148,12 +146,9 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               className="flex h-full min-h-full w-full snap-start items-center justify-center px-6 py-8"
             >
               <div className="mx-auto w-full max-w-4xl">
-                {/* Scope + availability row */}
+                {/* Scope row */}
                 <div className="mb-5 flex flex-wrap items-center gap-3">
                   <span className={`rounded-full px-3 py-1 text-sm font-medium ${s.chip}`}>{s.label}</span>
-                  <span className="ml-auto text-sm tabular-nums text-muted-foreground">
-                    {idx + 1} of {total}
-                  </span>
                 </div>
 
                 {/* Name — big */}
