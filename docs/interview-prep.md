@@ -104,6 +104,18 @@ Safety in this context means a few different things and they're worth separating
 
 This is a good honest answer: "I haven't load-tested it. I don't know what happens at 100 concurrent users hitting the dev server — probably fine for a Vercel-hosted prototype, but I haven't verified. I also haven't done adversarial evaluation — what happens if a user tries to prompt-inject the agent? I've designed defensively (the user prompt is one of several inputs to the LLM, not the dominant one) but I haven't tried to break it. And I haven't validated agent behavior across the full 13-agent surface — only Risk Analyst has been formally evaluated; the other 12 are anchored to worked examples but not consistency-tested." This is an extremely strong answer because it shows engineering humility and a clear plan for what to do next.
 
+### Q16. Tell me about a time you caught an AI mistake in practice.
+
+This is a true story from building AI PMO, and it's a strong one because it's specific and shows the discipline rather than just describing it.
+
+The system has an agent catalog — a page documenting what each of the 13 specialist agents does, with bullet points like "identifies 12-15 stakeholder roles" or "detects patterns across 3+ projects." That catalog was itself written by an LLM. While reviewing it, I questioned one quantitative claim — "identifies 12-15 stakeholder roles" — and instead of trusting it, I cross-checked it against the actual agent's system prompt, which is the authoritative source. The prompt specified a minimum of 10 and a maximum of 18 stakeholders. The catalog's "12-15" was invented — a plausible-sounding number the LLM had generated that nobody had verified.
+
+That prompted a full audit. I checked all six quantitative claims in the catalog against their source prompts and the worked examples. Five of the six were wrong: the stakeholder count, the WBS hierarchy level (it claimed branches were at "Level 1" when the methodology puts them at Level 2), the critical-path unit (it said "6-9 milestones" when the prompt defines the critical path as "3-7 sequential chains"), the risk analysis length, and the lessons structure. One claim even contradicted itself — the portfolio agent's description said patterns emerge at "3+ projects" in one bullet and "2+ projects" in another; the source prompt confirmed the threshold is two. Only one claim — "12-section charter" — was correct, which I verified by counting the sections in an actual generated charter.
+
+The lesson I draw from this, and the part that matters for the role: **LLM-generated content needs a grounding pass, and the grounding source cannot be another LLM.** It has to be the authoritative artifact — in this case the agent prompts and the worked examples. The failure mode isn't that the LLM lies; it's that it generates confident, specific, plausible detail that drifts from the source unless something checks it. The same discipline applies to the agent outputs themselves: that's why the architecture grounds every agent in real database rows rather than letting it generate facts, and why I ran the consistency evaluation rather than assuming the agents were reliable. Catching the catalog errors and running the consistency test are the same instinct applied at two layers — documentation and runtime.
+
+If they push further ("how would you prevent this at scale?"), the answer is automated grounding checks: a validation pass that extracts quantitative claims and verifies them against the source, run in CI so the documentation can't drift from the prompts without a test failing. I haven't built that yet — today it's manual — but that's the productionization path.
+
 ---
 
 ## Key numbers worth memorizing
