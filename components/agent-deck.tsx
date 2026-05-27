@@ -4,20 +4,43 @@
  * Agent catalog rendered as a full-screen slide deck — one agent per screen,
  * big presentation-style typography, scroll-snap navigation.
  *
- * - Vertical scroll snaps to each agent "slide" (CSS scroll-snap).
- * - An IntersectionObserver tracks the active slide for the progress counter
- *   and the side dot-navigation.
- * - Up/Down (and PageUp/PageDown) arrow keys jump between slides.
- * - Clicking a side dot jumps to that agent.
+ * Visual layers per slide:
+ *   - Scope-colored gradient hero band with a per-agent icon, scope badge, name
+ *   - Plain-English explanation (the main reading content)
+ *   - Project-lifecycle stepper highlighting where the agent operates
+ *   - Does well / Doesn't do cards with check / cross icons
+ *   - "Try asking" example + "Based on" methodology footer
+ *
+ * Navigation: scroll-snap, Up/Down (PageUp/PageDown) keys, side dots, top arrows.
  *
  * Server wrapper (app/access/[token]/agents/page.tsx) validates the token and
  * passes all catalog entries. This is an education surface — every role sees
  * all 13 agents; invocation permissions still apply in the widget / API.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import {
+  FileText,
+  Users,
+  ListTree,
+  Calendar,
+  DollarSign,
+  MessageSquare,
+  ClipboardList,
+  TrendingUp,
+  GitPullRequest,
+  ShieldAlert,
+  Lightbulb,
+  FileCheck,
+  LayoutGrid,
+  Check,
+  X,
+  MessageCircle,
+  type LucideIcon,
+} from 'lucide-react';
 import type { AgentCatalogEntry, AgentScope } from '@/lib/agent-catalog';
+import type { AgentType } from '@/lib/types';
 
 interface AgentDeckProps {
   token: string;
@@ -35,6 +58,48 @@ function scopeStyle(scope: AgentScope): { label: string; chip: string; accent: s
       return { label: 'Single-item', chip: 'bg-sky-100 text-sky-800', accent: '#0ea5e9' };
   }
 }
+
+/** Distinct icon per agent for visual identity. */
+const AGENT_ICON: Record<AgentType, LucideIcon> = {
+  charter_drafter: FileText,
+  stakeholder_analyst: Users,
+  wbs_builder: ListTree,
+  schedule_reasoner: Calendar,
+  budget_builder: DollarSign,
+  communications_planner: MessageSquare,
+  issue_logger: ClipboardList,
+  variance_analyst: TrendingUp,
+  change_order_reviewer: GitPullRequest,
+  risk_analyst: ShieldAlert,
+  lessons_learned_synthesiser: Lightbulb,
+  closeout_reporter: FileCheck,
+  portfolio_risk_reviewer: LayoutGrid,
+};
+
+/** Project lifecycle phases (PMBOK process groups). */
+const PHASES = ['Initiation', 'Planning', 'Execution', 'Monitoring', 'Closeout'] as const;
+type Phase = (typeof PHASES)[number];
+
+/**
+ * Where each agent primarily operates in the project lifecycle.
+ * Portfolio Risk Reviewer is cross-cutting (operates across the whole
+ * portfolio, not a single project phase) — marked 'portfolio'.
+ */
+const AGENT_PHASE: Record<AgentType, Phase | 'portfolio'> = {
+  charter_drafter: 'Initiation',
+  stakeholder_analyst: 'Initiation',
+  wbs_builder: 'Planning',
+  schedule_reasoner: 'Planning',
+  budget_builder: 'Planning',
+  communications_planner: 'Planning',
+  issue_logger: 'Execution',
+  variance_analyst: 'Monitoring',
+  change_order_reviewer: 'Monitoring',
+  risk_analyst: 'Monitoring',
+  lessons_learned_synthesiser: 'Closeout',
+  closeout_reporter: 'Closeout',
+  portfolio_risk_reviewer: 'portfolio',
+};
 
 export function AgentDeck({ token, total, entries }: AgentDeckProps) {
   const [active, setActive] = useState(0);
@@ -85,7 +150,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
 
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)] flex-col">
-      {/* Top strip — breadcrumb + role + progress */}
+      {/* Top strip — breadcrumb + label + navigator */}
       <div className="flex flex-none items-center justify-between gap-4 border-b bg-background px-6 py-2.5">
         <div className="flex items-center gap-3 text-sm">
           <Link href={`/access/${token}`} className="text-muted-foreground hover:text-foreground">
@@ -136,6 +201,8 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
       >
         {entries.map((entry, idx) => {
           const s = scopeStyle(entry.scope);
+          const Icon = AGENT_ICON[entry.agent_type] ?? FileText;
+          const phase = AGENT_PHASE[entry.agent_type];
           return (
             <section
               key={entry.agent_type}
@@ -146,34 +213,46 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               className="flex h-full min-h-full w-full snap-start items-center justify-center px-6 py-8"
             >
               <div className="mx-auto w-full max-w-4xl">
-                {/* Scope row */}
-                <div className="mb-5 flex flex-wrap items-center gap-3">
-                  <span className={`rounded-full px-3 py-1 text-sm font-medium ${s.chip}`}>{s.label}</span>
+                {/* Hero band — scope-tinted gradient with icon + badge + name */}
+                <div
+                  className="rounded-2xl border p-6"
+                  style={{
+                    background: `linear-gradient(135deg, ${s.accent}1f, ${s.accent}08)`,
+                    borderColor: `${s.accent}33`,
+                  }}
+                >
+                  <div className="mb-3 flex items-center gap-3">
+                    <span
+                      className="inline-flex h-12 w-12 flex-none items-center justify-center rounded-xl"
+                      style={{ backgroundColor: `${s.accent}26`, color: s.accent }}
+                    >
+                      <Icon size={26} strokeWidth={2} />
+                    </span>
+                    <span className={`rounded-full px-3 py-1 text-sm font-medium ${s.chip}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                  <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+                    {entry.name}
+                  </h1>
                 </div>
 
-                {/* Name — big */}
-                <h1
-                  className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl"
-                  style={{ borderLeft: `6px solid ${s.accent}`, paddingLeft: '1rem' }}
-                >
-                  {entry.name}
-                </h1>
+                {/* Plain-English explanation — the main reading content */}
+                <p className="mt-5 text-lg leading-relaxed text-foreground/80">{entry.plain}</p>
 
-                {/* Plain-English explanation — the main reading content for a business user */}
-                <p className="mt-5 text-lg leading-relaxed text-foreground/80">
-                  {entry.plain}
-                </p>
+                {/* Lifecycle position */}
+                <LifecycleStepper phase={phase} />
 
-                {/* Does / Doesn't — two columns, larger text */}
-                <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {/* Does / Doesn't — two columns with check / cross icons */}
+                <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-5">
                     <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
                       Does well
                     </p>
                     <ul className="mt-3 space-y-2">
                       {entry.does.map((d, i) => (
-                        <li key={i} className="flex gap-2 text-base text-foreground/85">
-                          <span className="select-none text-emerald-500">▸</span>
+                        <li key={i} className="flex gap-2.5 text-base text-foreground/85">
+                          <Check size={18} strokeWidth={2.5} className="mt-0.5 flex-none text-emerald-500" />
                           <span>{d}</span>
                         </li>
                       ))}
@@ -186,8 +265,8 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
                     </p>
                     <ul className="mt-3 space-y-2">
                       {entry.doesNot.map((d, i) => (
-                        <li key={i} className="flex gap-2 text-base text-foreground/85">
-                          <span className="select-none text-rose-400">▸</span>
+                        <li key={i} className="flex gap-2.5 text-base text-foreground/85">
+                          <X size={18} strokeWidth={2.5} className="mt-0.5 flex-none text-rose-400" />
                           <span>{d}</span>
                         </li>
                       ))}
@@ -195,15 +274,18 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
                   </div>
                 </div>
 
-                {/* Try asking — big sky callout */}
+                {/* Try asking — sky callout with icon */}
                 <div className="mt-6 rounded-xl border-l-4 border-sky-400 bg-sky-50/60 px-5 py-4">
-                  <p className="text-sm font-semibold uppercase tracking-wider text-sky-700">Try asking</p>
+                  <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-sky-700">
+                    <MessageCircle size={16} strokeWidth={2.5} />
+                    Try asking
+                  </p>
                   <p className="mt-2 text-lg italic leading-relaxed text-foreground/85">
                     &ldquo;{entry.samplePrompt}&rdquo;
                   </p>
                 </div>
 
-                {/* Methodology footer — readable sentence, not all-caps */}
+                {/* Methodology footer */}
                 <p className="mt-5 text-sm text-muted-foreground">
                   <span className="font-semibold uppercase tracking-wider text-foreground/60">Based on: </span>
                   {entry.methodology}
@@ -246,6 +328,65 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           );
         })}
       </nav>
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .agent-deck-scroll > * { scroll-snap-align: start; }
+            .agent-deck-scroll { scrollbar-width: thin; }
+          `,
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Horizontal lifecycle stepper. Highlights the phase the agent operates in.
+ * Portfolio-level agent is shown as cross-cutting instead of a single phase.
+ */
+function LifecycleStepper({ phase }: { phase: Phase | 'portfolio' }) {
+  // The lifecycle stepper represents the universal project lifecycle, so its
+  // highlight is a consistent emerald green for every agent — independent of
+  // the agent's scope accent (which colors the hero band / icon instead).
+  if (phase === 'portfolio') {
+    return (
+      <div className="mt-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Where in the project lifecycle
+        </p>
+        <div className="mt-2 rounded-lg border bg-muted/50 px-4 py-2.5 text-sm text-foreground/80">
+          Operates across the whole portfolio — spans every project phase, not a single one.
+        </div>
+      </div>
+    );
+  }
+
+  const activeIdx = PHASES.indexOf(phase);
+  return (
+    <div className="mt-6">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Where in the project lifecycle
+      </p>
+      <div className="mt-2 flex items-center">
+        {PHASES.map((p, i) => {
+          const isActive = i === activeIdx;
+          return (
+            <Fragment key={p}>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                  isActive ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {p}
+              </span>
+              {i < PHASES.length - 1 && (
+                <span className="mx-1 h-px w-4 flex-none bg-border sm:w-6" aria-hidden />
+              )}
+            </Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
