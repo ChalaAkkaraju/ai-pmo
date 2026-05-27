@@ -52,7 +52,7 @@ export default async function AgentCatalogPage({ params }: PageProps) {
           As <strong className="text-foreground">{resolved.definition.display_name}</strong>, you can
           invoke <strong className="text-foreground">{allowedCount} of {AGENT_CATALOG.length}</strong> specialists.
           Each agent is anchored to a methodology and tuned to one job — picking the right one
-          is what produces good output. The floating <span className="font-semibold">✨ Ask agent</span> button
+          is what produces good output. The floating <span className="font-semibold">✨ Ask AI Assistant</span> button
           can also auto-route for you.
         </p>
       </header>

@@ -797,7 +797,7 @@ export function DashboardClient({
         <div className="rounded-lg border bg-card divide-y">
           {activity.length === 0 ? (
             <p className="p-5 text-sm text-muted-foreground">
-              No agent activity yet. Invoke an agent from any project page or use the floating ✨ Ask agent button to see it appear here.
+              No agent activity yet. Invoke an agent from any project page or use the floating ✨ Ask AI Assistant button to see it appear here.
             </p>
           ) : (
             activity.map((a) => {

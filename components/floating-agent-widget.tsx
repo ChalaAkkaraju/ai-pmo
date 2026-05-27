@@ -197,10 +197,10 @@ export function FloatingAgentWidget({
         onClick={() => setIsOpen(true)}
         className="no-print fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-medium text-white shadow-lg transition hover:opacity-90"
         style={{ backgroundColor: 'rgb(15 23 42)' }}
-        aria-label="Ask agent"
+        aria-label="Ask AI Assistant"
       >
         <span className="text-lg leading-none">✨</span>
-        <span>Ask agent</span>
+        <span>Ask AI Assistant</span>
       </button>
     );
   }
@@ -227,7 +227,7 @@ export function FloatingAgentWidget({
             ✨
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white">Ask an agent</p>
+            <p className="text-sm font-semibold text-white">Ask AI Assistant</p>
             <p className="mt-0.5 truncate text-[11px] text-slate-300">
               {roleDisplayName} · context: {contextLabel}
             </p>

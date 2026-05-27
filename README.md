@@ -13,7 +13,7 @@ Behind the chat surface, prompts route to one of thirteen specialist agents — 
 ## Headline features
 
 - **Auto-routing.** Type any prompt; a Haiku classifier picks the appropriate specialist agent. Users can override the routing decision via a dropdown if they want a specific agent.
-- **Floating "Ask agent" widget** persistent on every page. Context-aware: knows which project page you're on and scopes the invocation accordingly.
+- **Floating "Ask AI Assistant" widget** persistent on every page. Context-aware: knows which project page you're on and scopes the invocation accordingly.
 - **Two-ribbon BI dashboard** with 6 portfolio KPIs, theme-drill-down by segment, a "Hot 5" list of projects of concern with composite scoring, and a live activity feed of recent invocations broadcasted via Supabase Realtime.
 - **Per-project visualizations**: 3×3 risk heat-map, variance-trend chart with contingency burn-down, Gantt-style schedule strip, hierarchical WBS tree.
 - **Polished printable report viewer** at `/access/<token>/report/<output-id>`. Two-tier layout (Summary + Full detail), Letterhead with brand mark, project context strip, request quote, footer. Real PDF download via `html2pdf.js` — produces a downloadable `.pdf` file (not a print-dialog screenshot).

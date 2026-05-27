@@ -1,0 +1,156 @@
+# AI PMO — Interview Prep Synthesis
+
+A study guide for talking about AI PMO in AI Solutions Architect / AI Strategy interviews. Organized around the questions that actually come up, with answers grounded in the system you built. Read this once before any conversation; you'll be substantively more prepared than most candidates.
+
+This document covers the elevator pitch, the 5-minute walkthrough, ~15 questions you'll be asked, key numbers worth memorizing, and a few things *not* to say. Designed to be skimmed in 20 minutes.
+
+---
+
+## How to position this project honestly
+
+Before the talking points, one framing note. AI PMO is a personal learning project built with substantial AI assistance from Claude (Anthropic). The honest framing in interviews is: **you designed the system, you made the architectural decisions, you ran the evaluation, you debugged the production issues — Claude wrote a lot of the code under your direction**. That's how serious engineers work with LLMs today. Don't claim you typed every line; don't undersell the architectural and evaluation judgment, which is entirely yours. Hiring managers know the difference. A senior architect who can articulate *why* a multi-agent system was the right shape, *how* they evaluated reliability, and *what* they'd do differently in production — that's the role.
+
+---
+
+## The 60-second elevator pitch
+
+> AI PMO is a methodology-aware, multi-agent system for engineering, procurement, and construction project management offices. Thirteen specialist agents — each anchored to a PMBOK 7 process or risk-management discipline — coordinate via a small Claude Haiku router that picks the right specialist from natural-language prompts. The system runs against a 100-project portfolio across four industry segments, with five colleague roles (PM Director, Procurement, Risk, Sponsor, Commercial) accessing role-scoped views via URL tokens. State changes broadcast across colleagues in real time. I built it as a personal project to demonstrate end-to-end enterprise AI engineering — grounded reasoning, reliability evaluation, real-time multi-user state — at a standard that would hold up in a regulated commercial environment, minus the go-to-market layer. The reliability of the agents has been empirically tested: a five-run consistency evaluation on the Risk Analyst produced 5/5 decision agreement and 5/5 factual citation agreement on a grounded ranking question, with prose variation in places where stochasticity doesn't undermine trust.
+
+Memorize this. Practice it out loud until you can deliver it in one breath without sounding rehearsed. Vary the words a little each time so it sounds natural.
+
+---
+
+## The 5-minute architecture walkthrough
+
+If asked "walk me through this system" with more time, hit these beats in order, ideally while drawing on a whiteboard:
+
+1. **The user enters via a URL token** — each colleague has a unique link. A proxy validates the token and resolves it to a role, which gates which agents and which data slices they can see. No passwords, no accounts.
+
+2. **The dashboard renders the portfolio view** — 100 projects across renewables, water, industrial, and power. Six KPIs at the top (contract value, budget, active count, weighted CPI/SPI, open H-severity issues, realised risks). Four theme cards below that drill into segment-level detail. A "Hot 5" panel surfaces projects of concern via composite scoring. A live activity feed shows what other colleagues are asking, broadcast via Supabase Realtime.
+
+3. **The user invokes an agent** — either from the floating "Ask AI Assistant" button on every page, or from a project-specific tab. A natural-language prompt hits the `/api/agent` endpoint.
+
+4. **The agent runner orchestrates**: validates the token, decides which specialist should handle the prompt (auto-routing via Claude Haiku 4.5 — cheap, fast classifier), loads the project state from Supabase, assembles the LLM input (agent system prompt + worked example anchor + project state JSON + user prompt), and calls Claude Opus 4.7 via OpenRouter.
+
+5. **The agent emits markdown** — grounded in the project data passed in via context, anchored methodologically to PMBOK 7 patterns and a six-class cross-cutting risk taxonomy. The output is stored in Supabase and broadcast to all viewers via Realtime.
+
+6. **The user can open the response as a polished printable report** in a new tab. A two-tier layout (Summary + Full detail, auto-split on the first H2), letterhead, project context strip, and a real PDF download via `html2pdf.js` — produces a downloadable file, not a print-dialog screenshot.
+
+7. **Methodology grounding throughout** — every agent prompt is anchored to a PMBOK 7 process or a risk-taxonomy discipline. The worked-example library (three historical projects: Riverside Water, Skyhawk Solar, Ironvale Smelter) provides anchor exemplars that the agent draws from for style and structure.
+
+Mention the consistency test toward the end: "I formally evaluated the Risk Analyst agent — 5/5 decision agreement across five runs, no hallucinated facts, prose variation where it doesn't undermine trust."
+
+---
+
+## Likely questions, with answers grounded in this project
+
+### Q1. Why a multi-agent system instead of one big agent?
+
+Single-agent systems with very long prompts tend to dilute specialty. A general-purpose agent handed the entire PMBOK 7 process model, six risk classes, and 100-project portfolio context in one prompt would lose precision on any specific job. The thirteen specialists in AI PMO are each tuned to one discipline — Charter Drafter, Risk Analyst, Variance Analyst, etc. — with focused system prompts and worked-example anchors specific to that discipline. Decomposition also makes evaluation tractable: I can evaluate Risk Analyst's reliability without entangling it with how Charter Drafter behaves. And it enables auto-routing, which means the user doesn't need to know which specialist to invoke — a cheap Haiku classifier maps prompts to specialists in a fraction of the cost of running Opus.
+
+### Q2. How does your auto-router work, and why use a cheap model for it?
+
+The router is a Claude Haiku 4.5 call that receives the user's prompt plus the list of allowed agents (filtered by the user's role) and returns a single token — the agent type. About 200ms, ~$0.001 per call. Haiku is more than capable of routing classification; using Opus for routing would be using a Ferrari to drive to the mailbox. If the router returns garbage or times out, the runner falls back to a sensible default specialist for the role. Routing decisions are logged with the output so the chain is transparent to the user — they see "Auto → Risk Analyst" in the UI.
+
+### Q3. How do you ground the agents in real data — do you use RAG?
+
+No RAG, by deliberate choice. RAG is the right pattern when the relevant data corpus is large, unstructured, and the right context for any given prompt has to be retrieved on the fly — think 50,000-page document collections. AI PMO's data is structured: ~100 projects, each with bounded sets of risks, issues, change orders, variance reports. For any agent invocation, the *relevant* data is determined by the prompt's context (which project, which agent) and can be loaded with a few SQL queries. So I do *contextual grounding*: when Risk Analyst is invoked on project X, the runner pulls X's full risk register, issue log, change orders, and variance history, and includes them verbatim in the LLM input. The agent has no opportunity to hallucinate a risk that doesn't exist because the actual rows are right there. The consistency test confirmed zero hallucinated risk IDs across five runs.
+
+### Q4. When would you add RAG?
+
+Three triggers. First, if the data corpus grew past what fits in Opus's context window per invocation — if I had 100,000 projects and the agent needed to synthesize across all of them, I'd add semantic retrieval to pre-filter. Second, if I introduced unstructured corpora: contracts, regulatory text, lessons-learned narratives from prior projects. Those benefit from embeddings-based retrieval because the right paragraph isn't predictable from the prompt. Third, if I added cross-project pattern recognition where the agent needs to find similar historical situations — that's a retrieval problem that grounding can't handle. Today AI PMO doesn't need any of these.
+
+### Q5. How did you select your models? Why Opus 4.7 + Haiku 4.5?
+
+Opus 4.7 for the specialists because the quality of reasoning matters more than cost for the user-facing output. A risk analysis from a sponsor's perspective needs precision in the framing, awareness of contractual nuance, and the methodological rigor of someone trained in PMBOK 7. That's frontier-level work; Haiku and Sonnet would degrade visibly. Haiku 4.5 for the router because routing is a classification task: pick from a list of 13. Doesn't need frontier capability, does need to be fast and cheap because it runs on every invocation. Net cost balance: ~$0.06 quick-mode call ends up being mostly Opus (the router is ~2% of the total). I considered cloud-only on Opus alone before realizing the routing cost made the system needlessly expensive for high-frequency use.
+
+### Q6. How do you ensure agent outputs are consistent across runs?
+
+I ran a formal evaluation: five sequential Risk Analyst invocations against the same project with the same prompt, default settings (no temperature override). All five returned the same two risks in the same ranking, citing the same data points — SPI 0.931, 26-day buffer, the same issue IDs as precursors. The variation that exists is in prose phrasing and in which follow-up question the agent surfaces — neither of which undermines decision trust. For production-grade hardening, four architectural patterns are available depending on which failure mode shows up at scale: a two-layer architecture where facts come from deterministic queries and the LLM only writes narrative; structured intermediate outputs (the agent emits JSON, a deterministic formatter renders prose); vote-and-converge for statistical confidence; or cache-and-invalidate so identical-data calls return cached outputs. The eval document at `docs/eval/consistency-2026-05-27/` captures the methodology and result with raw outputs.
+
+### Q7. What's your formal evaluation strategy beyond the consistency test?
+
+The consistency test is one of several reliability axes. The full strategy includes: (1) consistency — same input → same output, tested empirically; (2) accuracy — claims trace back to the source data, addressed by contextual grounding and verified during the consistency test; (3) factuality — no invented IDs or numbers, verified by cross-referencing outputs against the database; (4) methodology adherence — do the agents follow PMBOK 7 patterns, evaluated via the worked-example library acting as exemplars; (5) cost / latency / token-efficiency — instrumented per call. What's not yet covered: adversarial prompts ("are you SURE about R-004?"), portfolio-level prompts that synthesize across 100 projects, and long-form generative tasks where there's no constrained answer to grade against. Those would be the next evaluations to run.
+
+### Q8. What happens if the LLM hallucinates a risk that doesn't exist?
+
+In the current architecture, this can't happen at the *fact* level — the agent is grounded in the actual risk register rows, so it can only reference risks that are in the data. What it *can* do is misinterpret what a row means (e.g., describe a risk's status incorrectly), and there's no automated check today. The consistency test verified the agent reads the data correctly in this specific case, but it's a sample of one project and one prompt. For production, I'd add output validation: after the agent returns markdown, a small validator pass would extract claimed facts ("agent says R-004 has score 6") and verify them against the source ("R-004 actually has score 6"). Discrepancies flag the output for human review before it reaches the user.
+
+### Q9. How would you deploy this in a regulated environment (e.g., financial services, healthcare)?
+
+Several things would change. First, the LLM provider relationship: a regulated environment usually requires data residency guarantees, signed BAAs, audit logging of every prompt and response. Anthropic offers these through the API at Enterprise tier; OpenRouter sits in the middle and wouldn't usually be acceptable. Second, output validation becomes mandatory — every agent output gets fact-checked against the source data before it can be shown. Third, access auditing — the URL token model would be replaced with proper SSO + RBAC + per-action audit trails. Fourth, PII handling — the project state passed into LLM context would need to be reviewed for sensitive data, and either redacted or routed through a model with appropriate data-residency. Fifth, cost: regulated tier pricing is materially higher than self-serve. The architecture stays the same; the operational layer around it grows substantially.
+
+### Q10. How does cost scale as you add users and projects?
+
+Linearly with invocations, not with users or projects. Each invocation costs ~$0.06 in quick mode, ~$0.30 in full mode. So a 50-user pilot doing 10 invocations per user per day is ~$30/day, ~$900/month. Data storage in Supabase is negligible. Where I'd worry is: (a) if users hit the polished report viewer heavily, each first-view triggers a full-mode regeneration at ~$0.30; we mitigate that with sessionStorage caching but it's still per-session, not per-system; (b) if portfolio-level prompts become common and pull 100-project state into context, token cost per call goes up materially because the context window fills with structured data. Optimizations available: cache full-mode outputs in the database keyed by output_id, batch similar prompts into single calls, switch to Sonnet for non-critical agents.
+
+### Q11. What would you do differently if you started over?
+
+Three things. First, I'd separate interpretation from decision inside the specialist agents from day one — have them emit structured JSON ("top_risks: [R-004, R-002], reasoning: ..., confidence: high") that a deterministic formatter renders into prose. Today they're bundled and that produces the small variation we saw in the consistency test. Second, I'd build the evaluation harness BEFORE the UI, not after. Having `consistency-test.mjs` from week one would have surfaced reliability problems earlier when they were cheaper to fix. Third, I'd version the agent prompts as proper data assets with semver, not just markdown files in the repo — production agents need prompt version pinning to make eval results reproducible.
+
+### Q12. What are the biggest weaknesses of the system today?
+
+Three real ones. First, no automated output validation — I trust the LLM to faithfully summarize the grounded data, but nothing programmatically checks every claim against the source. Second, single-LLM dependency — if Anthropic has an outage or rate-limits, the system stops working. A production version would have a fallback model (e.g., Sonnet via the same provider, or an alternate provider). Third, the consistency test is a sample of five; statistical confidence in consistency claims would need 20-30 runs per condition across multiple agents and prompts. I name these honestly in the eval document. A weaker candidate would either claim the system is perfect or list cosmetic weaknesses; naming substantive limitations is what hiring managers are looking for.
+
+### Q13. Have you heard of the agent classification — purpose, sensing, interpretation, decision, orchestration?
+
+Yes, that's the enterprise-AI five-layer framing (Gartner, Forrester, vendor whitepapers). Mapped to AI PMO: the sensing layer is the project-state loader that pulls Supabase data; orchestration is the agent runner that sequences validate-route-load-call-write; the auto-router is an explicit decision agent for "which specialist?"; interpretation and decision are bundled inside each specialist's LLM call — which, as I mentioned earlier, is where the consistency test's small variations come from. There's no explicit purpose agent; intent is encoded implicitly in the role definitions and agent prompts. The taxonomy is more of a thinking tool than a rigorous classification, but it's useful for diagnosing where in the pipeline a failure happens.
+
+### Q14. How do you approach AI safety in enterprise systems?
+
+Safety in this context means a few different things and they're worth separating. *Output safety* — preventing the model from producing harmful content — is largely handled by the provider (Anthropic) and is a non-issue for project-management data. *Decision safety* — preventing the system from making consequential decisions autonomously without human review — is architectural: AI PMO is *decision support*, not *decision-making*. Every agent output is a recommendation for a human to act on, not an automated action. *Data safety* — preventing leakage of sensitive project data to the LLM provider — would be the main concern in a regulated deployment, addressed by enterprise-tier provider agreements and PII redaction. *Reliability safety* — preventing users from over-trusting outputs — is addressed by the "AI-assisted briefing" disclaimer at the bottom of every report, plus the consistency evaluation that establishes empirical trust bounds. In an interview, having all four buckets distinct shows you've thought about safety as a system property, not as a content filter.
+
+### Q15. If a hiring manager asks "what do you NOT know yet about this system?"
+
+This is a good honest answer: "I haven't load-tested it. I don't know what happens at 100 concurrent users hitting the dev server — probably fine for a Vercel-hosted prototype, but I haven't verified. I also haven't done adversarial evaluation — what happens if a user tries to prompt-inject the agent? I've designed defensively (the user prompt is one of several inputs to the LLM, not the dominant one) but I haven't tried to break it. And I haven't validated agent behavior across the full 13-agent surface — only Risk Analyst has been formally evaluated; the other 12 are anchored to worked examples but not consistency-tested." This is an extremely strong answer because it shows engineering humility and a clear plan for what to do next.
+
+---
+
+## Key numbers worth memorizing
+
+| Fact | Value |
+|---|---|
+| Portfolio size | 100 projects |
+| Industry segments | 4 (renewables, water, industrial, power) |
+| Specialist agents | 13 |
+| Roles | 5 (PM Director, Procurement, Risk, Sponsor, Commercial) |
+| Routing model | Claude Haiku 4.5 (~$0.001/call, ~200ms) |
+| Specialist model | Claude Opus 4.7 via OpenRouter |
+| Quick-mode cost | ~$0.06 per invocation, ~12 seconds |
+| Full-mode cost | ~$0.30 per invocation, ~30 seconds |
+| Consistency test result | 5/5 decision agreement, 5/5 factual agreement |
+| Methodology grounding | PMBOK 7 + 6-class cross-cutting risk taxonomy |
+| Stack | Next.js 16, React 19, Supabase, OpenRouter |
+
+---
+
+## Things NOT to say
+
+- **"It's production-ready."** It isn't. It's a portfolio-quality build. Acknowledging that is a strength, not a weakness.
+- **"I built it from scratch with no AI assistance."** Untrue and an experienced hiring manager will know. The honest framing — "I designed the system; Claude wrote much of the code under my direction" — is what they want to hear.
+- **"The system never hallucinates."** Strong claim, hard to defend. Better: "The architecture grounds outputs in real data so the agent can't invent IDs or numbers. The consistency test verified zero hallucinated facts across the five runs, but five is a small sample; a wider eval would tighten the bound."
+- **"It's perfectly consistent."** Same problem. Better: "Five runs, 5/5 decision agreement. Variation exists in prose, not in conclusion."
+- **"I haven't thought about [X]."** If you genuinely haven't, say "I haven't formally evaluated [X], but the way I'd think about it is..." then reason out loud. Demonstrates judgment under uncertainty.
+- **Vendor-marketing language.** Don't call it "transformational" or "revolutionary." Engineers smell that immediately. Just describe what it does.
+
+---
+
+## Questions worth asking the interviewer (when they ask "do you have questions for us?")
+
+Choose 2-3 from this list:
+
+- "What does the lifecycle of an LLM-based feature look like at your company — from spec to evaluation to production deployment?"
+- "How does your team think about the reliability-vs-creativity tradeoff for agentic systems? Where do you turn temperature down?"
+- "What's the current ratio of human-in-the-loop vs. autonomous decision-making in your agentic systems? Where would you want that ratio to move?"
+- "What's the most common failure mode you've seen in LLM systems you've shipped, and how did you find it?"
+- "How does your team evaluate prompts and agents — are there dedicated eval harnesses, or is it part of the normal QA loop?"
+
+Asking these signals you operate at the architect tier, not the implementer tier. Hiring managers notice.
+
+---
+
+## Final note on practice
+
+Reading this document is necessary but not sufficient. To actually internalize: pick three of the Q&A items above, close the document, and try to deliver each answer out loud from memory. If you stumble, re-read that section, then try again. Repeat with three different questions tomorrow. By the time you've cycled through all 15 questions twice, you'll have the substance internalized enough to handle a real interview without sounding like you're reciting.
+
+The single highest-leverage skill is being able to deliver the 60-second elevator pitch *fluently* — most candidates can't, and it's the first 60 seconds that anchors the interviewer's impression. Prioritize that.

@@ -9,7 +9,7 @@
  *   - scope: 'project' | 'portfolio' | 'single-item'
  *   - does: 3-5 things the agent does well
  *   - doesNot: 1-3 things the agent does NOT do (helps calibrate)
- *   - samplePrompt: a concrete example you can paste straight into Ask agent
+ *   - samplePrompt: a concrete example you can paste straight into Ask AI Assistant
  *   - methodology: short reference for what the agent's prompt is anchored to
  */
 
