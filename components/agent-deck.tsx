@@ -10,23 +10,19 @@
  * - Up/Down (and PageUp/PageDown) arrow keys jump between slides.
  * - Clicking a side dot jumps to that agent.
  *
- * Server wrapper (app/access/[token]/agents/page.tsx) resolves the role and
- * passes the catalog entries (with an `allowed` flag merged in) as props.
+ * Server wrapper (app/access/[token]/agents/page.tsx) validates the token and
+ * passes all catalog entries. This is an education surface — every role sees
+ * all 13 agents; invocation permissions still apply in the widget / API.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { AgentCatalogEntry, AgentScope } from '@/lib/agent-catalog';
 
-interface DeckEntry extends AgentCatalogEntry {
-  allowed: boolean;
-}
-
 interface AgentDeckProps {
   token: string;
-  allowedCount: number;
   total: number;
-  entries: DeckEntry[];
+  entries: AgentCatalogEntry[];
 }
 
 function scopeStyle(scope: AgentScope): { label: string; chip: string; accent: string } {
@@ -40,7 +36,7 @@ function scopeStyle(scope: AgentScope): { label: string; chip: string; accent: s
   }
 }
 
-export function AgentDeck({ token, allowedCount, total, entries }: AgentDeckProps) {
+export function AgentDeck({ token, total, entries }: AgentDeckProps) {
   const [active, setActive] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLElement | null>>([]);
@@ -97,7 +93,7 @@ export function AgentDeck({ token, allowedCount, total, entries }: AgentDeckProp
           </Link>
           <span className="text-muted-foreground/40">·</span>
           <span className="text-xs text-muted-foreground">
-            <strong className="text-foreground">{allowedCount} of {total}</strong> available to you
+            <strong className="text-foreground">{total}</strong> specialist agents
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -151,19 +147,10 @@ export function AgentDeck({ token, allowedCount, total, entries }: AgentDeckProp
               }}
               className="flex h-full min-h-full w-full snap-start items-center justify-center px-6 py-8"
             >
-              <div className={`mx-auto w-full max-w-4xl ${entry.allowed ? '' : 'opacity-70'}`}>
+              <div className="mx-auto w-full max-w-4xl">
                 {/* Scope + availability row */}
                 <div className="mb-5 flex flex-wrap items-center gap-3">
                   <span className={`rounded-full px-3 py-1 text-sm font-medium ${s.chip}`}>{s.label}</span>
-                  {entry.allowed ? (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-emerald-200">
-                      ✓ Available to you
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-500">
-                      Not in your role
-                    </span>
-                  )}
                   <span className="ml-auto text-sm tabular-nums text-muted-foreground">
                     {idx + 1} of {total}
                   </span>
@@ -258,7 +245,6 @@ export function AgentDeck({ token, allowedCount, total, entries }: AgentDeckProp
                   width: isActive ? 12 : 8,
                   height: isActive ? 12 : 8,
                   backgroundColor: isActive ? s.accent : 'rgb(203 213 225)',
-                  opacity: entry.allowed ? 1 : 0.4,
                 }}
               />
             </button>
