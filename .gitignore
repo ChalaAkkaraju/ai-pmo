@@ -36,5 +36,8 @@ next-env.d.ts
 supabase/.temp/
 supabase/.branches/
 
+# consistency-test script output — preserved evaluations live in docs/eval/
+consistency-test/
+
 # OS
 Thumbs.db

@@ -1,0 +1,72 @@
+{
+  "config": {
+    "BASE_URL": "http://localhost:3000",
+    "TOKEN": "demo-pm-token-replace-me",
+    "PROJECT_CODE": "NW-PWR-2686",
+    "AGENT_TYPE": "risk_analyst",
+    "CONCISE": true,
+    "RUNS": 5
+  },
+  "prompt": "Review the current risk register and identify which two risks deserve the most management attention through the remaining warranty tail. Three sentences each.",
+  "started_at": "2026-05-27T13:49:42.756Z",
+  "runs": [
+    {
+      "run": 1,
+      "ok": true,
+      "elapsed_ms": 13247,
+      "output_chars": 1302,
+      "tokens_used": 7222,
+      "cost_usd": 0.04549,
+      "agent_type_resolved": "risk_analyst",
+      "file": "run-01.md"
+    },
+    {
+      "run": 2,
+      "ok": true,
+      "elapsed_ms": 10872,
+      "output_chars": 1279,
+      "tokens_used": 7210,
+      "cost_usd": 0.04519,
+      "agent_type_resolved": "risk_analyst",
+      "file": "run-02.md"
+    },
+    {
+      "run": 3,
+      "ok": true,
+      "elapsed_ms": 12153,
+      "output_chars": 1307,
+      "tokens_used": 7232,
+      "cost_usd": 0.04574,
+      "agent_type_resolved": "risk_analyst",
+      "file": "run-03.md"
+    },
+    {
+      "run": 4,
+      "ok": true,
+      "elapsed_ms": 11716,
+      "output_chars": 1373,
+      "tokens_used": 7248,
+      "cost_usd": 0.04614,
+      "agent_type_resolved": "risk_analyst",
+      "file": "run-04.md"
+    },
+    {
+      "run": 5,
+      "ok": true,
+      "elapsed_ms": 10634,
+      "output_chars": 1249,
+      "tokens_used": 7220,
+      "cost_usd": 0.04544,
+      "agent_type_resolved": "risk_analyst",
+      "file": "run-05.md"
+    }
+  ],
+  "finished_at": "2026-05-27T13:50:41.389Z",
+  "totals": {
+    "successful_runs": 5,
+    "failed_runs": 0,
+    "total_cost_usd": 0.228,
+    "total_tokens": 36132,
+    "total_elapsed_ms": 58622
+  }
+}
