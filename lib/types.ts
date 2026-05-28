@@ -3,7 +3,17 @@
  * Mirrors the Supabase schema in supabase/migrations/0001_init.sql.
  */
 
-export type RoleType = 'pm' | 'procurement' | 'risk' | 'sponsor' | 'commercial';
+export type RoleType =
+  | 'pm'
+  | 'procurement'
+  | 'risk'
+  | 'sponsor'
+  | 'commercial'
+  | 'project_controls'
+  | 'program_manager'
+  | 'engineering_manager'
+  | 'construction_manager'
+  | 'hse_manager';
 
 export interface Role {
   id: string;

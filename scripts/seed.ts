@@ -49,7 +49,7 @@ async function main() {
     );
     process.exit(1);
   }
-  log.info(`Connected to Supabase. Found ${roleCount ?? 0} role rows (expect 4).`);
+  log.info(`Connected to Supabase. Found ${roleCount ?? 0} role rows (expect 10 once migration 0006 is applied; legacy seed had 4).`);
 
   section('1. Mariposa project row');
   const mariposaId = await seedMariposaProject(supabase);
@@ -122,7 +122,7 @@ async function main() {
   log.info('  • Foxhaven: 7 issues, 6 risks, 1 CO, 1 variance (mid-execution placeholder)');
   log.info('  • 4 cross-cutting portfolio patterns (1 / 2 / 3 / 4)');
   log.info('  • 16 worked examples (13 agent anchors + 3 context briefs)');
-  log.info('  • 4 role tokens (PM / Procurement / Risk Analyst / Sponsor)');
+  log.info('  • 10 role tokens (PM / Procurement / Risk / Sponsor / Commercial / Project Controls / Program Mgr / Engineering Mgr / Construction Mgr / HSE) — provided migration 0006 has been applied');
   log.info('');
   log.info('Phase 2.2 is complete. Next: Phase 2.3 — agent invocation layer.');
 }

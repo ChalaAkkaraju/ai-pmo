@@ -118,6 +118,18 @@ If they push further ("how would you prevent this at scale?"), the answer is aut
 
 ---
 
+### Q17. If you added RAG, would you store the chunks or regenerate them at query time?
+
+This pairs with Q4 (when would you add RAG). It's the practitioner-level follow-up that separates someone who's read about RAG from someone who's implemented it.
+
+Always **store**. Regenerating at query time would defeat the entire point. The lifecycle has two distinct phases. At **ingest time** — once, when a document enters the system — you split it into ~500-token chunks with a small overlap (so context isn't lost at boundaries), embed each chunk through an embedding model like `text-embedding-3-small` (which returns a ~1,536-dimensional vector — a numerical fingerprint of meaning), and store both the chunk text and its vector in a vector-search-capable database. In our stack the natural fit is Supabase's pgvector extension, which was actually in the original architecture diagram. At **query time**, every time a user asks something: embed just the question with the same model, similarity-search the stored vectors for the top-k most relevant chunks, and send those chunks plus the question to the specialist agent as context.
+
+Three reasons regenerating at query time is wrong. First, you'd pay the embedding inference cost on every chunk on every query instead of paying it once at ingest — that's hundreds or thousands of model calls per question. Second, there'd be nothing to search against — the whole point of vector storage is that the index makes similarity lookup take 50-100 milliseconds even at millions of vectors. Without persistence, you'd be doing brute-force re-embedding instead of indexed retrieval. Third, latency would jump from sub-100ms to seconds per query, which kills the user experience.
+
+The cost picture, if I ever needed to add this: embeddings ingest is about $0.02 per million tokens with modern small models, each vector is around 6KB so 10,000 chunks fit in 60MB, and pgvector retrieval is sub-100ms with proper indexing. So the decision to skip RAG in AI PMO today is purely about avoiding complexity I don't need — not about cost or feasibility. The day I add a corpus that doesn't fit in the LLM's context window (lessons-learned archive, contract library, regulatory text), the architecture has a clear extension point and Supabase already supports it.
+
+---
+
 ## Key numbers worth memorizing
 
 | Fact | Value |

@@ -140,6 +140,12 @@ function roleChipClass(role_type: string | null): string {
     case 'procurement': return 'bg-amber-100 text-amber-800';
     case 'risk': return 'bg-rose-100 text-rose-800';
     case 'sponsor': return 'bg-violet-100 text-violet-800';
+    case 'commercial': return 'bg-sky-100 text-sky-800';
+    case 'project_controls': return 'bg-indigo-100 text-indigo-800';
+    case 'program_manager': return 'bg-teal-100 text-teal-800';
+    case 'engineering_manager': return 'bg-cyan-100 text-cyan-800';
+    case 'construction_manager': return 'bg-orange-100 text-orange-800';
+    case 'hse_manager': return 'bg-fuchsia-100 text-fuchsia-800';
     default: return 'bg-slate-100 text-slate-700';
   }
 }
@@ -151,6 +157,11 @@ function shortRole(role_type: string | null): string {
     case 'risk': return 'Risk';
     case 'sponsor': return 'Sponsor';
     case 'commercial': return 'Commercial';
+    case 'project_controls': return 'Project Controls';
+    case 'program_manager': return 'Program Mgr';
+    case 'engineering_manager': return 'Engineering Mgr';
+    case 'construction_manager': return 'Construction Mgr';
+    case 'hse_manager': return 'HSE';
     default: return role_type ?? '';
   }
 }

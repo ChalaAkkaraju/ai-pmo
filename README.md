@@ -6,7 +6,7 @@ A methodology-aware, multi-agent system for EPC (engineering, procurement, const
 
 ## What it does
 
-The demo lets up to five colleagues with different roles (PM Director, Procurement, Risk, Sponsor, Commercial) collaboratively interact with a portfolio of 100 active and historical capital projects across four industry segments (renewables, water, industrial, power). Each colleague accesses the system via a unique URL token; they share the same project state with role-appropriate filtering; updates from any colleague's agent invocation propagate to others in real time.
+The demo lets up to ten colleagues across a realistic PMO org (PMO Director, Procurement, Risk, Sponsor, Commercial, Project Controls, Program Manager, Engineering Manager, Construction Manager, HSE Manager) collaboratively interact with a portfolio of 100 active and historical capital projects across four industry segments (renewables, water, industrial, power). Each colleague accesses the system via a unique URL token; they share the same project state with role-appropriate filtering; updates from any colleague's agent invocation propagate to others in real time.
 
 Behind the chat surface, prompts route to one of thirteen specialist agents — Charter Drafter, Stakeholder Analyst, WBS Builder, Schedule Reasoner, Budget Builder, Communications Planner, Issue Logger, Variance Analyst, Change Order Reviewer, Risk Analyst, Lessons-Learned Synthesiser, Closeout Reporter, Portfolio Risk Reviewer. The router (a cheap Claude Haiku 4.5 classifier) picks the right specialist from the user's prompt; the specialist itself (Claude Opus 4.7 via OpenRouter) generates the grounded response using the project's actual data passed in via context.
 
@@ -55,13 +55,22 @@ Methodology grounding: PMBOK 7 process model, cross-cutting risk taxonomy (six c
 
 ## Roles
 
+All ten roles are portfolio-level — each colleague sees the full ~100-project portfolio with a role-scoped slice.
+
 | Role | Scope | Agents available |
 |---|---|---|
 | Senior PM (PMO Director) | All 100 projects + all artefacts | All 13 agents |
 | Portfolio Procurement Strategist | Procurement slice across portfolio | Risk Analyst, Variance Analyst, Change Order Reviewer, Portfolio Risk Reviewer |
-| Portfolio Risk Analyst | Risks + cross-cutting patterns across portfolio | Risk Analyst, Portfolio Risk Reviewer, Lessons-Learned Synthesiser |
-| VP Sponsor | Executive view + status reports + change orders | Closeout Reporter, Portfolio Risk Reviewer (read-only) |
-| Commercial Manager | (staged, not seeded by default) | — |
+| Portfolio Risk Analyst | Risks + cross-cutting patterns across portfolio | Risk Analyst, Portfolio Risk Reviewer, Lessons-Learned Synthesiser, Issue Logger |
+| VP Sponsor | Executive view + status reports + change orders (read-only) | Closeout Reporter, Portfolio Risk Reviewer |
+| Commercial Manager | Change-order four-frame dynamics + margin protection | Change Order Reviewer, Variance Analyst |
+| Project Controls Manager | Cost & schedule analytics — CPI/SPI health, baseline reasoning | Variance Analyst, Schedule Reasoner, Budget Builder |
+| Program Manager — Renewables | Multi-project programme oversight + escalations | Stakeholder Analyst, Schedule Reasoner, Budget Builder, Communications Planner, Issue Logger, Variance Analyst, Change Order Reviewer, Risk Analyst, Portfolio Risk Reviewer, Closeout Reporter |
+| Engineering Manager | Early-phase planning + engineering risk identification | Charter Drafter, Stakeholder Analyst, WBS Builder, Risk Analyst |
+| Construction Manager | Execution-phase site issues + variance + field change orders | Issue Logger, Variance Analyst, Change Order Reviewer |
+| HSE Manager | Safety incidents + cross-cutting HSE pattern detection | Issue Logger, Portfolio Risk Reviewer |
+
+Even though each role has a narrower default agent set, the full 13-agent catalog is browsable from every role's `/agents` page so colleagues can see what the broader system offers.
 
 ## Running locally
 

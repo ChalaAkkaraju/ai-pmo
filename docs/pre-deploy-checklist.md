@@ -19,10 +19,16 @@ Tick each box as you go. If anything fails, note it under "Issues found" at the 
 - [ ] No "PMO LLM" text anywhere on the landing page (should be fully rebranded)
 - [ ] An invalid token like `/access/totally-fake-token` redirects to a 404 / "not found" page
 - [ ] Clicking each role's access link loads the dashboard for that role without error:
-  - [ ] PM Director (`demo-pm-token-replace-me`)
-  - [ ] Portfolio Procurement Strategist (`demo-procurement-token-replace-me`)
-  - [ ] Portfolio Risk Analyst (`demo-risk-token-replace-me`)
-  - [ ] VP Sponsor (`demo-sponsor-token-replace-me`)
+  - [ ] Senior PM / PMO Director — J. Okafor (`demo-pm-token-replace-me`)
+  - [ ] Portfolio Procurement Strategist — M. Patel (`demo-procurement-token-replace-me`)
+  - [ ] Portfolio Risk Analyst — R. Yuen (`demo-risk-token-replace-me`)
+  - [ ] VP Sponsor — L. Andersen (`demo-sponsor-token-replace-me`)
+  - [ ] Commercial Manager — A. Whitfield (`demo-commercial-token-replace-me`)
+  - [ ] Project Controls Manager — K. Müller (`demo-project-controls-token-replace-me`)
+  - [ ] Program Manager (Renewables) — S. Park (`demo-program-manager-token-replace-me`)
+  - [ ] Engineering Manager — D. Sato (`demo-engineering-manager-token-replace-me`)
+  - [ ] Construction Manager — T. O'Brien (`demo-construction-manager-token-replace-me`)
+  - [ ] HSE Manager — F. Mahmoud (`demo-hse-manager-token-replace-me`)
 - [ ] The header bar shows the correct colleague name and role for the token you used
 
 ---
