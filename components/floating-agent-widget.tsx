@@ -66,15 +66,186 @@ function extractActions(md: string | undefined): string[] {
       .replace(/^\s*\*\*([^*]+)\*\*\s*/, '$1 ') // unwrap leading **bold**
       .trim();
     const m = stripped.match(/^(action|next step|next steps|recommendation|recommended action|recommend):\s*(.+)/i);
-    if (m) {
-      const actionText = m[2].trim().replace(/\*\*/g, '');
-      if (actionText.length > 5 && actionText.length < 500) {
-        actions.push(actionText);
-      }
-    }
+    if (!m) continue;
+    const actionText = m[2].trim().replace(/\*\*/g, '');
+    if (actionText.length <= 5 || actionText.length >= 500) continue;
+    // Skip clarification-style "actions". When the agent says something like
+    // "Next step: please clarify whether you mean X or Y", the line technically
+    // matches the keyword but the content is a question FROM the agent TO the
+    // user, not an action FOR the user. Wrapping it as "Acting on this: …"
+    // would produce a nonsensical follow-up prompt, so we filter these out.
+    const lower = actionText.toLowerCase();
+    // Two flavours of "this isn't a real action":
+    //   1. Contains a question mark or clarify-style phrasing
+    //   2. References multiple lettered options ("(a), (b), or (c)") which is
+    //      almost always the agent listing interpretations back at the user.
+    const lettered = (lower.match(/\([a-z]\)/g) ?? []).length;
+    const isClarification =
+      actionText.includes('?') ||
+      lettered >= 2 ||
+      lower.includes('please clarify') ||
+      lower.includes('could you clarify') ||
+      lower.includes('can you clarify') ||
+      lower.includes('please specify') ||
+      lower.includes('could you specify') ||
+      lower.includes('are you asking') ||
+      lower.includes('do you mean') ||
+      lower.includes('which of the following') ||
+      lower.includes('tell me') ||
+      lower.includes('let me know') ||
+      lower.startsWith('clarify');
+    if (isClarification) continue;
+    actions.push(actionText);
   }
   // De-duplicate (the agent sometimes restates the same action verbatim).
   return Array.from(new Set(actions));
+}
+
+/**
+ * Detect lettered clarification options in agent responses.
+ *
+ * The agent often replies with "Which one — (a), (b), or (c)?" plus a bulleted
+ * list of options. Without help the user has to type their answer manually.
+ * This helper finds the lettered options so the widget can render them as
+ * one-click "Quick reply" buttons that pre-fill the prompt with the choice.
+ *
+ * Only fires when the response actually asks the user to pick (looks for
+ * "which one", "pick one", "tell me which", etc.) — avoids false positives
+ * on responses that incidentally contain (a) (b) (c) labels.
+ */
+function extractChoices(md: string | undefined): Array<{ letter: string; text: string }> {
+  if (!md) return [];
+  const lower = md.toLowerCase();
+  const hasPickPrompt =
+    lower.includes('which one') ||
+    lower.includes('pick one') ||
+    lower.includes('tell me which') ||
+    lower.includes('tell me whether') ||
+    lower.includes('which of these') ||
+    lower.includes('which of the following') ||
+    lower.includes('which interpretation') ||
+    lower.includes('which would you') ||
+    lower.includes('which did you') ||
+    lower.includes('did you mean') ||
+    lower.includes('if you mean') ||
+    lower.includes('you could mean') ||
+    lower.includes("i can't tell") ||
+    lower.includes('i cannot tell') ||
+    lower.includes('is ambiguous') ||
+    lower.includes('the question is ambiguous') ||
+    lower.includes('please clarify');
+  if (!hasPickPrompt) return [];
+
+  const choices: Array<{ letter: string; text: string }> = [];
+  const seen = new Set<string>();
+
+  function add(letter: string, rawText: string) {
+    const l = letter.toLowerCase();
+    if (seen.has(l)) return;
+    let text = rawText.replace(/\*\*/g, '').trim();
+    // Take the first phrase — strip at em-dash, en-dash, or colon followed by space.
+    const splitIdx = text.search(/\s+[—–]\s+|:\s+/);
+    if (splitIdx > 0) text = text.slice(0, splitIdx).trim();
+    // Strip trailing connectives so inline lists read clean.
+    text = text.replace(/[,;]?\s*(or|and)\s*$/i, '').trim();
+    text = text.replace(/[,;]\s*$/, '').trim();
+    if (text.length < 4 || text.length > 250) return;
+    choices.push({ letter: l, text });
+    seen.add(l);
+  }
+
+  // --- Pass 1: bullet-style options, one per line ---
+  // Common format: "- **(a) Headline?** Rationale text…"
+  // When the headline is bold-wrapped, capture JUST the headline so the
+  // pre-filled prompt stays short and clean. Fall back to the rest-of-line
+  // capture when there's no bold wrapper.
+  const lines = md.split('\n');
+  for (const rawLine of lines) {
+    const stripped = rawLine
+      .replace(/^\s*[*\-]\s+/, '')
+      .replace(/^\s*\d+\.\s+/, '')
+      .trim();
+    // Try bold-wrapped headline first: **(a) the headline question?**
+    let m = stripped.match(/^\*\*\(([a-zA-Z])\)\s+(.+?)\*\*/);
+    if (m) {
+      add(m[1], m[2]);
+      continue;
+    }
+    // Fallback: any line that starts with (a) or **(a)** followed by text.
+    m = stripped.match(/^\*?\*?\(([a-zA-Z])\)\*?\*?\s+(.+?)$/);
+    if (m) add(m[1], m[2]);
+  }
+
+  // --- Pass 2: inline options inside a single paragraph ---
+  // Agent often writes "... could mean (a) X, (b) Y, (c) Z, or (d) something else."
+  // Split on parenthesised single letters. The captured letter becomes a marker;
+  // text after it (up to the next marker or sentence end) is that choice.
+  const parts = md.split(/\(([a-zA-Z])\)/);
+  // parts[0] is text before any marker; then [letter, text, letter, text, ...].
+  // Need at least 2 markers (= at least 5 parts) to count as a real list.
+  if (parts.length >= 5) {
+    for (let i = 1; i < parts.length; i += 2) {
+      const letter = parts[i];
+      let text = parts[i + 1] ?? '';
+      // Clip at the FIRST sentence end inside this chunk so we don't bleed into
+      // the next paragraph's content.
+      const sentenceEnd = text.search(/\.\s+[A-Z]|\.\s*\n|\n\n/);
+      if (sentenceEnd >= 0) text = text.slice(0, sentenceEnd);
+      add(letter, text);
+    }
+  }
+
+  return choices;
+}
+
+/**
+ * When the widget is showing Quick Reply buttons under a response, the
+ * lettered bullets and the trailing "Which one — (a), (b), or (c)?" sentence
+ * in the rendered markdown are redundant — the buttons already convey them.
+ * This helper strips them from the markdown body so the user sees a clean
+ * "the question is ambiguous" sentence above the buttons, nothing more.
+ *
+ * Only called when extractChoices(md) returned at least one choice — so the
+ * agent's intent really was a clarification question.
+ */
+function stripQuickReplyContent(md: string): string {
+  if (!md) return md;
+  let out = md;
+  // Remove lines that are a bulleted (or plain) lettered option:
+  //   - **(a) Headline?** Reason text…
+  //   * (a) Plain text…
+  //   (a) Plain text…
+  out = out.replace(/^\s*[*\-]?\s*\*?\*?\(([a-zA-Z])\)\*?\*?\s+.*$/gm, '');
+  // Remove a trailing "Which one — (a), (b), or (c)?" line / sentence.
+  out = out.replace(/(^|\n)\s*which\s+one\b[^\n.!?]*\?/gi, '');
+  // Remove an analogous trailing "pick which you mean" / "pick one" sentence.
+  out = out.replace(/(^|\n)\s*(pick which you mean|pick one)[^\n.!?]*[.!?]?/gi, '');
+  // Collapse 3+ blank lines that the deletions just introduced down to a single blank.
+  out = out.replace(/\n{3,}/g, '\n\n');
+  return out.trim();
+}
+
+/**
+ * Hide "Action:" / "Next step:" / "Recommendation:" callout lines from the
+ * rendered markdown when the green "Have agent follow up" button row is
+ * already shown beneath the response. Without this, every actionable line
+ * appears twice — once as a green-tinted callout in the body, again as a
+ * clickable button. Strip the bodies so the buttons are the sole surface for
+ * acting on those recommendations.
+ *
+ * Only called when extractActions(md) returned at least one action.
+ */
+function stripActionCallouts(md: string): string {
+  if (!md) return md;
+  let out = md;
+  // Strip lines that begin (after optional bullet + bold) with the
+  // recommendation keywords. Both bare and bold-wrapped forms.
+  out = out.replace(
+    /^\s*[*\-]?\s*\*?\*?(action|next step|next steps|recommendation|recommend|recommended action):\*?\*?\s+.*$/gim,
+    '',
+  );
+  out = out.replace(/\n{3,}/g, '\n\n');
+  return out.trim();
 }
 
 interface FloatingAgentWidgetProps {
@@ -375,7 +546,10 @@ export function FloatingAgentWidget({
           className="w-full resize-none rounded-md border px-2.5 py-1.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-foreground/30"
           style={{ backgroundColor: 'white' }}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            // Enter (without Shift) sends. Shift+Enter still inserts a newline.
+            // Cmd/Ctrl+Enter also sends, so muscle memory from before still works.
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
               handleSubmit(e);
             }
           }}
@@ -397,8 +571,8 @@ export function FloatingAgentWidget({
             <p>
               {canWrite
                 ? agentType === 'auto'
-                  ? 'Auto · Cmd/Ctrl+Enter to send'
-                  : `${AGENT_LABELS[agentType as AgentType]} · Cmd/Ctrl+Enter to send`
+                  ? 'Auto · Enter to send, Shift+Enter for new line'
+                  : `${AGENT_LABELS[agentType as AgentType]} · Enter to send, Shift+Enter for new line`
                 : 'Your role is read-only'}
             </p>
           </div>
@@ -434,6 +608,7 @@ function InvocationCard({
   onPopOut: (inv: Invocation) => void;
 }) {
   const actions = extractActions(invocation.response_md);
+  const choices = extractChoices(invocation.response_md);
   const isInProgress = isLatest && !invocation.response_md && !invocation.error;
   const requested = invocation.agent_type_requested;
   const resolved = invocation.agent_type_resolved;
@@ -535,7 +710,7 @@ function InvocationCard({
                   },
                 }}
               >
-                {invocation.response_md}
+                {(() => { let b = invocation.response_md ?? ''; if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
               </ReactMarkdown>
             </article>
             <div className="mt-2 flex items-center justify-between gap-2 border-t pt-1.5 text-[10px] text-muted-foreground">
@@ -543,7 +718,7 @@ function InvocationCard({
                 {typeof invocation.duration_ms === 'number' &&
                   `${(invocation.duration_ms / 1000).toFixed(1)}s`}
               </span>
-              {invocation.output_id && (
+              {invocation.output_id && choices.length === 0 && (
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
@@ -565,6 +740,26 @@ function InvocationCard({
                 </div>
               )}
             </div>
+            {choices.length > 0 && (
+              <div className="mt-2 border-t pt-2">
+                <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-sky-700">
+                  Quick reply
+                </p>
+                <div className="flex flex-col gap-1">
+                  {choices.map((choice) => (
+                    <button
+                      key={choice.letter}
+                      type="button"
+                      onClick={() => onUseAsPrompt(choice.text)}
+                      className="text-left rounded border border-sky-200 bg-sky-50 px-2 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100"
+                      title="Pre-fills the prompt with this option — review and Send"
+                    >
+                      <span className="line-clamp-2">{choice.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {actions.length > 0 && (
               <div className="mt-2 border-t pt-2">
                 <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-emerald-700">
@@ -575,14 +770,10 @@ function InvocationCard({
                     <button
                       key={i}
                       type="button"
-                      onClick={() => {
-                        const followUp = `Acting on this: \"${action}\". What are the concrete next steps to make this happen?`;
-                        onUseAsPrompt(followUp);
-                      }}
+                      onClick={() => onUseAsPrompt(action)}
                       className="group text-left rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900 transition hover:border-emerald-400 hover:bg-emerald-100"
                       title="Pre-fills the prompt below with a follow-up question on this action"
                     >
-                      <span className="font-medium text-emerald-700">▶ </span>
                       <span className="line-clamp-2">{action}</span>
                     </button>
                   ))}
@@ -626,6 +817,7 @@ function PoppedOutBriefPanel({
   onUseAsPrompt: (text: string) => void;
 }) {
   const actions = extractActions(invocation.response_md);
+  const choices = extractChoices(invocation.response_md);
 
   const requested = invocation.agent_type_requested;
   const resolved = invocation.agent_type_resolved;
@@ -806,14 +998,14 @@ function PoppedOutBriefPanel({
                 },
               }}
             >
-              {invocation.response_md}
+              {(() => { let b = invocation.response_md ?? ''; if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
             </ReactMarkdown>
           </article>
         )}
       </div>
 
       <footer className="border-t bg-slate-50 px-3 py-2">
-        {invocation.output_id && (
+        {invocation.output_id && choices.length === 0 && (
           <div className="mb-1.5 flex items-center justify-end">
             <a
               href={`/access/${token}/report/${invocation.output_id}`}
@@ -826,6 +1018,26 @@ function PoppedOutBriefPanel({
             </a>
           </div>
         )}
+        {choices.length > 0 && (
+          <div className="border-t pt-1.5">
+            <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-sky-700">
+              Quick reply
+            </p>
+            <div className="flex flex-col gap-1 pb-1.5">
+              {choices.map((choice) => (
+                <button
+                  key={choice.letter}
+                  type="button"
+                  onClick={() => onUseAsPrompt(choice.text)}
+                  className="text-left rounded border border-sky-200 bg-sky-50 px-2 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100"
+                  title="Pre-fills the agent widget prompt with this option — review and Send"
+                >
+                  <span className="line-clamp-2">{choice.text}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {actions.length > 0 && (
           <div className="border-t pt-1.5">
             <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-emerald-700">
@@ -836,14 +1048,10 @@ function PoppedOutBriefPanel({
                 <button
                   key={i}
                   type="button"
-                  onClick={() => {
-                    const followUp = `Acting on this: "${action}". What are the concrete next steps to make this happen?`;
-                    onUseAsPrompt(followUp);
-                  }}
+                  onClick={() => onUseAsPrompt(action)}
                   className="text-left rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900 transition hover:border-emerald-400 hover:bg-emerald-100"
                   title="Pre-fills the agent widget's prompt with a follow-up question on this action"
                 >
-                  <span className="font-medium text-emerald-700">▶ </span>
                   <span className="line-clamp-2">{action}</span>
                 </button>
               ))}
