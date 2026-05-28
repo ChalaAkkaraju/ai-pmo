@@ -16,7 +16,7 @@ Behind the chat surface, prompts route to one of thirteen specialist agents — 
 - **Floating "Ask AI Assistant" widget** persistent on every page. Context-aware: knows which project page you're on and scopes the invocation accordingly.
 - **Two-ribbon BI dashboard** with 6 portfolio KPIs, theme-drill-down by segment, a "Hot 5" list of projects of concern with composite scoring, and a live activity feed of recent invocations broadcasted via Supabase Realtime.
 - **Per-project visualizations**: 3×3 risk heat-map, variance-trend chart with contingency burn-down, Gantt-style schedule strip, hierarchical WBS tree.
-- **Polished printable report viewer** at `/access/<token>/report/<output-id>`. Two-tier layout (Summary + Full detail), Letterhead with brand mark, project context strip, request quote, footer. Real PDF download via `html2pdf.js` — produces a downloadable `.pdf` file (not a print-dialog screenshot).
+- **Polished printable report viewer** at `/access/<token>/report/<output-id>`. Two-tier layout (Summary + Full detail), letterhead with brand mark, project context strip, request quote, footer. **Searchable PDF download** via a server-side Puppeteer route — Chromium headless renders the same page server-side and captures it as a real PDF with selectable, copyable, searchable text (no rasterization).
 - **Quick + full response modes.** Chat-panel responses default to a 250-word brief (~$0.06, ~12s). Opening the polished report regenerates in long-form (~$0.30, ~30s) and caches per browser session.
 - **Agent catalog page** at `/access/<token>/agents` — documents what each of the 13 specialists does and doesn't do, scope, sample prompts, methodology grounding.
 - **Empirical reliability evaluation.** Formal consistency test of the Risk Analyst agent (5 runs, same prompt, same project): 5/5 decision agreement, 5/5 factual agreement, healthy prose variation. Full methodology + raw outputs at [`docs/eval/consistency-2026-05-27/`](./docs/eval/consistency-2026-05-27/).
@@ -45,7 +45,8 @@ Methodology grounding: PMBOK 7 process model, cross-cutting risk taxonomy (six c
 
 ## Stack
 
-- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS, Radix UI primitives, Inter typography, `react-markdown` + `remark-gfm`, `html2pdf.js`
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS, Radix UI primitives, Inter typography, `react-markdown` + `remark-gfm`
+- **PDF generation**: `puppeteer` (headless Chromium) via a server-side API route — produces searchable PDFs with real text layers
 - **Backend**: Next.js API routes (serverless), Zod request validation
 - **Database**: Supabase Postgres, Row-Level Security, Realtime broadcast on the `agent_outputs` table
 - **Inference**: Anthropic Claude Opus 4.7 (specialists) + Claude Haiku 4.5 (router), accessed via OpenRouter

@@ -328,6 +328,26 @@ export function DashboardClient({
   const [query, setQuery] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
 
+  // Always-visible global project search (separate from the segment
+  // drill-down search above). Matches on code, name, client, or segment.
+  const [globalQuery, setGlobalQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const globalSearchResults = useMemo(() => {
+    const q = globalQuery.trim().toLowerCase();
+    if (!q) return [];
+    return projects
+      .filter((p) => {
+        return (
+          p.code.toLowerCase().includes(q) ||
+          p.name.toLowerCase().includes(q) ||
+          p.client.toLowerCase().includes(q) ||
+          p.segment.toLowerCase().includes(q) ||
+          p.status.toLowerCase().includes(q)
+        );
+      })
+      .slice(0, 8);
+  }, [globalQuery, projects]);
+
   // Live agent-activity feed — seeded by server-rendered prop, updated by
   // Supabase Realtime subscription on the agent_outputs table.
   const [activity, setActivity] = useState<DashboardActivity[]>(initialActivity);
@@ -507,6 +527,90 @@ export function DashboardClient({
           {roleDisplayName}
         </p>
         <h1 className="mt-1 text-4xl font-bold tracking-tight">Welcome, {roleName}</h1>
+      </section>
+
+      {/* Global project search — always visible, matches across all 99 projects.
+          The segment drill-down has its own scoped search lower in the page; this
+          one is for jumping straight to any project by name, code, client, or segment. */}
+      <section>
+        <div className="relative">
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">
+              🔎
+            </span>
+            <input
+              type="text"
+              value={globalQuery}
+              onChange={(e) => setGlobalQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => {
+                // Delay so a click on a result has time to register before the dropdown unmounts.
+                setTimeout(() => setIsSearchFocused(false), 150);
+              }}
+              placeholder="Search projects — try a code (NW-REN-2511), a name, a client, or a segment (renewables, water…)"
+              className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400"
+              aria-label="Search projects"
+            />
+            {globalQuery && (
+              <button
+                type="button"
+                onClick={() => setGlobalQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-0.5 text-xs text-muted-foreground transition hover:bg-slate-100 hover:text-foreground"
+                aria-label="Clear search"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Results dropdown */}
+          {globalQuery.trim() && isSearchFocused && (
+            <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[28rem] overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+              {globalSearchResults.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-muted-foreground">
+                  No projects match &ldquo;{globalQuery.trim()}&rdquo;.
+                </div>
+              ) : (
+                <>
+                  <p className="border-b border-slate-100 px-4 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {globalSearchResults.length} match{globalSearchResults.length === 1 ? '' : 'es'} {globalSearchResults.length === 8 ? '(showing first 8)' : ''}
+                  </p>
+                  <ul className="divide-y divide-slate-100">
+                    {globalSearchResults.map((p) => {
+                      const ss = segmentStyle(p.segment);
+                      return (
+                        <li key={p.id}>
+                          <Link
+                            href={`/access/${token}/projects/${p.code}`}
+                            className="flex items-center gap-3 px-4 py-2.5 transition hover:bg-slate-50"
+                          >
+                            <span className={`h-8 w-1 flex-none rounded-full ${ss.accentBar}`} />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-baseline gap-2">
+                                <span className="truncate text-sm font-semibold text-foreground">{p.name}</span>
+                                <span className="font-mono text-[11px] text-muted-foreground">{p.code}</span>
+                              </div>
+                              <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                                <span className="capitalize">{p.segment}</span>
+                                <span>·</span>
+                                <span className="truncate">{p.client}</span>
+                                <span>·</span>
+                                <span>Week {p.current_week}</span>
+                              </div>
+                            </div>
+                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge(p.status)}`}>
+                              {p.status}
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* HERO */}

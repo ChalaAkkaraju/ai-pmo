@@ -10,15 +10,16 @@
  *     (quick-mode briefings) and no toggle is shown.
  *
  * Print-to-PDF:
- *   "Download PDF" calls window.print(). Print CSS hides chrome/buttons and
- *   force-expands the full detail. Modern browsers let the user pick
- *   "Save as PDF" in the print dialog.
+ *   "Download PDF" hits /api/report-pdf which uses Puppeteer headless
+ *   Chromium to render this exact page server-side and capture it as a
+ *   real PDF with selectable, searchable, copyable text (no rasterization).
+ *   Falls back to window.print() if the API errors out.
  *
  * The page is its own URL (/access/[token]/report/[outputId]) and is meant to
  * be opened in a new tab from the dashboard / floating widget / planning tabs.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -30,6 +31,8 @@ interface ReportOutput {
   invoked_at: string;
   user_prompt: string | null;
   output_md: string;
+  /** Cached long-form regen — populated by /api/report/save-full on first open. */
+  full_output_md: string | null;
 }
 
 interface ReportProject {
@@ -200,7 +203,6 @@ const SEGMENT_COLORS: Record<string, string> = {
 export function ReportView({ token, output, project, colleague, viewerRole }: ReportViewProps) {
   const [detailOpen, setDetailOpen] = useState(true);
   const [generatingPdf, setGeneratingPdf] = useState(false);
-  const sheetRef = useRef<HTMLDivElement | null>(null);
 
   // Full-mode regeneration. The DB stores the QUICK BRIEF (concise:true output);
   // the polished report view should show the LONG-FORM version. On mount we
@@ -211,6 +213,17 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
   const [fullError, setFullError] = useState<string | null>(null);
 
   useEffect(() => {
+    // 1. DB cache hit — the server-rendered row already has the long-form.
+    //    Skip the regen entirely, set state to ready, done in microseconds.
+    if (output.full_output_md) {
+      setFullMarkdown(output.full_output_md);
+      setFullState('ready');
+      return;
+    }
+
+    // 2. Same-session cache hit (sessionStorage). Useful for the rare case
+    //    where the report opens before the DB write has propagated, or where
+    //    the user has been bouncing in and out of this report this session.
     const cacheKey = `report-full-md:${output.id}`;
     try {
       const cached = sessionStorage.getItem(cacheKey);
@@ -223,6 +236,8 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
       // sessionStorage may be unavailable (e.g., privacy mode) — silently skip cache
     }
 
+    // 3. Cache miss everywhere — regenerate AND persist back to the DB so the
+    //    next open is instant.
     let cancelled = false;
     setFullState('loading');
     fetch('/api/agent', {
@@ -248,6 +263,21 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
           } catch {
             // ignore cache write errors
           }
+          // Fire-and-forget DB cache write. The next reader of this report
+          // (anyone, any session) will skip the regen entirely.
+          fetch('/api/report/save-full', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token,
+              output_id: output.id,
+              full_md: data.output_md,
+            }),
+          }).catch((err) => {
+            // Non-fatal — the user already has the long-form. Only the
+            // cache-warming benefit is lost.
+            console.warn('Failed to cache long-form to DB (non-fatal):', err);
+          });
         } else {
           setFullError(data.error ?? `HTTP ${res.status}`);
           setFullState('error');
@@ -262,7 +292,7 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
     return () => {
       cancelled = true;
     };
-  }, [output.id, output.agent_type, output.user_prompt, project, token]);
+  }, [output.id, output.agent_type, output.user_prompt, output.full_output_md, project, token]);
 
   // Choose source markdown: full version once it arrives, otherwise the brief
   // (so users see content immediately instead of a blank skeleton).
@@ -294,53 +324,47 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
   }
 
   /**
-   * Generate a real PDF using html2pdf.js (dynamic import — client-only,
-   * touches window). Browser triggers the file save based on its own
-   * downloads setting; if the user has "Ask where to save each file"
-   * enabled in browser settings, they get a native folder picker.
+   * Request a real, text-selectable PDF from the server. The server-side
+   * /api/report-pdf route uses Puppeteer + headless Chromium to render this
+   * exact page and capture it as a PDF with proper text layers (no
+   * rasterization). We fetch the resulting blob and trigger a download via
+   * a temporary anchor; the browser's own download settings decide where
+   * it lands and whether to prompt for a folder.
    */
   async function handleDownloadPdf() {
-    if (!sheetRef.current || generatingPdf) return;
-    // Expand the detail section so the whole report is included.
+    if (generatingPdf) return;
+    // Expand the detail section so the rendered page contains everything.
     setDetailOpen(true);
     setGeneratingPdf(true);
 
     try {
-      // Wait one paint so React flushes the open-state DOM change.
-      await new Promise((r) => setTimeout(r, 80));
+      const filename = buildFilename();
+      const apiUrl =
+        `/api/report-pdf/${output.id}` +
+        `?token=${encodeURIComponent(token)}` +
+        `&filename=${encodeURIComponent(filename)}`;
 
-      // Dynamic import — html2pdf.js touches window so it can't be in the bundle for SSR.
-      const html2pdf = (await import('html2pdf.js')).default;
+      const res = await fetch(apiUrl);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `HTTP ${res.status}`);
+      }
 
-      await html2pdf()
-        .from(sheetRef.current)
-        .set({
-          margin: [10, 10, 10, 10],
-          filename: buildFilename(),
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            // Avoid capturing fixed/absolute elements outside the sheet
-            windowWidth: sheetRef.current.scrollWidth,
-          },
-          jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'portrait',
-            compress: true,
-          },
-          // 'avoid-all' tries to keep block-level elements together; 'css' honors
-          // our page-break-* hints; 'legacy' adds a class-based escape hatch.
-          pagebreak: {
-            mode: ['avoid-all', 'css', 'legacy'],
-            avoid: ['h1', 'h2', 'h3', 'blockquote', '.report-footer'],
-          },
-        })
-        .save();
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Trigger the download by clicking a hidden anchor.
+      const anchor = document.createElement('a');
+      anchor.href = blobUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+
+      // Release the blob URL after the browser has had time to read it.
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
     } catch (err) {
-      // Fallback to print dialog if html2pdf fails for any reason.
+      // Fallback to the browser's native print dialog so the user isn't stranded.
       console.error('PDF generation failed, falling back to print:', err);
       window.print();
     } finally {
@@ -348,8 +372,15 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
     }
   }
 
+  // Puppeteer (in /api/report-pdf) waits for this attribute to flip to "true"
+  // before capturing — that's how it knows the full-mode regeneration is done.
+  const reportReady = fullState === 'ready' || fullState === 'error';
+
   return (
-    <div className="report-root min-h-screen bg-slate-100 print:bg-white">
+    <div
+      className="report-root min-h-screen bg-slate-100 print:bg-white"
+      data-report-ready={reportReady ? 'true' : 'false'}
+    >
       {/* Action bar — visible on screen, hidden in print. Sized to draw the eye. */}
       <div className="no-print sticky top-0 z-10 border-b bg-white shadow-sm">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-4">
@@ -422,12 +453,9 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
         </div>
       )}
 
-      {/* Report sheet — ref'd by html2pdf when generating the PDF */}
+      {/* Report sheet — Puppeteer renders this whole page; no ref needed. */}
       <main className="mx-auto max-w-4xl px-6 py-8 print:max-w-none print:px-0 print:py-0">
-        <article
-          ref={sheetRef}
-          className="report-sheet rounded-lg border bg-white p-10 shadow-sm print:border-0 print:p-0 print:shadow-none"
-        >
+        <article className="report-sheet rounded-lg border bg-white p-10 shadow-sm print:border-0 print:p-0 print:shadow-none">
           {/* Letterhead */}
           <header className="flex items-start justify-between gap-6 border-b border-slate-200 pb-5">
             <div className="flex items-center gap-3">

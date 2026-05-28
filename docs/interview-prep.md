@@ -34,7 +34,7 @@ If asked "walk me through this system" with more time, hit these beats in order,
 
 5. **The agent emits markdown** — grounded in the project data passed in via context, anchored methodologically to PMBOK 7 patterns and a six-class cross-cutting risk taxonomy. The output is stored in Supabase and broadcast to all viewers via Realtime.
 
-6. **The user can open the response as a polished printable report** in a new tab. A two-tier layout (Summary + Full detail, auto-split on the first H2), letterhead, project context strip, and a real PDF download via `html2pdf.js` — produces a downloadable file, not a print-dialog screenshot.
+6. **The user can open the response as a polished printable report** in a new tab. A two-tier layout (Summary + Full detail, auto-split on the first H2), letterhead, project context strip, and a real **searchable** PDF download via a server-side Puppeteer route — headless Chromium renders the same page server-side and captures it with proper text layers, so the text is selectable, copyable, and Ctrl-F searchable in the PDF.
 
 7. **Methodology grounding throughout** — every agent prompt is anchored to a PMBOK 7 process or a risk-taxonomy discipline. The worked-example library (three historical projects: Riverside Water, Skyhawk Solar, Ironvale Smelter) provides anchor exemplars that the agent draws from for style and structure.
 

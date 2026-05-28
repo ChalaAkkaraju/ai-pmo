@@ -1,27 +1,24 @@
 /**
- * Polished status-report viewer.
+ * Brief viewer page.
  *
- * Renders a single agent_output as a printable, sharable report — the kind of
- * thing a PMO would email to a sponsor. Opens in a new tab from:
- *   - Activity feed cards on the dashboard
- *   - "Open as report" in the floating agent widget
- *   - "Open as report" on every planning artefact tab (Charter / WBS / etc.)
+ * Renders the QUICK BRIEF (output_md, ~250 words) of a single agent_output as
+ * a clean, printable, sharable page. Loads instantly — no long-form regen.
  *
- * URL: /access/[token]/report/[outputId]
+ * Opens from:
+ *   - "↗ Pop out brief" link in the floating agent widget
  *
- * Two-tier layout:
- *   - Summary block (everything before the first H2) — always visible
- *   - Full detail (from first H2 onward) — collapsible, expanded by default
+ * URL: /access/[token]/brief/[outputId]
  *
- * Includes a Download PDF button that uses the browser's native
- * print-to-PDF (window.print) so the user gets a real PDF with one click
- * and no server roundtrip.
+ * Use case: a colleague wants to keep a brief response visible (in its own
+ * tab/window) while continuing to ask follow-up questions in the widget on
+ * the dashboard. Compare against /access/[token]/report/[outputId] which
+ * renders the long-form polished report with PDF download.
  */
 
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { ReportView } from '@/components/report-view';
+import { BriefView } from '@/components/brief-view';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +42,7 @@ interface PageProps {
   params: Promise<{ token: string; outputId: string }>;
 }
 
-export default async function ReportPage({ params }: PageProps) {
+export default async function BriefPage({ params }: PageProps) {
   const { token, outputId } = await params;
   const resolved = await resolveRoleFromToken(token);
   if (!resolved) notFound();
@@ -54,7 +51,7 @@ export default async function ReportPage({ params }: PageProps) {
   const { data, error } = await supabase
     .from('agent_outputs')
     .select(
-      'id, agent_type, invoked_at, user_prompt, output_md, full_output_md, tokens_used, ' +
+      'id, agent_type, invoked_at, user_prompt, output_md, ' +
         'projects:project_id(code, name, segment, client, status), ' +
         'roles:invoked_by_role_id(name, role_type)',
     )
@@ -78,8 +75,6 @@ export default async function ReportPage({ params }: PageProps) {
     invoked_at: string;
     user_prompt: string | null;
     output_md: string;
-    full_output_md: string | null;
-    tokens_used: number | null;
     projects: JoinedProject | JoinedProject[] | null;
     roles: JoinedRole | JoinedRole[] | null;
   };
@@ -90,7 +85,7 @@ export default async function ReportPage({ params }: PageProps) {
   const agentLabel = AGENT_LABELS[raw.agent_type] ?? raw.agent_type;
 
   return (
-    <ReportView
+    <BriefView
       token={token}
       output={{
         id: raw.id,
@@ -99,7 +94,6 @@ export default async function ReportPage({ params }: PageProps) {
         invoked_at: raw.invoked_at,
         user_prompt: raw.user_prompt,
         output_md: raw.output_md,
-        full_output_md: raw.full_output_md,
       }}
       project={
         project
@@ -112,11 +106,7 @@ export default async function ReportPage({ params }: PageProps) {
             }
           : null
       }
-      colleague={
-        role
-          ? { name: role.name, role_type: role.role_type }
-          : null
-      }
+      colleague={role ? { name: role.name, role_type: role.role_type } : null}
       viewerRole={resolved.definition.display_name}
     />
   );

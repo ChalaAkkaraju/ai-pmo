@@ -12,12 +12,21 @@
  * widget passes that project_code so the agent runs against that project's
  * data. On the dashboard (no project in URL), invocations are portfolio-level.
  *
- * After a response comes back, the card footer shows an "Open as report" link
- * that opens /access/{token}/report/{output_id} in a new tab — a polished,
- * printable status report (with Download PDF).
+ * After a response comes back, the card footer shows:
+ *   - "↗ Pop out" — clones the brief into a FLOATING IN-PAGE PANEL beside the
+ *     agent widget. Static snapshot — doesn't change when new questions are
+ *     asked. Multiple can be open at once (cascaded). Each has its own
+ *     follow-up buttons that pre-fill the AGENT WIDGET's prompt input below.
+ *   - "↗ Show full report" — opens the polished long-form report with PDF
+ *     download (/access/{token}/report/{id}) in a new browser tab.
+ *
+ * If the response contains "Action:", "Next step(s):", or "Recommendation:"
+ * callouts, the card also shows one-click "▶ Have agent follow up" buttons
+ * that pre-fill the prompt input with a follow-up question seeded by that
+ * action's text. The colleague can edit and hit Send.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -35,6 +44,37 @@ function extractLeadingText(children: React.ReactNode): string {
     return extractLeadingText(c.props?.children);
   }
   return '';
+}
+
+/**
+ * Scan markdown for actionable callout lines (Action:, Next step:, Recommendation:).
+ * Returns the action text (with the keyword stripped) for each match. Used to
+ * render one-click "▶ Have agent follow up" buttons under each response.
+ *
+ * Filters out matches that are too short to be meaningful or absurdly long
+ * (likely false positives from a paragraph that just happens to start with
+ * a keyword).
+ */
+function extractActions(md: string | undefined): string[] {
+  if (!md) return [];
+  const actions: string[] = [];
+  const lines = md.split('\n');
+  for (const rawLine of lines) {
+    const stripped = rawLine
+      .replace(/^\s*[*\-]\s+/, '')          // strip leading bullet
+      .replace(/^\s*\d+\.\s+/, '')          // strip leading numbered list marker
+      .replace(/^\s*\*\*([^*]+)\*\*\s*/, '$1 ') // unwrap leading **bold**
+      .trim();
+    const m = stripped.match(/^(action|next step|next steps|recommendation|recommended action|recommend):\s*(.+)/i);
+    if (m) {
+      const actionText = m[2].trim().replace(/\*\*/g, '');
+      if (actionText.length > 5 && actionText.length < 500) {
+        actions.push(actionText);
+      }
+    }
+  }
+  // De-duplicate (the agent sometimes restates the same action verbatim).
+  return Array.from(new Set(actions));
 }
 
 interface FloatingAgentWidgetProps {
@@ -118,6 +158,42 @@ export function FloatingAgentWidget({
   const [agentType, setAgentType] = useState<AgentTypeOrAuto>('auto');
   const pathname = usePathname();
 
+  // Popped-out briefs: each entry is a snapshot of a previous response shown
+  // in its own floating panel on the page. Newest pop-outs stack on top.
+  // Cap at 5 so the screen doesn't get overwhelmed.
+  const [poppedOutBriefs, setPoppedOutBriefs] = useState<Invocation[]>([]);
+  const MAX_POPPED_OUT = 5;
+
+  function handlePopOut(inv: Invocation) {
+    setPoppedOutBriefs((prev) => {
+      // Don't pop out the same output_id twice — focus the existing one instead.
+      if (inv.output_id && prev.some((p) => p.output_id === inv.output_id)) {
+        return prev;
+      }
+      const next = [...prev, inv];
+      if (next.length > MAX_POPPED_OUT) next.shift();
+      return next;
+    });
+    // Reset the agent widget chat to its default empty state — the response
+    // now lives in the popped-out panel, so the chat panel is free for the
+    // next question. The user's typed-but-not-sent prompt is preserved.
+    setHistory([]);
+  }
+
+  function handleClosePopOut(idx: number) {
+    setPoppedOutBriefs((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  /**
+   * Applied when a "Have agent follow up" button is clicked anywhere
+   * (in the chat history or in a popped-out panel). Fills the prompt input
+   * and ensures the widget is open so the user can see + edit + send.
+   */
+  function applyFollowUp(text: string) {
+    setPrompt(text);
+    setIsOpen(true);
+  }
+
   if (allowedAgents.length === 0) return null;
 
   const projectMatch = pathname?.match(/\/access\/[^/]+\/projects\/([^/?]+)/);
@@ -190,25 +266,42 @@ export function FloatingAgentWidget({
     }
   }
 
-  if (!isOpen) {
-    return (
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="no-print fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-medium text-white shadow-lg transition hover:opacity-90"
-        style={{ backgroundColor: 'rgb(15 23 42)' }}
-        aria-label="Ask AI Assistant"
-      >
-        <span className="text-lg leading-none">✨</span>
-        <span>Ask AI Assistant</span>
-      </button>
-    );
-  }
-
   const contextLabel = projectCode ?? 'Portfolio';
   const dropdownOptions: AgentTypeOrAuto[] = ['auto', ...allowedAgents];
 
+  // Popped-out brief panels render alongside the widget — they persist
+  // whether the widget is collapsed or expanded.
+  const poppedOutPanels = poppedOutBriefs.map((inv, i) => (
+    <PoppedOutBriefPanel
+      key={inv.output_id ?? `pop-${i}`}
+      invocation={inv}
+      index={i}
+      token={token}
+      onClose={() => handleClosePopOut(i)}
+      onUseAsPrompt={applyFollowUp}
+    />
+  ));
+
+  if (!isOpen) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="no-print fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-medium text-white shadow-lg transition hover:opacity-90"
+          style={{ backgroundColor: 'rgb(15 23 42)' }}
+          aria-label="Ask AI Assistant"
+        >
+          <span className="text-lg leading-none">✨</span>
+          <span>Ask AI Assistant</span>
+        </button>
+        {poppedOutPanels}
+      </>
+    );
+  }
+
   return (
+    <>
     <div
       className="no-print fixed bottom-6 right-6 z-50 flex max-h-[calc(100vh-3rem)] w-[400px] flex-col overflow-hidden rounded-lg border shadow-2xl"
       style={{ backgroundColor: 'white' }}
@@ -245,7 +338,7 @@ export function FloatingAgentWidget({
 
       <div className="flex-1 overflow-y-auto px-4 py-2" style={{ backgroundColor: 'white' }}>
         {history.map((h, idx) => (
-          <InvocationCard key={idx} invocation={h} isLatest={idx === 0} token={token} />
+          <InvocationCard key={idx} invocation={h} isLatest={idx === 0} token={token} onUseAsPrompt={applyFollowUp} onPopOut={handlePopOut} />
         ))}
       </div>
 
@@ -288,13 +381,27 @@ export function FloatingAgentWidget({
           }}
         />
         <div className="mt-1.5 flex items-center justify-between gap-2">
-          <p className="text-[10px] text-muted-foreground">
-            {canWrite
-              ? agentType === 'auto'
-                ? 'Auto · Cmd/Ctrl+Enter to send'
-                : `${AGENT_LABELS[agentType as AgentType]} · Cmd/Ctrl+Enter to send`
-              : 'Your role is read-only'}
-          </p>
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            {history.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setHistory([])}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-muted-foreground transition hover:bg-slate-100 hover:text-foreground"
+                title="Clear the chat — start fresh. Your typed-but-not-sent prompt stays."
+                aria-label="Clear chat"
+              >
+                <span aria-hidden="true">↺</span>
+                <span>Clear chat</span>
+              </button>
+            )}
+            <p>
+              {canWrite
+                ? agentType === 'auto'
+                  ? 'Auto · Cmd/Ctrl+Enter to send'
+                  : `${AGENT_LABELS[agentType as AgentType]} · Cmd/Ctrl+Enter to send`
+                : 'Your role is read-only'}
+            </p>
+          </div>
           <button
             type="submit"
             disabled={isInvoking || !prompt.trim() || !canWrite}
@@ -306,6 +413,8 @@ export function FloatingAgentWidget({
         </div>
       </form>
     </div>
+    {poppedOutPanels}
+    </>
   );
 }
 
@@ -313,11 +422,18 @@ function InvocationCard({
   invocation,
   isLatest,
   token,
+  onUseAsPrompt,
+  onPopOut,
 }: {
   invocation: Invocation;
   isLatest: boolean;
   token: string;
+  /** Pre-fill the parent prompt input with a follow-up message. */
+  onUseAsPrompt: (text: string) => void;
+  /** Snapshot this invocation into a floating side panel. */
+  onPopOut: (inv: Invocation) => void;
 }) {
+  const actions = extractActions(invocation.response_md);
   const isInProgress = isLatest && !invocation.response_md && !invocation.error;
   const requested = invocation.agent_type_requested;
   const resolved = invocation.agent_type_resolved;
@@ -428,20 +544,313 @@ function InvocationCard({
                   `${(invocation.duration_ms / 1000).toFixed(1)}s`}
               </span>
               {invocation.output_id && (
-                <a
-                  href={`/access/${token}/report/${invocation.output_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"
-                  title="Opens a polished, printable report in a new tab"
-                >
-                  ↗ Show full report
-                </a>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => onPopOut(invocation)}
+                    className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 transition hover:bg-slate-50"
+                    title="Pop this brief into a floating panel beside the widget so you can keep it visible while asking follow-ups"
+                  >
+                    ↗ Pop out
+                  </button>
+                  <a
+                    href={`/access/${token}/report/${invocation.output_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"
+                    title="Opens a polished, printable long-form report (with PDF download) in a new tab"
+                  >
+                    ↗ Show full report
+                  </a>
+                </div>
               )}
             </div>
+            {actions.length > 0 && (
+              <div className="mt-2 border-t pt-2">
+                <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-emerald-700">
+                  Have agent follow up
+                </p>
+                <div className="flex flex-col gap-1">
+                  {actions.map((action, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        const followUp = `Acting on this: \"${action}\". What are the concrete next steps to make this happen?`;
+                        onUseAsPrompt(followUp);
+                      }}
+                      className="group text-left rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900 transition hover:border-emerald-400 hover:bg-emerald-100"
+                      title="Pre-fills the prompt below with a follow-up question on this action"
+                    >
+                      <span className="font-medium text-emerald-700">▶ </span>
+                      <span className="line-clamp-2">{action}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+
+/**
+ * Static snapshot of a previous response, mounted in its own floating panel
+ * beside the agent widget. The agent widget is the ONLY active input on the
+ * page — these panels are read-only by design.
+ *
+ * What you CAN do here:
+ *   - Read the brief
+ *   - Click "▶ Have agent follow up" to send the action back to the agent
+ *     widget (pre-fills its prompt + opens it if collapsed)
+ *   - Click "↗ Full report" to open the long-form report in a new tab
+ *   - Close the panel with the × in the header
+ *
+ * Stacking: each new pop-out cascades down-and-right from the previous one
+ * (top-left origin). Up to MAX_POPPED_OUT can be open simultaneously.
+ */
+function PoppedOutBriefPanel({
+  invocation,
+  index,
+  token,
+  onClose,
+  onUseAsPrompt,
+}: {
+  invocation: Invocation;
+  index: number;
+  token: string;
+  onClose: () => void;
+  onUseAsPrompt: (text: string) => void;
+}) {
+  const actions = extractActions(invocation.response_md);
+
+  const requested = invocation.agent_type_requested;
+  const resolved = invocation.agent_type_resolved;
+  let headerLabel: string;
+  if (requested === 'auto' && resolved) {
+    headerLabel = `Auto → ${AGENT_LABELS[resolved] ?? resolved}`;
+  } else if (requested === 'auto') {
+    headerLabel = 'Auto (Router)';
+  } else {
+    headerLabel = AGENT_LABELS[requested as AgentType] ?? requested;
+  }
+
+  // Initial cascade position: each panel starts offset 28px from the previous.
+  // After mount the user can drag the panel anywhere by its header.
+  const [position, setPosition] = useState({
+    top: 24 + index * 28,
+    left: 24 + index * 28,
+  });
+  // Track in-flight drag without re-rendering. nulled when not dragging.
+  const dragStateRef = useRef<{
+    pointerStartX: number;
+    pointerStartY: number;
+    panelStartTop: number;
+    panelStartLeft: number;
+  } | null>(null);
+
+  // Drag handlers attached to the document (so the user can drag the panel
+  // by sweeping the cursor outside the header without losing the drag).
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      const drag = dragStateRef.current;
+      if (!drag) return;
+      const dx = e.clientX - drag.pointerStartX;
+      const dy = e.clientY - drag.pointerStartY;
+      // Keep the panel header reachable — never let it drag fully off-screen.
+      const newTop = Math.max(0, Math.min(window.innerHeight - 48, drag.panelStartTop + dy));
+      const newLeft = Math.max(0, Math.min(window.innerWidth - 80, drag.panelStartLeft + dx));
+      setPosition({ top: newTop, left: newLeft });
+    }
+    function onUp() {
+      dragStateRef.current = null;
+      document.body.style.userSelect = '';
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+  }, []);
+
+  function startDrag(e: React.MouseEvent) {
+    dragStateRef.current = {
+      pointerStartX: e.clientX,
+      pointerStartY: e.clientY,
+      panelStartTop: position.top,
+      panelStartLeft: position.left,
+    };
+    // Stop text-selection while dragging so the user doesn't accidentally
+    // highlight the panel contents instead of moving it.
+    document.body.style.userSelect = 'none';
+  }
+
+  return (
+    <div
+      className="no-print fixed z-40 flex w-[380px] flex-col overflow-hidden rounded-lg border shadow-2xl"
+      style={{
+        backgroundColor: 'white',
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        maxHeight: '70vh',
+      }}
+      role="complementary"
+      aria-label={`Popped-out brief: ${invocation.prompt.slice(0, 60)}`}
+    >
+      <header
+        className="flex items-start justify-between gap-2 px-4 py-2.5"
+        style={{ backgroundColor: 'rgb(30 41 59)' }}
+      >
+        <div
+          className="flex min-w-0 flex-1 items-center gap-2"
+          style={{ cursor: 'move' }}
+          onMouseDown={startDrag}
+          title="Drag to move"
+        >
+          <span
+            className="inline-flex h-6 w-6 flex-none items-center justify-center rounded-md text-sm leading-none"
+            style={{ backgroundColor: 'rgb(15 23 42)', color: '#FBBF24' }}
+          >
+            📌
+          </span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-200">
+              Pinned brief
+            </p>
+            <p className="mt-0.5 truncate text-[10px] text-slate-400">
+              {headerLabel}
+              {invocation.project_code && ` · ${invocation.project_code}`}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-base leading-none text-slate-400 transition hover:text-white"
+          aria-label="Close popped-out brief"
+          title="Close this pinned brief"
+        >
+          ×
+        </button>
+      </header>
+
+      <div
+        className="overflow-y-auto px-3 py-2"
+        style={{ backgroundColor: 'white' }}
+      >
+        <div className="rounded-md border bg-slate-50 px-3 py-1.5">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Question
+          </p>
+          <p className="mt-0.5 text-[11px] italic text-foreground/90">
+            {invocation.prompt}
+          </p>
+        </div>
+
+        {invocation.response_md && (
+          <article className="prose prose-xs mt-2.5 max-w-none [&_*]:!my-1.5 [&_h1]:!text-sm [&_h2]:!text-sm [&_h3]:!text-xs [&_p]:!text-[12px] [&_li]:!text-[12px] [&_code]:!text-[11px]">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => (
+                  <h1 className="border-b-2 border-amber-300 pb-1 text-sm font-bold text-slate-900">
+                    {children}
+                  </h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="mt-3 border-l-4 border-sky-500 pl-2 text-sm font-semibold text-slate-900">
+                    {children}
+                  </h2>
+                ),
+                strong: ({ children }) => (
+                  <strong className="font-semibold text-slate-900">{children}</strong>
+                ),
+                code: ({ children }) => (
+                  <code className="rounded bg-amber-100 px-1 py-0.5 text-[11px] font-medium text-amber-900 before:content-none after:content-none">
+                    {children}
+                  </code>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="my-1.5 rounded-r border-l-4 border-amber-400 bg-amber-50 px-2 py-1 not-italic text-slate-800">
+                    {children}
+                  </blockquote>
+                ),
+                p: ({ children }) => {
+                  const text = extractLeadingText(children).toLowerCase().trim();
+                  if (text.startsWith('caveat:') || text.startsWith('note:') || text.startsWith('warning:')) {
+                    return (
+                      <p className="my-1.5 rounded-md border-l-4 border-amber-400 bg-amber-50 px-2.5 py-1.5 text-[12px] not-italic text-amber-900">
+                        {children}
+                      </p>
+                    );
+                  }
+                  if (text.startsWith('recommendation:') || text.startsWith('recommend:') || text.startsWith('recommended action')) {
+                    return (
+                      <p className="my-1.5 rounded-md border-l-4 border-sky-400 bg-sky-50 px-2.5 py-1.5 text-[12px] text-sky-900">
+                        {children}
+                      </p>
+                    );
+                  }
+                  if (text.startsWith('action:') || text.startsWith('next step:') || text.startsWith('next steps:')) {
+                    return (
+                      <p className="my-1.5 rounded-md border-l-4 border-emerald-500 bg-emerald-50 px-2.5 py-1.5 text-[12px] text-emerald-900">
+                        {children}
+                      </p>
+                    );
+                  }
+                  return <p>{children}</p>;
+                },
+              }}
+            >
+              {invocation.response_md}
+            </ReactMarkdown>
+          </article>
+        )}
+      </div>
+
+      <footer className="border-t bg-slate-50 px-3 py-2">
+        {invocation.output_id && (
+          <div className="mb-1.5 flex items-center justify-end">
+            <a
+              href={`/access/${token}/report/${invocation.output_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"
+              title="Opens the polished, printable long-form report with PDF download"
+            >
+              ↗ Full report
+            </a>
+          </div>
+        )}
+        {actions.length > 0 && (
+          <div className="border-t pt-1.5">
+            <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-emerald-700">
+              Have agent follow up
+            </p>
+            <div className="flex flex-col gap-1">
+              {actions.map((action, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    const followUp = `Acting on this: "${action}". What are the concrete next steps to make this happen?`;
+                    onUseAsPrompt(followUp);
+                  }}
+                  className="text-left rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900 transition hover:border-emerald-400 hover:bg-emerald-100"
+                  title="Pre-fills the agent widget's prompt with a follow-up question on this action"
+                >
+                  <span className="font-medium text-emerald-700">▶ </span>
+                  <span className="line-clamp-2">{action}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </footer>
     </div>
   );
 }

@@ -38,6 +38,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { runAgent } from '@/lib/agent-runner';
+import { createSupabaseServiceClient } from '@/lib/supabase';
 import type { AgentType } from '@/lib/types';
 
 const VALID_AGENT_TYPES: AgentType[] = [
@@ -113,6 +114,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
+  // Background long-form generation:
+  // If this was a brief call (concise: true) AND we logged a row to attach
+  // a cache to, fire off the long-form regen NOW so the cache is warm by
+  // the time the user clicks "Show full report". The promise is intentionally
+  // not awaited — the brief response goes back to the user immediately and
+  // the long-form continues on the server.
+  //
+  // Note for Vercel deployment: serverless functions can be killed once the
+  // response is sent; wrap this in next/server's `after()` (Next 15+) for prod.
+  // Today (local dev / dev server keeps the process alive), `void` is enough.
+  if (
+    body.concise === true &&
+    body.skip_log !== true &&
+    result.agent_output_id
+  ) {
+    void generateAndCacheLongForm({
+      token: body.token,
+      agent_type: result.agent_type, // resolved type (not 'auto' — avoids re-routing)
+      project_code: body.project_code,
+      user_prompt: body.user_prompt,
+      output_id: result.agent_output_id,
+    });
+  }
+
   return NextResponse.json(
     {
       agent_output_id: result.agent_output_id,
@@ -125,4 +150,85 @@ export async function POST(request: NextRequest) {
     },
     { status: 200 },
   );
+}
+
+/**
+ * Generate the long-form version of an agent_output and cache it on the row.
+ * Fire-and-forget — never throws. Logs to the server console on success/failure.
+ *
+ * Race-condition handling: if the user opens the report before this finishes
+ * and the report page triggers its own regen, that path saves first. This
+ * function double-checks the row before writing and bails out if the cache
+ * is already populated.
+ */
+async function generateAndCacheLongForm(args: {
+  token: string;
+  agent_type: AgentType;
+  project_code?: string;
+  user_prompt: string;
+  output_id: string;
+}): Promise<void> {
+  try {
+    const longResult = await runAgent({
+      token: args.token,
+      agent_type: args.agent_type,
+      project_code: args.project_code,
+      user_prompt: args.user_prompt,
+      concise: false, // long-form
+      skip_log: true, // don't create a duplicate activity-feed entry
+    });
+
+    if (!longResult.ok) {
+      console.warn(
+        `[background long-form] runAgent failed for ${args.output_id.slice(0, 8)}…:`,
+        longResult.error,
+      );
+      return;
+    }
+
+    const supabase = createSupabaseServiceClient();
+
+    // Check cache state before writing. If something else (e.g., the report
+    // page's own regen) already filled this in, leave it alone.
+    const { data: existing, error: lookupError } = await supabase
+      .from('agent_outputs')
+      .select('full_output_md')
+      .eq('id', args.output_id)
+      .maybeSingle();
+
+    if (lookupError) {
+      console.warn(
+        `[background long-form] lookup failed for ${args.output_id.slice(0, 8)}…:`,
+        lookupError.message,
+      );
+      return;
+    }
+    if (existing?.full_output_md && existing.full_output_md.length > 0) {
+      console.log(
+        `[background long-form] ${args.output_id.slice(0, 8)}… already cached, skipping write`,
+      );
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from('agent_outputs')
+      .update({ full_output_md: longResult.output_md })
+      .eq('id', args.output_id);
+
+    if (updateError) {
+      console.warn(
+        `[background long-form] DB update failed for ${args.output_id.slice(0, 8)}…:`,
+        updateError.message,
+      );
+    } else {
+      console.log(
+        `[background long-form] cached ${longResult.output_md.length} chars for ${args.output_id.slice(0, 8)}…`,
+      );
+    }
+  } catch (err) {
+    console.warn(
+      `[background long-form] unexpected error for ${args.output_id.slice(0, 8)}…:`,
+      (err as Error).message,
+    );
+  }
 }
