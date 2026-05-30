@@ -16,6 +16,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
+import { ActionRibbon } from '@/components/action-ribbon';
 
 export interface DashboardProject {
   id: string;
@@ -40,6 +41,7 @@ export interface DashboardActivity {
   output_md: string | null;
   colleague_name: string | null;
   role_type: string | null;
+  is_you: boolean;
 }
 
 export interface PortfolioKpis {
@@ -61,6 +63,7 @@ export interface SegmentSummary {
   closed_count: number;
   avg_cpi: number | null;
   avg_spi: number | null;
+  margin_pct: number | null;
 }
 
 export interface PortfolioInsights {
@@ -83,14 +86,53 @@ export interface HotItem {
   score: number;
 }
 
+export interface OperationalKpis {
+  open_h_issues: number;
+  realised_risks: number;
+  cost_off_track: number;
+  sched_off_track: number;
+  contingency_drawn_m: number;
+  patterns_at_emergence: number;
+}
+
+export interface RoleKpiTile {
+  label: string;
+  value: string;
+  sub: string;
+  tone: 'neutral' | 'ok' | 'warn' | 'info';
+}
+
+export interface RoleKpiStrip {
+  title: string;
+  subtitle: string;
+  tiles: RoleKpiTile[];
+}
+
+export interface WorkspaceActivity {
+  count: number;
+  latest_at: string | null;
+  latest_by: string | null;
+}
+
 interface Props {
   token: string;
+  roleType: string;
+  actionsActive: number;
+  issuesActive: number;
+  risksActive: number;
+  actionsMine: number;
+  issuesMine: number;
+  risksMine: number;
   roleName: string;
   roleDisplayName: string;
   roleDescription: string;
   canWrite: boolean;
   allowedAgentCount: number;
   kpis: PortfolioKpis;
+  roleId: string;
+  workspaceActivity: WorkspaceActivity;
+  operational: OperationalKpis;
+  roleKpis: RoleKpiStrip | null;
   insights: PortfolioInsights;
   hotItems: HotItem[];
   segmentSummaries: SegmentSummary[];
@@ -312,12 +354,23 @@ function MiniBarChart({ items, maxLabelWidth = 'flex-1' }: { items: BarItem[]; m
 
 export function DashboardClient({
   token,
+  roleType,
+  actionsActive,
+  issuesActive,
+  risksActive,
+  actionsMine,
+  issuesMine,
+  risksMine,
   roleName,
   roleDisplayName,
   roleDescription,
   canWrite,
   allowedAgentCount,
   kpis,
+  roleId,
+  workspaceActivity,
+  operational,
+  roleKpis,
   insights,
   hotItems,
   segmentSummaries,
@@ -386,6 +439,8 @@ export function DashboardClient({
             output_md: string | null;
             invoked_by_role_id: string | null;
           };
+          // Lead feed is scoped to this role; ignore other roles' inserts here.
+          if (row.invoked_by_role_id !== roleId) return;
           // Fetch joined project + colleague info so the card is meaningful.
           let project_code: string | null = null;
           let project_name: string | null = null;
@@ -422,6 +477,7 @@ export function DashboardClient({
             output_md: row.output_md,
             colleague_name,
             role_type,
+            is_you: true,
           };
           setActivity((prev) => {
             // De-dup: if this id already exists (race with initial server fetch), skip.
@@ -448,7 +504,7 @@ export function DashboardClient({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [roleId]);
 
   const totalProjects = segmentSummaries.reduce((s, x) => s + x.project_count, 0);
   const totalActive = segmentSummaries.reduce((s, x) => s + x.active_count, 0);
@@ -632,17 +688,36 @@ export function DashboardClient({
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center md:px-4">
-            <p className="mb-2 text-sm font-medium uppercase tracking-wider text-muted-foreground">Segment mix</p>
-            <SegmentDonut segments={segmentSummaries} />
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          <div className="flex flex-col items-center justify-center md:px-2">
+            <p className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">Segment mix</p>
+            {/* Horizontal segment bars — fills the column width + height and shows
+                project count (bar length) and margin together, colored per segment. */}
+            <div className="flex w-full flex-1 flex-col justify-center gap-5 py-1">
               {segmentSummaries.map((s) => {
                 const ss = segmentStyle(s.segment);
+                const maxCount = Math.max(...segmentSummaries.map((x) => x.project_count), 1);
+                const pct = Math.round((s.project_count / maxCount) * 100);
                 return (
-                  <span key={s.segment} className="inline-flex items-center gap-1.5">
-                    <span className={`h-2 w-2 rounded-full ${ss.dot}`} />
-                    {ss.label} <strong className="tabular-nums">{s.project_count}</strong>
-                  </span>
+                  <div key={s.segment}>
+                    <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ss.hex }}>
+                        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ss.hex }} />
+                        {ss.label}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        <strong className="tabular-nums text-foreground">{s.project_count}</strong> projects
+                        {s.margin_pct !== null && (
+                          <>
+                            {' · '}
+                            <strong className="tabular-nums" style={{ color: ss.hex }}>{s.margin_pct.toFixed(1)}%</strong> margin
+                          </>
+                        )}
+                      </span>
+                    </div>
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: ss.hex }} />
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -673,6 +748,37 @@ export function DashboardClient({
           </div>
         </div>
       </section>
+
+      {/* Action ribbon — slim attention bar + popup; sits just below the portfolio HERO */}
+      <ActionRibbon
+        token={token}
+        roleType={roleType}
+        actionsActive={actionsActive}
+        issuesActive={issuesActive}
+        risksActive={risksActive}
+        actionsMine={actionsMine}
+        issuesMine={issuesMine}
+        risksMine={risksMine}
+      />
+
+      {/* Role-specific KPI strip — shown only for roles with a tailored set.
+          Each tile is net-new vs the hero and the operational ribbon below. */}
+      {roleKpis && (
+        <section className="rounded-xl border border-slate-200 bg-slate-50/70 p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-base font-semibold">{roleKpis.title}</h2>
+            <span className="rounded-full bg-slate-200/70 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-slate-600">
+              Specific to your role
+            </span>
+          </div>
+          <p className="mt-0.5 text-sm text-muted-foreground">{roleKpis.subtitle}</p>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {roleKpis.tiles.map((t) => (
+              <KpiCard key={t.label} label={t.label} value={t.value} sub={t.sub} tone={t.tone} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* INSIGHTS — 3 mini charts */}
       <section>
@@ -793,23 +899,24 @@ export function DashboardClient({
         </section>
       )}
 
-      {/* Ribbon 1 — KPIs */}
+      {/* Ribbon 1 — operational portfolio signals (net-new vs the hero, which
+          already shows value, budget, margin, lifecycle mix and the CPI/SPI pulse) */}
       <section>
-        <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio KPIs</h2>
+        <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio watchlist</h2>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <KpiCard label="Contract value" value={fmtBillions(kpis.total_contract_b)} sub="current total" />
-          <KpiCard label="Approved budget" value={fmtBillions(kpis.total_budget_b)} sub="cost-side" />
-          <KpiCard label="Active projects" value={String(kpis.active_count)} sub={`of ${totalProjects}`} />
-          <KpiCard label="Avg CPI / SPI" value={`${kpis.avg_cpi.toFixed(2)} / ${kpis.avg_spi.toFixed(2)}`} sub="weighted by contract" tone={kpis.avg_cpi < 0.95 || kpis.avg_spi < 0.95 ? 'warn' : 'ok'} />
-          <KpiCard label="Open H issues" value={String(kpis.open_h_issues)} sub="needs attention" tone={kpis.open_h_issues > 0 ? 'warn' : 'ok'} />
-          <KpiCard label="Realised risks" value={String(kpis.realised_risks)} sub="pattern signal" tone="info" />
+          <KpiCard label="Open H issues" value={String(operational.open_h_issues)} sub="needs attention" tone={operational.open_h_issues > 0 ? 'warn' : 'ok'} />
+          <KpiCard label="Realised risks" value={String(operational.realised_risks)} sub="pattern signal" tone="info" />
+          <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} />
+          <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} />
+          <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" />
+          <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" />
         </div>
       </section>
 
-      {/* Ribbon 2 — Theme cards */}
+      {/* Ribbon 2 — Segment cards (click to drill in) */}
       <section>
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Themes (click to drill in)</h2>
+          <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Segments</h2>
           {selectedSegment && (
             <button onClick={() => toggleSegment(selectedSegment)} className="text-xs text-muted-foreground hover:text-foreground">Collapse</button>
           )}
@@ -828,7 +935,7 @@ export function DashboardClient({
                 <div className="pl-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold">{ss.label}</span>
-                    <span className="text-xs text-muted-foreground">{active ? 'Expanded ▾' : 'Click ▸'}</span>
+                    <span className="text-base text-muted-foreground/50">{active ? '▾' : '▸'}</span>
                   </div>
                   <p className="mt-2 text-4xl font-semibold tabular-nums">{s.project_count}</p>
                   <p className="text-sm text-muted-foreground">projects · {fmtBillions(s.contract_value_b)}</p>
@@ -841,9 +948,10 @@ export function DashboardClient({
                       <span><span className="font-medium text-foreground tabular-nums">{s.closed_count}</span> Closed</span>
                     </div>
                   </div>
-                  <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                  <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-1 text-xs">
                     <div><dt className="text-muted-foreground">Avg CPI</dt><dd className="font-medium tabular-nums">{s.avg_cpi !== null ? s.avg_cpi.toFixed(2) : '—'}</dd></div>
                     <div><dt className="text-muted-foreground">Avg SPI</dt><dd className="font-medium tabular-nums">{s.avg_spi !== null ? s.avg_spi.toFixed(2) : '—'}</dd></div>
+                    <div><dt className="text-muted-foreground">Margin</dt><dd className="font-medium tabular-nums">{s.margin_pct !== null ? `${s.margin_pct.toFixed(1)}%` : '—'}</dd></div>
                   </dl>
                 </div>
               </button>
@@ -902,17 +1010,33 @@ export function DashboardClient({
 
       {/* Recent activity — live via Supabase Realtime */}
       <section>
-        <div className="mb-4 flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Recent agent activity</h2>
+        <div className="mb-1 flex items-center gap-2">
+          <h2 className="text-xl font-semibold">Your recent activity</h2>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-800">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             Live
           </span>
         </div>
+        {workspaceActivity.count > 0 && (
+          <p className="mb-4 text-xs text-muted-foreground">
+            Across the workspace: {workspaceActivity.count.toLocaleString()} invocation{workspaceActivity.count === 1 ? '' : 's'}
+            {workspaceActivity.latest_at && (
+              <>
+                {' · '}latest {relativeTime(workspaceActivity.latest_at)}
+                {workspaceActivity.latest_by ? ` by ${workspaceActivity.latest_by}` : ''}
+              </>
+            )}
+            {' · '}
+            <Link href={`/access/${token}/usage`} className="underline-offset-2 hover:underline">
+              View usage
+            </Link>
+          </p>
+        )}
         <div className="rounded-lg border bg-card divide-y">
           {activity.length === 0 ? (
             <p className="p-5 text-sm text-muted-foreground">
-              No agent activity yet. Invoke an agent from any project page or use the floating ✨ Ask AI Assistant button to see it appear here.
+              You haven&apos;t invoked an agent yet. Use the floating ✨ Ask AI Assistant button or any
+              project page, and your activity will appear here.
             </p>
           ) : (
             activity.map((a) => {
@@ -958,6 +1082,11 @@ export function DashboardClient({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
                       <span className="font-semibold">{a.colleague_name ?? 'Unknown colleague'}</span>
+                      {a.is_you && (
+                        <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium text-foreground/70">
+                          You
+                        </span>
+                      )}
                       {a.role_type && (
                         <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${roleChipClass(a.role_type)}`}>
                           {shortRole(a.role_type)}
@@ -1122,14 +1251,6 @@ export function DashboardClient({
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t pt-6 text-xs text-muted-foreground">
-        <p>
-          Token <code className="rounded bg-muted px-1.5 py-0.5">{token.slice(0, 8)}…</code>
-          {' · '}{canWrite ? 'Write access' : 'Read-only'}
-          {' · '}{allowedAgentCount} agent{allowedAgentCount === 1 ? '' : 's'} available
-        </p>
-      </footer>
     </div>
   );
 }

@@ -170,6 +170,36 @@ export interface AgentOutput {
   created_at: string;
 }
 
+export type ActionStatus = 'Open' | 'Acknowledged' | 'In progress' | 'Done';
+export type ActionUrgency = 'L' | 'M' | 'H';
+export type ActionSourceType = 'risk' | 'issue';
+
+/**
+ * A cross-agent task: a mitigation action raised by one role's agent and
+ * assigned to another role to own. Mirrors action_items (migration 0009).
+ */
+export interface ActionItem {
+  id: string;
+  project_id: string | null;
+  source_type: ActionSourceType;
+  source_id: string | null;
+  source_ref: string | null;
+  description: string;
+  assigned_to_role_type: RoleType;
+  raised_by_role_type: RoleType | null;
+  raised_by_agent_type: AgentType | null;
+  status: ActionStatus;
+  urgency: ActionUrgency;
+  due_week: number | null;
+  created_from_output_id: string | null;
+  assignment_flagged: boolean;
+  response_md: string | null;
+  responded_by_role_type: RoleType | null;
+  responded_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type PatternStatus = 'candidate' | 'confirmed' | 'firm-level standard';
 
 export interface PortfolioPattern {

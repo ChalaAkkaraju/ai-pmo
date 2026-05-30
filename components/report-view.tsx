@@ -438,8 +438,8 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
           <div className="flex items-center gap-3 rounded-md border border-sky-200 bg-sky-50 px-4 py-2.5 text-xs text-sky-900">
             <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-sky-300 border-t-sky-700" />
             <span>
-              Generating the full long-form report. This usually takes 25–40 seconds. The
-              quick brief is shown below in the meantime.
+              Generating the full long-form report. The quick brief is shown below in
+              the meantime.
             </span>
           </div>
         </div>

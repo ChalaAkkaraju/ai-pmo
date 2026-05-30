@@ -9,6 +9,7 @@
 
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
+import { matchRoleFromText } from '@/lib/role-match';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import {
   DashboardClient,
@@ -18,6 +19,8 @@ import {
   type SegmentSummary,
   type PortfolioInsights,
   type HotItem,
+  type OperationalKpis,
+  type RoleKpiStrip,
 } from '@/components/dashboard-client';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -41,20 +44,30 @@ export default async function RoleLandingPage({ params }: PageProps) {
 
   const supabase = createSupabaseServiceClient();
 
-  const [projectsRes, risksRes, issuesRes, varianceRes, activityRes] = await Promise.all([
-    supabase
-      .from('projects')
-      .select('id, code, name, client, segment, status, current_week, contract_value_current, approved_budget_current, contingency, hard_deadline_description')
-      .order('code', { ascending: true }),
-    supabase.from('risks').select('project_id, status, cross_cutting_class'),
-    supabase.from('issues').select('project_id, severity, status'),
-    supabase.from('variance_reports').select('project_id, report_week, cpi, spi'),
-    supabase
-      .from('agent_outputs')
-      .select('id, agent_type, invoked_at, project_id, user_prompt, output_md, projects:project_id(code, name, segment), roles:invoked_by_role_id(name, role_type)')
-      .order('invoked_at', { ascending: false })
-      .limit(5),
-  ]);
+  const [projectsRes, risksRes, issuesRes, varianceRes, changeOrdersRes, patternsRes, activityRes, workspaceCountRes, workspaceRecentRes] =
+    await Promise.all([
+      supabase
+        .from('projects')
+        .select('id, code, name, client, segment, status, current_week, contract_value_current, approved_budget_current, contingency, hard_deadline_description')
+        .order('code', { ascending: true }),
+      supabase.from('risks').select('project_id, status, impact, cross_cutting_class, owner'),
+      supabase.from('issues').select('project_id, severity, status, category, owner'),
+      supabase.from('variance_reports').select('project_id, report_week, cpi, spi, contingency_consumed_m'),
+      supabase.from('change_orders').select('project_id, status, revenue_impact_m, margin_realized_pct'),
+      supabase.from('portfolio_patterns').select('status, threshold_projects, supporting_projects, cross_cutting_class'),
+      supabase
+        .from('agent_outputs')
+        .select('id, agent_type, invoked_at, project_id, user_prompt, output_md, projects:project_id(code, name, segment), roles:invoked_by_role_id(name, role_type)')
+        .eq('invoked_by_role_id', resolved.role.id)
+        .order('invoked_at', { ascending: false })
+        .limit(5),
+      supabase.from('agent_outputs').select('id', { count: 'exact', head: true }),
+      supabase
+        .from('agent_outputs')
+        .select('id, agent_type, invoked_at, project_id, user_prompt, output_md, projects:project_id(code, name, segment), roles:invoked_by_role_id(name, role_type)')
+        .order('invoked_at', { ascending: false })
+        .limit(8),
+    ]);
 
   const projects = (projectsRes.data ?? []) as Array<{
     id: string;
@@ -69,9 +82,11 @@ export default async function RoleLandingPage({ params }: PageProps) {
     contingency: number | string;
     hard_deadline_description: string | null;
   }>;
-  const risks = (risksRes.data ?? []) as Array<{ project_id: string; status: string; cross_cutting_class: string }>;
-  const issues = (issuesRes.data ?? []) as Array<{ project_id: string; severity: string; status: string }>;
-  const variance = (varianceRes.data ?? []) as Array<{ project_id: string; report_week: number; cpi: number | string; spi: number | string }>;
+  const risks = (risksRes.data ?? []) as Array<{ project_id: string; status: string; impact: string; cross_cutting_class: string; owner: string | null }>;
+  const issues = (issuesRes.data ?? []) as Array<{ project_id: string; severity: string; status: string; category: string; owner: string | null }>;
+  const variance = (varianceRes.data ?? []) as Array<{ project_id: string; report_week: number; cpi: number | string; spi: number | string; contingency_consumed_m: number | string | null }>;
+  const changeOrders = (changeOrdersRes.data ?? []) as Array<{ project_id: string; status: string; revenue_impact_m: number | string | null; margin_realized_pct: number | string | null }>;
+  const patterns = (patternsRes.data ?? []) as Array<{ status: string; threshold_projects: number; supporting_projects: string[] | null; cross_cutting_class: string }>;
 
   const projIdToContract = new Map<string, number>();
   for (const p of projects) {
@@ -79,11 +94,15 @@ export default async function RoleLandingPage({ params }: PageProps) {
   }
 
   // Latest variance report per project (sort desc by week, take first per pid)
-  const latestVariance = new Map<string, { cpi: number; spi: number }>();
+  const latestVariance = new Map<string, { cpi: number; spi: number; contingency_m: number }>();
   const varianceSorted = [...variance].sort((a, b) => b.report_week - a.report_week);
   for (const v of varianceSorted) {
     if (!latestVariance.has(v.project_id)) {
-      latestVariance.set(v.project_id, { cpi: Number(v.cpi), spi: Number(v.spi) });
+      latestVariance.set(v.project_id, {
+        cpi: Number(v.cpi),
+        spi: Number(v.spi),
+        contingency_m: Number(v.contingency_consumed_m ?? 0),
+      });
     }
   }
 
@@ -130,20 +149,126 @@ export default async function RoleLandingPage({ params }: PageProps) {
     avg_spi: avgSpi,
   };
 
+  // -------- Operational portfolio signals (net-new vs the hero) --------
+  let costOffTrack = 0;
+  let schedOffTrack = 0;
+  let contingencyDrawnM = 0;
+  for (const [, v] of latestVariance) {
+    if (v.cpi < 0.95) costOffTrack++;
+    if (v.spi < 0.95) schedOffTrack++;
+    contingencyDrawnM += v.contingency_m;
+  }
+  let patternsAtEmergence = 0;
+  for (const p of patterns) {
+    const n = Array.isArray(p.supporting_projects) ? p.supporting_projects.length : 0;
+    if (n >= (p.threshold_projects ?? Number.POSITIVE_INFINITY)) patternsAtEmergence++;
+  }
+
+  const operational: OperationalKpis = {
+    open_h_issues: openHighIssues,
+    realised_risks: realisedRisks,
+    cost_off_track: costOffTrack,
+    sched_off_track: schedOffTrack,
+    contingency_drawn_m: contingencyDrawnM,
+    patterns_at_emergence: patternsAtEmergence,
+  };
+
+  // -------- Role-specific KPI strip (pilot: commercial, risk, hse) --------
+  // Each tile is chosen to be net-new vs the hero AND the operational ribbon,
+  // and is computed from real seeded data (see lib/types + seed generators).
+  let roleKpis: RoleKpiStrip | null = null;
+  const rt = resolved.definition.type;
+
+  if (rt === 'commercial') {
+    let coValueM = 0;
+    let marginSum = 0;
+    let marginN = 0;
+    let inFlight = 0;
+    for (const c of changeOrders) {
+      coValueM += Number(c.revenue_impact_m ?? 0);
+      if (c.margin_realized_pct !== null && c.margin_realized_pct !== undefined) {
+        marginSum += Number(c.margin_realized_pct);
+        marginN++;
+      }
+      if (c.status === 'Under analysis' || c.status === 'Priced') inFlight++;
+    }
+    const avgMargin = marginN > 0 ? marginSum / marginN : 0;
+    roleKpis = {
+      title: 'Your commercial KPIs',
+      subtitle: 'Change-order economics across the portfolio — not shown in the shared view above.',
+      tiles: [
+        { label: 'Change-order value', value: `$${coValueM.toFixed(1)}M`, sub: 'total revenue impact', tone: 'neutral' },
+        { label: 'Avg margin protected', value: `${avgMargin.toFixed(1)}%`, sub: 'on executed / complete COs', tone: avgMargin > 0 && avgMargin < 8 ? 'warn' : 'ok' },
+        { label: 'Change orders in flight', value: String(inFlight), sub: 'awaiting decision', tone: inFlight > 0 ? 'info' : 'neutral' },
+      ],
+    };
+  } else if (rt === 'risk') {
+    let openRisks = 0;
+    let highOpen = 0;
+    let mitigated = 0;
+    for (const r of risks) {
+      if (r.status === 'Open') {
+        openRisks++;
+        if (r.impact === 'H') highOpen++;
+      }
+      if (r.status === 'Mitigated') mitigated++;
+    }
+    roleKpis = {
+      title: 'Your risk KPIs',
+      subtitle: 'Open-register cuts that complement the realised-risk and pattern counts in the shared view.',
+      tiles: [
+        { label: 'Open risks', value: String(openRisks), sub: 'active in the register', tone: 'neutral' },
+        { label: 'High-impact open', value: String(highOpen), sub: 'impact = High', tone: highOpen > 0 ? 'warn' : 'ok' },
+        { label: 'Mitigated risks', value: String(mitigated), sub: 'closed via mitigation', tone: 'info' },
+      ],
+    };
+  } else if (rt === 'hse_manager') {
+    const hseRe = /hse|safety|environment|h&s|ehs/i;
+    let hseOpen = 0;
+    let hseHigh = 0;
+    for (const i of issues) {
+      if (hseRe.test(i.category ?? '') && (i.status === 'Open' || i.status === 'In progress')) {
+        hseOpen++;
+        if (i.severity === 'H') hseHigh++;
+      }
+    }
+    let siteWeatherRisks = 0;
+    for (const r of risks) {
+      if (
+        r.cross_cutting_class === 'Site-conditions variance' ||
+        r.cross_cutting_class === 'Weather / climate-sensitive construction'
+      ) {
+        siteWeatherRisks++;
+      }
+    }
+    roleKpis = {
+      title: 'Your HSE KPIs',
+      subtitle: 'Safety / environment signals filtered from the portfolio — not surfaced in the shared view.',
+      tiles: [
+        { label: 'Open HSE issues', value: String(hseOpen), sub: 'safety / environment, open', tone: hseOpen > 0 ? 'warn' : 'ok' },
+        { label: 'High-severity HSE', value: String(hseHigh), sub: 'severity = High', tone: hseHigh > 0 ? 'warn' : 'ok' },
+        { label: 'Site & weather risks', value: String(siteWeatherRisks), sub: 'site-conditions & weather classes', tone: 'info' },
+      ],
+    };
+  }
+
   // -------- Per-segment summaries --------
   const segmentSummaries: SegmentSummary[] = ALL_SEGMENTS.map((seg) => {
     const segProjects = projects.filter((p) => p.segment === seg);
     const segProjIds = new Set(segProjects.map((p) => p.id));
     let segContract = 0;
+    let segBudget = 0;
     let segActive = 0;
     let segSc = 0;
     let segClosed = 0;
     for (const p of segProjects) {
       segContract += Number(p.contract_value_current);
+      segBudget += Number(p.approved_budget_current);
       if (p.status === 'Active') segActive++;
       else if (p.status === 'SC') segSc++;
       else if (p.status === 'Closed') segClosed++;
     }
+    const segMargin = segContract > 0 ? ((segContract - segBudget) / segContract) * 100 : null;
 
     let segWCpiSum = 0;
     let segWSpiSum = 0;
@@ -167,6 +292,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
       closed_count: segClosed,
       avg_cpi: segCpi,
       avg_spi: segSpi,
+      margin_pct: segMargin,
     };
   });
 
@@ -271,11 +397,11 @@ export default async function RoleLandingPage({ params }: PageProps) {
     hard_deadline_description: p.hard_deadline_description ?? null,
   }));
 
-  // Recent agent activity. Supabase returns joined relations as an array even
-  // for single-FK joins; normalise via Array.isArray check.
+  // -------- Recent activity (role-led, workspace backfill) --------
+  // Supabase returns joined relations as an array even for single-FK joins.
   type JoinedProject = { code: string; name: string; segment: string };
   type JoinedRole = { name: string; role_type: string };
-  const dashboardActivity: DashboardActivity[] = ((activityRes.data ?? []) as unknown as Array<{
+  type RawActivity = {
     id: string;
     agent_type: string;
     invoked_at: string;
@@ -284,7 +410,8 @@ export default async function RoleLandingPage({ params }: PageProps) {
     output_md: string | null;
     projects: JoinedProject | JoinedProject[] | null;
     roles: JoinedRole | JoinedRole[] | null;
-  }>).map((a) => {
+  };
+  const normalizeActivity = (a: RawActivity, is_you: boolean): DashboardActivity => {
     const proj = Array.isArray(a.projects) ? a.projects[0] ?? null : a.projects;
     const role = Array.isArray(a.roles) ? a.roles[0] ?? null : a.roles;
     return {
@@ -298,18 +425,90 @@ export default async function RoleLandingPage({ params }: PageProps) {
       output_md: a.output_md ?? null,
       colleague_name: role?.name ?? null,
       role_type: role?.role_type ?? null,
+      is_you,
     };
-  });
+  };
+
+  const ACTIVITY_LIMIT = 5;
+  const roleActivity = ((activityRes.data ?? []) as unknown as RawActivity[]).map((a) =>
+    normalizeActivity(a, true),
+  );
+  const workspaceRecent = ((workspaceRecentRes.data ?? []) as unknown as RawActivity[]).map((a) =>
+    normalizeActivity(a, false),
+  );
+
+  // The current role's own invocations take priority; once the list isn't full,
+  // backfill with the most recent workspace-wide invocations (deduped by id).
+  // Over time each role accrues enough of their own that backfill drops away.
+  const seenActivity = new Set(roleActivity.map((a) => a.id));
+  const dashboardActivity: DashboardActivity[] = [
+    ...roleActivity,
+    ...workspaceRecent.filter((a) => !seenActivity.has(a.id)),
+  ].slice(0, ACTIVITY_LIMIT);
+
+  // Workspace-wide context line (total count + most recent invocation overall).
+  const wsLatest = workspaceRecent[0] ?? null;
+  const workspaceActivity = {
+    count: workspaceCountRes.count ?? 0,
+    latest_at: wsLatest?.invoked_at ?? null,
+    latest_by: wsLatest?.colleague_name ?? null,
+  };
+
+  // ---- Action-ribbon tile counts ----
+  // Two trios: "active" (portfolio-wide, live work only) and "mine" (the
+  // viewing role's slice). "Active" excludes Closed/SC projects so the numbers
+  // mean "what's live". The ribbon defaults to active with a "just mine" toggle.
+  const activeProjectIds = new Set(projects.filter((p) => p.status === 'Active').map((p) => p.id));
+  const myRoleType = resolved.definition.type;
+
+  // Actions: fetch the rows we need (resilient — empty on any error / missing table).
+  type ActionLite = { status: string; assigned_to_role_type: string | null; raised_by_role_type: string | null };
+  let actionRows: ActionLite[] = [];
+  try {
+    const { data: aData } = await supabase
+      .from('action_items')
+      .select('status, assigned_to_role_type, raised_by_role_type');
+    actionRows = (aData ?? []) as ActionLite[];
+  } catch {
+    actionRows = [];
+  }
+  const actionsActive = actionRows.filter((a) => a.status !== 'Done').length;
+  const actionsMine = actionRows.filter(
+    (a) => a.status !== 'Done' && (a.assigned_to_role_type === myRoleType || a.raised_by_role_type === myRoleType),
+  ).length;
+
+  // Issues: active = open/in-progress on a live project.
+  const issueIsActive = (i: { status: string; project_id: string }) =>
+    (i.status === 'Open' || i.status === 'In progress') && activeProjectIds.has(i.project_id);
+  const issuesActive = issues.filter(issueIsActive).length;
+  const issuesMine = issues.filter((i) => issueIsActive(i) && matchRoleFromText(i.owner) === myRoleType).length;
+
+  // Risks: active = status active/open on a live project.
+  const riskIsActive = (r: { status: string; project_id: string }) =>
+    (String(r.status).toLowerCase().startsWith('active') || r.status === 'Open') && activeProjectIds.has(r.project_id);
+  const risksActive = risks.filter(riskIsActive).length;
+  const risksMine = risks.filter((r) => riskIsActive(r) && matchRoleFromText(r.owner) === myRoleType).length;
 
   return (
     <DashboardClient
       token={token}
+      roleType={resolved.definition.type}
+      actionsActive={actionsActive}
+      issuesActive={issuesActive}
+      risksActive={risksActive}
+      actionsMine={actionsMine}
+      issuesMine={issuesMine}
+      risksMine={risksMine}
       roleName={resolved.role.name}
       roleDisplayName={resolved.definition.display_name}
       roleDescription={resolved.definition.description}
       canWrite={resolved.definition.can_write}
       allowedAgentCount={resolved.definition.allowed_agents.length}
       kpis={kpis}
+      roleId={resolved.role.id}
+      workspaceActivity={workspaceActivity}
+      operational={operational}
+      roleKpis={roleKpis}
       insights={insights}
       hotItems={hotItems}
       segmentSummaries={segmentSummaries}

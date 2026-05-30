@@ -36,6 +36,18 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
           >
             Agents
           </Link>
+          <Link
+            href={`/access/${token}/usage`}
+            className="text-muted-foreground transition hover:text-foreground"
+          >
+            Usage
+          </Link>
+          <Link
+            href={`/access/${token}/analytics/actions`}
+            className="text-muted-foreground transition hover:text-foreground"
+          >
+            Analytics
+          </Link>
           <div className="flex items-center gap-3">
             <span className="font-medium">{resolved.role.name}</span>
             <span className="text-muted-foreground">·</span>

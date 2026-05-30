@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { canonicalRiskStatus, riskStatusBadgeClass } from '@/lib/risk-status';
 
 interface Risk {
   risk_id: string;
@@ -17,18 +18,59 @@ interface Risk {
   trigger: string;
 }
 
-function statusBadgeClass(status: string): string {
-  const s = status.toLowerCase();
-  if (s.startsWith('realised')) return 'bg-amber-100 text-amber-900';
-  if (s.includes('not materialised')) return 'bg-gray-100 text-gray-700';
-  if (s.includes('mitigated')) return 'bg-green-100 text-green-900';
-  if (s.includes('active')) return 'bg-blue-100 text-blue-900';
-  return 'bg-muted text-muted-foreground';
+interface ActionItemLite {
+  id: string;
+  source_ref: string | null;
+  description: string;
+  assigned_to_role_type: string;
+  status: string;
+  urgency: string;
 }
 
-export function RisksTable({ rows }: { rows: Array<Record<string, unknown>> }) {
+const ROLE_LABELS: Record<string, string> = {
+  pm: 'Senior PM',
+  procurement: 'Procurement Strategist',
+  risk: 'Risk Analyst',
+  sponsor: 'VP Sponsor',
+  commercial: 'Commercial Manager',
+  project_controls: 'Project Controls',
+  program_manager: 'Program Manager',
+  engineering_manager: 'Engineering Manager',
+  construction_manager: 'Construction Manager',
+  hse_manager: 'HSE Manager',
+};
+
+function roleLabel(rt: string): string {
+  return ROLE_LABELS[rt] ?? rt;
+}
+
+function actionStatusClass(status: string): string {
+  const s = status.toLowerCase();
+  if (s === 'done') return 'bg-emerald-100 text-emerald-800';
+  if (s === 'in progress') return 'bg-blue-100 text-blue-900';
+  if (s === 'acknowledged') return 'bg-indigo-100 text-indigo-900';
+  return 'bg-amber-100 text-amber-800';
+}
+
+export function RisksTable({
+  rows,
+  actions = [],
+}: {
+  rows: Array<Record<string, unknown>>;
+  actions?: Array<Record<string, unknown>>;
+}) {
   const risks = rows as unknown as Risk[];
+  const actionItems = actions as unknown as ActionItemLite[];
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Group assigned actions by the risk ref they were raised against.
+  const actionsByRef = new Map<string, ActionItemLite[]>();
+  for (const a of actionItems) {
+    if (!a.source_ref) continue;
+    const list = actionsByRef.get(a.source_ref) ?? [];
+    list.push(a);
+    actionsByRef.set(a.source_ref, list);
+  }
 
   if (risks.length === 0) {
     return <p className="text-sm text-muted-foreground">No risks recorded.</p>;
@@ -53,6 +95,7 @@ export function RisksTable({ rows }: { rows: Array<Record<string, unknown>> }) {
             <RiskRow
               key={r.risk_id}
               risk={r}
+              spawnedActions={actionsByRef.get(r.risk_id) ?? []}
               isExpanded={expandedId === r.risk_id}
               onToggle={() =>
                 setExpandedId(expandedId === r.risk_id ? null : r.risk_id)
@@ -67,28 +110,34 @@ export function RisksTable({ rows }: { rows: Array<Record<string, unknown>> }) {
 
 function RiskRow({
   risk,
+  spawnedActions,
   isExpanded,
   onToggle,
 }: {
   risk: Risk;
+  spawnedActions: ActionItemLite[];
   isExpanded: boolean;
   onToggle: () => void;
 }) {
+  const canonStatus = canonicalRiskStatus(risk.status);
   return (
     <>
       <tr className="cursor-pointer hover:bg-muted/30" onClick={onToggle}>
         <td className="px-4 py-3 font-mono text-xs">{risk.risk_id}</td>
-        <td className="px-4 py-3">{risk.description}</td>
+        <td className="px-4 py-3">
+          {risk.description}
+          {spawnedActions.length > 0 && (
+            <span className="ml-2 rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+              {spawnedActions.length} action{spawnedActions.length === 1 ? '' : 's'}
+            </span>
+          )}
+        </td>
         <td className="px-4 py-3 text-center font-mono">{risk.probability}</td>
         <td className="px-4 py-3 text-center font-mono">{risk.impact}</td>
         <td className="px-4 py-3 text-center font-mono">{risk.score}</td>
         <td className="px-4 py-3">
-          <span
-            className={`inline-block rounded-full px-2 py-0.5 text-xs ${statusBadgeClass(
-              risk.status,
-            )}`}
-          >
-            {risk.status}
+          <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${riskStatusBadgeClass(canonStatus)}`}>
+            {canonStatus}
           </span>
         </td>
         <td className="px-4 py-3 text-xs text-muted-foreground">
@@ -116,6 +165,29 @@ function RiskRow({
                 <dd className="mt-0.5">{risk.pattern_link ?? '—'}</dd>
               </div>
             </dl>
+            {spawnedActions.length > 0 && (
+              <div className="mt-4">
+                <dt className="text-xs text-muted-foreground">Assigned actions</dt>
+                <ul className="mt-1.5 space-y-1.5">
+                  {spawnedActions.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex items-start justify-between gap-3 rounded-md border bg-background p-2.5"
+                    >
+                      <span className="min-w-0">{a.description}</span>
+                      <span className="flex shrink-0 items-center gap-1.5 text-[11px]">
+                        <span className="rounded-full bg-muted px-2 py-0.5 font-medium">
+                          → {roleLabel(a.assigned_to_role_type)}
+                        </span>
+                        <span className={`rounded-full px-2 py-0.5 font-medium ${actionStatusClass(a.status)}`}>
+                          {a.status}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </td>
         </tr>
       )}

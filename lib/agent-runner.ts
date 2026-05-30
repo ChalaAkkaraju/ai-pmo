@@ -41,6 +41,8 @@ export interface RunAgentInput {
    * and we don't want a duplicate activity entry for the same underlying request.
    */
   skip_log?: boolean;
+  /** Optional client-generated id grouping invocations from one chat thread. */
+  session_id?: string | null;
 }
 
 export interface RoutingInfo {
@@ -199,36 +201,51 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
   let agentOutputId = '';
 
   if (input.skip_log !== true) {
-    const { data: insertedRow, error: insertErr } = await supabase
+    // Base row (always valid against the current schema).
+    const baseRow = {
+      project_id: projectId,
+      agent_type: effectiveAgentType,
+      invoked_by_role_id: role.id,
+      user_prompt: input.user_prompt,
+      input_payload: {
+        agent_type_requested: input.agent_type,
+        agent_type_resolved: effectiveAgentType,
+        project_code: input.project_code ?? null,
+        has_worked_example: workedExample !== null,
+        model_used: result.model,
+        ...(routerResult && {
+          router: {
+            raw: routerResult.router_raw,
+            tokens: routerResult.tokens_used,
+            cost_usd: routerResult.cost_usd,
+            duration_ms: routerResult.duration_ms,
+            fallback: routerResult.is_fallback,
+          },
+        }),
+      },
+      output_md: result.output_md,
+      tokens_used: result.tokens_used,
+      cost_usd: result.cost_usd,
+      routed_from_intent: routedFromIntent,
+    };
+
+    let { data: insertedRow, error: insertErr } = await supabase
       .from('agent_outputs')
-      .insert({
-        project_id: projectId,
-        agent_type: effectiveAgentType,
-        invoked_by_role_id: role.id,
-        user_prompt: input.user_prompt,
-        input_payload: {
-          agent_type_requested: input.agent_type,
-          agent_type_resolved: effectiveAgentType,
-          project_code: input.project_code ?? null,
-          has_worked_example: workedExample !== null,
-          model_used: result.model,
-          ...(routerResult && {
-            router: {
-              raw: routerResult.router_raw,
-              tokens: routerResult.tokens_used,
-              cost_usd: routerResult.cost_usd,
-              duration_ms: routerResult.duration_ms,
-              fallback: routerResult.is_fallback,
-            },
-          }),
-        },
-        output_md: result.output_md,
-        tokens_used: result.tokens_used,
-        cost_usd: result.cost_usd,
-        routed_from_intent: routedFromIntent,
-      })
+      .insert({ ...baseRow, session_id: input.session_id ?? null })
       .select('id')
       .single();
+
+    // Resilience: if migration 0008 (session_id column) hasn't been applied
+    // yet, Supabase rejects the unknown column. Retry without it so agent
+    // invocations keep working; session_id persists automatically once the
+    // column exists.
+    if (insertErr && /session_id/i.test(insertErr.message ?? '')) {
+      ({ data: insertedRow, error: insertErr } = await supabase
+        .from('agent_outputs')
+        .insert(baseRow)
+        .select('id')
+        .single());
+    }
 
     if (insertErr || !insertedRow) {
       return {

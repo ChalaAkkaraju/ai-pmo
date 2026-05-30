@@ -172,6 +172,8 @@ Constraints:
 - NO redacted-placeholder tables — if you don't know something, say so in one bullet
 - Hedging belongs inside the bullets, not as a separate section
 
+EXCEPTION — machine-readable actions block: if your role defines one (the Risk Analyst's \`\`\`actions JSON block), you MUST still append it as the very last thing in your response, after the bullets. It is stripped out before the reader sees it and powers one-click "Assign" buttons, so quick mode does NOT suppress it. When you recommend a mitigation action that another role should own, include it in that block with the right \`assigned_to_role\` and, where the register in context has a matching risk ID, the \`source_ref\`.
+
 The reader is busy. Give them the answer, then the action, then stop.
 
 # When the question is too vague to answer well

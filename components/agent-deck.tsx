@@ -1,19 +1,25 @@
 'use client';
 
 /**
- * Agent catalog rendered as a full-screen slide deck — one agent per screen,
- * presentation-style typography, scroll-snap navigation.
+ * Agent catalog rendered as a full-screen slide deck — a summary landing
+ * panel followed by one agent per screen, presentation-style typography,
+ * horizontal scroll-snap navigation.
  *
- * Visual layers per slide:
+ * Slide 0 is an overview/landing panel (what the system is, a stat strip, the
+ * 13 specialists mapped across the project lifecycle, and a scope legend) so a
+ * colleague is oriented before stepping into per-agent detail.
+ *
+ * Visual layers per agent slide:
  *   - Scope-colored gradient hero band with a per-agent icon, scope badge, name
  *   - Plain-English explanation (the main reading content)
  *   - Project-lifecycle stepper highlighting where the agent operates
  *   - Does well / Doesn't do cards with check / cross icons
  *   - "Try asking" example + "Based on" methodology footer
  *
- * Layout is compacted + top-aligned so each agent fits one screen.
- * Navigation: big Prev/Next buttons in the left & right margins, a horizontal
- * jump-dot row at the bottom, scroll-snap, and Up/Down (PageUp/PageDown) keys.
+ * Navigation: the deck scrolls HORIZONTALLY (snap-x). Big Prev/Next chevrons in
+ * the left & right margins match that motion, plus a jump-dot row at the bottom,
+ * Left/Right (and Up/Down) keys, and a wheel handler that translates vertical
+ * mouse-wheel input into horizontal movement (so mouse users can still scroll).
  *
  * Server wrapper (app/access/[token]/agents/page.tsx) validates the token and
  * passes all catalog entries. This is an education surface — every role sees
@@ -41,6 +47,8 @@ import {
   MessageCircle,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
+  Layers,
   type LucideIcon,
 } from 'lucide-react';
 import type { AgentCatalogEntry, AgentScope } from '@/lib/agent-catalog';
@@ -104,17 +112,30 @@ const AGENT_PHASE: Record<AgentType, Phase | 'portfolio'> = {
   portfolio_risk_reviewer: 'portfolio',
 };
 
+/** Ordered lifecycle groups for the landing-slide map. */
+const PHASE_ORDER: Array<{ key: Phase | 'portfolio'; label: string }> = [
+  { key: 'Initiation', label: 'Initiation' },
+  { key: 'Planning', label: 'Planning' },
+  { key: 'Execution', label: 'Execution' },
+  { key: 'Monitoring', label: 'Monitoring' },
+  { key: 'Closeout', label: 'Closeout' },
+  { key: 'portfolio', label: 'Portfolio-wide' },
+];
+
 export function AgentDeck({ token, total, entries }: AgentDeckProps) {
+  // Slide 0 is the landing/overview panel; agents occupy slides 1..total.
+  const slideCount = total + 1;
   const [active, setActive] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLElement | null>>([]);
+  const activeRef = useRef(0);
 
   const jumpTo = useCallback(
     (idx: number) => {
-      const clamped = Math.max(0, Math.min(idx, total - 1));
-      slideRefs.current[clamped]?.scrollIntoView({ behavior: 'smooth' });
+      const clamped = Math.max(0, Math.min(idx, slideCount - 1));
+      slideRefs.current[clamped]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
     },
-    [total],
+    [slideCount],
   );
 
   // Track which slide is in view.
@@ -126,7 +147,10 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
         obsEntries.forEach((e) => {
           if (e.isIntersecting) {
             const idx = Number((e.target as HTMLElement).dataset.idx);
-            if (!Number.isNaN(idx)) setActive(idx);
+            if (!Number.isNaN(idx)) {
+              setActive(idx);
+              activeRef.current = idx;
+            }
           }
         });
       },
@@ -134,15 +158,15 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
     );
     slideRefs.current.forEach((el) => el && observer.observe(el));
     return () => observer.disconnect();
-  }, [total]);
+  }, [slideCount]);
 
-  // Keyboard navigation.
+  // Keyboard navigation — Right/Down advance, Left/Up go back.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowDown') {
         e.preventDefault();
         jumpTo(active + 1);
-      } else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') {
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') {
         e.preventDefault();
         jumpTo(active - 1);
       }
@@ -151,8 +175,34 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [active, jumpTo]);
 
+  // Mouse-wheel support: translate vertical wheel into horizontal scroll, but
+  // let a panel scroll vertically first if its own content overflows.
+  useEffect(() => {
+    const root = containerRef.current;
+    if (!root) return;
+    function onWheel(e: WheelEvent) {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return; // horizontal intent → native
+      const panel = slideRefs.current[activeRef.current];
+      if (panel) {
+        const canScrollDown = panel.scrollHeight - panel.clientHeight - panel.scrollTop > 1;
+        const canScrollUp = panel.scrollTop > 1;
+        if ((e.deltaY > 0 && canScrollDown) || (e.deltaY < 0 && canScrollUp)) return;
+      }
+      root!.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+    root.addEventListener('wheel', onWheel, { passive: false });
+    return () => root.removeEventListener('wheel', onWheel);
+  }, []);
+
   const atStart = active === 0;
-  const atEnd = active === total - 1;
+  const atEnd = active === slideCount - 1;
+
+  // Lifecycle groups for the landing slide (skip empty groups defensively).
+  const groups = PHASE_ORDER.map((g) => ({
+    ...g,
+    items: entries.filter((e) => AGENT_PHASE[e.agent_type] === g.key),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)] flex-col">
@@ -166,7 +216,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           <span className="text-xs text-muted-foreground">Agent catalog</span>
         </div>
         <span className="tabular-nums text-xs font-medium text-muted-foreground">
-          {active + 1} / {total}
+          {active === 0 ? 'Overview' : `${active} / ${total}`}
         </span>
       </div>
 
@@ -174,27 +224,144 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
       <div className="h-0.5 flex-none bg-muted">
         <div
           className="h-full bg-foreground transition-all duration-300"
-          style={{ width: `${((active + 1) / total) * 100}%` }}
+          style={{ width: `${(active / total) * 100}%` }}
         />
       </div>
 
-      {/* Deck — scroll-snap container */}
+      {/* Deck — horizontal scroll-snap container */}
       <div
         ref={containerRef}
-        className="agent-deck-scroll flex-1 snap-y snap-mandatory overflow-y-auto scroll-smooth"
+        className="agent-deck-scroll flex flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth"
       >
+        {/* Slide 0 — landing / overview panel (sized to fit one screen) */}
+        <section
+          key="__intro"
+          data-idx={0}
+          ref={(el) => {
+            slideRefs.current[0] = el;
+          }}
+          className="flex h-full min-h-full w-full min-w-full flex-none snap-start items-center justify-center overflow-y-auto px-6 py-4"
+        >
+          <div className="mx-auto w-full max-w-4xl">
+            {/* Hero band */}
+            <div
+              className="rounded-2xl border p-5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(100,116,139,0.16), rgba(100,116,139,0.05))',
+                borderColor: 'rgba(100,116,139,0.25)',
+              }}
+            >
+              <div className="mb-2 flex items-center gap-2.5">
+                <span className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-slate-900/10 text-slate-700">
+                  <Sparkles size={22} strokeWidth={2} />
+                </span>
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  AI PMO · Agent catalog
+                </span>
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                Thirteen specialists, one assistant
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/80 sm:text-base">
+                Ask in plain English. The assistant routes you to the right specialist, which returns a
+                draft grounded in PMBOK standards — with every assumption flagged for your review. It
+                supports your judgment rather than replacing it.
+              </p>
+            </div>
+
+            {/* Stat strip */}
+            <div className="mt-3 grid grid-cols-3 gap-3">
+              {[
+                { n: String(total), l: 'specialist agents' },
+                { n: String(PHASES.length), l: 'lifecycle phases' },
+                { n: 'PMBOK', l: 'grounded methodology' },
+              ].map((s) => (
+                <div key={s.l} className="rounded-xl border bg-muted/40 px-4 py-2.5">
+                  <div className="text-xl font-bold text-foreground">{s.n}</div>
+                  <div className="text-xs text-muted-foreground">{s.l}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Lifecycle map — label + chips on one row each to stay compact */}
+            <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              The specialists, across the project lifecycle
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {groups.map((g) => (
+                <div
+                  key={g.label}
+                  className="flex items-center gap-3 rounded-lg border bg-background px-3 py-2"
+                >
+                  <div className="flex w-24 flex-none items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground/70">
+                    {g.key === 'portfolio' ? (
+                      <Layers size={13} className="flex-none text-muted-foreground" />
+                    ) : (
+                      <span className="inline-block h-1.5 w-1.5 flex-none rounded-full bg-emerald-500" aria-hidden />
+                    )}
+                    {g.label}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {g.items.map((entry) => {
+                      const s = scopeStyle(entry.scope);
+                      return (
+                        <span
+                          key={entry.agent_type}
+                          className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                          style={{ backgroundColor: `${s.accent}1f`, color: s.accent }}
+                        >
+                          {entry.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Scope legend + CTA on one row */}
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+                <span className="font-semibold uppercase tracking-wider">Scope</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#10b981' }} />
+                  Project-level
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#0ea5e9' }} />
+                  Single-item
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
+                  Portfolio-level
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => jumpTo(1)}
+                className="inline-flex flex-none items-center gap-2 rounded-full border bg-background px-4 py-2 text-sm font-medium text-foreground/80 shadow-sm transition hover:bg-muted"
+              >
+                Step through each specialist
+                <ChevronRight size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Agent slides */}
         {entries.map((entry, idx) => {
           const s = scopeStyle(entry.scope);
           const Icon = AGENT_ICON[entry.agent_type] ?? FileText;
           const phase = AGENT_PHASE[entry.agent_type];
+          const slideIdx = idx + 1;
           return (
             <section
               key={entry.agent_type}
-              data-idx={idx}
+              data-idx={slideIdx}
               ref={(el) => {
-                slideRefs.current[idx] = el;
+                slideRefs.current[slideIdx] = el;
               }}
-              className="flex h-full min-h-full w-full snap-start items-start justify-center px-6 py-6"
+              className="flex h-full min-h-full w-full min-w-full flex-none snap-start items-start justify-center overflow-y-auto px-6 py-6"
             >
               <div className="mx-auto w-full max-w-4xl">
                 {/* Hero band — scope-tinted gradient with icon + badge + name */}
@@ -291,7 +458,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           type="button"
           onClick={() => jumpTo(active - 1)}
           disabled={atStart}
-          aria-label="Previous agent"
+          aria-label="Previous"
           className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-slate-600 shadow-lg transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-25"
         >
           <ChevronLeft size={26} strokeWidth={2.5} />
@@ -300,26 +467,39 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           type="button"
           onClick={() => jumpTo(active + 1)}
           disabled={atEnd}
-          aria-label="Next agent"
+          aria-label="Next"
           className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-slate-600 shadow-lg transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-25"
         >
           <ChevronRight size={26} strokeWidth={2.5} />
         </button>
       </div>
 
-      {/* Jump-dot row, bottom-center */}
+      {/* Jump-dot row, bottom-center — a home dot for the overview, then one per agent */}
       <nav
         className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border bg-background/80 px-3 py-2 shadow-sm backdrop-blur"
-        aria-label="Jump to agent"
+        aria-label="Jump to slide"
       >
+        <button
+          type="button"
+          onClick={() => jumpTo(0)}
+          title="Overview"
+          aria-label="Go to overview"
+          className="rounded-full transition-all hover:scale-125"
+          style={{
+            width: active === 0 ? 11 : 8,
+            height: active === 0 ? 11 : 8,
+            backgroundColor: active === 0 ? '#475569' : 'rgb(203 213 225)',
+          }}
+        />
+        <span className="mx-0.5 h-3 w-px bg-border" aria-hidden />
         {entries.map((entry, idx) => {
           const s = scopeStyle(entry.scope);
-          const isActive = idx === active;
+          const isActive = idx + 1 === active;
           return (
             <button
               key={entry.agent_type}
               type="button"
-              onClick={() => jumpTo(idx)}
+              onClick={() => jumpTo(idx + 1)}
               title={entry.name}
               aria-label={`Go to ${entry.name}`}
               className="rounded-full transition-all hover:scale-125"
@@ -336,8 +516,8 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
       <style
         dangerouslySetInnerHTML={{
           __html: `
-            .agent-deck-scroll > * { scroll-snap-align: start; }
-            .agent-deck-scroll { scrollbar-width: thin; }
+            .agent-deck-scroll { scrollbar-width: thin; overscroll-behavior-x: contain; }
+            .agent-deck-scroll::-webkit-scrollbar { height: 8px; }
           `,
         }}
       />

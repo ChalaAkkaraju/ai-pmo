@@ -177,3 +177,32 @@ export function getRoleDefinition(roleType: RoleType): RoleDefinition {
 export function canRoleInvokeAgent(roleType: RoleType, agentType: AgentType): boolean {
   return ROLE_DEFINITIONS[roleType].allowed_agents.includes(agentType);
 }
+
+/** All valid role types, derived from the definitions map. */
+export const ROLE_TYPES = Object.keys(ROLE_DEFINITIONS) as RoleType[];
+
+/** Type guard: is this string one of the known role types? */
+export function isValidRoleType(value: string): value is RoleType {
+  return (ROLE_TYPES as string[]).includes(value);
+}
+
+/**
+ * Short, human-facing label for a role type (e.g. for action-assignment UI).
+ * Falls back to the full display name from the definitions map.
+ */
+export const ROLE_SHORT_LABELS: Record<RoleType, string> = {
+  pm: 'Senior PM',
+  procurement: 'Procurement Strategist',
+  risk: 'Risk Analyst',
+  sponsor: 'VP Sponsor',
+  commercial: 'Commercial Manager',
+  project_controls: 'Project Controls',
+  program_manager: 'Program Manager',
+  engineering_manager: 'Engineering Manager',
+  construction_manager: 'Construction Manager',
+  hse_manager: 'HSE Manager',
+};
+
+export function roleLabel(roleType: RoleType): string {
+  return ROLE_SHORT_LABELS[roleType] ?? ROLE_DEFINITIONS[roleType]?.display_name ?? roleType;
+}

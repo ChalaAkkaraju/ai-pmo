@@ -31,6 +31,8 @@ import { usePathname } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AgentType } from '@/lib/types';
+import { parseProposedActions, stripActionsBlock } from '@/lib/action-parser';
+import { AssignActionsPanel } from '@/components/assign-actions-panel';
 
 type AgentTypeOrAuto = AgentType | 'auto';
 
@@ -326,7 +328,14 @@ export function FloatingAgentWidget({
   const [prompt, setPrompt] = useState('');
   const [history, setHistory] = useState<Invocation[]>([]);
   const [isInvoking, setIsInvoking] = useState(false);
-  const [agentType, setAgentType] = useState<AgentTypeOrAuto>('auto');
+  const [agentType, setAgentType] = useState<AgentTypeOrAuto>(() =>
+    canWrite ? 'auto' : allowedAgents[0] ?? 'auto',
+  );
+  const [sessionId] = useState(() =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
   const pathname = usePathname();
 
   // Popped-out briefs: each entry is a snapshot of a previous response shown
@@ -372,7 +381,7 @@ export function FloatingAgentWidget({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!prompt.trim() || isInvoking || !canWrite) return;
+    if (!prompt.trim() || isInvoking) return;
 
     const invocation: Invocation = {
       prompt: prompt.trim(),
@@ -397,6 +406,7 @@ export function FloatingAgentWidget({
           project_code: projectCode ?? undefined,
           user_prompt: invocation.prompt,
           concise: true,
+          session_id: sessionId,
         }),
       });
       const data = await res.json();
@@ -438,7 +448,7 @@ export function FloatingAgentWidget({
   }
 
   const contextLabel = projectCode ?? 'Portfolio';
-  const dropdownOptions: AgentTypeOrAuto[] = ['auto', ...allowedAgents];
+  const dropdownOptions: AgentTypeOrAuto[] = canWrite ? ['auto', ...allowedAgents] : [...allowedAgents];
 
   // Popped-out brief panels render alongside the widget — they persist
   // whether the widget is collapsed or expanded.
@@ -526,7 +536,7 @@ export function FloatingAgentWidget({
             id="floating-agent-select"
             value={agentType}
             onChange={(e) => setAgentType(e.target.value as AgentTypeOrAuto)}
-            disabled={isInvoking || !canWrite}
+            disabled={isInvoking}
             className="flex-1 rounded-md border px-2 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-foreground/30"
             style={{ backgroundColor: 'white' }}
           >
@@ -540,8 +550,8 @@ export function FloatingAgentWidget({
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder={canWrite ? defaultPlaceholderFor(roleDisplayName, projectCode) : 'Read-only role — agent invocation is disabled'}
-          disabled={isInvoking || !canWrite}
+          placeholder={defaultPlaceholderFor(roleDisplayName, projectCode)}
+          disabled={isInvoking}
           rows={9}
           className="w-full resize-none rounded-md border px-2.5 py-1.5 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-foreground/30"
           style={{ backgroundColor: 'white' }}
@@ -569,16 +579,15 @@ export function FloatingAgentWidget({
               </button>
             )}
             <p>
-              {canWrite
-                ? agentType === 'auto'
-                  ? 'Auto · Enter to send, Shift+Enter for new line'
-                  : `${AGENT_LABELS[agentType as AgentType]} · Enter to send, Shift+Enter for new line`
-                : 'Your role is read-only'}
+              {agentType === 'auto'
+                ? 'Auto · Enter to send, Shift+Enter for new line'
+                : `${AGENT_LABELS[agentType as AgentType]} · Enter to send, Shift+Enter for new line`}
+              {!canWrite ? ' · read-only (analytical agents)' : ''}
             </p>
           </div>
           <button
             type="submit"
-            disabled={isInvoking || !prompt.trim() || !canWrite}
+            disabled={isInvoking || !prompt.trim()}
             className="rounded-md px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40"
             style={{ backgroundColor: 'rgb(15 23 42)' }}
           >
@@ -609,6 +618,7 @@ function InvocationCard({
 }) {
   const actions = extractActions(invocation.response_md);
   const choices = extractChoices(invocation.response_md);
+  const proposedActions = parseProposedActions(invocation.response_md ?? '');
   const isInProgress = isLatest && !invocation.response_md && !invocation.error;
   const requested = invocation.agent_type_requested;
   const resolved = invocation.agent_type_resolved;
@@ -710,14 +720,19 @@ function InvocationCard({
                   },
                 }}
               >
-                {(() => { let b = invocation.response_md ?? ''; if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
+                {(() => { let b = stripActionsBlock(invocation.response_md ?? ''); if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
               </ReactMarkdown>
             </article>
-            <div className="mt-2 flex items-center justify-between gap-2 border-t pt-1.5 text-[10px] text-muted-foreground">
-              <span>
-                {typeof invocation.duration_ms === 'number' &&
-                  `${(invocation.duration_ms / 1000).toFixed(1)}s`}
-              </span>
+            {proposedActions.length > 0 && (
+              <AssignActionsPanel
+                actions={proposedActions}
+                token={token}
+                projectCode={invocation.project_code}
+                agentOutputId={invocation.output_id}
+                agentType={resolved ?? (requested === 'auto' ? undefined : (requested as AgentType))}
+              />
+            )}
+            <div className="mt-2 flex items-center justify-end gap-2 border-t pt-1.5 text-[10px] text-muted-foreground">
               {invocation.output_id && choices.length === 0 && (
                 <div className="flex items-center gap-1.5">
                   <button
@@ -883,12 +898,18 @@ function PoppedOutBriefPanel({
 
   return (
     <div
-      className="no-print fixed z-40 flex w-[380px] flex-col overflow-hidden rounded-lg border shadow-2xl"
+      className="no-print fixed z-40 flex flex-col rounded-lg border shadow-2xl"
       style={{
         backgroundColor: 'white',
         top: `${position.top}px`,
         left: `${position.left}px`,
-        maxHeight: '70vh',
+        width: 380,
+        minWidth: 300,
+        maxWidth: '95vw',
+        minHeight: 180,
+        maxHeight: '90vh',
+        overflow: 'hidden',
+        resize: 'both',
       }}
       role="complementary"
       aria-label={`Popped-out brief: ${invocation.prompt.slice(0, 60)}`}
@@ -931,7 +952,7 @@ function PoppedOutBriefPanel({
       </header>
 
       <div
-        className="overflow-y-auto px-3 py-2"
+        className="min-h-0 flex-1 overflow-y-auto px-3 py-2"
         style={{ backgroundColor: 'white' }}
       >
         <div className="rounded-md border bg-slate-50 px-3 py-1.5">
@@ -998,7 +1019,7 @@ function PoppedOutBriefPanel({
                 },
               }}
             >
-              {(() => { let b = invocation.response_md ?? ''; if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
+              {(() => { let b = stripActionsBlock(invocation.response_md ?? ''); if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
             </ReactMarkdown>
           </article>
         )}

@@ -77,6 +77,7 @@ const invokeAgentSchema = z.object({
   concise: z.boolean().optional(),
   /** When true, don't write the response to agent_outputs (no duplicate activity entry). */
   skip_log: z.boolean().optional(),
+  session_id: z.string().optional(),
 });
 
 // Vercel-serverless safety: Opus 4.7 can take 30-60s for long outputs.
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
     user_prompt: body.user_prompt,
     concise: body.concise ?? false,
     skip_log: body.skip_log ?? false,
+    session_id: body.session_id,
   });
 
   if (!result.ok) {

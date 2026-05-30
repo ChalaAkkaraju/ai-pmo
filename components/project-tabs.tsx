@@ -68,6 +68,8 @@ interface ProjectTabsProps {
     variance_reports: Array<Record<string, unknown>>;
     /** Planning agent outputs for THIS project, newest first, any agent_type. */
     planning_outputs: ArtefactRow[];
+    /** Cross-agent action items raised against this project (migration 0009). */
+    action_items?: Array<Record<string, unknown>>;
   };
 }
 
@@ -120,7 +122,7 @@ export function ProjectTabs({
       {/* Operational panels */}
       <Tabs.Content value="risks" className="space-y-6 pt-6">
         <RiskHeatmap rows={data.risks} />
-        <RisksTable rows={data.risks} />
+        <RisksTable rows={data.risks} actions={data.action_items ?? []} />
       </Tabs.Content>
       <Tabs.Content value="issues" className="pt-6">
         <IssuesTable rows={data.issues} />

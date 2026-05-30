@@ -47,7 +47,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   if (!project) notFound();
 
-  const [issuesRes, risksRes, cosRes, varianceRes, planningRes] = await Promise.all([
+  const [issuesRes, risksRes, cosRes, varianceRes, planningRes, actionItemsRes] = await Promise.all([
     supabase.from('issues').select('*').eq('project_id', project.id).order('opened_week', { ascending: true }),
     supabase.from('risks').select('*').eq('project_id', project.id).order('risk_id', { ascending: true }),
     supabase.from('change_orders').select('*').eq('project_id', project.id).order('co_id', { ascending: true }),
@@ -58,6 +58,13 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       .eq('project_id', project.id)
       .in('agent_type', PLANNING_AGENT_TYPES)
       .order('invoked_at', { ascending: false }),
+    // action_items may not exist yet (migration 0009). Query is resilient:
+    // on error, .data is null and we fall back to an empty list below.
+    supabase
+      .from('action_items')
+      .select('*')
+      .eq('project_id', project.id)
+      .order('created_at', { ascending: false }),
   ]);
 
   const issues = issuesRes.data ?? [];
@@ -65,6 +72,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const change_orders = cosRes.data ?? [];
   const variance_reports = varianceRes.data ?? [];
   const planning_outputs = planningRes.data ?? [];
+  const action_items = actionItemsRes.data ?? [];
 
   const realisedCount = risks.filter((r) => String(r.status).toLowerCase().startsWith('realised')).length;
   const mitigatedCount = risks.filter((r) => String(r.status).toLowerCase().includes('mitigated')).length;
@@ -182,7 +190,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         projectCurrentWeek={Number(project.current_week)}
         projectStatus={String(project.status)}
         projectHardDeadline={project.hard_deadline_description ?? null}
-        data={{ issues, risks, change_orders, variance_reports, planning_outputs }}
+        data={{ issues, risks, change_orders, variance_reports, planning_outputs, action_items }}
       />
     </div>
   );
