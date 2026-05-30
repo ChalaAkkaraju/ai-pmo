@@ -1,5 +1,6 @@
 /**
  * Analytics → Issues. Portfolio-wide issue breakdowns, server-rendered.
+ * Category is rolled up to standard PMO groups (see lib/issue-category).
  */
 
 import { notFound } from 'next/navigation';
@@ -8,6 +9,7 @@ import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { BreakdownTable, Kpis, rowsFrom, tally, renameHML } from '@/components/analytics-shared';
+import { canonicalIssueCategory, CANONICAL_ISSUE_CATEGORIES } from '@/lib/issue-category';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +35,7 @@ export default async function IssuesAnalyticsPage({ params }: { params: Promise<
 
   const bySeverity = rowsFrom(renameHML(tally(issues, (i) => i.severity)), ['High', 'Medium', 'Low']);
   const byStatus = rowsFrom(tally(issues, (i) => i.status), ['Open', 'In progress', 'Resolved', 'Closed']);
-  const byCategory = rowsFrom(tally(issues, (i) => i.category)).slice(0, 10);
+  const byCategory = rowsFrom(tally(issues, (i) => canonicalIssueCategory(i.category)), CANONICAL_ISSUE_CATEGORIES);
   const openByProject = tally(
     issues.filter((i) => i.status === 'Open' || i.status === 'In progress'),
     (i) => codeById.get(i.project_id) ?? null,
@@ -64,7 +66,7 @@ export default async function IssuesAnalyticsPage({ params }: { params: Promise<
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <BreakdownTable title="By severity" rows={bySeverity} color="#ef4444" />
         <BreakdownTable title="By status" rows={byStatus} color="#6366f1" />
-        <BreakdownTable title="By category (top 10)" rows={byCategory} color="#14b8a6" />
+        <BreakdownTable title="By category" rows={byCategory} color="#14b8a6" />
         <BreakdownTable title="Top projects by open issues" rows={topProjects} color="#f97316" />
       </div>
     </div>
