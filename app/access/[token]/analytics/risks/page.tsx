@@ -1,6 +1,7 @@
 /**
- * Analytics → Risks. Portfolio-wide risk breakdowns, server-rendered.
- * Status is collapsed to five canonical buckets (see lib/risk-status).
+ * Analytics → Risks. Portfolio-wide risk breakdowns.
+ * Adds a probability × impact matrix; impact/status/segment as donuts,
+ * cross-cutting class as a treemap. Status uses the 5 canonical buckets.
  */
 
 import { notFound } from 'next/navigation';
@@ -8,7 +9,8 @@ import Link from 'next/link';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
-import { BreakdownTable, Kpis, rowsFrom, tally, renameHML, cap } from '@/components/analytics-shared';
+import { Kpis, rowsFrom, tally, renameHML, cap } from '@/components/analytics-shared';
+import { DonutPanel, RankedBarPanel, RiskMatrix } from '@/components/analytics-charts';
 import { canonicalRiskStatus, CANONICAL_RISK_STATUSES } from '@/lib/risk-status';
 
 export const dynamic = 'force-dynamic';
@@ -20,14 +22,13 @@ export default async function RisksAnalyticsPage({ params }: { params: Promise<{
 
   const supabase = createSupabaseServiceClient();
   const [risksRes, projectsRes] = await Promise.all([
-    supabase.from('risks').select('project_id, impact, status, cross_cutting_class').limit(10000),
+    supabase.from('risks').select('project_id, impact, probability, status, cross_cutting_class').limit(10000),
     supabase.from('projects').select('id, segment').limit(10000),
   ]);
-  const risks = (risksRes.data ?? []) as Array<{ project_id: string; impact: string; status: string; cross_cutting_class: string }>;
+  const risks = (risksRes.data ?? []) as Array<{ project_id: string; impact: string; probability: string; status: string; cross_cutting_class: string }>;
   const projects = (projectsRes.data ?? []) as Array<{ id: string; segment: string }>;
   const segById = new Map(projects.map((p) => [p.id, p.segment]));
 
-  // Counts via canonical buckets so the KPIs match the "By status" chart.
   const canon = risks.map((r) => canonicalRiskStatus(r.status));
   const total = risks.length;
   const open = canon.filter((c) => c === 'Open').length;
@@ -63,10 +64,11 @@ export default async function RisksAnalyticsPage({ params }: { params: Promise<{
       />
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <BreakdownTable title="By impact" rows={byImpact} color="#ef4444" />
-        <BreakdownTable title="By status" rows={byStatus} color="#6366f1" />
-        <BreakdownTable title="By cross-cutting class" rows={byClass} color="#8b5cf6" />
-        <BreakdownTable title="By segment" rows={bySegment} color="#0ea5e9" />
+        <RiskMatrix cells={risks.map((r) => ({ probability: r.probability, impact: r.impact }))} />
+        <DonutPanel title="By status" rows={byStatus} centerLabel="risks" />
+        <DonutPanel title="By impact" rows={byImpact} centerLabel="risks" />
+        <DonutPanel title="By segment" rows={bySegment} centerLabel="risks" />
+        <RankedBarPanel title="By cross-cutting class" rows={byClass} />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 /**
- * Analytics → Cross-agent actions. Portfolio-wide breakdowns of action_items,
- * server-rendered in the Usage-page style.
+ * Analytics → Cross-agent actions. Portfolio-wide breakdowns of action_items.
+ * Composition shown as donuts; role weight as treemaps (see analytics-charts).
  */
 
 import { notFound } from 'next/navigation';
@@ -10,7 +10,8 @@ import { createSupabaseServiceClient } from '@/lib/supabase';
 import { roleLabel } from '@/lib/roles';
 import type { RoleType } from '@/lib/types';
 import { AnalyticsNav } from '@/components/analytics-nav';
-import { BreakdownTable, Kpis, rowsFrom, tally, renameHML } from '@/components/analytics-shared';
+import { Kpis, rowsFrom, tally, renameHML } from '@/components/analytics-shared';
+import { DonutPanel, RankedBarPanel } from '@/components/analytics-charts';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,10 +69,10 @@ export default async function ActionsAnalyticsPage({ params }: { params: Promise
         ]}
       />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <BreakdownTable title="By status" rows={byStatus} color="#6366f1" />
-        <BreakdownTable title="By urgency" rows={byUrgency} color="#f59e0b" />
-        <BreakdownTable title="By owning role" rows={byOwner} color="#0ea5e9" />
-        <BreakdownTable title="By raising role" rows={byRaiser} color="#8b5cf6" />
+        <DonutPanel title="By status" rows={byStatus} centerLabel="actions" />
+        <DonutPanel title="By urgency" rows={byUrgency} centerLabel="actions" />
+        <RankedBarPanel title="By owning role" rows={byOwner} />
+        <RankedBarPanel title="By raising role" rows={byRaiser} />
       </div>
     </div>
   );

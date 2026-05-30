@@ -1,6 +1,6 @@
 /**
- * Analytics → Issues. Portfolio-wide issue breakdowns, server-rendered.
- * Category is rolled up to standard PMO groups (see lib/issue-category).
+ * Analytics → Issues. Portfolio-wide issue breakdowns.
+ * Severity/status as donuts, category as a treemap, top projects as bars.
  */
 
 import { notFound } from 'next/navigation';
@@ -9,6 +9,7 @@ import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { BreakdownTable, Kpis, rowsFrom, tally, renameHML } from '@/components/analytics-shared';
+import { DonutPanel, RankedBarPanel } from '@/components/analytics-charts';
 import { canonicalIssueCategory, CANONICAL_ISSUE_CATEGORIES } from '@/lib/issue-category';
 
 export const dynamic = 'force-dynamic';
@@ -64,9 +65,9 @@ export default async function IssuesAnalyticsPage({ params }: { params: Promise<
         ]}
       />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <BreakdownTable title="By severity" rows={bySeverity} color="#ef4444" />
-        <BreakdownTable title="By status" rows={byStatus} color="#6366f1" />
-        <BreakdownTable title="By category" rows={byCategory} color="#14b8a6" />
+        <DonutPanel title="By severity" rows={bySeverity} centerLabel="issues" />
+        <DonutPanel title="By status" rows={byStatus} centerLabel="issues" />
+        <RankedBarPanel title="By category" rows={byCategory} />
         <BreakdownTable title="Top projects by open issues" rows={topProjects} color="#f97316" />
       </div>
     </div>
