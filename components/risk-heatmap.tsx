@@ -148,22 +148,30 @@ function Cell({
 }) {
   const tint = cellTint(probability, impact);
   return (
-    <div className={`flex h-32 flex-col rounded-md border ${tint} p-2`}>
-      <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span className="font-medium">{probability}×{impact}</span>
-        {risks.length > 0 && <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] tabular-nums">{risks.length}</span>}
-      </div>
+    <div className={`relative flex h-32 flex-col rounded-md border ${tint} p-2`}>
+      {/* tiny corner label */}
+      <span className="absolute left-2 top-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+        {probability}×{impact}
+      </span>
+
       {risks.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center text-[10px] text-muted-foreground/60">—</div>
+        <div className="flex flex-1 items-center justify-center text-base text-muted-foreground/40">—</div>
       ) : (
-        <div className="flex flex-1 flex-wrap content-start gap-1">
-          {risks.map((r) => (
-            <span
-              key={r.risk_id}
-              className={`group relative inline-block h-2.5 w-2.5 rounded-full ring-1 ${dotClass(r.status)}`}
-              title={`${r.risk_id} (${r.status}) — ${r.description.slice(0, 100)}${r.description.length > 100 ? '…' : ''}`}
-            />
-          ))}
+        <div className="flex flex-1 flex-col items-center justify-center gap-2">
+          {/* big centered count */}
+          <span className="text-3xl font-bold leading-none tabular-nums text-foreground">
+            {risks.length}
+          </span>
+          {/* centered dot cluster, one per risk, coloured by status */}
+          <div className="flex max-w-[88%] flex-wrap items-center justify-center gap-1.5">
+            {risks.map((r) => (
+              <span
+                key={r.risk_id}
+                className={`inline-block h-3 w-3 rounded-full ring-1 ${dotClass(r.status)}`}
+                title={`${r.risk_id} (${r.status}) — ${r.description.slice(0, 100)}${r.description.length > 100 ? '…' : ''}`}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -177,7 +177,17 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           </div>
         </div>
         {project.hard_deadline_description && (
-          <p className="mt-4 pl-2 text-xs text-muted-foreground">⏱ {project.hard_deadline_description}</p>
+          <div className="mt-5 flex items-center gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-2.5">
+            <span className="text-lg leading-none" aria-hidden="true">⏱</span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">
+                Hard deadline
+              </p>
+              <p className="text-sm font-medium text-amber-900">
+                {project.hard_deadline_description}
+              </p>
+            </div>
+          </div>
         )}
       </header>
 
