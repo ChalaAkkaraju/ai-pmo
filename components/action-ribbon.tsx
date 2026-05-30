@@ -46,7 +46,7 @@ export function ActionRibbon({
   risksMine: number;
 }) {
   const [open, setOpen] = useState(false);
-  const [mine, setMine] = useState(false);
+  const [mine, setMine] = useState(true);
   const [assignedOpen, setAssignedOpen] = useState(0);
   // Live-bumpable copies of the action counts (issues/risks are static per load).
   const [aActive, setAActive] = useState(actionsActive);
@@ -149,16 +149,8 @@ export function ActionRibbon({
           ))}
         </div>
 
-        {/* Active / Just mine toggle */}
+        {/* Just mine / Overall toggle (right; defaults to Just mine) */}
         <div className="flex flex-none items-center rounded-md border p-0.5 text-[11px] font-medium">
-          <button
-            type="button"
-            onClick={() => setMine(false)}
-            className={`rounded px-2 py-1 transition ${!mine ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
-            title="Live work across the whole portfolio (excludes closed projects)"
-          >
-            Active
-          </button>
           <button
             type="button"
             onClick={() => setMine(true)}
@@ -166,6 +158,14 @@ export function ActionRibbon({
             title="Only what's in your lane"
           >
             Just mine
+          </button>
+          <button
+            type="button"
+            onClick={() => setMine(false)}
+            className={`rounded px-2 py-1 transition ${!mine ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+            title="Live work across the whole portfolio (active projects only; excludes closed)"
+          >
+            Overall
           </button>
         </div>
       </div>

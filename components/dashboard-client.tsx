@@ -152,6 +152,22 @@ function fmtBillions(b: number): string {
   return `$${b.toFixed(2)}B`;
 }
 
+function agentAccent(agentType: string): { bar: string; chip: string } {
+  // Group agents into colour families so the feed is scannable by agent type.
+  const t = agentType;
+  if (t.includes('risk')) return { bar: 'bg-rose-400', chip: 'bg-rose-100 text-rose-800' };
+  if (t.includes('variance') || t.includes('budget') || t.includes('change_order'))
+    return { bar: 'bg-amber-400', chip: 'bg-amber-100 text-amber-800' };
+  if (t.includes('schedule') || t.includes('wbs') || t.includes('charter'))
+    return { bar: 'bg-sky-400', chip: 'bg-sky-100 text-sky-800' };
+  if (t.includes('issue')) return { bar: 'bg-orange-400', chip: 'bg-orange-100 text-orange-800' };
+  if (t.includes('stakeholder') || t.includes('communications'))
+    return { bar: 'bg-violet-400', chip: 'bg-violet-100 text-violet-800' };
+  if (t.includes('lessons') || t.includes('closeout'))
+    return { bar: 'bg-emerald-400', chip: 'bg-emerald-100 text-emerald-800' };
+  return { bar: 'bg-slate-300', chip: 'bg-slate-100 text-slate-700' };
+}
+
 function prettyAgent(t: string): string {
   return t.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
@@ -408,6 +424,9 @@ export function DashboardClient({
   const [activity, setActivity] = useState<DashboardActivity[]>(initialActivity);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  // The whole "Your recent activity" section is collapsed by default so it
+  // doesn't dominate the dashboard; the user expands it on demand.
+  const [activityOpen, setActivityOpen] = useState(false);
 
   // The expanded card used to support an inline "Show full report" toggle
   // that re-fired the agent in full mode. That UI was retired — the single
@@ -1013,14 +1032,28 @@ export function DashboardClient({
 
       {/* Recent activity — live via Supabase Realtime */}
       <section>
-        <div className="mb-1 flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Your recent activity</h2>
+        <button
+          type="button"
+          onClick={() => setActivityOpen((v) => !v)}
+          className={`flex w-full items-center gap-2.5 rounded-lg border border-indigo-200 bg-gradient-to-r from-indigo-50 via-sky-50 to-white px-4 py-3 text-left shadow-sm transition hover:from-indigo-100 hover:via-sky-100 ${activityOpen ? 'mb-3 rounded-b-none border-b-0' : ''}`}
+          aria-expanded={activityOpen}
+        >
+          <h2 className="text-xl font-semibold text-indigo-900">Your recent activity</h2>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-800">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             Live
           </span>
-        </div>
-        {workspaceActivity.count > 0 && (
+          {activity.length > 0 && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums">
+              {activity.length}
+            </span>
+          )}
+          <span className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition group-hover:bg-indigo-700">
+            {activityOpen ? 'Hide activity' : 'Show activity'}
+            <span className="transition-transform" style={{ transform: activityOpen ? 'rotate(180deg)' : 'none' }}>▾</span>
+          </span>
+        </button>
+        {activityOpen && workspaceActivity.count > 0 && (
           <p className="mb-4 text-xs text-muted-foreground">
             Across the workspace: {workspaceActivity.count.toLocaleString()} invocation{workspaceActivity.count === 1 ? '' : 's'}
             {workspaceActivity.latest_at && (
@@ -1035,6 +1068,7 @@ export function DashboardClient({
             </Link>
           </p>
         )}
+        {activityOpen && (
         <div className="rounded-lg border bg-card divide-y">
           {activity.length === 0 ? (
             <p className="p-5 text-sm text-muted-foreground">
@@ -1069,10 +1103,13 @@ export function DashboardClient({
                       toggleExpand(a.id);
                     }
                   }}
-                  className={`flex cursor-pointer items-start gap-3 p-4 transition-colors duration-200 hover:bg-muted/40 ${
+                  className={`relative flex cursor-pointer items-start gap-3 py-3.5 pl-5 pr-4 transition-colors duration-200 hover:bg-muted/40 ${
                     isNew ? 'bg-emerald-50' : ''
                   } ${isExpanded ? 'bg-muted/30' : ''}`}
                 >
+                  {/* Agent-type accent stripe */}
+                  <span className={`absolute left-0 top-0 h-full w-1 ${agentAccent(a.agent_type).bar}`} />
+
                   {/* Initials avatar */}
                   <div
                     className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700"
@@ -1083,7 +1120,7 @@ export function DashboardClient({
 
                   {/* Body */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                       <span className="font-semibold">{a.colleague_name ?? 'Unknown colleague'}</span>
                       {a.is_you && (
                         <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium text-foreground/70">
@@ -1095,21 +1132,19 @@ export function DashboardClient({
                           {shortRole(a.role_type)}
                         </span>
                       )}
-                      <span className="text-muted-foreground">asked</span>
-                      <span className="font-medium">{prettyAgent(a.agent_type)}</span>
-                      {a.project_name && (
-                        <>
-                          <span className="text-muted-foreground">on</span>
-                          <span className="inline-flex items-center gap-1.5 font-medium">
-                            {ss && <span className={`h-2 w-2 rounded-full ${ss.dot}`} />}
-                            {a.project_name}
-                            <span className="font-mono text-[11px] text-muted-foreground/80">({a.project_code})</span>
-                          </span>
-                        </>
-                      )}
-                      {!a.project_name && (
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                          · portfolio-level
+                      <span className="text-muted-foreground/60">→</span>
+                      <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${agentAccent(a.agent_type).chip}`}>
+                        {prettyAgent(a.agent_type)}
+                      </span>
+                      {a.project_name ? (
+                        <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                          {ss && <span className={`h-2 w-2 rounded-full ${ss.dot}`} />}
+                          {a.project_name}
+                          <span className="font-mono text-[10px] text-muted-foreground/70">{a.project_code}</span>
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-500">
+                          Portfolio
                         </span>
                       )}
                       {isNew && (
@@ -1119,15 +1154,15 @@ export function DashboardClient({
                       )}
                     </div>
                     {promptPreview && (
-                      <p className="mt-1 line-clamp-2 text-sm italic text-muted-foreground">
+                      <p className="mt-1.5 line-clamp-1 text-[13px] italic text-muted-foreground">
                         “{promptPreview}”
                       </p>
                     )}
                     {!isExpanded && responsePreview && (
-                      <p className="mt-1.5 line-clamp-2 text-sm text-foreground/80">
-                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">Response · </span>
-                        {responsePreview}
-                      </p>
+                      <div className="mt-2 flex items-start gap-2 rounded-md border-l-2 border-slate-200 bg-muted/30 px-2.5 py-1.5">
+                        <span className="mt-0.5 flex-none text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">Reply</span>
+                        <p className="line-clamp-2 text-[13px] text-foreground/80">{responsePreview}</p>
+                      </div>
                     )}
                     {isExpanded && a.output_md && (
                       <div
@@ -1252,6 +1287,7 @@ export function DashboardClient({
             })
           )}
         </div>
+        )}
       </section>
 
     </div>
