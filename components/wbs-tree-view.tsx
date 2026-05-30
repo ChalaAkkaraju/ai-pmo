@@ -211,7 +211,6 @@ function groupByCategory(items: WbsItem[]): CategoryGroup[] {
 export function WbsTreeView({ markdown }: { markdown: string | null | undefined }) {
   const items = useMemo(() => parseWbs(markdown ?? ''), [markdown]);
   const maxLevel = useMemo(() => items.reduce((m, it) => Math.max(m, it.level), 0), [items]);
-  const groups = useMemo(() => groupByCategory(items), [items]);
 
   if (!markdown) return null;
 
@@ -226,126 +225,73 @@ export function WbsTreeView({ markdown }: { markdown: string | null | undefined 
     );
   }
 
-  return maxLevel <= 1 ? (
-    <WbsCardGrid items={items} groups={groups} />
-  ) : (
-    <WbsTree items={items} />
-  );
+  // Single indented-tree renderer for both flat and hierarchical WBS data.
+  void maxLevel;
+  return <WbsIndentedTree items={items} />;
 }
 
 // =============================================================================
-// Card-grid mode (flat data)
+// Indented tree renderer (used for both flat and hierarchical WBS data)
 // =============================================================================
 
-function WbsCardGrid({ items, groups }: { items: WbsItem[]; groups: CategoryGroup[] }) {
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const visibleGroups = activeCategory ? groups.filter((g) => g.category === activeCategory) : groups;
+interface TreeNode extends WbsItem {
+  children: TreeNode[];
+}
+
+/** Numeric-aware compare of WBS codes (1.2 < 1.10). */
+function compareCodes(a: string, b: string): number {
+  const pa = a.split('.').map((n) => parseInt(n, 10));
+  const pb = b.split('.').map((n) => parseInt(n, 10));
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i++) {
+    const x = pa[i] ?? -1;
+    const y = pb[i] ?? -1;
+    if (x !== y) return x - y;
+  }
+  return 0;
+}
+
+/** Build a parent→child tree from the flat WBS items using their dotted codes. */
+function buildTree(items: WbsItem[]): TreeNode[] {
+  const byCode = new Map<string, TreeNode>();
+  for (const it of items) byCode.set(it.code, { ...it, children: [] });
+
+  const roots: TreeNode[] = [];
+  for (const node of byCode.values()) {
+    const parts = node.code.split('.');
+    let parent: TreeNode | undefined;
+    // Walk up the code (drop last segment) until a known ancestor is found.
+    for (let cut = parts.length - 1; cut >= 1 && !parent; cut--) {
+      parent = byCode.get(parts.slice(0, cut).join('.'));
+    }
+    if (parent) parent.children.push(node);
+    else roots.push(node);
+  }
+  const sortRec = (nodes: TreeNode[]) => {
+    nodes.sort((a, b) => compareCodes(a.code, b.code));
+    nodes.forEach((n) => sortRec(n.children));
+  };
+  sortRec(roots);
+  return roots;
+}
+
+function countDescendants(node: TreeNode): number {
+  return node.children.reduce((s, c) => s + 1 + countDescendants(c), 0);
+}
+
+function WbsIndentedTree({ items }: { items: WbsItem[] }) {
+  const tree = useMemo(() => buildTree(items), [items]);
   const reviewCount = items.filter((it) => it.needsReview).length;
-  const colourByCategory = new Map(groups.map((g) => [g.category, g.colour]));
+  const maxLevel = items.reduce((m, it) => Math.max(m, it.level), 0);
 
-  return (
-    <div className="rounded-lg border bg-card p-5">
-      <header className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-sm font-semibold">WBS structure</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {items.length} work package{items.length === 1 ? '' : 's'} across {groups.length} categor{groups.length === 1 ? 'y' : 'ies'}.
-            {reviewCount > 0 && ` ${reviewCount} flagged for PM review.`}
-          </p>
-        </div>
-      </header>
-
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        <button
-          type="button"
-          onClick={() => setActiveCategory(null)}
-          className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition ${
-            activeCategory === null ? 'border-foreground bg-foreground text-background' : 'border-border bg-background text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          All ({items.length})
-        </button>
-        {groups.map((g) => {
-          const isActive = activeCategory === g.category;
-          return (
-            <button
-              key={g.category}
-              type="button"
-              onClick={() => setActiveCategory(isActive ? null : g.category)}
-              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition ${
-                isActive ? `${g.colour.chip} border-transparent` : 'border-border bg-background text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <span className={`inline-block h-2 w-2 rounded-full ${g.colour.dot}`} />
-              <span>{g.category}</span>
-              <span className="tabular-nums opacity-70">{g.items.length}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="space-y-5">
-        {visibleGroups.map((g) => (
-          <section key={g.category}>
-            <div className="mb-1.5 flex items-center gap-2">
-              <span className={`inline-block h-2 w-2 rounded-full ${g.colour.dot}`} />
-              <h4 className={`text-xs font-semibold uppercase tracking-wider ${g.colour.text}`}>{g.category}</h4>
-              <span className="text-[11px] text-muted-foreground tabular-nums">{g.items.length}</span>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {g.items.map((it) => {
-                const c = colourByCategory.get(it.category) ?? PALETTE[0];
-                return (
-                  <article
-                    key={it.code}
-                    className={`flex items-start gap-2 rounded-md border-l-2 ${c.border} bg-background/60 p-2.5 transition hover:bg-muted/40`}
-                  >
-                    <span className={`flex-none rounded ${c.chip} px-1.5 py-0.5 font-mono text-[10px] tabular-nums`}>
-                      {it.code}
-                    </span>
-                    <span className="flex-1 text-[13px] leading-snug">{it.title}</span>
-                    {it.needsReview && (
-                      <span
-                        className="flex-none rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
-                        title={it.reviewNote ?? 'Needs PM review'}
-                      >
-                        ⚠
-                      </span>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
-    </div>
+  const parentCodes = useMemo(
+    () => items.filter((it) => items.some((o) => o.code.startsWith(it.code + '.'))).map((it) => it.code),
+    [items],
   );
-}
-
-// =============================================================================
-// Tree mode (hierarchical data) — branch-card layout
-// =============================================================================
-
-interface Branch {
-  l1: WbsItem;
-  descendants: WbsItem[];
-  colour: CategoryColour;
-}
-
-function WbsTree({ items }: { items: WbsItem[] }) {
-  const branches: Branch[] = useMemo(() => {
-    let idx = 0;
-    return items
-      .filter((it) => it.level === 1)
-      .map((l1) => ({
-        l1,
-        descendants: items.filter((other) => other.code.startsWith(l1.code + '.')),
-        colour: PALETTE[idx++ % PALETTE.length],
-      }));
-  }, [items]);
-
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  // Default: top-level branches collapsed (children hidden) so the user sees a
+  // clean L1 overview and drills in as needed.
+  const rootCodes = useMemo(() => tree.map((n) => n.code), [tree]);
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(rootCodes));
 
   function toggle(code: string) {
     setCollapsed((prev) => {
@@ -355,100 +301,152 @@ function WbsTree({ items }: { items: WbsItem[] }) {
       return next;
     });
   }
-  function collapseAll() {
-    setCollapsed(new Set(branches.map((b) => b.l1.code)));
-  }
-  function expandAll() {
-    setCollapsed(new Set());
-  }
-
-  const totalCount = items.length;
-  const reviewCount = items.filter((it) => it.needsReview).length;
-  const maxLevel = items.reduce((m, it) => Math.max(m, it.level), 0);
 
   return (
     <div className="rounded-lg border bg-card p-5">
-      <header className="mb-4 flex items-start justify-between gap-4">
+      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold">WBS structure</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {totalCount} work package{totalCount === 1 ? '' : 's'} across {branches.length} branch{branches.length === 1 ? '' : 'es'} ({maxLevel} level{maxLevel === 1 ? '' : 's'}).
+            {items.length} work package{items.length === 1 ? '' : 's'}
+            {maxLevel > 1 ? ` across ${maxLevel} levels` : ''}.
             {reviewCount > 0 && ` ${reviewCount} flagged for PM review.`}
           </p>
         </div>
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={expandAll}
-            className="rounded-md border bg-background px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
-          >
-            Expand all
-          </button>
-          <button
-            type="button"
-            onClick={collapseAll}
-            className="rounded-md border bg-background px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
-          >
-            Collapse all
-          </button>
-        </div>
+        {parentCodes.length > 0 && (
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => setCollapsed(new Set())}
+              className="rounded-md border bg-background px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+            >
+              Expand all
+            </button>
+            <button
+              type="button"
+              onClick={() => setCollapsed(new Set(parentCodes))}
+              className="rounded-md border bg-background px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+            >
+              Collapse all
+            </button>
+          </div>
+        )}
       </header>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        {branches.map((b) => {
-          const isCollapsed = collapsed.has(b.l1.code);
-          return (
-            <article
-              key={b.l1.code}
-              className={`overflow-hidden rounded-md border ${b.colour.border} ${b.colour.bg}`}
-            >
-              <button
-                type="button"
-                onClick={() => toggle(b.l1.code)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-white/30"
-              >
-                <span className={`inline-flex h-4 w-4 flex-none items-center justify-center text-[10px] ${b.colour.text}`}>
-                  {isCollapsed ? '▶' : '▼'}
-                </span>
-                <span className={`flex-none rounded ${b.colour.chip} px-1.5 py-0.5 font-mono text-[10px] tabular-nums`}>
-                  {b.l1.code}
-                </span>
-                <span className={`flex-1 text-sm font-semibold ${b.colour.text}`}>{b.l1.title}</span>
-                <span className="flex-none rounded-full bg-white/70 px-1.5 py-0.5 text-[10px] text-muted-foreground tabular-nums">
-                  {b.descendants.length} pkg{b.descendants.length === 1 ? '' : 's'}
-                </span>
-              </button>
-              {!isCollapsed && b.descendants.length > 0 && (
-                <ul className="space-y-px border-t border-white/60 bg-white/40 p-2">
-                  {b.descendants.map((d) => {
-                    const indent = (d.level - 2) * 14;
-                    return (
-                      <li
-                        key={d.code}
-                        className="flex items-start gap-2 rounded px-2 py-1 text-[13px] transition hover:bg-white/70"
-                        style={{ paddingLeft: `${indent + 8}px` }}
-                      >
-                        <span className="mt-0.5 font-mono text-[10px] tabular-nums text-muted-foreground/80">
-                          {d.code}
-                        </span>
-                        <span className="flex-1 leading-snug">{d.title}</span>
-                        {d.needsReview && (
-                          <span
-                            className="flex-none rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
-                            title={d.reviewNote ?? 'Needs PM review'}
-                          >
-                            ⚠
-                          </span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </article>
-          );
-        })}
-      </div>
+      <ul className="space-y-1.5 text-[13px]">
+        {tree.map((n, i) => (
+          <TreeRow key={n.code} node={n} depth={0} colour={PALETTE[i % PALETTE.length]} collapsed={collapsed} onToggle={toggle} />
+        ))}
+      </ul>
     </div>
   );
+}
+
+function TreeRow({
+  node,
+  depth,
+  colour,
+  collapsed,
+  onToggle,
+}: {
+  node: TreeNode;
+  depth: number;
+  colour: CategoryColour;
+  collapsed: Set<string>;
+  onToggle: (code: string) => void;
+}) {
+  const hasChildren = node.children.length > 0;
+  const isCollapsed = collapsed.has(node.code);
+  const isTop = depth === 0;
+  // A "sub-branch" is a non-top node that itself has children (e.g. 4.1, 4.2).
+  const isSubBranch = !isTop && hasChildren;
+
+  // Top-level → coloured card header. Sub-branch → tinted band so 4.1/4.2 read
+  // as section headers. Leaf rows → plain indented row.
+  let rowClasses: string;
+  if (isTop) {
+    rowClasses = `group flex items-start gap-2 rounded-lg border ${colour.border} ${colour.bg} px-3 py-2 transition hover:brightness-[0.98]`;
+  } else if (isSubBranch) {
+    rowClasses = `group flex items-start gap-2 rounded-md ${colour.bg} px-2 py-1.5 transition hover:brightness-[0.98]`;
+  } else {
+    rowClasses = 'group flex items-start gap-2 rounded-md py-1 pr-2 transition hover:bg-muted/40';
+  }
+  const rowStyle: React.CSSProperties = isTop
+    ? {}
+    : {
+        paddingLeft: `${(depth - 1) * 18 + 10}px`,
+        marginLeft: `${(depth - 1) * 18 + 12}px`,
+        borderLeft: `${isSubBranch ? 3 : 2}px solid var(--wbs-accent)`,
+      };
+
+  return (
+    <li style={{ ['--wbs-accent' as string]: colourHex(colour) }}>
+      <div className={rowClasses} style={rowStyle}>
+        {/* expand/collapse caret (or spacer) */}
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => onToggle(node.code)}
+            className={`mt-0.5 inline-flex h-4 w-4 flex-none items-center justify-center rounded text-[10px] transition hover:bg-black/5 ${isTop || isSubBranch ? colour.text : 'text-muted-foreground hover:text-foreground'}`}
+            aria-label={isCollapsed ? 'Expand' : 'Collapse'}
+          >
+            {isCollapsed ? '▶' : '▼'}
+          </button>
+        ) : (
+          <span className={`mt-0.5 inline-block h-4 w-4 flex-none text-center ${isTop ? colour.text : 'text-muted-foreground/40'}`}>·</span>
+        )}
+
+        {/* code chip */}
+        <span className={`mt-0.5 flex-none rounded px-1.5 py-0.5 font-mono text-[10px] tabular-nums ${isTop || isSubBranch ? colour.chip : 'bg-muted text-foreground/80'}`}>
+          {node.code}
+        </span>
+
+        {/* title */}
+        <span className={`flex-1 leading-snug ${isTop ? `font-semibold ${colour.text}` : isSubBranch ? `font-semibold ${colour.text}` : ''}`}>
+          {node.title}
+        </span>
+
+        {/* child count on parents */}
+        {hasChildren && (
+          <span className={`mt-0.5 flex-none rounded-full px-1.5 py-0.5 text-[10px] tabular-nums ${isTop ? 'bg-white/70 text-muted-foreground' : 'bg-muted text-muted-foreground'}`}>
+            {countDescendants(node)} pkg{countDescendants(node) === 1 ? '' : 's'}
+          </span>
+        )}
+
+        {/* review flag */}
+        {node.needsReview && (
+          <span
+            className="mt-0.5 flex-none rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
+            title={node.reviewNote ?? 'Needs PM review'}
+          >
+            ⚠
+          </span>
+        )}
+      </div>
+
+      {hasChildren && !isCollapsed && (
+        <ul className={isTop ? 'mt-1 space-y-px' : 'space-y-px'}>
+          {node.children.map((c) => (
+            <TreeRow key={c.code} node={c} depth={depth + 1} colour={colour} collapsed={collapsed} onToggle={onToggle} />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+/** Map a CategoryColour to a concrete hex for the inline accent border. */
+function colourHex(c: CategoryColour): string {
+  // Derive from the dot bg class (e.g. "bg-emerald-500").
+  const map: Record<string, string> = {
+    'bg-emerald-500': '#10b981',
+    'bg-sky-500': '#0ea5e9',
+    'bg-amber-500': '#f59e0b',
+    'bg-violet-500': '#8b5cf6',
+    'bg-pink-500': '#ec4899',
+    'bg-teal-500': '#14b8a6',
+    'bg-indigo-500': '#6366f1',
+    'bg-rose-500': '#f43f5e',
+  };
+  return map[c.dot] ?? '#94a3b8';
 }

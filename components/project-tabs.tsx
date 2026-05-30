@@ -95,18 +95,9 @@ export function ProjectTabs({
   const latestWbsMarkdown = planningByAgent['wbs_builder']?.[0]?.output_md ?? null;
 
   return (
-    <Tabs.Root defaultValue="risks" className="mt-8">
+    <Tabs.Root defaultValue="charter" className="mt-8">
       <Tabs.List className="flex flex-wrap gap-x-1 gap-y-2 border-b">
-        {/* Operational */}
-        <TabTrigger value="risks" label="Risks" count={data.risks.length} />
-        <TabTrigger value="issues" label="Issues" count={data.issues.length} />
-        <TabTrigger value="cos" label="Change orders" count={data.change_orders.length} />
-        <TabTrigger value="variance" label="Variance" count={data.variance_reports.length} />
-
-        {/* Divider */}
-        <span className="mx-2 self-center text-muted-foreground/40">|</span>
-
-        {/* Planning */}
+        {/* Planning (Charter leads) */}
         {PLANNING_TABS.map((t) => (
           <TabTrigger
             key={t.value}
@@ -117,6 +108,14 @@ export function ProjectTabs({
           />
         ))}
 
+        {/* Divider */}
+        <span className="mx-2 self-center text-muted-foreground/40">|</span>
+
+        {/* Operational */}
+        <TabTrigger value="risks" label="Risks" count={data.risks.length} />
+        <TabTrigger value="issues" label="Issues" count={data.issues.length} />
+        <TabTrigger value="cos" label="Change orders" count={data.change_orders.length} />
+        <TabTrigger value="variance" label="Variance" count={data.variance_reports.length} />
       </Tabs.List>
 
       {/* Operational panels */}
@@ -146,6 +145,17 @@ export function ProjectTabs({
               varianceReports={data.variance_reports}
               changeOrders={data.change_orders}
             />
+          )}
+          {t.value === 'wbs' && (
+            <div className="flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50/60 px-4 py-3">
+              <span className="text-base leading-none" aria-hidden="true">🗂️</span>
+              <p className="text-xs text-sky-900">
+                <span className="font-semibold">Scope baseline.</span> The WBS is the deliverable-based
+                decomposition of <em>what</em> the project will produce — the foundation for estimating,
+                risk, and the schedule. For <em>when</em> the work happens, see the{' '}
+                <span className="font-medium">Schedule</span> tab.
+              </p>
+            </div>
           )}
           {t.value === 'wbs' && latestWbsMarkdown && (
             <WbsTreeView markdown={latestWbsMarkdown} />

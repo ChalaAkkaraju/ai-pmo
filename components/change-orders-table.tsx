@@ -21,6 +21,25 @@ interface ChangeOrder {
   } | null;
 }
 
+function statusClass(status: string): string {
+  const s = status.toLowerCase();
+  if (s === 'executed' || s === 'complete') return 'bg-emerald-100 text-emerald-800';
+  if (s === 'rejected') return 'bg-red-100 text-red-800';
+  if (s === 'priced' || s === 'under analysis') return 'bg-blue-100 text-blue-900';
+  return 'bg-slate-100 text-slate-700';
+}
+
+function marginTone(pct: number): string {
+  if (pct <= 0) return 'text-red-600';
+  if (pct < 8) return 'text-amber-600';
+  return 'text-emerald-700';
+}
+
+/** Strings collapse to a comparable form so we can detect driver==scope duplication. */
+function norm(s: string): string {
+  return (s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
 export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown>> }) {
   const cos = rows as unknown as ChangeOrder[];
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -34,75 +53,98 @@ export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown
   }
 
   return (
-    <div className="space-y-4">
-      {cos.map((co) => (
-        <div key={co.co_id} className="rounded-lg border bg-card">
-          <div
-            className="flex cursor-pointer flex-wrap items-start justify-between gap-3 p-5"
-            onClick={() => setExpandedId(expandedId === co.co_id ? null : co.co_id)}
-          >
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-sm font-semibold">{co.co_id}</span>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-900">
-                  {co.driver}
-                </span>
-                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-900">
-                  {co.status}
-                </span>
-              </div>
-              <p className="mt-2 text-sm">{co.scope_summary}</p>
-            </div>
-            <dl className="grid grid-cols-3 gap-3 text-xs sm:gap-5">
-              <div>
-                <dt className="text-muted-foreground">Revenue</dt>
-                <dd className="font-mono font-medium">
-                  +${co.revenue_impact_m.toFixed(2)}M
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Cost</dt>
-                <dd className="font-mono font-medium">+${co.cost_impact_m.toFixed(2)}M</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Margin</dt>
-                <dd className="font-mono font-medium">
-                  {co.margin_realized_pct.toFixed(1)}%
-                </dd>
-              </div>
-            </dl>
-          </div>
-          {expandedId === co.co_id && co.four_frame_analysis && (
-            <div className="border-t bg-muted/20 p-5 text-sm">
-              <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Four-frame commercial dynamics
-              </h4>
-              <dl className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <dt className="text-xs text-muted-foreground">Vendor leverage</dt>
-                  <dd className="mt-0.5">{co.four_frame_analysis.vendor_leverage}</dd>
+    <div className="space-y-3">
+      {cos.map((co) => {
+        const isOpen = expandedId === co.co_id;
+        const driverDup = norm(co.driver) === norm(co.scope_summary);
+        const sched = co.schedule_impact_days;
+        return (
+          <div key={co.co_id} className="overflow-hidden rounded-lg border bg-card transition hover:border-foreground/20">
+            <div
+              className="flex cursor-pointer flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+              onClick={() => setExpandedId(isOpen ? null : co.co_id)}
+            >
+              {/* Left: id + status, then scope title, then meta chips */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="rounded bg-foreground px-1.5 py-0.5 font-mono text-[11px] font-semibold text-background">
+                    {co.co_id}
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusClass(co.status)}`}>
+                    {co.status}
+                  </span>
+                  <span className="text-muted-foreground/40">{isOpen ? '▾' : '▸'}</span>
                 </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Client leverage</dt>
-                  <dd className="mt-0.5">{co.four_frame_analysis.client_leverage}</dd>
+                <p className="mt-2 text-sm font-semibold leading-snug text-foreground">
+                  {co.scope_summary}
+                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                  {!driverDup && (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="text-muted-foreground/70">Driver:</span>
+                      <span className="font-medium text-foreground/80">{co.driver}</span>
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1">
+                    <span className="text-muted-foreground/70">Schedule:</span>
+                    <span className={`font-medium ${sched > 0 ? 'text-amber-600' : 'text-foreground/80'}`}>
+                      {sched > 0 ? `+${sched} days` : sched < 0 ? `${sched} days` : 'no impact'}
+                    </span>
+                  </span>
                 </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Client position</dt>
-                  <dd className="mt-0.5">{co.four_frame_analysis.client_position}</dd>
+              </div>
+
+              {/* Right: financials */}
+              <dl className="flex shrink-0 items-stretch divide-x divide-border rounded-md border bg-muted/30">
+                <div className="px-4 py-2 text-center">
+                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Revenue</dt>
+                  <dd className="mt-0.5 font-mono text-sm font-semibold text-emerald-700">+${co.revenue_impact_m.toFixed(2)}M</dd>
                 </div>
-                <div>
-                  <dt className="text-xs text-muted-foreground">Northwood acceptance</dt>
-                  <dd className="mt-0.5">{co.four_frame_analysis.northwood_acceptance}</dd>
+                <div className="px-4 py-2 text-center">
+                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Cost</dt>
+                  <dd className="mt-0.5 font-mono text-sm font-semibold text-foreground">+${co.cost_impact_m.toFixed(2)}M</dd>
+                </div>
+                <div className="px-4 py-2 text-center">
+                  <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Margin</dt>
+                  <dd className={`mt-0.5 font-mono text-sm font-semibold ${marginTone(co.margin_realized_pct)}`}>
+                    {co.margin_realized_pct.toFixed(1)}%
+                  </dd>
                 </div>
               </dl>
-              <p className="mt-4 text-xs text-muted-foreground">
-                {co.approval_routing}
-                {co.executed_week && ` · Executed Week ${co.executed_week}`}
-              </p>
             </div>
-          )}
-        </div>
-      ))}
+
+            {isOpen && co.four_frame_analysis && (
+              <div className="border-t bg-muted/20 p-5 text-sm">
+                <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Four-frame commercial dynamics
+                </h4>
+                <dl className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Vendor leverage</dt>
+                    <dd className="mt-0.5">{co.four_frame_analysis.vendor_leverage}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Client leverage</dt>
+                    <dd className="mt-0.5">{co.four_frame_analysis.client_leverage}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Client position</dt>
+                    <dd className="mt-0.5">{co.four_frame_analysis.client_position}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Northwood acceptance</dt>
+                    <dd className="mt-0.5">{co.four_frame_analysis.northwood_acceptance}</dd>
+                  </div>
+                </dl>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  {co.approval_routing}
+                  {co.executed_week && ` · Executed Week ${co.executed_week}`}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

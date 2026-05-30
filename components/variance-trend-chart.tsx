@@ -56,21 +56,96 @@ export function VarianceTrendChart({ rows, contingencyTotal }: Props) {
     Number.isFinite(contingencyTotal) && contingencyTotal > 0 ? contingencyTotal / 1_000_000 : 0;
   const consumedPct = totalContingencyM > 0 ? (latest.contingencyConsumedM / totalContingencyM) * 100 : 0;
 
+  // A trend needs at least two points. With a single report, a line chart looks
+  // empty/broken — show a clean week-snapshot of gauges instead.
+  const single = data.length < 2;
+
   return (
     <div className="rounded-lg border bg-card p-5">
       <header className="mb-4">
-        <h3 className="text-sm font-semibold">Variance trend</h3>
+        <h3 className="text-sm font-semibold">{single ? `Variance snapshot — Week ${latest.week}` : 'Variance trend'}</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {data.length} report{data.length === 1 ? '' : 's'} across weeks {data[0].week}–{latest.week}.
-          Latest CPI {latest.cpi.toFixed(2)} · SPI {latest.spi.toFixed(2)}
-          {totalContingencyM > 0 ? ` · contingency ${consumedPct.toFixed(0)}% consumed` : ''}.
+          {single
+            ? `Only one report so far (Week ${latest.week}) — trend builds as more weeks are logged.`
+            : `${data.length} reports across weeks ${data[0].week}–${latest.week}. Latest CPI ${latest.cpi.toFixed(2)} · SPI ${latest.spi.toFixed(2)}${totalContingencyM > 0 ? ` · contingency ${consumedPct.toFixed(0)}% consumed` : ''}.`}
         </p>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <CpiSpiChart data={data} />
-        <ContingencyBurnChart data={data} totalContingencyM={totalContingencyM} />
+      {single ? (
+        <VarianceSnapshot
+          cpi={latest.cpi}
+          spi={latest.spi}
+          consumedM={latest.contingencyConsumedM}
+          totalM={totalContingencyM}
+          consumedPct={consumedPct}
+        />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <CpiSpiChart data={data} />
+          <ContingencyBurnChart data={data} totalContingencyM={totalContingencyM} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Single-report view: index gauges + a contingency burn bar. */
+function VarianceSnapshot({
+  cpi,
+  spi,
+  consumedM,
+  totalM,
+  consumedPct,
+}: {
+  cpi: number;
+  spi: number;
+  consumedM: number;
+  totalM: number;
+  consumedPct: number;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-3">
+      <IndexGauge label="CPI" sub="Cost performance" value={cpi} />
+      <IndexGauge label="SPI" sub="Schedule performance" value={spi} />
+      <div className="rounded-lg border bg-muted/20 p-4">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Contingency</p>
+        <p className="mt-1 text-2xl font-bold tabular-nums">
+          {totalM > 0 ? `${consumedPct.toFixed(0)}%` : `$${consumedM.toFixed(1)}M`}
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          ${consumedM.toFixed(1)}M{totalM > 0 ? ` of $${totalM.toFixed(1)}M consumed` : ' consumed'}
+        </p>
+        {totalM > 0 && (
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={`h-full rounded-full ${consumedPct > 100 ? 'bg-red-500' : consumedPct > 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+              style={{ width: `${Math.min(100, consumedPct)}%` }}
+            />
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+/** Compact index gauge: value vs a 1.0 baseline, color-coded. */
+function IndexGauge({ label, sub, value }: { label: string; sub: string; value: number }) {
+  const tone = value < 0.95 ? 'text-red-600' : value >= 1 ? 'text-emerald-700' : 'text-amber-600';
+  const barTone = value < 0.95 ? 'bg-red-500' : value >= 1 ? 'bg-emerald-500' : 'bg-amber-500';
+  // Map 0.7..1.3 onto 0..100% for the bar, with a baseline tick at 1.0.
+  const pct = Math.max(0, Math.min(100, ((value - 0.7) / 0.6) * 100));
+  const basePct = ((1.0 - 0.7) / 0.6) * 100;
+  return (
+    <div className="rounded-lg border bg-muted/20 p-4">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-2xl font-bold tabular-nums ${tone}`}>{value.toFixed(2)}</p>
+      <p className="text-[11px] text-muted-foreground">{sub}</p>
+      <div className="relative mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div className={`h-full rounded-full ${barTone}`} style={{ width: `${pct}%` }} />
+        {/* 1.0 baseline tick */}
+        <span className="absolute top-0 h-full w-px bg-slate-500/60" style={{ left: `${basePct}%` }} />
+      </div>
+      <p className="mt-1 text-[10px] text-muted-foreground">baseline 1.00</p>
     </div>
   );
 }

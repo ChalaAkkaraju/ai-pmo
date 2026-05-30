@@ -30,9 +30,15 @@ export function VarianceSummary({ rows }: { rows: Array<Record<string, unknown>>
 
   const selected = reports.find((r) => r.report_week === selectedWeek);
 
+  // With a single report the week-selector is pointless (nothing to switch
+  // between) and the snapshot card above already shows CPI/SPI/Margin/Buffer —
+  // so skip the grid and show the full report full-width.
+  const showWeekSelector = reports.length > 1;
+
   return (
     <div className="space-y-4">
-      {/* Summary grid */}
+      {/* Week selector — only when there's more than one report */}
+      {showWeekSelector && (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {reports.map((r) => (
           <button
@@ -64,6 +70,7 @@ export function VarianceSummary({ rows }: { rows: Array<Record<string, unknown>>
           </button>
         ))}
       </div>
+      )}
 
       {/* Full report markdown */}
       {selected && (
