@@ -79,6 +79,8 @@ export interface HotItem {
   segment: string;
   status: string;
   current_week: number;
+  est_end_week: number;
+  progress_pct: number;
   cpi: number;
   spi: number;
   open_h_issues: number;
@@ -819,17 +821,17 @@ export function DashboardClient({
           </div>
           <div className="mt-3 overflow-hidden rounded-lg border bg-card">
             <table className="w-full text-sm">
-              <thead className="border-b bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+              <thead className="border-b bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-2 text-left">#</th>
-                  <th className="px-4 py-2 text-left">Project</th>
-                  <th className="px-4 py-2 text-left">Segment</th>
-                  <th className="px-4 py-2 text-left">Stage</th>
-                  <th className="px-4 py-2 text-right">CPI</th>
-                  <th className="px-4 py-2 text-right">SPI</th>
-                  <th className="px-4 py-2 text-right">Open H</th>
-                  <th className="px-4 py-2 text-right">Realised</th>
-                  <th className="px-4 py-2 text-right">Score</th>
+                  <th className="px-3 py-2 text-left font-medium">#</th>
+                  <th className="px-3 py-2 text-left font-medium">Project</th>
+                  <th className="px-3 py-2 text-left font-medium">Segment</th>
+                  <th className="px-3 py-2 text-left font-medium">Progress</th>
+                  <th className="px-3 py-2 text-right font-medium">CPI</th>
+                  <th className="px-3 py-2 text-right font-medium">SPI</th>
+                  <th className="px-3 py-2 text-right font-medium" title="Open High-severity issues">Open high issues</th>
+                  <th className="px-3 py-2 text-right font-medium" title="Risks that have occurred">Realised risks</th>
+                  <th className="px-3 py-2 text-right font-medium">Score</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -837,50 +839,59 @@ export function DashboardClient({
                   const ss = segmentStyle(h.segment);
                   const cpiCls = h.cpi < 0.95 ? 'text-red-600 font-semibold' : h.cpi < 1 ? 'text-amber-600' : 'text-foreground';
                   const spiCls = h.spi < 0.95 ? 'text-red-600 font-semibold' : h.spi < 1 ? 'text-amber-600' : 'text-foreground';
+                  const href = `/access/${token}/projects/${h.code}`;
+                  const barTone = h.status === 'SC' ? 'bg-teal-500' : h.status === 'Closed' ? 'bg-slate-400' : 'bg-amber-500';
                   return (
-                    <tr key={h.id} className="hover:bg-muted/30 transition">
-                      <td className="px-4 py-3 text-muted-foreground tabular-nums">{idx + 1}</td>
-                      <td className="px-4 py-3">
-                        <Link href={`/access/${token}/projects/${h.code}`} className="font-medium hover:underline">
+                    <tr
+                      key={h.id}
+                      onClick={() => { window.location.href = href; }}
+                      className="cursor-pointer transition hover:bg-muted/40"
+                    >
+                      <td className="px-3 py-2.5 text-muted-foreground tabular-nums">{idx + 1}</td>
+                      <td className="px-3 py-2.5">
+                        <Link href={href} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
                           {h.name}
                         </Link>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{h.code}</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {h.code} · <span className={`rounded px-1 py-0.5 text-[10px] font-medium ${statusBadge(h.status)}`}>{h.status}</span>
+                        </p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5">
                         <span className="inline-flex items-center gap-1.5 text-xs">
                           <span className={`h-2 w-2 rounded-full ${ss.dot}`} />
                           {ss.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge(h.status)}`}>
-                          {h.status} · W{h.current_week}
-                        </span>
+                      <td className="px-3 py-2.5">
+                        <div className="w-36">
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground tabular-nums">
+                            <span>W{h.current_week}</span>
+                            <span>{h.progress_pct}%</span>
+                            <span>W{h.est_end_week}</span>
+                          </div>
+                          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div className={`h-full rounded-full ${barTone}`} style={{ width: `${h.progress_pct}%` }} />
+                          </div>
+                        </div>
                       </td>
-                      <td className={`px-4 py-3 text-right tabular-nums ${cpiCls}`}>{h.cpi.toFixed(2)}</td>
-                      <td className={`px-4 py-3 text-right tabular-nums ${spiCls}`}>{h.spi.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className={`px-3 py-2.5 text-right tabular-nums ${cpiCls}`}>{h.cpi.toFixed(2)}</td>
+                      <td className={`px-3 py-2.5 text-right tabular-nums ${spiCls}`}>{h.spi.toFixed(2)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
                         {h.open_h_issues > 0 ? (
-                          <span className="inline-block rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-900">
-                            {h.open_h_issues}
-                          </span>
+                          <span className="inline-block rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-900">{h.open_h_issues}</span>
                         ) : (
                           <span className="text-muted-foreground">0</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className="px-3 py-2.5 text-right tabular-nums">
                         {h.realised_risks > 0 ? (
-                          <span className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-900">
-                            {h.realised_risks}
-                          </span>
+                          <span className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-900">{h.realised_risks}</span>
                         ) : (
                           <span className="text-muted-foreground">0</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="inline-block rounded bg-foreground/90 px-2 py-0.5 text-xs font-semibold tabular-nums text-background">
-                          {h.score.toFixed(1)}
-                        </span>
+                      <td className="px-3 py-2.5 text-right">
+                        <span className="inline-block rounded bg-foreground/90 px-2 py-0.5 text-xs font-semibold tabular-nums text-background">{h.score.toFixed(1)}</span>
                       </td>
                     </tr>
                   );

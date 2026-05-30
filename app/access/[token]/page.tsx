@@ -365,13 +365,21 @@ export default async function RoleLandingPage({ params }: PageProps) {
       const openH = openHByProject.get(p.id) ?? 0;
       const realised = realisedByProject.get(p.id) ?? 0;
       const score = cpiPenalty + spiPenalty + openH * 2 + realised * 1;
+      // Estimated end + progress (same heuristic as the schedule timeline):
+      // Active ~70% elapsed, SC short warranty tail.
+      const cw = Number(p.current_week) || 0;
+      const estEnd =
+        p.status === 'SC' ? Math.max(1, Math.ceil(cw * 1.05)) : Math.max(cw + 4, Math.ceil(cw / 0.7));
+      const progressPct = estEnd > 0 ? Math.min(100, Math.round((cw / estEnd) * 100)) : 0;
       return {
         id: p.id,
         code: p.code,
         name: p.name,
         segment: p.segment,
         status: p.status,
-        current_week: p.current_week,
+        current_week: cw,
+        est_end_week: estEnd,
+        progress_pct: progressPct,
         cpi,
         spi,
         open_h_issues: openH,
