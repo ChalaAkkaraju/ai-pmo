@@ -1,8 +1,10 @@
 /**
  * Authentication-aware app header.
  *
- * Shown on every page under /access/[token]/. Displays the brand mark,
- * the colleague's name, and their role.
+ * Shown on every page under /access/[token]/. Three zones:
+ *   left   — brand mark (logo + product name)
+ *   center — the colleague's name + role
+ *   right  — nav links (Agents / Usage / Analytics)
  */
 
 import Link from 'next/link';
@@ -11,10 +13,11 @@ import type { ResolvedRole } from '@/lib/role-context';
 export function Header({ token, resolved }: { token: string; resolved: ResolvedRole }) {
   return (
     <header className="no-print border-b bg-background">
-      <div className="container mx-auto flex h-14 items-center justify-between px-6">
+      <div className="container mx-auto grid h-14 grid-cols-[1fr_auto_1fr] items-center px-6">
+        {/* Left — brand */}
         <Link
           href={`/access/${token}`}
-          className="inline-flex items-center gap-2.5 transition hover:opacity-90"
+          className="inline-flex items-center gap-2.5 justify-self-start transition hover:opacity-90"
         >
           <span
             className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-foreground text-base leading-none"
@@ -29,7 +32,15 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
             </span>
           </span>
         </Link>
-        <div className="flex items-center gap-5 text-sm">
+
+        {/* Center — who you are */}
+        <div className="flex flex-col items-center justify-self-center leading-tight">
+          <span className="text-sm font-semibold text-foreground">{resolved.role.name}</span>
+          <span className="text-[11px] text-muted-foreground">{resolved.definition.display_name}</span>
+        </div>
+
+        {/* Right — nav */}
+        <div className="flex items-center gap-5 justify-self-end text-sm">
           <Link
             href={`/access/${token}/agents`}
             className="text-muted-foreground transition hover:text-foreground"
@@ -48,11 +59,6 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
           >
             Analytics
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="font-medium">{resolved.role.name}</span>
-            <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground">{resolved.definition.display_name}</span>
-          </div>
         </div>
       </div>
     </header>

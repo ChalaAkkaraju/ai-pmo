@@ -577,14 +577,6 @@ export function DashboardClient({
 
   return (
     <div className="container mx-auto max-w-screen-2xl px-8 py-8 space-y-6">
-      {/* Welcome */}
-      <section>
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">
-          {roleDisplayName}
-        </p>
-        <h1 className="mt-1 text-4xl font-bold tracking-tight">Welcome, {roleName}</h1>
-      </section>
-
       {/* Global project search — always visible, matches across all 99 projects.
           The segment drill-down has its own scoped search lower in the page; this
           one is for jumping straight to any project by name, code, client, or segment. */}
