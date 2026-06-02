@@ -12,11 +12,12 @@
  * Supabase Realtime on action_items (migrations 0009 / 0010).
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { ActionQueue } from '@/components/action-queue';
 import { RaisedActionsPanel } from '@/components/raised-actions-panel';
+import { NewProjectsPopover, type RecentlyAddedProject } from '@/components/recently-added-banner';
 
 interface CountRow {
   id: string;
@@ -35,6 +36,7 @@ export function ActionRibbon({
   actionsMine,
   issuesMine,
   risksMine,
+  recentlyAdded = [],
 }: {
   token: string;
   roleType: string;
@@ -44,6 +46,7 @@ export function ActionRibbon({
   actionsMine: number;
   issuesMine: number;
   risksMine: number;
+  recentlyAdded?: RecentlyAddedProject[];
 }) {
   const [open, setOpen] = useState(false);
   const [mine, setMine] = useState(true);
@@ -52,6 +55,24 @@ export function ActionRibbon({
   const [aActive, setAActive] = useState(actionsActive);
   const [aMine, setAMine] = useState(actionsMine);
   const [flash, setFlash] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
+  const newRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!newOpen) return;
+    function onDown(e: MouseEvent) {
+      if (newRef.current && !newRef.current.contains(e.target as Node)) setNewOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setNewOpen(false);
+    }
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [newOpen]);
 
   const refresh = useCallback(async () => {
     try {
@@ -118,6 +139,28 @@ export function ActionRibbon({
       `}</style>
 
       <div className="flex flex-wrap items-center gap-3">
+        {/* New projects pill — recently added via the intake form (last 14 days) */}
+        {recentlyAdded.length > 0 && (
+          <div ref={newRef} className="relative flex-none">
+            <button
+              type="button"
+              onClick={() => setNewOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 transition hover:bg-emerald-100"
+              title="Projects added in the last 14 days"
+              aria-expanded={newOpen}
+            >
+              <span aria-hidden="true">🆕</span>
+              New
+              <span className="rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                {recentlyAdded.length}
+              </span>
+            </button>
+            {newOpen && (
+              <NewProjectsPopover token={token} projects={recentlyAdded} onClose={() => setNewOpen(false)} />
+            )}
+          </div>
+        )}
+
         {/* Open actions button (blinks when the role has work waiting) */}
         <button
           type="button"

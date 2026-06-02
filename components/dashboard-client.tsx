@@ -17,6 +17,9 @@ import remarkGfm from 'remark-gfm';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { ActionRibbon } from '@/components/action-ribbon';
+import type { RecentlyAddedProject } from '@/components/recently-added-banner';
+
+export type { RecentlyAddedProject };
 
 export interface DashboardProject {
   id: string;
@@ -28,6 +31,7 @@ export interface DashboardProject {
   current_week: number;
   contract_value_current: number;
   hard_deadline_description: string | null;
+  is_new?: boolean;
 }
 
 export interface DashboardActivity {
@@ -139,6 +143,7 @@ interface Props {
   hotItems: HotItem[];
   segmentSummaries: SegmentSummary[];
   projects: DashboardProject[];
+  recentlyAdded: RecentlyAddedProject[];
   activity: DashboardActivity[];
 }
 
@@ -393,6 +398,7 @@ export function DashboardClient({
   hotItems,
   segmentSummaries,
   projects,
+  recentlyAdded,
   activity: initialActivity,
 }: Props) {
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
@@ -772,6 +778,7 @@ export function DashboardClient({
         actionsMine={actionsMine}
         issuesMine={issuesMine}
         risksMine={risksMine}
+        recentlyAdded={recentlyAdded}
       />
 
       {/* Role-specific KPI strip — shown only for roles with a tailored set.
@@ -1014,7 +1021,12 @@ export function DashboardClient({
                     <div className="p-4 pl-5">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="text-base font-semibold leading-tight line-clamp-2">{p.name}</h3>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge(p.status)}`}>{p.status}</span>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          {p.is_new && (
+                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">New</span>
+                          )}
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge(p.status)}`}>{p.status}</span>
+                        </div>
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">{p.code} · {p.client}</p>
                       <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">

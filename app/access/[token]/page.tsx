@@ -21,6 +21,7 @@ import {
   type HotItem,
   type OperationalKpis,
   type RoleKpiStrip,
+  type RecentlyAddedProject,
 } from '@/components/dashboard-client';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -48,7 +49,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
     await Promise.all([
       supabase
         .from('projects')
-        .select('id, code, name, client, segment, status, current_week, contract_value_current, approved_budget_current, contingency, hard_deadline_description')
+        .select('id, code, name, client, segment, status, current_week, contract_value_current, approved_budget_current, contingency, hard_deadline_description, created_via, created_at')
         .order('code', { ascending: true }),
       supabase.from('risks').select('project_id, status, impact, cross_cutting_class, owner'),
       supabase.from('issues').select('project_id, severity, status, category, owner'),
@@ -81,6 +82,8 @@ export default async function RoleLandingPage({ params }: PageProps) {
     approved_budget_current: number | string;
     contingency: number | string;
     hard_deadline_description: string | null;
+    created_via: string | null;
+    created_at: string;
   }>;
   const risks = (risksRes.data ?? []) as Array<{ project_id: string; status: string; impact: string; cross_cutting_class: string; owner: string | null }>;
   const issues = (issuesRes.data ?? []) as Array<{ project_id: string; severity: string; status: string; category: string; owner: string | null }>;
@@ -392,7 +395,12 @@ export default async function RoleLandingPage({ params }: PageProps) {
 
   const hotItems = hotItemsAll.slice(0, 5);
 
-  // Project rows for inline drill-down grid
+  // Project rows for inline drill-down grid. A project is "new" when it was
+  // created via the intake form within the last 14 days.
+  const RECENT_MS = 14 * 24 * 60 * 60 * 1000;
+  const isNewProject = (p: { created_via: string | null; created_at: string }) =>
+    p.created_via === 'intake_form' && Date.now() - new Date(p.created_at).getTime() < RECENT_MS;
+
   const dashboardProjects: DashboardProject[] = projects.map((p) => ({
     id: p.id,
     code: p.code,
@@ -403,7 +411,15 @@ export default async function RoleLandingPage({ params }: PageProps) {
     current_week: p.current_week,
     contract_value_current: Number(p.contract_value_current),
     hard_deadline_description: p.hard_deadline_description ?? null,
+    is_new: isNewProject(p),
   }));
+
+  // Recently-added banner: form-created projects from the last 14 days, newest first.
+  const recentlyAdded: RecentlyAddedProject[] = projects
+    .filter(isNewProject)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 9)
+    .map((p) => ({ code: p.code, name: p.name, segment: p.segment, status: p.status, created_at: p.created_at }));
 
   // -------- Recent activity (role-led, workspace backfill) --------
   // Supabase returns joined relations as an array even for single-FK joins.
@@ -521,6 +537,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
       hotItems={hotItems}
       segmentSummaries={segmentSummaries}
       projects={dashboardProjects}
+      recentlyAdded={recentlyAdded}
       activity={dashboardActivity}
     />
   );
