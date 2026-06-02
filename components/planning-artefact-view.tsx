@@ -7,9 +7,14 @@
  *
  * If multiple outputs exist for the same agent_type, shows an iteration
  * selector. Falls back gracefully to a "no output yet" empty state.
+ *
+ * Write-capable roles can REVIEW & EDIT the AI draft: the original (output_md)
+ * is preserved, the human correction is saved to edited_md with provenance,
+ * and the edited version is shown going forward (with a "Revert to AI draft"
+ * option). See PATCH /api/agent-output and migration 0015.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -21,6 +26,9 @@ export interface ArtefactRow {
   user_prompt: string | null;
   tokens_used: number | null;
   cost_usd: number | null;
+  edited_md?: string | null;
+  edited_by_role_type?: string | null;
+  edited_at?: string | null;
 }
 
 interface PlanningArtefactViewProps {
@@ -29,6 +37,8 @@ interface PlanningArtefactViewProps {
   token: string;
   /** Optional one-line description shown in the header band. */
   blurb?: string;
+  /** Write-capable role → can review & edit the draft. */
+  canEdit?: boolean;
 }
 
 /** Pull the first H1 (# ...) from the markdown to use as a display title. */
@@ -42,6 +52,18 @@ function readingStats(md: string): { words: number; mins: number } {
   const words = (md.trim().match(/\S+/g) ?? []).length;
   return { words, mins: Math.max(1, Math.round(words / 220)) };
 }
+
+const ROLE_LABEL: Record<string, string> = {
+  pm: 'Senior PM',
+  procurement: 'Procurement',
+  risk: 'Risk Analyst',
+  commercial: 'Commercial',
+  project_controls: 'Project Controls',
+  program_manager: 'Program Manager',
+  engineering_manager: 'Engineering Manager',
+  construction_manager: 'Construction Manager',
+  hse_manager: 'HSE Manager',
+};
 
 const MD_COMPONENTS = {
   h1: ({ children }: { children?: React.ReactNode }) => (
@@ -90,8 +112,22 @@ const MD_COMPONENTS = {
   ),
 };
 
-export function PlanningArtefactView({ rows, artefactLabel, token, blurb }: PlanningArtefactViewProps) {
+type EditMeta = { edited_md: string | null; edited_by_role_type: string | null; edited_at: string | null };
+
+export function PlanningArtefactView({ rows, artefactLabel, token, blurb, canEdit = false }: PlanningArtefactViewProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
+  // Local overrides keyed by row id so saves/reverts reflect without a reload.
+  const [localEdits, setLocalEdits] = useState<Record<string, EditMeta>>({});
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Leaving a version while editing cancels the edit.
+  useEffect(() => {
+    setEditing(false);
+    setError(null);
+  }, [selectedIdx]);
 
   if (rows.length === 0) {
     return (
@@ -108,8 +144,72 @@ export function PlanningArtefactView({ rows, artefactLabel, token, blurb }: Plan
   }
 
   const current = rows[selectedIdx];
-  const title = extractTitle(current.output_md, artefactLabel);
-  const stats = readingStats(current.output_md);
+  const meta: EditMeta =
+    localEdits[current.id] ??
+    {
+      edited_md: current.edited_md ?? null,
+      edited_by_role_type: current.edited_by_role_type ?? null,
+      edited_at: current.edited_at ?? null,
+    };
+  const isEdited = !!meta.edited_md;
+  const effective = meta.edited_md ?? current.output_md;
+
+  const title = extractTitle(effective, artefactLabel);
+  const stats = readingStats(effective);
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/agent-output', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, id: current.id, edited_md: draft }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json?.error ?? 'Could not save the edit.');
+      } else {
+        setLocalEdits((prev) => ({
+          ...prev,
+          [current.id]: {
+            edited_md: json.edited_md ?? draft,
+            edited_by_role_type: json.edited_by_role_type ?? null,
+            edited_at: json.edited_at ?? null,
+          },
+        }));
+        setEditing(false);
+      }
+    } catch {
+      setError('Network error — could not save the edit.');
+    }
+    setSaving(false);
+  }
+
+  async function revert() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/agent-output', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, id: current.id, revert: true }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json?.error ?? 'Could not revert.');
+      } else {
+        setLocalEdits((prev) => ({
+          ...prev,
+          [current.id]: { edited_md: null, edited_by_role_type: null, edited_at: null },
+        }));
+        setEditing(false);
+      }
+    } catch {
+      setError('Network error — could not revert.');
+    }
+    setSaving(false);
+  }
 
   return (
     <div className="space-y-4">
@@ -133,10 +233,17 @@ export function PlanningArtefactView({ rows, artefactLabel, token, blurb }: Plan
                   <span>{rows.length} versions</span>
                 </>
               )}
+              {isEdited && (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800">
+                  ✎ Edited
+                  {meta.edited_by_role_type ? ` by ${ROLE_LABEL[meta.edited_by_role_type] ?? meta.edited_by_role_type}` : ''}
+                  {meta.edited_at ? ` · ${new Date(meta.edited_at).toLocaleDateString()}` : ''}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {rows.length > 1 && (
+            {rows.length > 1 && !editing && (
               <select
                 aria-label="Iteration"
                 value={selectedIdx}
@@ -150,25 +257,90 @@ export function PlanningArtefactView({ rows, artefactLabel, token, blurb }: Plan
                 ))}
               </select>
             )}
-            <a
-              href={`/access/${token}/report/${current.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
-              title="Opens a polished, printable report in a new tab"
-            >
-              ↗ Full report
-            </a>
+            {canEdit && !editing && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDraft(effective);
+                  setEditing(true);
+                  setError(null);
+                }}
+                className="rounded-md border px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
+                title="Review and correct this draft. The AI original is preserved."
+              >
+                ✎ Edit
+              </button>
+            )}
+            {canEdit && isEdited && !editing && (
+              <button
+                type="button"
+                onClick={revert}
+                disabled={saving}
+                className="rounded-md border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted disabled:opacity-50"
+                title="Discard the human edits and restore the AI draft."
+              >
+                ↺ Revert to AI draft
+              </button>
+            )}
+            {!editing && (
+              <a
+                href={`/access/${token}/report/${current.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
+                title="Opens a polished, printable report in a new tab"
+              >
+                ↗ Full report
+              </a>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Body */}
-      <article className="prose prose-sm max-w-none rounded-xl border bg-card p-6 prose-headings:scroll-mt-20 prose-p:text-[13px] prose-li:text-[13px] dark:prose-invert">
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
-          {current.output_md}
-        </ReactMarkdown>
-      </article>
+      {error && (
+        <p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+      )}
+
+      {/* Body — editor or rendered markdown */}
+      {editing ? (
+        <div className="rounded-xl border bg-card p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              Editing markdown. The AI original is kept — you can revert anytime.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                disabled={saving}
+                className="rounded-md border px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving || !draft.trim()}
+                className="rounded-md bg-foreground px-4 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-50"
+              >
+                {saving ? 'Saving…' : 'Save edit'}
+              </button>
+            </div>
+          </div>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            spellCheck
+            className="h-[60vh] w-full resize-y rounded-md border bg-background px-3 py-2 font-mono text-[12px] leading-relaxed outline-none focus:ring-1 focus:ring-foreground/30"
+          />
+        </div>
+      ) : (
+        <article className="prose prose-sm max-w-none rounded-xl border bg-card p-6 prose-headings:scroll-mt-20 prose-p:text-[13px] prose-li:text-[13px] dark:prose-invert">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+            {effective}
+          </ReactMarkdown>
+        </article>
+      )}
     </div>
   );
 }

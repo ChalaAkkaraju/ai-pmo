@@ -164,6 +164,7 @@ export function ProjectTabs({
             rows={planningByAgent[t.agentType] ?? []}
             artefactLabel={t.label}
             token={token}
+            canEdit={canWrite}
           />
         </Tabs.Content>
       ))}
