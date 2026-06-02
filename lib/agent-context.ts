@@ -75,6 +75,67 @@ export async function loadWorkedExample(
 }
 
 /**
+ * Planning agents whose latest output is worth pulling from a *reference*
+ * project to ground a new project's planning. Ordered in lifecycle sequence.
+ */
+const REFERENCE_PLANNING_AGENTS: AgentType[] = [
+  'charter_drafter',
+  'stakeholder_analyst',
+  'wbs_builder',
+  'schedule_reasoner',
+  'budget_builder',
+  'communications_planner',
+];
+
+/** Per-artefact character cap so reference grounding doesn't blow the budget. */
+const MAX_REFERENCE_ARTEFACT_CHARS = 6000;
+
+export interface ReferenceGrounding {
+  project: Record<string, unknown>;
+  artefacts: Array<{ agent_type: string; output_md: string }>;
+}
+
+/**
+ * Load a "similar project" the new project was created from (via the intake
+ * form's reference picker) plus its latest planning artefacts, to use as a
+ * grounding basis. Returns null if the reference can't be found.
+ */
+export async function loadReferenceGrounding(
+  supabase: SupabaseClient,
+  referenceCode: string,
+): Promise<ReferenceGrounding | null> {
+  const { data: refProject } = await supabase
+    .from('projects')
+    .select('id, name, code, segment, contract_value_current, approved_budget_current, contingency, hard_deadline_description')
+    .eq('code', referenceCode)
+    .maybeSingle();
+  if (!refProject) return null;
+
+  const { data: outputs } = await supabase
+    .from('agent_outputs')
+    .select('agent_type, output_md, created_at')
+    .eq('project_id', (refProject as { id: string }).id)
+    .in('agent_type', REFERENCE_PLANNING_AGENTS)
+    .order('created_at', { ascending: false });
+
+  // Keep only the latest output per agent type, then order by lifecycle.
+  const seen = new Set<string>();
+  const artefacts: Array<{ agent_type: string; output_md: string }> = [];
+  for (const o of (outputs ?? []) as Array<{ agent_type: string; output_md: string | null }>) {
+    if (seen.has(o.agent_type)) continue;
+    seen.add(o.agent_type);
+    artefacts.push({ agent_type: o.agent_type, output_md: (o.output_md ?? '').slice(0, MAX_REFERENCE_ARTEFACT_CHARS) });
+  }
+  artefacts.sort(
+    (a, b) =>
+      REFERENCE_PLANNING_AGENTS.indexOf(a.agent_type as AgentType) -
+      REFERENCE_PLANNING_AGENTS.indexOf(b.agent_type as AgentType),
+  );
+
+  return { project: refProject, artefacts };
+}
+
+/**
  * Load the relevant project state from Supabase for the given project.
  *
  * Returns issues, risks, change orders, variance reports — all the structured
@@ -90,6 +151,7 @@ export async function loadProjectState(
   risks: Array<Record<string, unknown>>;
   change_orders: Array<Record<string, unknown>>;
   variance_reports: Array<Record<string, unknown>>;
+  reference?: ReferenceGrounding | null;
 }> {
   const { data: project } = await supabase
     .from('projects')
@@ -98,7 +160,7 @@ export async function loadProjectState(
     .maybeSingle();
 
   if (!project) {
-    return { project: null, issues: [], risks: [], change_orders: [], variance_reports: [] };
+    return { project: null, issues: [], risks: [], change_orders: [], variance_reports: [], reference: null };
   }
 
   const [issuesRes, risksRes, cosRes, variancesRes] = await Promise.all([
@@ -124,12 +186,21 @@ export async function loadProjectState(
       .order('report_week', { ascending: true }),
   ]);
 
+  // If this project was created from a reference (intake form), pull the
+  // reference's planning artefacts to ground the agent's output.
+  let reference: ReferenceGrounding | null = null;
+  const refCode = (project as { intake_json?: { reference_project_code?: unknown } }).intake_json?.reference_project_code;
+  if (typeof refCode === 'string' && refCode && refCode !== projectCode) {
+    reference = await loadReferenceGrounding(supabase, refCode);
+  }
+
   return {
     project,
     issues: issuesRes.data ?? [],
     risks: risksRes.data ?? [],
     change_orders: cosRes.data ?? [],
     variance_reports: variancesRes.data ?? [],
+    reference,
   };
 }
 
@@ -261,6 +332,32 @@ Rules for the vague-question shape:
       varianceSection += `## Latest report (Week ${latest.report_week}) — full content\n\n${latest.full_report_md}`;
       sections.push(varianceSection);
     }
+  }
+
+  // Section 4: Reference project grounding (when this project was created from
+  // a similar one via the intake form). Give the model the reference's planning
+  // artefacts as a BASIS to adapt, not copy.
+  const reference = params.projectState.reference;
+  if (reference) {
+    const rp = reference.project as Record<string, unknown>;
+    let refSection = `# Reference project — ${rp.name} (${rp.code})
+
+This project was set up using the project above as a *similar reference*. Use its structure, work breakdown, schedule logic, budget shape, and overall approach as a STARTING BASIS — then adapt to the current project's specific facts, scale, and constraints. Do NOT copy names, figures, or dates blindly; treat them as a template to tailor.
+
+- **Segment:** ${rp.segment}
+- **Contract value:** $${Number(rp.contract_value_current).toLocaleString()}
+- **Approved budget:** $${Number(rp.approved_budget_current).toLocaleString()}
+- **Hard deadline:** ${rp.hard_deadline_description ?? 'none specified'}`;
+
+    if (reference.artefacts.length > 0) {
+      refSection += `\n\n## Reference artefacts (latest planning outputs from the similar project)\n`;
+      for (const a of reference.artefacts) {
+        refSection += `\n### ${a.agent_type}\n\n${a.output_md}\n`;
+      }
+    } else {
+      refSection += `\n\n(No planning artefacts have been generated on the reference project yet — use its facts above as the basis.)`;
+    }
+    sections.push(refSection);
   }
 
   return sections.join('\n\n---\n\n');

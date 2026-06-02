@@ -4,13 +4,19 @@
  * Shown on every page under /access/[token]/. Three zones:
  *   left   — brand mark (logo + product name)
  *   center — the colleague's name + role
- *   right  — nav links (Agents / Usage / Analytics)
+ *   right  — nav links (New project / Agents / Usage / Analytics)
+ *
+ * "+ New project" only shows for roles that can create one (pm + engineering_manager).
  */
 
 import Link from 'next/link';
 import type { ResolvedRole } from '@/lib/role-context';
 
+const CREATE_ROLES = ['pm', 'engineering_manager'];
+
 export function Header({ token, resolved }: { token: string; resolved: ResolvedRole }) {
+  const canCreate = CREATE_ROLES.includes(resolved.role.role_type);
+
   return (
     <header className="no-print border-b bg-background">
       <div className="container mx-auto grid h-14 grid-cols-[1fr_auto_1fr] items-center px-6">
@@ -41,6 +47,14 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
 
         {/* Right — nav */}
         <div className="flex items-center gap-5 justify-self-end text-sm">
+          {canCreate && (
+            <Link
+              href={`/access/${token}/intake`}
+              className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
+            >
+              + New project
+            </Link>
+          )}
           <Link
             href={`/access/${token}/agents`}
             className="text-muted-foreground transition hover:text-foreground"
