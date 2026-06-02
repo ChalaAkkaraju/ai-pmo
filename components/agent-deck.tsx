@@ -123,8 +123,9 @@ const PHASE_ORDER: Array<{ key: Phase | 'portfolio'; label: string }> = [
 ];
 
 export function AgentDeck({ token, total, entries }: AgentDeckProps) {
-  // Slide 0 is the landing/overview panel; agents occupy slides 1..total.
-  const slideCount = total + 1;
+  // Slide 0 = overview, slide 1 = how-it-works, agents occupy slides 2..total+1.
+  const HOWTO_IDX = 1;
+  const slideCount = total + 2;
   const [active, setActive] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const slideRefs = useRef<Array<HTMLElement | null>>([]);
@@ -216,7 +217,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           <span className="text-xs text-muted-foreground">Agent catalog</span>
         </div>
         <span className="tabular-nums text-xs font-medium text-muted-foreground">
-          {active === 0 ? 'Overview' : `${active} / ${total}`}
+          {active === 0 ? 'Overview' : active === HOWTO_IDX ? 'How it works' : `${active - 1} / ${total}`}
         </span>
       </div>
 
@@ -224,7 +225,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
       <div className="h-0.5 flex-none bg-muted">
         <div
           className="h-full bg-foreground transition-all duration-300"
-          style={{ width: `${(active / total) * 100}%` }}
+          style={{ width: `${(active / (total + 1)) * 100}%` }}
         />
       </div>
 
@@ -240,7 +241,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           ref={(el) => {
             slideRefs.current[0] = el;
           }}
-          className="flex h-full min-h-full w-full min-w-full flex-none snap-start items-center justify-center overflow-y-auto px-6 py-4"
+          className="flex h-full min-h-full w-full min-w-full flex-none snap-start items-start justify-center overflow-y-auto px-6 py-6"
         >
           <div className="mx-auto w-full max-w-4xl">
             {/* Hero band */}
@@ -319,31 +320,135 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               ))}
             </div>
 
-            {/* Scope legend + CTA on one row */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-                <span className="font-semibold uppercase tracking-wider">Scope</span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#10b981' }} />
-                  Project-level
+            {/* Scope legend */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+              <span className="font-semibold uppercase tracking-wider">Scope</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#10b981' }} />
+                Project-level
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#0ea5e9' }} />
+                Single-item
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
+                Portfolio-level
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Slide 1 — how to work with the assistant */}
+        <section
+          key="__howto"
+          data-idx={1}
+          ref={(el) => {
+            slideRefs.current[1] = el;
+          }}
+          className="flex h-full min-h-full w-full min-w-full flex-none snap-start items-start justify-center overflow-y-auto px-6 py-6"
+        >
+          <div className="mx-auto w-full max-w-4xl">
+            {/* Hero band */}
+            <div
+              className="rounded-2xl border p-5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(14,165,233,0.16), rgba(14,165,233,0.05))',
+                borderColor: 'rgba(14,165,233,0.25)',
+              }}
+            >
+              <div className="mb-2 flex items-center gap-2.5">
+                <span className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-sky-500/15 text-sky-600">
+                  <Sparkles size={22} strokeWidth={2} />
                 </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#0ea5e9' }} />
-                  Single-item
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
-                  Portfolio-level
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  How it works
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => jumpTo(1)}
-                className="inline-flex flex-none items-center gap-2 rounded-full border bg-background px-4 py-2 text-sm font-medium text-foreground/80 shadow-sm transition hover:bg-muted"
-              >
-                Step through each specialist
-                <ChevronRight size={16} strokeWidth={2.5} />
-              </button>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                Working with the assistant
+              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/80 sm:text-base">
+                Four things to know: how to ask, how a quick answer becomes a full report, how the
+                assistant hands work to your colleagues, and when to let it choose the specialist for you.
+              </p>
+            </div>
+
+            {/* Four workflow cards */}
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* 1. Ask from anywhere */}
+              <div className="rounded-xl border bg-card p-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+                    <MessageCircle size={17} strokeWidth={2.5} />
+                  </span>
+                  <h2 className="text-sm font-semibold">Ask from any page</h2>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/80">
+                  Click the floating <span className="font-medium">✨ Ask AI Assistant</span> button (bottom-right of every page)
+                  and type in plain English. On a project page it answers about that project; on the dashboard it answers
+                  portfolio-wide.
+                </p>
+              </div>
+
+              {/* 2. Auto vs specific */}
+              <div className="rounded-xl border bg-card p-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-violet-100 text-violet-700">
+                    <Sparkles size={17} strokeWidth={2.5} />
+                  </span>
+                  <h2 className="text-sm font-semibold">Auto-routing (or pick a specialist)</h2>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/80">
+                  Leave it on <span className="font-medium">Auto</span> and a quick classifier picks the right specialist for
+                  your question — you&apos;ll see which one ran (&ldquo;Auto → Risk Analyst&rdquo;). Prefer a specific agent?
+                  Choose it from the dropdown to override.
+                </p>
+              </div>
+
+              {/* 3. Pop out + full report */}
+              <div className="rounded-xl border bg-card p-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                    <FileCheck size={17} strokeWidth={2.5} />
+                  </span>
+                  <h2 className="text-sm font-semibold">Pin a brief · open the full report</h2>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/80">
+                  Use <span className="font-medium">↗ Pop out</span> to pin a quick answer as a floating panel while you keep
+                  asking. Use <span className="font-medium">↗ Show full report</span> to expand it into a polished, printable
+                  document (with PDF download) in a new tab.
+                </p>
+              </div>
+
+              {/* 4. Assign actions */}
+              <div className="rounded-xl border bg-card p-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-rose-100 text-rose-700">
+                    <GitPullRequest size={17} strokeWidth={2.5} />
+                  </span>
+                  <h2 className="text-sm font-semibold">Assign actions to other roles</h2>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/80">
+                  When an agent (e.g. the Risk Analyst) recommends work that another role should own, you&apos;ll see
+                  <span className="font-medium"> Assign</span> buttons under its answer. Assign one and it lands in that
+                  role&apos;s queue; they can change its status and <span className="font-medium">Draft my response</span> back —
+                  a shared work item, no agent calling another blindly.
+                </p>
+              </div>
+            </div>
+
+            {/* Flow strip */}
+            <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border bg-muted/30 px-4 py-3 text-xs font-medium text-muted-foreground">
+              <span className="rounded-full bg-sky-100 px-2.5 py-1 text-sky-800">Ask ✨</span>
+              <ChevronRight size={14} />
+              <span className="rounded-full bg-violet-100 px-2.5 py-1 text-violet-800">Auto-routed answer</span>
+              <ChevronRight size={14} />
+              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-amber-800">Pin / full report</span>
+              <ChevronRight size={14} />
+              <span className="rounded-full bg-rose-100 px-2.5 py-1 text-rose-800">Assign to a colleague</span>
+              <ChevronRight size={14} />
+              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800">They respond</span>
             </div>
           </div>
         </section>
@@ -353,7 +458,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           const s = scopeStyle(entry.scope);
           const Icon = AGENT_ICON[entry.agent_type] ?? FileText;
           const phase = AGENT_PHASE[entry.agent_type];
-          const slideIdx = idx + 1;
+          const slideIdx = idx + 2;
           return (
             <section
               key={entry.agent_type}
@@ -494,12 +599,12 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
         <span className="mx-0.5 h-3 w-px bg-border" aria-hidden />
         {entries.map((entry, idx) => {
           const s = scopeStyle(entry.scope);
-          const isActive = idx + 1 === active;
+          const isActive = idx + 2 === active;
           return (
             <button
               key={entry.agent_type}
               type="button"
-              onClick={() => jumpTo(idx + 1)}
+              onClick={() => jumpTo(idx + 2)}
               title={entry.name}
               aria-label={`Go to ${entry.name}`}
               className="rounded-full transition-all hover:scale-125"

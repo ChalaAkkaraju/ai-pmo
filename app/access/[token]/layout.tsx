@@ -8,7 +8,7 @@
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { Header } from '@/components/header';
-import { FloatingAgentWidget } from '@/components/floating-agent-widget';
+import { FloatingAgentWidgetGate } from '@/components/floating-agent-widget-gate';
 
 interface AccessLayoutProps {
   children: React.ReactNode;
@@ -27,7 +27,7 @@ export default async function AccessLayout({ children, params }: AccessLayoutPro
     <div className="min-h-screen flex flex-col">
       <Header token={token} resolved={resolved} />
       <main className="flex-1">{children}</main>
-      <FloatingAgentWidget
+      <FloatingAgentWidgetGate
         token={token}
         roleDisplayName={resolved.definition.display_name}
         allowedAgents={resolved.definition.allowed_agents}
