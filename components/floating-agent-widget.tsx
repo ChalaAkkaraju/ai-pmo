@@ -27,7 +27,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AgentType } from '@/lib/types';
@@ -337,6 +337,24 @@ export function FloatingAgentWidget({
       : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Listen for in-page triggers (e.g. the guided setup checklist) asking us to
+  // open pre-filled with a specific agent + seeded prompt. Human stays in the
+  // loop: we open + select + prefill, but the user reviews and hits Send.
+  useEffect(() => {
+    function onAsk(e: Event) {
+      const detail = (e as CustomEvent).detail as { agentType?: string; prompt?: string } | undefined;
+      if (!detail) return;
+      if (detail.agentType && (detail.agentType === 'auto' || allowedAgents.includes(detail.agentType as AgentType))) {
+        setAgentType(detail.agentType as AgentTypeOrAuto);
+      }
+      if (typeof detail.prompt === 'string') setPrompt(detail.prompt);
+      setIsOpen(true);
+    }
+    window.addEventListener('pmo:ask-agent', onAsk as EventListener);
+    return () => window.removeEventListener('pmo:ask-agent', onAsk as EventListener);
+  }, [allowedAgents]);
 
   // Popped-out briefs: each entry is a snapshot of a previous response shown
   // in its own floating panel on the page. Newest pop-outs stack on top.
@@ -435,6 +453,10 @@ export function FloatingAgentWidget({
               : h,
           ),
         );
+        // Soft-refresh the page's server components so project tabs, counts,
+        // and the setup checklist pick up the new agent_outputs row — without a
+        // full reload (client state like pinned briefs is preserved).
+        router.refresh();
       }
     } catch (err) {
       setHistory((prev) =>

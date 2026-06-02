@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { ProjectTabs } from '@/components/project-tabs';
+import { SetupChecklist } from '@/components/setup-checklist';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -31,6 +32,31 @@ const PLANNING_AGENT_TYPES = [
   'closeout_reporter',
 ];
 
+// Planning outputs for a project. edited_* columns exist only after migration
+// 0015, so we try with them and fall back without — keeps the planning tabs +
+// setup checklist working before 0015 is applied.
+async function loadPlanningOutputs(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+) {
+  const base = 'id, agent_type, invoked_at, output_md, user_prompt, tokens_used, cost_usd';
+  let res = await supabase
+    .from('agent_outputs')
+    .select(`${base}, edited_md, edited_by_role_type, edited_at`)
+    .eq('project_id', projectId)
+    .in('agent_type', PLANNING_AGENT_TYPES)
+    .order('invoked_at', { ascending: false });
+  if (res.error) {
+    res = await supabase
+      .from('agent_outputs')
+      .select(base)
+      .eq('project_id', projectId)
+      .in('agent_type', PLANNING_AGENT_TYPES)
+      .order('invoked_at', { ascending: false });
+  }
+  return res.data ?? [];
+}
+
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { token, code } = await params;
 
@@ -47,17 +73,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   if (!project) notFound();
 
-  const [issuesRes, risksRes, cosRes, varianceRes, planningRes, actionItemsRes] = await Promise.all([
+  const [issuesRes, risksRes, cosRes, varianceRes, planningRows, actionItemsRes] = await Promise.all([
     supabase.from('issues').select('*').eq('project_id', project.id).order('opened_week', { ascending: true }),
     supabase.from('risks').select('*').eq('project_id', project.id).order('risk_id', { ascending: true }),
     supabase.from('change_orders').select('*').eq('project_id', project.id).order('co_id', { ascending: true }),
     supabase.from('variance_reports').select('*').eq('project_id', project.id).order('report_week', { ascending: true }),
-    supabase
-      .from('agent_outputs')
-      .select('id, agent_type, invoked_at, output_md, user_prompt, tokens_used, cost_usd')
-      .eq('project_id', project.id)
-      .in('agent_type', PLANNING_AGENT_TYPES)
-      .order('invoked_at', { ascending: false }),
+    loadPlanningOutputs(supabase, project.id),
     // action_items may not exist yet (migration 0009). Query is resilient:
     // on error, .data is null and we fall back to an empty list below.
     supabase
@@ -71,8 +92,12 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const risks = risksRes.data ?? [];
   const change_orders = cosRes.data ?? [];
   const variance_reports = varianceRes.data ?? [];
-  const planning_outputs = planningRes.data ?? [];
+  const planning_outputs = planningRows;
   const action_items = actionItemsRes.data ?? [];
+
+  // Which planning artefacts already exist — drives the guided setup checklist.
+  const doneAgents = Array.from(new Set(planning_outputs.map((o) => String(o.agent_type))));
+  const isFreshProject = project.created_via === 'intake_form' || Number(project.current_week) === 0;
 
   const realisedCount = risks.filter((r) => String(r.status).toLowerCase().startsWith('realised')).length;
   const mitigatedCount = risks.filter((r) => String(r.status).toLowerCase().includes('mitigated')).length;
@@ -190,6 +215,15 @@ export default async function ProjectDetailPage({ params }: PageProps) {
           </div>
         )}
       </header>
+
+      <SetupChecklist
+        token={token}
+        projectCode={code}
+        projectName={String(project.name)}
+        done={doneAgents}
+        allowedAgents={resolved.definition.allowed_agents}
+        defaultOpen={isFreshProject && doneAgents.length < 6}
+      />
 
       <ProjectTabs
         token={token}
