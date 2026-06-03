@@ -13,6 +13,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase';
 import { ProjectTabs } from '@/components/project-tabs';
 import { SetupChecklist } from '@/components/setup-checklist';
 import { AssignTaskButton } from '@/components/assign-task-button';
+import { WbsCanonicalTree, type WorkPackage } from '@/components/wbs-canonical-tree';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -58,6 +59,20 @@ async function loadPlanningOutputs(
   return res.data ?? [];
 }
 
+// Work packages (canonical WBS, mirrored from SAP PS). Table exists only after
+// migration 0017 — resilient so the page works before it is applied.
+async function loadWorkPackages(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<WorkPackage[]> {
+  const res = await supabase
+    .from('work_packages')
+    .select('wbs_code, parent_wbs_code, name, responsible_role_type, is_billing_element, budget_bac, source_system, synced_at')
+    .eq('project_id', projectId);
+  if (res.error) return [];
+  return (res.data ?? []) as WorkPackage[];
+}
+
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { token, code } = await params;
 
@@ -99,6 +114,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   // Which planning artefacts already exist — drives the guided setup checklist.
   const doneAgents = Array.from(new Set(planning_outputs.map((o) => String(o.agent_type))));
   const isFreshProject = project.created_via === 'intake_form' || Number(project.current_week) === 0;
+  const workPackages = await loadWorkPackages(supabase, project.id);
 
   const realisedCount = risks.filter((r) => String(r.status).toLowerCase().startsWith('realised')).length;
   const mitigatedCount = risks.filter((r) => String(r.status).toLowerCase().includes('mitigated')).length;
@@ -227,6 +243,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       />
 
       {resolved.definition.can_write && <AssignTaskButton token={token} projectCode={code} />}
+
+      <WbsCanonicalTree workPackages={workPackages} />
 
       <ProjectTabs
         token={token}
