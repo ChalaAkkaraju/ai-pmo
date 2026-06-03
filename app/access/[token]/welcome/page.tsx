@@ -23,6 +23,9 @@ import {
   Wand2,
   Target,
   Brain,
+  ClipboardList,
+  Gauge,
+  ShieldAlert,
 } from 'lucide-react';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { resolveRoleFromToken } from '@/lib/role-context';
@@ -60,6 +63,12 @@ const CAPABILITIES = [
   { Icon: MessagesSquare, cls: 'bg-violet-100 text-violet-700', title: 'Ask the AI assistant', body: 'Any project or portfolio question, answered by the right specialist agent — full report a click away.' },
   { Icon: FilePlus2, cls: 'bg-amber-100 text-amber-700', title: 'Stand up a new project', body: 'A guided intake form and a step-by-step setup checklist that drafts the charter, WBS, schedule and budget.' },
   { Icon: ListChecks, cls: 'bg-emerald-100 text-emerald-700', title: 'Act on what matters', body: 'Assign tasks to colleagues, track cross-agent actions, and review or correct anything the agents draft.' },
+];
+
+const AGENT_GROUPS = [
+  { Icon: ClipboardList, cls: 'bg-sky-100 text-sky-700', title: 'Planning', agents: ['Charter Drafter', 'Stakeholder Analyst', 'WBS Builder', 'Schedule Reasoner', 'Budget Builder', 'Communications Planner'] },
+  { Icon: Gauge, cls: 'bg-amber-100 text-amber-700', title: 'Controls & commercial', agents: ['Variance Analyst', 'Change Order Reviewer', 'Issue Logger'] },
+  { Icon: ShieldAlert, cls: 'bg-rose-100 text-rose-700', title: 'Risk & closeout', agents: ['Risk Analyst', 'Portfolio Risk Reviewer', 'Lessons-Learned Synthesiser', 'Closeout Reporter'] },
 ];
 
 export default async function WelcomePage({ params }: { params: Promise<{ token: string }> }) {
@@ -255,11 +264,33 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
         The test we hold every feature to: if a normal BI dashboard could do it, it is table stakes. The moat is what the AI uniquely adds.
       </p>
 
+      {/* Specialist agents */}
+      <p className="mt-12 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">One assistant, thirteen specialists</p>
+      <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-muted-foreground">
+        Ask in plain language and the assistant routes your question to the right specialist agent — each one
+        method-aware (PMBOK-aligned), each output reviewable and editable.
+      </p>
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+        {AGENT_GROUPS.map((g) => (
+          <div key={g.title} className="rounded-xl border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${g.cls}`}><g.Icon className="h-4 w-4" strokeWidth={1.75} /></span>
+              <p className="text-sm font-semibold">{g.title}</p>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {g.agents.map((a) => (
+                <span key={a} className="rounded-full border bg-muted/30 px-2.5 py-1 text-[11px] text-muted-foreground">{a}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Capabilities */}
       <p className="mt-12 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">What you can do here</p>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {CAPABILITIES.map((c) => (
-          <div key={c.title} className="rounded-xl border bg-card p-5 transition hover:border-foreground/20">
+          <div key={c.title} className="rounded-xl border bg-card p-5 transition hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-sm">
             <span className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${c.cls}`}><c.Icon className="h-5 w-5" strokeWidth={1.75} /></span>
             <h3 className="mt-3 text-sm font-semibold">{c.title}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{c.body}</p>
