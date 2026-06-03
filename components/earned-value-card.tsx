@@ -39,10 +39,10 @@ export function EarnedValueCard({ metrics, syncedAt, curve }: { metrics: EvMetri
   const tone = (v: number | null, warnBelow = 0.95) =>
     v == null ? 'text-foreground' : v < warnBelow ? 'text-red-600' : v >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
 
-  const Metric = ({ label, value, cls = 'text-foreground', color }: { label: string; value: string; cls?: string; color?: string }) => (
-    <div className="rounded-md bg-muted/40 px-3 py-1.5">
-      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`text-base font-semibold tabular-nums ${color ? '' : cls}`} style={color ? { color } : undefined}>{value}</p>
+  const Metric = ({ label, value, cls = 'text-foreground', accent }: { label: string; value: string; cls?: string; accent?: string }) => (
+    <div className="rounded-md bg-muted/40 px-3 py-1.5" style={accent ? { backgroundColor: `${accent}1A` } : undefined}>
+      <p className={`text-[10px] font-medium uppercase tracking-wider ${accent ? '' : 'text-muted-foreground'}`} style={accent ? { color: accent } : undefined}>{label}</p>
+      <p className={`text-base font-semibold tabular-nums ${cls}`}>{value}</p>
     </div>
   );
 
@@ -64,10 +64,10 @@ export function EarnedValueCard({ metrics, syncedAt, curve }: { metrics: EvMetri
 
       <div className="grid grid-cols-1 gap-x-6 gap-y-4 px-5 py-4 md:grid-cols-2 md:items-center">
         <div className="grid grid-cols-2 gap-2">
-          <Metric label="Budget (BAC)" value={money(bac)} />
-          <Metric label="Planned (PV)" value={money(pv)} color="#378ADD" />
-          <Metric label="Earned (EV)" value={money(ev)} color="#639922" />
-          <Metric label="Actual (AC)" value={money(ac)} color="#BA7517" />
+          <Metric label="Budget (BAC)" value={money(bac)} cls="text-foreground" />
+          <Metric label="Planned (PV)" value={money(pv)} accent="#378ADD" />
+          <Metric label="Earned (EV)" value={money(ev)} accent="#639922" />
+          <Metric label="Actual (AC)" value={money(ac)} accent="#BA7517" />
           <Metric label="CPI · cost" value={num(cpi)} cls={tone(cpi)} />
           <Metric label="SPI · schedule" value={num(spi)} cls={tone(spi)} />
           <Metric label="Forecast (EAC)" value={money(eac)} />
