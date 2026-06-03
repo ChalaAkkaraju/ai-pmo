@@ -307,8 +307,9 @@ function PlanningPanel({ byAgent, token, canEdit }: { byAgent: Record<string, Ar
   const active = PLANNING_TABS.find((t) => t.value === sel) ?? PLANNING_TABS[0];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-col gap-6 md:flex-row">
+      <nav className="flex gap-1.5 overflow-x-auto pb-1 md:w-52 md:shrink-0 md:flex-col md:gap-0.5 md:overflow-visible md:border-r md:pb-0 md:pr-3">
+        <p className="hidden px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground md:block">Planning documents</p>
         {PLANNING_TABS.map((t) => {
           const count = byAgent[t.agentType]?.length ?? 0;
           const isActive = t.value === sel;
@@ -317,17 +318,25 @@ function PlanningPanel({ byAgent, token, canEdit }: { byAgent: Record<string, Ar
               key={t.value}
               type="button"
               onClick={() => setSel(t.value)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                isActive ? 'bg-foreground text-background' : count > 0 ? 'bg-muted hover:bg-muted/70' : 'bg-muted/40 text-muted-foreground/60'
+              className={`flex shrink-0 items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition md:shrink ${
+                isActive
+                  ? 'bg-muted font-medium text-foreground'
+                  : count > 0
+                    ? 'text-muted-foreground hover:bg-muted/60'
+                    : 'text-muted-foreground/50 hover:bg-muted/40'
               }`}
             >
-              {t.label}
-              {count > 0 && <span className="ml-1.5 opacity-70">{count}</span>}
+              <span>{t.label}</span>
+              {count > 0 && (
+                <span className="rounded-full bg-background px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">{count}</span>
+              )}
             </button>
           );
         })}
+      </nav>
+      <div className="min-w-0 flex-1">
+        <PlanningArtefactView rows={byAgent[active.agentType] ?? []} artefactLabel={active.label} token={token} canEdit={canEdit} />
       </div>
-      <PlanningArtefactView rows={byAgent[active.agentType] ?? []} artefactLabel={active.label} token={token} canEdit={canEdit} />
     </div>
   );
 }
