@@ -39,8 +39,6 @@ import type { AgentType } from '@/lib/types';
 const PLANNING_TABS: Array<{ value: string; label: string; agentType: AgentType }> = [
   { value: 'charter', label: 'Charter', agentType: 'charter_drafter' },
   { value: 'stakeholders', label: 'Stakeholders', agentType: 'stakeholder_analyst' },
-  { value: 'wbs', label: 'WBS', agentType: 'wbs_builder' },
-  { value: 'schedule', label: 'Schedule', agentType: 'schedule_reasoner' },
   { value: 'budget', label: 'Budget', agentType: 'budget_builder' },
   { value: 'comms', label: 'Comms', agentType: 'communications_planner' },
   { value: 'lessons', label: 'Lessons', agentType: 'lessons_learned_synthesiser' },
@@ -96,7 +94,7 @@ export function ProjectTabs({
     if (!planningByAgent[row.agent_type]) planningByAgent[row.agent_type] = [];
     planningByAgent[row.agent_type].push(row);
   }
-  const planningCount = Object.values(planningByAgent).reduce((n, rows) => n + rows.length, 0);
+  const planningCount = PLANNING_TABS.reduce((n, t) => n + (planningByAgent[t.agentType]?.length ?? 0), 0);
 
   return (
     <Tabs.Root value={tab} onValueChange={setTab} className="mt-8">
@@ -124,12 +122,14 @@ export function ProjectTabs({
         />
       </Tabs.Content>
 
-      <Tabs.Content value="structure" className="pt-6">
+      <Tabs.Content value="structure" className="space-y-6 pt-6">
         <WbsCanonicalTree workPackages={workPackages} />
+        <PlanningAside rows={planningByAgent['wbs_builder'] ?? []} label="WBS" token={token} canEdit={canWrite} />
       </Tabs.Content>
 
-      <Tabs.Content value="schedule" className="pt-6">
+      <Tabs.Content value="schedule" className="space-y-6 pt-6">
         <ScheduleView tasks={tasks} workPackages={workPackages} />
+        <PlanningAside rows={planningByAgent['schedule_reasoner'] ?? []} label="Schedule" token={token} canEdit={canWrite} />
       </Tabs.Content>
 
       <Tabs.Content value="ev" className="pt-6">
@@ -278,6 +278,20 @@ function AttnRow({ label, n, onClick }: { label: string; n: number; onClick: () 
       <span className="text-muted-foreground">{label}</span>
       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${n > 0 ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground'}`}>{n}</span>
     </button>
+  );
+}
+
+/* ------------------------------------------------------ AI write-up aside */
+
+function PlanningAside({ rows, label, token, canEdit }: { rows: ArtefactRow[]; label: string; token: string; canEdit: boolean }) {
+  if (!rows || rows.length === 0) return null;
+  return (
+    <div className="rounded-lg border bg-muted/20 p-4">
+      <p className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <span aria-hidden="true">✨</span> AI {label.toLowerCase()} write-up
+      </p>
+      <PlanningArtefactView rows={rows} artefactLabel={label} token={token} canEdit={canEdit} />
+    </div>
   );
 }
 
