@@ -10,6 +10,7 @@
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { matchRoleFromText } from '@/lib/role-match';
+import { WelcomeGate } from '@/components/welcome-gate';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import {
   DashboardClient,
@@ -527,7 +528,9 @@ export default async function RoleLandingPage({ params }: PageProps) {
   const risksMine = risks.filter((r) => riskIsActive(r) && matchRoleFromText(r.owner) === myRoleType).length;
 
   return (
-    <DashboardClient
+    <>
+      <WelcomeGate token={token} />
+      <DashboardClient
       token={token}
       roleType={resolved.definition.type}
       actionsActive={actionsActive}
@@ -552,6 +555,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
       projects={dashboardProjects}
       recentlyAdded={recentlyAdded}
       activity={dashboardActivity}
-    />
+      />
+    </>
   );
 }
