@@ -12,6 +12,7 @@ import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { ProjectTabs } from '@/components/project-tabs';
 import { SetupChecklist } from '@/components/setup-checklist';
+import { AssignTaskButton } from '@/components/assign-task-button';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -47,12 +48,12 @@ async function loadPlanningOutputs(
     .in('agent_type', PLANNING_AGENT_TYPES)
     .order('invoked_at', { ascending: false });
   if (res.error) {
-    res = await supabase
+    res = (await supabase
       .from('agent_outputs')
       .select(base)
       .eq('project_id', projectId)
       .in('agent_type', PLANNING_AGENT_TYPES)
-      .order('invoked_at', { ascending: false });
+      .order('invoked_at', { ascending: false })) as typeof res;
   }
   return res.data ?? [];
 }
@@ -224,6 +225,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         allowedAgents={resolved.definition.allowed_agents}
         defaultOpen={isFreshProject && doneAgents.length < 6}
       />
+
+      {resolved.definition.can_write && <AssignTaskButton token={token} projectCode={code} />}
 
       <ProjectTabs
         token={token}

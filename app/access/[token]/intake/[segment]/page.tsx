@@ -39,12 +39,12 @@ async function referencesForSegment(segment: Segment): Promise<ReferenceProject[
     .limit(500);
 
   if (rows.error) {
-    rows = await supabase
+    rows = (await supabase
       .from('projects')
       .select(base)
       .eq('segment', segment)
       .order('name', { ascending: true })
-      .limit(500);
+      .limit(500)) as typeof rows;
   }
 
   return (rows.data ?? []).map((r) => ({

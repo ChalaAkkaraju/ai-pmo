@@ -12,6 +12,8 @@
 
 import Link from 'next/link';
 import { segmentStyle } from '@/lib/segment-style';
+import { roleLabel } from '@/lib/roles';
+import type { RoleType } from '@/lib/types';
 
 export interface RecentlyAddedProject {
   code: string;
@@ -19,6 +21,7 @@ export interface RecentlyAddedProject {
   segment: string;
   status: string;
   created_at: string;
+  created_by_role_type?: string | null;
 }
 
 export function timeAgo(iso: string): string {
@@ -63,6 +66,7 @@ export function NewProjectsPopover({
               </div>
               <p className="pl-1.5 text-[11px] text-muted-foreground">
                 <span className="font-mono">{p.code}</span> · {ss.label}
+                {p.created_by_role_type ? ` · by ${roleLabel(p.created_by_role_type as RoleType)}` : ''}
               </p>
             </Link>
           );

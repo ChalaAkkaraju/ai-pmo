@@ -415,11 +415,24 @@ export default async function RoleLandingPage({ params }: PageProps) {
   }));
 
   // Recently-added banner: form-created projects from the last 14 days, newest first.
-  const recentlyAdded: RecentlyAddedProject[] = projects
+  let recentlyAdded: RecentlyAddedProject[] = projects
     .filter(isNewProject)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 9)
     .map((p) => ({ code: p.code, name: p.name, segment: p.segment, status: p.status, created_at: p.created_at }));
+
+  // Who created each one (migration 0016). Resilient: if the column is missing
+  // the select errors, creators stays empty, and we just show "added X ago".
+  if (recentlyAdded.length > 0) {
+    const { data: creatorRows } = await supabase
+      .from('projects')
+      .select('code, created_by_role_type')
+      .in('code', recentlyAdded.map((r) => r.code));
+    const creators = new Map(
+      (creatorRows ?? []).map((r) => [r.code, (r as { created_by_role_type: string | null }).created_by_role_type ?? null]),
+    );
+    recentlyAdded = recentlyAdded.map((r) => ({ ...r, created_by_role_type: creators.get(r.code) ?? null }));
+  }
 
   // -------- Recent activity (role-led, workspace backfill) --------
   // Supabase returns joined relations as an array even for single-FK joins.

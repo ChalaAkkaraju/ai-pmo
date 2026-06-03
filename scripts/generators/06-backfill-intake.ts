@@ -306,7 +306,7 @@ const SEG: Record<Segment, SegSpec> = {
       'Gas pipeline / substation tie-in coordination',
       'Commissioning / vendor FAT failures',
     ],
-    specific: (rng, p) => {
+    specific: (rng, p): Record<string, string> => {
       const type = powerType(rng, p.name);
       const kv = pick(rng, ['230', '345', '500']);
       if (type === 'Substation') {

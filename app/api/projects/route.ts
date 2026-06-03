@@ -122,24 +122,29 @@ export async function POST(request: NextRequest) {
     hard_deadline_description: body.hard_deadline?.trim() ? body.hard_deadline.trim() : null,
     intake_json: body.intake ?? {},
     created_via: 'intake_form',
+    created_by_role_type: role.role_type,
   };
 
-  const { data: inserted, error } = await supabase.from('projects').insert(row).select('id, code').maybeSingle();
+  // Insert with a one-shot retry on the code unique constraint (race).
+  async function tryInsert(r: Record<string, unknown>) {
+    let attempt = await supabase.from('projects').insert(r).select('id, code').maybeSingle();
+    if (attempt.error && /duplicate key|unique/i.test(attempt.error.message)) {
+      const retryCode = await nextCodeForSegment(body.segment);
+      attempt = await supabase.from('projects').insert({ ...r, code: retryCode }).select('id, code').maybeSingle();
+    }
+    return attempt;
+  }
+
+  let { data: inserted, error } = await tryInsert(row);
+
+  // created_by_role_type only exists after migration 0016 — if it's missing,
+  // retry without it so project creation still works pre-0016.
+  if (error && /created_by_role_type/i.test(error.message)) {
+    const { created_by_role_type: _omit, ...rowNoCreator } = row;
+    ({ data: inserted, error } = await tryInsert(rowNoCreator));
+  }
 
   if (error) {
-    // A race on the code unique constraint: retry once with a fresh code.
-    if (/duplicate key|unique/i.test(error.message)) {
-      const retryCode = await nextCodeForSegment(body.segment);
-      const { data: retry, error: retryErr } = await supabase
-        .from('projects')
-        .insert({ ...row, code: retryCode })
-        .select('id, code')
-        .maybeSingle();
-      if (retryErr) {
-        return NextResponse.json({ error: `DB insert failed: ${retryErr.message}` }, { status: 500 });
-      }
-      return NextResponse.json({ project: retry }, { status: 200 });
-    }
     return NextResponse.json({ error: `DB insert failed: ${error.message}` }, { status: 500 });
   }
 

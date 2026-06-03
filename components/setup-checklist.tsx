@@ -181,7 +181,7 @@ export function SetupChecklist({
             })}
           </ol>
           <p className="mt-3 px-1 text-[11px] text-muted-foreground">
-            Each step opens the ✨ assistant pre-filled — review the prompt and hit Send. After a draft lands, refresh to tick the step off.
+            Each step opens the ✨ assistant pre-filled — review the prompt and hit Send. Steps tick off automatically as each draft lands.
           </p>
         </div>
       )}
