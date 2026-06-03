@@ -114,7 +114,8 @@ async function main() {
     const baseF = p.status === 'Closed' ? 1.0 : p.status === 'SC' ? 0.95 : 0.35 + ((rng % 30) / 100);
     const total = Math.max(now + 6, Math.round((now || 40) / baseF));
     // Schedule-health completion factor: <1 behind, >1 ahead.
-    const cf = 0.8 + ((rng >> 5) % 28) / 100; // 0.80 .. 1.07
+    const cf = 0.75 + ((rng >>> 5) % 36) / 100; // 0.75 .. 1.10 (unsigned shift; ahead/behind)
+    const front = now * cf; // progress front: < now = behind schedule, > now = ahead
     const src = (rng & 1) === 0 ? 'DATAVERSE' : 'P6';
     const ntp = addDays(today, -now * 7); // as-of (now) maps to today
     const ntpDate = new Date(ntp);
@@ -137,8 +138,8 @@ async function main() {
       const n = sibs.length;
       const ws = (win[0] + (win[1] - win[0]) * (idx / n)) * total;
       const wf = (win[0] + (win[1] - win[0]) * ((idx + 1) / n)) * total;
-      const timeFrac = wf > ws ? clamp((now - ws) / (wf - ws), 0, 1) : now >= wf ? 1 : 0;
-      const pct = clamp(Math.round(timeFrac * 100 * cf), 0, 100);
+      // Done tasks hit 100%, future 0%, the one straddling the front is partial.
+      const pct = wf > ws ? clamp(Math.round(((front - ws) / (wf - ws)) * 100), 0, 100) : front >= wf ? 100 : 0;
       taskRows.push({
         project_id: p.id,
         wbs_code: w.wbs_code,
