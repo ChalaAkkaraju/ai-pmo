@@ -26,6 +26,9 @@ import {
   ClipboardList,
   Gauge,
   ShieldAlert,
+  Bot,
+  UserCheck,
+  Plug,
 } from 'lucide-react';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { resolveRoleFromToken } from '@/lib/role-context';
@@ -35,7 +38,12 @@ export const dynamic = 'force-dynamic';
 
 const display = Plus_Jakarta_Sans({ subsets: ['latin'], display: 'swap' });
 
-const HERO_CHIPS = ['Earned value built in', '13 specialist agents', 'Human-in-the-loop', 'Tool-agnostic'];
+const HERO_CHIPS = [
+  { label: 'Earned value built in', cls: 'bg-emerald-100 text-emerald-800', Icon: TrendingUp },
+  { label: '13 specialist agents', cls: 'bg-violet-100 text-violet-800', Icon: Bot },
+  { label: 'Human-in-the-loop', cls: 'bg-amber-100 text-amber-800', Icon: UserCheck },
+  { label: 'Tool-agnostic', cls: 'bg-sky-100 text-sky-800', Icon: Plug },
+];
 const LAYER_OUTPUTS = ['earned value', 'risk & change synthesis', 'portfolio patterns', 'status narrative', 'recommendations'];
 
 const STEPS = [
@@ -91,7 +99,10 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
           {HERO_CHIPS.map((c) => (
-            <span key={c} className="rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">{c}</span>
+            <span key={c.label} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${c.cls}`}>
+              <c.Icon className="h-3.5 w-3.5" strokeWidth={2} />
+              {c.label}
+            </span>
           ))}
         </div>
       </div>
