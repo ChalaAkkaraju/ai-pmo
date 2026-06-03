@@ -9,7 +9,7 @@
  * schedule hangs off the same work packages as the WBS tree.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { roleLabel } from '@/lib/roles';
 import type { RoleType } from '@/lib/types';
 
@@ -43,6 +43,10 @@ function shortDate(d: string | null): string {
 
 export function ScheduleView({ tasks, workPackages }: { tasks: Task[]; workPackages: Phase[] }) {
   const [open, setOpen] = useState(false);
+  // 'today' depends on Date.now(); compute it client-side after mount so the
+  // server render (which has no stable 'now') doesn't cause a hydration mismatch.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => setNow(Date.now()), []);
 
   if (tasks.length === 0) {
     return (
@@ -61,8 +65,8 @@ export function ScheduleView({ tasks, workPackages }: { tasks: Task[]; workPacka
   const t1 = Math.max(...ends);
   const span = t1 - t0 || 1;
   const pct = (d: number) => Math.max(0, Math.min(100, ((d - t0) / span) * 100));
-  const todayPct = pct(Date.now());
-  const withinToday = Date.now() >= t0 && Date.now() <= t1;
+  const withinToday = now != null && now >= t0 && now <= t1;
+  const todayPct = now != null ? pct(now) : 0;
 
   const phases = workPackages.filter((w) => !w.parent_wbs_code).sort((a, b) => a.wbs_code.localeCompare(b.wbs_code, undefined, { numeric: true }));
 
