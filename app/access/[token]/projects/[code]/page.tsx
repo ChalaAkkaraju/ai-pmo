@@ -15,6 +15,8 @@ import { SetupChecklist } from '@/components/setup-checklist';
 import { AssignTaskButton } from '@/components/assign-task-button';
 import { WbsCanonicalTree, type WorkPackage } from '@/components/wbs-canonical-tree';
 import { ScheduleView, type Task } from '@/components/schedule-view';
+import { EarnedValueCard } from '@/components/earned-value-card';
+import { computeEv } from '@/lib/earned-value';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -87,6 +89,19 @@ async function loadTasks(
   return (res.data ?? []) as Task[];
 }
 
+// Cost actuals (mirrored from SAP PS) — inputs to earned value. Resilient.
+async function loadCostActuals(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<Array<{ actual_cost: number | null; planned_value: number | null; synced_at: string | null }>> {
+  const res = await supabase
+    .from('cost_actuals')
+    .select('actual_cost, planned_value, synced_at')
+    .eq('project_id', projectId);
+  if (res.error) return [];
+  return res.data ?? [];
+}
+
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { token, code } = await params;
 
@@ -130,6 +145,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const isFreshProject = project.created_via === 'intake_form' || Number(project.current_week) === 0;
   const workPackages = await loadWorkPackages(supabase, project.id);
   const tasks = await loadTasks(supabase, project.id);
+  const costActuals = await loadCostActuals(supabase, project.id);
+  const evMetrics = computeEv(workPackages.filter((w) => w.parent_wbs_code), tasks, costActuals);
 
   const realisedCount = risks.filter((r) => String(r.status).toLowerCase().startsWith('realised')).length;
   const mitigatedCount = risks.filter((r) => String(r.status).toLowerCase().includes('mitigated')).length;
@@ -262,6 +279,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       <WbsCanonicalTree workPackages={workPackages} />
 
       <ScheduleView tasks={tasks} workPackages={workPackages} />
+
+      <EarnedValueCard metrics={evMetrics} syncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null} />
 
       <ProjectTabs
         token={token}
