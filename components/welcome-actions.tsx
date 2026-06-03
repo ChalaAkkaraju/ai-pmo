@@ -30,7 +30,7 @@ export function WelcomeActions({ token }: { token: string }) {
         onClick={enter}
         className="rounded-md bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90"
       >
-        Enter dashboard →
+        Enter dashboard
       </button>
       <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
         <input type="checkbox" checked={skip} onChange={(e) => setSkip(e.target.checked)} />

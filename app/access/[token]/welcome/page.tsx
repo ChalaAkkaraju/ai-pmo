@@ -309,7 +309,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
       </div>
 
       {/* CTA */}
-      <p className="mt-12 text-center text-lg font-semibold">Ready to look around?</p>
+      <p className="mt-12 text-center text-xl font-semibold">Ready to see what&apos;s really going on?</p>
       <WelcomeActions token={token} />
 
       <p className="mt-10 text-center text-xs text-muted-foreground">
