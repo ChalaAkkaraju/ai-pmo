@@ -1,6 +1,6 @@
 /**
- * Analytics → Cross-agent actions. Portfolio-wide breakdowns of action_items.
- * Composition shown as donuts; role weight as treemaps (see analytics-charts).
+ * Analytics → Cross-agent actions. Portfolio-wide breakdowns (charts) plus a
+ * sortable/filterable table of every action on active work at the bottom.
  */
 
 import { notFound } from 'next/navigation';
@@ -12,6 +12,7 @@ import type { RoleType } from '@/lib/types';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { Kpis, rowsFrom, tally, renameHML } from '@/components/analytics-shared';
 import { DonutPanel, RankedBarPanel } from '@/components/analytics-charts';
+import { PortfolioActionsTable, type PortfolioActionRow } from '@/components/portfolio-tables';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,15 +27,24 @@ export default async function ActionsAnalyticsPage({ params }: { params: Promise
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
-  const { data } = await supabase.from('action_items').select('*').limit(10000);
+  const [actionsRes, projectsRes] = await Promise.all([
+    supabase.from('action_items').select('*').limit(10000),
+    supabase.from('projects').select('id, code, name, segment, status').limit(10000),
+  ]);
   type ActionRow = {
+    id: string;
+    project_id: string | null;
+    description: string;
     status: string;
     urgency: string;
     assigned_to_role_type: string | null;
     raised_by_role_type: string | null;
     response_md: string | null;
+    created_at: string;
   };
-  const actions = (data ?? []) as ActionRow[];
+  const actions = (actionsRes.data ?? []) as ActionRow[];
+  const projects = (projectsRes.data ?? []) as Array<{ id: string; code: string; name: string; segment: string; status: string }>;
+  const projById = new Map(projects.map((p) => [p.id, p]));
 
   const total = actions.length;
   const open = actions.filter((a) => a.status === 'Open').length;
@@ -46,6 +56,25 @@ export default async function ActionsAnalyticsPage({ params }: { params: Promise
   const byUrgency = rowsFrom(renameHML(tally(actions, (a) => a.urgency)), ['High', 'Medium', 'Low']);
   const byOwner = rowsFrom(tally(actions, (a) => labelRole(a.assigned_to_role_type)));
   const byRaiser = rowsFrom(tally(actions, (a) => labelRole(a.raised_by_role_type)));
+
+  // Active-work table: actions on an active project, plus portfolio-level ones.
+  const activeActionRows: PortfolioActionRow[] = actions
+    .filter((a) => !a.project_id || projById.get(a.project_id)?.status === 'Active')
+    .map((a) => {
+      const p = a.project_id ? projById.get(a.project_id) : null;
+      return {
+        id: a.id,
+        project_code: p?.code ?? null,
+        project_name: p?.name ?? '',
+        segment: p?.segment ?? '',
+        description: a.description,
+        assigned_to_role: a.assigned_to_role_type ?? 'pm',
+        raised_by_role: a.raised_by_role_type,
+        urgency: a.urgency,
+        status: a.status,
+        created_at: a.created_at,
+      };
+    });
 
   return (
     <div className="container mx-auto max-w-screen-xl px-8 py-6 space-y-4">
@@ -74,6 +103,14 @@ export default async function ActionsAnalyticsPage({ params }: { params: Promise
         <RankedBarPanel title="By owning role" rows={byOwner} />
         <RankedBarPanel title="By raising role" rows={byRaiser} />
       </div>
+
+      <section className="space-y-2 pt-2">
+        <h2 className="text-base font-semibold">All actions on active work ({activeActionRows.length})</h2>
+        <p className="text-xs text-muted-foreground">
+          Every cross-agent action on an active project (plus portfolio-level ones). Search, filter by segment / status / urgency / owner, sort any column.
+        </p>
+        <PortfolioActionsTable token={token} rows={activeActionRows} />
+      </section>
     </div>
   );
 }

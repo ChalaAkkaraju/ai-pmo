@@ -14,6 +14,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { segmentStyle } from '@/lib/segment-style';
 import { CANONICAL_RISK_STATUSES } from '@/lib/risk-status';
+import { ROLE_TYPES, roleLabel } from '@/lib/roles';
+import type { RoleType } from '@/lib/types';
 
 type Align = 'left' | 'center' | 'right';
 interface Col<R> {
@@ -272,6 +274,56 @@ export function PortfolioRisksTable({ token, rows }: { token: string; rows: Port
       searchText={(r) => `${r.risk_id} ${r.description} ${r.project_code} ${r.project_name} ${r.owner} ${r.cross_cutting_class}`}
       initialSortKey="score"
       emptyLabel="No risks match your filters."
+    />
+  );
+}
+
+
+function actionStatusClass(s: string): string {
+  if (s === 'Done') return 'bg-green-100 text-green-900';
+  if (s === 'In progress') return 'bg-amber-100 text-amber-900';
+  if (s === 'Acknowledged') return 'bg-sky-100 text-sky-900';
+  if (s === 'Open') return 'bg-red-100 text-red-900';
+  return 'bg-gray-100 text-gray-700';
+}
+
+export interface PortfolioActionRow {
+  id: string;
+  project_code: string | null;
+  project_name: string;
+  segment: string;
+  description: string;
+  assigned_to_role: string;
+  raised_by_role: string | null;
+  urgency: string;
+  status: string;
+  created_at: string;
+}
+
+export function PortfolioActionsTable({ token, rows }: { token: string; rows: PortfolioActionRow[] }) {
+  const columns: Col<PortfolioActionRow>[] = [
+    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code ?? '~', render: (r) => (r.project_code ? <ProjectCell token={token} code={r.project_code} name={r.project_name} segment={r.segment} /> : <span className="text-xs text-muted-foreground">Portfolio</span>) },
+    { key: 'description', label: 'Description', render: (r) => <span className="block max-w-md">{r.description}</span> },
+    { key: 'assigned_to_role', label: 'Assigned to', sortKey: (r) => r.assigned_to_role, render: (r) => <span className="text-xs font-medium">{roleLabel(r.assigned_to_role as RoleType)}</span> },
+    { key: 'raised_by_role', label: 'Raised by', sortKey: (r) => r.raised_by_role ?? '', render: (r) => <span className="text-xs text-muted-foreground">{r.raised_by_role ? roleLabel(r.raised_by_role as RoleType) : '\u2014'}</span> },
+    { key: 'urgency', label: 'Urgency', align: 'center', sortKey: (r) => hmlRank(r.urgency), render: (r) => <HmlBadge v={r.urgency} /> },
+    { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${actionStatusClass(r.status)}`}>{r.status}</span> },
+    { key: 'created_at', label: 'Created', align: 'center', sortKey: (r) => r.created_at, render: (r) => <span className="text-xs">{new Date(r.created_at).toLocaleDateString()}</span> },
+  ];
+  const filters: FilterDef<PortfolioActionRow>[] = [
+    { key: 'segment', label: 'Segment', options: SEGMENT_OPTS, match: (r, v) => r.segment === v },
+    { key: 'status', label: 'Status', options: ['Open', 'Acknowledged', 'In progress', 'Done'].map((x) => ({ value: x, label: x })), match: (r, v) => r.status === v },
+    { key: 'urgency', label: 'Urgency', options: [{ value: 'H', label: 'High' }, { value: 'M', label: 'Medium' }, { value: 'L', label: 'Low' }], match: (r, v) => r.urgency === v },
+    { key: 'assigned', label: 'Owner', options: ROLE_TYPES.map((rt) => ({ value: rt, label: roleLabel(rt) })), match: (r, v) => r.assigned_to_role === v },
+  ];
+  return (
+    <DataTable
+      rows={rows}
+      columns={columns}
+      filters={filters}
+      searchText={(r) => `${r.description} ${r.project_code ?? ''} ${roleLabel(r.assigned_to_role as RoleType)} ${r.raised_by_role ? roleLabel(r.raised_by_role as RoleType) : ''}`}
+      initialSortKey="urgency"
+      emptyLabel="No actions match your filters."
     />
   );
 }
