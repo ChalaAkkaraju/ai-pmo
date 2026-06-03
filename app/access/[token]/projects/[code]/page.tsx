@@ -13,9 +13,8 @@ import { createSupabaseServiceClient } from '@/lib/supabase';
 import { ProjectTabs } from '@/components/project-tabs';
 import { SetupChecklist } from '@/components/setup-checklist';
 import { AssignTaskButton } from '@/components/assign-task-button';
-import { WbsCanonicalTree, type WorkPackage } from '@/components/wbs-canonical-tree';
-import { ScheduleView, type Task } from '@/components/schedule-view';
-import { EarnedValueCard } from '@/components/earned-value-card';
+import type { WorkPackage } from '@/components/wbs-canonical-tree';
+import type { Task } from '@/components/schedule-view';
 import { computeEv, evCurve } from '@/lib/earned-value';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
@@ -278,12 +277,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
       {resolved.definition.can_write && <AssignTaskButton token={token} projectCode={code} />}
 
-      <WbsCanonicalTree workPackages={workPackages} />
-
-      <ScheduleView tasks={tasks} workPackages={workPackages} />
-
-      <EarnedValueCard metrics={evMetrics} syncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null} curve={evC} />
-
       <ProjectTabs
         token={token}
         projectCode={code}
@@ -293,6 +286,11 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         projectCurrentWeek={Number(project.current_week)}
         projectStatus={String(project.status)}
         projectHardDeadline={project.hard_deadline_description ?? null}
+        workPackages={workPackages}
+        tasks={tasks}
+        evMetrics={evMetrics}
+        evCurve={evC}
+        evSyncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null}
         data={{ issues, risks, change_orders, variance_reports, planning_outputs, action_items }}
       />
     </div>

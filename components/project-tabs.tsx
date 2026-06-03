@@ -1,27 +1,26 @@
 'use client';
 
 /**
- * Client component that renders the tabbed view on a project detail page.
+ * Unified project workspace — the single tabbed home for everything about one
+ * project. One URL, one floating assistant, fast tab switches; the synthesis
+ * story (cost + schedule + structure are one picture) stays intact.
  *
- * Tab layout (wraps onto two rows when narrow):
- *   Operational: Risks / Issues / Change orders / Variance
- *   Planning:    Charter / Stakeholders / WBS / Schedule / Budget / Comms
- *                Lessons / Closeout
+ * Top-level tabs:
+ *   Overview     — the executive read: EV headline + what needs attention.
+ *   Structure    — canonical WBS tree (synced from SAP PS).
+ *   Schedule     — canonical Gantt + task list (Planner Premium / P6).
+ *   Earned value — full EV card + S-curve (flagship).
+ *   Risks & issues — heat map + risk register + issue register.
+ *   Changes      — change orders.
+ *   Variance     — contingency-burn trend + variance summary.
+ *   Planning     — AI planning artefacts (charter, stakeholders, …) via an
+ *                  inner selector so the top bar stays clean.
  *
- * Agent invocation now lives in the floating widget (bottom-right of every
- * page), not as a tab. See components/floating-agent-widget.tsx.
- *
- * Planning tabs render the markdown output of the corresponding agent (from
- * agent_outputs) via <PlanningArtefactView>. Empty state if no output yet.
- * Special-cased tabs:
- *   - Risks: 3×3 heat map above the table
- *   - Variance: CPI/SPI + contingency-burn chart above the summary
- *   - Schedule: Gantt timeline strip above the markdown
- *   - WBS: collapsible hierarchical tree above the markdown
- *
- * Uses Radix Tabs with Tailwind styling.
+ * Agent invocation lives in the floating widget (bottom-right of every page).
+ * Tabs are controlled so the Overview can link straight into a deeper tab.
  */
 
+import { useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { IssuesTable } from './issues-table';
 import { RisksTable } from './risks-table';
@@ -29,17 +28,15 @@ import { RiskHeatmap } from './risk-heatmap';
 import { ChangeOrdersTable } from './change-orders-table';
 import { VarianceSummary } from './variance-summary';
 import { VarianceTrendChart } from './variance-trend-chart';
-import { ScheduleGantt } from './schedule-gantt';
-import { WbsTreeView } from './wbs-tree-view';
+import { WbsCanonicalTree, type WorkPackage } from './wbs-canonical-tree';
+import { ScheduleView, type Task } from './schedule-view';
+import { EarnedValueCard } from './earned-value-card';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
+import type { EvMetrics, EvCurve } from '@/lib/earned-value';
 import type { AgentType } from '@/lib/types';
 
-/** Agents whose outputs are surfaced as planning tabs (not operational tables). */
-const PLANNING_TABS: Array<{
-  value: string;
-  label: string;
-  agentType: AgentType;
-}> = [
+/** AI planning artefacts, shown inside the Planning tab via an inner selector. */
+const PLANNING_TABS: Array<{ value: string; label: string; agentType: AgentType }> = [
   { value: 'charter', label: 'Charter', agentType: 'charter_drafter' },
   { value: 'stakeholders', label: 'Stakeholders', agentType: 'stakeholder_analyst' },
   { value: 'wbs', label: 'WBS', agentType: 'wbs_builder' },
@@ -55,20 +52,23 @@ interface ProjectTabsProps {
   projectCode: string;
   allowedAgents: AgentType[];
   canWrite: boolean;
-  /** Total contingency in dollars — used by variance trend chart for reference line. */
   contingencyTotal: number;
-  /** Project metadata used by the Schedule Gantt strip. */
   projectCurrentWeek: number;
   projectStatus: string;
   projectHardDeadline: string | null;
+  /** Canonical structure + schedule (mirrored from SAP PS / scheduler). */
+  workPackages: WorkPackage[];
+  tasks: Task[];
+  /** Earned-value engine output + S-curve, plus the cost-actual sync time. */
+  evMetrics: EvMetrics;
+  evCurve: EvCurve | null;
+  evSyncedAt: string | null;
   data: {
     issues: Array<Record<string, unknown>>;
     risks: Array<Record<string, unknown>>;
     change_orders: Array<Record<string, unknown>>;
     variance_reports: Array<Record<string, unknown>>;
-    /** Planning agent outputs for THIS project, newest first, any agent_type. */
     planning_outputs: ArtefactRow[];
-    /** Cross-agent action items raised against this project (migration 0009). */
     action_items?: Array<Record<string, unknown>>;
   };
 }
@@ -82,96 +82,239 @@ export function ProjectTabs({
   projectCurrentWeek,
   projectStatus,
   projectHardDeadline,
+  workPackages,
+  tasks,
+  evMetrics,
+  evCurve,
+  evSyncedAt,
   data,
 }: ProjectTabsProps) {
-  // Group planning outputs by agent_type so each tab can show all iterations.
+  const [tab, setTab] = useState('overview');
+
   const planningByAgent: Record<string, ArtefactRow[]> = {};
   for (const row of data.planning_outputs ?? []) {
     if (!planningByAgent[row.agent_type]) planningByAgent[row.agent_type] = [];
     planningByAgent[row.agent_type].push(row);
   }
-
-  // Latest WBS markdown for the tree view (rows are sorted invoked_at DESC).
-  const latestWbsMarkdown = planningByAgent['wbs_builder']?.[0]?.output_md ?? null;
+  const planningCount = Object.values(planningByAgent).reduce((n, rows) => n + rows.length, 0);
 
   return (
-    <Tabs.Root defaultValue="charter" className="mt-8">
-      <Tabs.List className="flex flex-wrap gap-x-1 gap-y-2 border-b">
-        {/* Planning (Charter leads) */}
-        {PLANNING_TABS.map((t) => (
-          <TabTrigger
-            key={t.value}
-            value={t.value}
-            label={t.label}
-            count={planningByAgent[t.agentType]?.length}
-            dimWhenEmpty
-          />
-        ))}
-
-        {/* Divider */}
+    <Tabs.Root value={tab} onValueChange={setTab} className="mt-8">
+      <Tabs.List className="flex flex-wrap items-center gap-x-1 gap-y-2 border-b">
+        <TabTrigger value="overview" label="Overview" />
+        <TabTrigger value="structure" label="Structure" count={workPackages.length} />
+        <TabTrigger value="schedule" label="Schedule" count={tasks.length} />
+        <TabTrigger value="ev" label="Earned value" highlight />
         <span className="mx-2 self-center text-muted-foreground/40">|</span>
-
-        {/* Operational */}
-        <TabTrigger value="risks" label="Risks" count={data.risks.length} />
-        <TabTrigger value="issues" label="Issues" count={data.issues.length} />
-        <TabTrigger value="cos" label="Change orders" count={data.change_orders.length} />
+        <TabTrigger value="risks" label="Risks & issues" count={data.risks.length + data.issues.length} />
+        <TabTrigger value="cos" label="Changes" count={data.change_orders.length} />
         <TabTrigger value="variance" label="Variance" count={data.variance_reports.length} />
+        <TabTrigger value="planning" label="Planning" count={planningCount} dimWhenEmpty />
       </Tabs.List>
 
-      {/* Operational panels */}
+      <Tabs.Content value="overview" className="pt-6">
+        <OverviewPanel
+          metrics={evMetrics}
+          status={projectStatus}
+          currentWeek={projectCurrentWeek}
+          risks={data.risks}
+          issues={data.issues}
+          actions={data.action_items ?? []}
+          go={setTab}
+        />
+      </Tabs.Content>
+
+      <Tabs.Content value="structure" className="pt-6">
+        <WbsCanonicalTree workPackages={workPackages} />
+      </Tabs.Content>
+
+      <Tabs.Content value="schedule" className="pt-6">
+        <ScheduleView tasks={tasks} workPackages={workPackages} />
+      </Tabs.Content>
+
+      <Tabs.Content value="ev" className="pt-6">
+        <EarnedValueCard metrics={evMetrics} syncedAt={evSyncedAt} curve={evCurve} />
+      </Tabs.Content>
+
       <Tabs.Content value="risks" className="space-y-6 pt-6">
         <RiskHeatmap rows={data.risks} />
         <RisksTable rows={data.risks} actions={data.action_items ?? []} />
-      </Tabs.Content>
-      <Tabs.Content value="issues" className="pt-6">
         <IssuesTable rows={data.issues} />
       </Tabs.Content>
+
       <Tabs.Content value="cos" className="pt-6">
         <ChangeOrdersTable rows={data.change_orders} />
       </Tabs.Content>
+
       <Tabs.Content value="variance" className="space-y-6 pt-6">
         <VarianceTrendChart rows={data.variance_reports} contingencyTotal={contingencyTotal} />
         <VarianceSummary rows={data.variance_reports} />
       </Tabs.Content>
 
-      {/* Planning panels */}
-      {PLANNING_TABS.map((t) => (
-        <Tabs.Content key={t.value} value={t.value} className="space-y-6 pt-6">
-          {t.value === 'schedule' && (
-            <ScheduleGantt
-              currentWeek={projectCurrentWeek}
-              status={projectStatus}
-              hardDeadlineDescription={projectHardDeadline}
-              varianceReports={data.variance_reports}
-              changeOrders={data.change_orders}
-            />
-          )}
-          {t.value === 'wbs' && (
-            <div className="flex items-start gap-3 rounded-lg border border-sky-200 bg-sky-50/60 px-4 py-3">
-              <span className="text-base leading-none" aria-hidden="true">🗂️</span>
-              <p className="text-xs text-sky-900">
-                <span className="font-semibold">Scope baseline.</span> The WBS is the deliverable-based
-                decomposition of <em>what</em> the project will produce — the foundation for estimating,
-                risk, and the schedule. For <em>when</em> the work happens, see the{' '}
-                <span className="font-medium">Schedule</span> tab.
-              </p>
-            </div>
-          )}
-          {t.value === 'wbs' && latestWbsMarkdown && (
-            <WbsTreeView markdown={latestWbsMarkdown} />
-          )}
-          <PlanningArtefactView
-            rows={planningByAgent[t.agentType] ?? []}
-            artefactLabel={t.label}
-            token={token}
-            canEdit={canWrite}
-          />
-        </Tabs.Content>
-      ))}
-
+      <Tabs.Content value="planning" className="pt-6">
+        <PlanningPanel byAgent={planningByAgent} token={token} canEdit={canWrite} />
+      </Tabs.Content>
     </Tabs.Root>
   );
 }
+
+/* ---------------------------------------------------------------- Overview */
+
+function fmtM(n: number | null): string {
+  if (n == null) return '—';
+  const m = n / 1_000_000;
+  return `${m < 0 ? '-' : ''}$${Math.abs(m).toFixed(1)}M`;
+}
+function ratioTone(v: number | null): string {
+  return v == null ? 'text-foreground' : v < 0.95 ? 'text-red-600' : v >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
+}
+
+function OverviewPanel({
+  metrics,
+  status,
+  currentWeek,
+  risks,
+  issues,
+  actions,
+  go,
+}: {
+  metrics: EvMetrics;
+  status: string;
+  currentWeek: number;
+  risks: Array<Record<string, unknown>>;
+  issues: Array<Record<string, unknown>>;
+  actions: Array<Record<string, unknown>>;
+  go: (tab: string) => void;
+}) {
+  const closedRisk = (s: string) => ['mitigated', 'realised', 'realized', 'not materialised', 'not materialized', 'closed', 'retired'].some((k) => s.includes(k));
+  const openRisks = risks.filter((r) => !closedRisk(String(r.status ?? '').toLowerCase())).length;
+  const openIssues = issues.filter((i) => {
+    const s = String(i.status ?? '').toLowerCase();
+    return s === 'open' || s.includes('progress');
+  }).length;
+  const openActions = actions.filter((a) => {
+    const s = String(a.status ?? '').toLowerCase();
+    return !(s.includes('done') || s.includes('closed') || s.includes('complete') || s.includes('resolved') || s.includes('declined'));
+  }).length;
+
+  const cpi = metrics.ready ? metrics.cpi : null;
+  const spi = metrics.ready ? metrics.spi : null;
+  const sched = spi == null ? null : spi < 0.97 ? 'behind schedule' : spi > 1.03 ? 'ahead of schedule' : 'on schedule';
+  const cost = cpi == null ? null : cpi < 0.97 ? 'over cost' : cpi > 1.03 ? 'under cost' : 'on budget';
+  const trouble = (cpi != null && cpi < 0.97) || (spi != null && spi < 0.97);
+  const great = cpi != null && cpi >= 1.0 && spi != null && spi >= 1.0;
+  const readChip = trouble ? 'bg-red-100 text-red-800' : great ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+  const readout = [sched, cost].filter(Boolean).join(' · ') || 'in progress';
+
+  return (
+    <div className="space-y-5">
+      {/* Health line */}
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">{status} · Week {currentWeek}</span>
+        {metrics.ready && <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium tabular-nums">{metrics.complete_pct.toFixed(0)}% complete</span>}
+        {(sched || cost) && <span className={`rounded-full px-3 py-1 text-xs font-medium ${readChip}`}>{readout}</span>}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Performance snapshot */}
+        <button
+          type="button"
+          onClick={() => go('ev')}
+          className="group rounded-lg border bg-gradient-to-br from-emerald-50/40 via-card to-card p-4 text-left transition hover:shadow-sm"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold">Earned value</p>
+            <span className="text-xs text-muted-foreground group-hover:text-foreground">Open →</span>
+          </div>
+          {metrics.ready ? (
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <Kpi label="Complete" value={`${metrics.complete_pct.toFixed(0)}%`} />
+              <Kpi label="CPI · cost" value={metrics.cpi == null ? '—' : metrics.cpi.toFixed(2)} cls={ratioTone(metrics.cpi)} />
+              <Kpi label="SPI · sched" value={metrics.spi == null ? '—' : metrics.spi.toFixed(2)} cls={ratioTone(metrics.spi)} />
+              <Kpi label="Forecast" value={fmtM(metrics.eac)} />
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-muted-foreground">Earned value not computed yet — run the cost sync.</p>
+          )}
+        </button>
+
+        {/* Needs attention */}
+        <div className="rounded-lg border bg-card p-4">
+          <p className="text-sm font-semibold">Needs attention</p>
+          <div className="mt-3 space-y-1.5">
+            <AttnRow label="Open risks" n={openRisks} onClick={() => go('risks')} />
+            <AttnRow label="Open issues" n={openIssues} onClick={() => go('risks')} />
+            <AttnRow label="Open actions" n={openActions} onClick={() => go('risks')} />
+          </div>
+          {openRisks + openIssues + openActions === 0 && (
+            <p className="mt-3 text-xs text-emerald-700">Nothing open — all clear.</p>
+          )}
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Tip: the tabs above hold the detail — structure (WBS), schedule, the full earned-value S-curve, and the AI planning artefacts.
+      </p>
+    </div>
+  );
+}
+
+function Kpi({ label, value, cls = 'text-foreground' }: { label: string; value: string; cls?: string }) {
+  return (
+    <div className="rounded-md bg-muted/40 px-3 py-1.5">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`text-base font-semibold tabular-nums ${cls}`}>{value}</p>
+    </div>
+  );
+}
+
+function AttnRow({ label, n, onClick }: { label: string; n: number; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition hover:bg-muted/60"
+    >
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${n > 0 ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground'}`}>{n}</span>
+    </button>
+  );
+}
+
+/* ---------------------------------------------------------------- Planning */
+
+function PlanningPanel({ byAgent, token, canEdit }: { byAgent: Record<string, ArtefactRow[]>; token: string; canEdit: boolean }) {
+  const firstWithContent = PLANNING_TABS.find((t) => (byAgent[t.agentType]?.length ?? 0) > 0)?.value ?? PLANNING_TABS[0].value;
+  const [sel, setSel] = useState(firstWithContent);
+  const active = PLANNING_TABS.find((t) => t.value === sel) ?? PLANNING_TABS[0];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-1.5">
+        {PLANNING_TABS.map((t) => {
+          const count = byAgent[t.agentType]?.length ?? 0;
+          const isActive = t.value === sel;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setSel(t.value)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                isActive ? 'bg-foreground text-background' : count > 0 ? 'bg-muted hover:bg-muted/70' : 'bg-muted/40 text-muted-foreground/60'
+              }`}
+            >
+              {t.label}
+              {count > 0 && <span className="ml-1.5 opacity-70">{count}</span>}
+            </button>
+          );
+        })}
+      </div>
+      <PlanningArtefactView rows={byAgent[active.agentType] ?? []} artefactLabel={active.label} token={token} canEdit={canEdit} />
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------------- Trigger */
 
 function TabTrigger({
   value,
