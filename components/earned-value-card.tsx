@@ -49,7 +49,7 @@ export function EarnedValueCard({ metrics, syncedAt }: { metrics: EvMetrics; syn
   // PV / EV / AC bars, scaled to the largest of the three.
   const scale = Math.max(pv, ev, ac, 1);
   const bar = (v: number, color: string) => (
-    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
       <div className="h-full" style={{ width: `${(v / scale) * 100}%`, backgroundColor: color }} />
     </div>
   );
@@ -82,15 +82,18 @@ export function EarnedValueCard({ metrics, syncedAt }: { metrics: EvMetrics; syn
           <Metric label="Variance (VAC)" value={money(vac)} cls={vac != null && vac < 0 ? 'text-red-600' : 'text-emerald-700'} />
         </div>
 
-        <div className="mt-4 space-y-1.5">
-          <div className="flex items-center gap-3 text-[11px]">
-            <span className="w-20 flex-none text-muted-foreground">Planned</span>{bar(pv, '#378ADD')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(pv)}</span>
-          </div>
-          <div className="flex items-center gap-3 text-[11px]">
-            <span className="w-20 flex-none text-muted-foreground">Earned</span>{bar(ev, '#639922')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(ev)}</span>
-          </div>
-          <div className="flex items-center gap-3 text-[11px]">
-            <span className="w-20 flex-none text-muted-foreground">Actual</span>{bar(ac, '#BA7517')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(ac)}</span>
+        <div className="mt-5 max-w-xl">
+          <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Planned vs earned vs actual</p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 text-[11px]">
+              <span className="w-16 flex-none text-muted-foreground">Planned</span>{bar(pv, '#378ADD')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(pv)}</span>
+            </div>
+            <div className="flex items-center gap-3 text-[11px]">
+              <span className="w-16 flex-none text-muted-foreground">Earned</span>{bar(ev, '#639922')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(ev)}</span>
+            </div>
+            <div className="flex items-center gap-3 text-[11px]">
+              <span className="w-16 flex-none text-muted-foreground">Actual</span>{bar(ac, '#BA7517')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(ac)}</span>
+            </div>
           </div>
         </div>
       </div>
