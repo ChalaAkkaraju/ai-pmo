@@ -29,6 +29,7 @@ import { ChangeOrdersTable } from './change-orders-table';
 import { VarianceSummary } from './variance-summary';
 import { VarianceTrendChart } from './variance-trend-chart';
 import { WbsCanonicalTree, type WorkPackage } from './wbs-canonical-tree';
+import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
@@ -57,6 +58,8 @@ interface ProjectTabsProps {
   /** Canonical structure + schedule (mirrored from SAP PS / scheduler). */
   workPackages: WorkPackage[];
   tasks: Task[];
+  /** Project not yet sourced from SAP — eligible for AI WBS authoring + booking. */
+  projectAppNative: boolean;
   /** Earned-value engine output + S-curve, plus the cost-actual sync time. */
   evMetrics: EvMetrics;
   evCurve: EvCurve | null;
@@ -82,6 +85,7 @@ export function ProjectTabs({
   projectHardDeadline,
   workPackages,
   tasks,
+  projectAppNative,
   evMetrics,
   evCurve,
   evSyncedAt,
@@ -95,6 +99,8 @@ export function ProjectTabs({
     planningByAgent[row.agent_type].push(row);
   }
   const planningCount = PLANNING_TABS.reduce((n, t) => n + (planningByAgent[t.agentType]?.length ?? 0), 0);
+  const activeWps = workPackages.filter((w) => (w.status ?? 'active') !== 'proposed');
+  const proposedWps = workPackages.filter((w) => w.status === 'proposed');
 
   return (
     <Tabs.Root value={tab} onValueChange={setTab} className="mt-8">
@@ -123,9 +129,17 @@ export function ProjectTabs({
       </Tabs.Content>
 
       <Tabs.Content value="structure" className="space-y-6 pt-6">
-        <WbsCanonicalTree workPackages={workPackages} />
-        {workPackages.length === 0 && (
-          <PlanningAside rows={planningByAgent['wbs_builder'] ?? []} label="WBS" token={token} canEdit={canWrite} />
+        {activeWps.length > 0 ? (
+          <WbsCanonicalTree workPackages={activeWps} />
+        ) : proposedWps.length > 0 ? (
+          <>
+            {canWrite && <WbsAuthoring token={token} projectCode={projectCode} proposed />}
+            <WbsCanonicalTree workPackages={proposedWps} mode="proposed" />
+          </>
+        ) : projectAppNative && canWrite ? (
+          <WbsAuthoring token={token} projectCode={projectCode} proposed={false} />
+        ) : (
+          <WbsCanonicalTree workPackages={[]} />
         )}
       </Tabs.Content>
 

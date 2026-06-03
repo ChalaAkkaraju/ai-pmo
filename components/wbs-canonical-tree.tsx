@@ -23,6 +23,7 @@ export interface WorkPackage {
   budget_bac: number | null;
   source_system: string;
   synced_at: string | null;
+  status?: string;
 }
 
 function money(n: number | null): string {
@@ -36,7 +37,7 @@ function sourceLabel(s: string): string {
   return s === 'SAP_PS' ? 'SAP PS' : s === 'DATAVERSE' ? 'Dataverse' : s === 'P6' ? 'Primavera P6' : 'App';
 }
 
-export function WbsCanonicalTree({ workPackages }: { workPackages: WorkPackage[] }) {
+export function WbsCanonicalTree({ workPackages, mode = 'synced' }: { workPackages: WorkPackage[]; mode?: 'synced' | 'proposed' }) {
   const phases = workPackages.filter((w) => !w.parent_wbs_code).sort((a, b) => a.wbs_code.localeCompare(b.wbs_code, undefined, { numeric: true }));
   const childrenOf = (code: string) =>
     workPackages.filter((w) => w.parent_wbs_code === code).sort((a, b) => a.wbs_code.localeCompare(b.wbs_code, undefined, { numeric: true }));
@@ -65,13 +66,19 @@ export function WbsCanonicalTree({ workPackages }: { workPackages: WorkPackage[]
           <span className="text-base leading-none" aria-hidden="true">🗂️</span>
           <div>
             <p className="text-sm font-semibold">Work breakdown structure</p>
-            <p className="text-xs text-muted-foreground">Scope baseline · read-only · {workPackages.length} elements</p>
+            <p className="text-xs text-muted-foreground">{mode === 'proposed' ? 'Draft for review · editable until booked' : 'Scope baseline · read-only'} · {workPackages.length} elements</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-medium text-sky-800">
-            Synced from {sourceLabel(source)}{synced ? ` · ${new Date(synced).toLocaleDateString()}` : ''}
-          </span>
+          {mode === 'proposed' ? (
+            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-800">
+              Proposed by AI · not yet booked
+            </span>
+          ) : (
+            <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-medium text-sky-800">
+              Synced from {sourceLabel(source)}{synced ? ` · ${new Date(synced).toLocaleDateString()}` : ''}
+            </span>
+          )}
           <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium">BAC {money(totalBac)}</span>
         </div>
       </div>

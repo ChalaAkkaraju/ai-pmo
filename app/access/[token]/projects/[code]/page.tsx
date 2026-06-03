@@ -67,11 +67,17 @@ async function loadWorkPackages(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   projectId: string,
 ): Promise<WorkPackage[]> {
-  const res = await supabase
+  const cols = 'wbs_code, parent_wbs_code, name, responsible_role_type, is_billing_element, budget_bac, source_system, synced_at';
+  let res = await supabase
     .from('work_packages')
-    .select('wbs_code, parent_wbs_code, name, responsible_role_type, is_billing_element, budget_bac, source_system, synced_at')
+    .select(`${cols}, status`)
     .eq('project_id', projectId);
-  if (res.error) return [];
+  if (res.error) {
+    // Pre-0018 (no status column) — fall back; treat all rows as active.
+    res = (await supabase.from('work_packages').select(cols).eq('project_id', projectId)) as typeof res;
+    if (res.error) return [];
+    return (res.data ?? []).map((w) => ({ ...(w as WorkPackage), status: 'active' }));
+  }
   return (res.data ?? []) as WorkPackage[];
 }
 
@@ -288,6 +294,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         projectHardDeadline={project.hard_deadline_description ?? null}
         workPackages={workPackages}
         tasks={tasks}
+        projectAppNative={(project.source_system ?? 'APP') !== 'SAP_PS'}
         evMetrics={evMetrics}
         evCurve={evC}
         evSyncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null}
