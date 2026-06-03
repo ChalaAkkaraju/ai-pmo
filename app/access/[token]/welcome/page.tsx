@@ -50,7 +50,7 @@ const DOES = [
 ];
 
 const IS_NOT = [
-  'Not a scheduler — no critical-path engine or resource levelling (that stays in your scheduler, e.g. MS Project or Primavera P6)',
+  'Not a scheduler — no critical-path engine or resource levelling (that stays in your scheduler, e.g. Microsoft Planner Premium or Primavera P6)',
   'Not an accounting system — cost, commitment, billing and revenue stay in your ERP, e.g. SAP PS or Oracle',
   'Not a data-entry replacement — it consumes those systems of record, it does not replace them',
 ];
@@ -126,7 +126,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
               <p className="text-sm font-medium">Any ERP</p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">Financial system of record — cost · commitment · revenue</p>
-            <p className="mt-1.5 text-[11px] text-muted-foreground/80">e.g. SAP PS · Oracle · IFS · and others</p>
+            <p className="mt-1.5 text-[11px] text-muted-foreground/80">e.g.{' '}<a href="https://www.sap.com/products/erp/s4hana.html" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-foreground">SAP PS</a>{' · '}<a href="https://www.oracle.com/erp/" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-foreground">Oracle</a>{' · '}<a href="https://www.ifs.com/" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-foreground">IFS</a>{' · and others'}</p>
           </div>
           <div className="rounded-xl border bg-card p-4">
             <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
               <p className="text-sm font-medium">Any scheduler</p>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">Schedule &amp; resources — dates · critical path · levelling</p>
-            <p className="mt-1.5 text-[11px] text-muted-foreground/80">e.g. MS Project · Primavera P6 · and others</p>
+            <p className="mt-1.5 text-[11px] text-muted-foreground/80">e.g.{' '}<a href="https://www.microsoft.com/en-us/microsoft-365/planner" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-foreground">Microsoft Planner Premium</a>{' · '}<a href="https://www.oracle.com/construction-engineering/primavera-p6/" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2 hover:text-foreground">Primavera P6</a>{' · and others'}</p>
           </div>
         </div>
         <p className="mt-3 text-center text-[11px] text-muted-foreground">
