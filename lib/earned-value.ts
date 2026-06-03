@@ -110,3 +110,38 @@ export function evCurve(leaves: EvLeaf[], tasks: EvTaskDated[], spi: number | nu
   const bac = leaves.reduce((a, l) => a + (Number(l.budget_bac) || 0), 0);
   return { points, todayX, bac };
 }
+
+/* ----------------------------------------------------- Portfolio roll-up */
+
+export interface PortfolioEv extends EvMetrics {
+  /** Projects with enough data to compute EV (a budget and some actual cost). */
+  projects_in: number;
+  /** Projects behind schedule (SPI < 0.97). */
+  behind_count: number;
+  /** Projects over cost (CPI < 0.97). */
+  over_count: number;
+}
+
+/**
+ * Portfolio earned value. The honest way to aggregate is to SUM the dollar
+ * quantities (BAC/PV/EV/AC) across projects and recompute the indices from the
+ * totals — not to average per-project CPI/SPI, which would over-weight small
+ * projects. WBS codes are only unique within a project, so callers must group
+ * by project and compute each project's EvMetrics BEFORE rolling up here.
+ */
+export function rollUpEv(perProject: EvMetrics[]): PortfolioEv {
+  let bac = 0, pv = 0, ev = 0, ac = 0, projects_in = 0, behind = 0, over = 0;
+  for (const m of perProject) {
+    if (!m.ready) continue;
+    projects_in++;
+    bac += m.bac; pv += m.pv; ev += m.ev; ac += m.ac;
+    if (m.spi != null && m.spi < 0.97) behind++;
+    if (m.cpi != null && m.cpi < 0.97) over++;
+  }
+  const cpi = ac > 0 ? ev / ac : null;
+  const spi = pv > 0 ? ev / pv : null;
+  const eac = cpi && cpi > 0 ? bac / cpi : null;
+  const vac = eac != null ? bac - eac : null;
+  const complete_pct = bac > 0 ? (ev / bac) * 100 : 0;
+  return { bac, pv, ev, ac, cpi, spi, eac, vac, complete_pct, ready: bac > 0 && ac > 0, projects_in, behind_count: behind, over_count: over };
+}

@@ -17,6 +17,7 @@ import remarkGfm from 'remark-gfm';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { ActionRibbon } from '@/components/action-ribbon';
+import type { PortfolioEv } from '@/lib/earned-value';
 import type { RecentlyAddedProject } from '@/components/recently-added-banner';
 
 export type { RecentlyAddedProject };
@@ -135,6 +136,7 @@ interface Props {
   canWrite: boolean;
   allowedAgentCount: number;
   kpis: PortfolioKpis;
+  portfolioEv: PortfolioEv | null;
   roleId: string;
   workspaceActivity: WorkspaceActivity;
   operational: OperationalKpis;
@@ -375,6 +377,60 @@ function MiniBarChart({ items, maxLabelWidth = 'flex-1' }: { items: BarItem[]; m
 // Main
 // =============================================================================
 
+function PortfolioEvBand({ ev }: { ev: PortfolioEv }) {
+  const money = (n: number | null) => {
+    if (n == null) return '\u2014';
+    const m = n / 1_000_000;
+    return `${m < 0 ? '-' : ''}$${Math.abs(m).toFixed(1)}M`;
+  };
+  const ratioTone = (v: number | null) =>
+    v == null ? 'text-slate-900' : v < 0.97 ? 'text-red-600' : v >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
+  const sched = ev.spi == null ? null : ev.spi < 0.97 ? 'behind schedule' : ev.spi > 1.03 ? 'ahead of schedule' : 'on schedule';
+  const cost = ev.cpi == null ? null : ev.cpi < 0.97 ? 'over cost' : ev.cpi > 1.03 ? 'under cost' : 'on budget';
+  const trouble = (ev.cpi != null && ev.cpi < 0.97) || (ev.spi != null && ev.spi < 0.97);
+  const great = ev.cpi != null && ev.cpi >= 1.0 && ev.spi != null && ev.spi >= 1.0;
+  const chip = trouble ? 'bg-red-100 text-red-800' : great ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+  const readout = [sched, cost].filter(Boolean).join(' \u00b7 ') || 'in progress';
+
+  const Cell = ({ label, value, cls = 'text-slate-900', accent }: { label: string; value: string; cls?: string; accent?: string }) => (
+    <div className="rounded-md bg-white/70 px-3 py-2" style={accent ? { backgroundColor: `${accent}14` } : undefined}>
+      <p className="text-[10px] font-medium uppercase tracking-wider" style={accent ? { color: accent } : undefined}>{label}</p>
+      <p className={`text-base font-semibold tabular-nums ${cls}`}>{value}</p>
+    </div>
+  );
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50/50 via-white to-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="text-lg leading-none" aria-hidden="true">📈</span>
+          <div>
+            <h2 className="text-base font-semibold">Portfolio earned value</h2>
+            <p className="text-xs text-muted-foreground">
+              {ev.complete_pct.toFixed(0)}% complete · computed across {ev.projects_in} project{ev.projects_in === 1 ? '' : 's'} · cost from SAP PS, progress from the scheduler
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {(sched || cost) && <span className={`rounded-full px-3 py-1 text-xs font-medium ${chip}`}>{readout}</span>}
+          {ev.behind_count > 0 && <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700">{ev.behind_count} behind</span>}
+          {ev.over_count > 0 && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700">{ev.over_count} over cost</span>}
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        <Cell label="Budget (BAC)" value={money(ev.bac)} />
+        <Cell label="Planned (PV)" value={money(ev.pv)} accent="#378ADD" />
+        <Cell label="Earned (EV)" value={money(ev.ev)} accent="#639922" />
+        <Cell label="Actual (AC)" value={money(ev.ac)} accent="#BA7517" />
+        <Cell label="CPI · cost" value={ev.cpi == null ? '\u2014' : ev.cpi.toFixed(2)} cls={ratioTone(ev.cpi)} />
+        <Cell label="SPI · sched" value={ev.spi == null ? '\u2014' : ev.spi.toFixed(2)} cls={ratioTone(ev.spi)} />
+        <Cell label="Forecast (EAC)" value={money(ev.eac)} />
+      </div>
+    </section>
+  );
+}
+
 export function DashboardClient({
   token,
   roleType,
@@ -390,6 +446,7 @@ export function DashboardClient({
   canWrite,
   allowedAgentCount,
   kpis,
+  portfolioEv,
   roleId,
   workspaceActivity,
   operational,
@@ -780,6 +837,13 @@ export function DashboardClient({
         risksMine={risksMine}
         recentlyAdded={recentlyAdded}
       />
+
+      {/* Portfolio earned value — the one number that needs cost, schedule and
+          structure together. Computed from the canonical model (sum of
+          BAC/PV/EV/AC across projects, indices recomputed from the totals). */}
+      {portfolioEv && portfolioEv.ready && (
+        <PortfolioEvBand ev={portfolioEv} />
+      )}
 
       {/* Role-specific KPI strip — shown only for roles with a tailored set.
           Each tile is net-new vs the hero and the operational ribbon below. */}

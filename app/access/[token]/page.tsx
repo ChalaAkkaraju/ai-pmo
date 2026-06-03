@@ -12,6 +12,7 @@ import { resolveRoleFromToken } from '@/lib/role-context';
 import { matchRoleFromText } from '@/lib/role-match';
 import { WelcomeGate } from '@/components/welcome-gate';
 import { createSupabaseServiceClient } from '@/lib/supabase';
+import { computeEv, rollUpEv, type PortfolioEv } from '@/lib/earned-value';
 import {
   DashboardClient,
   type DashboardProject,
@@ -527,6 +528,45 @@ export default async function RoleLandingPage({ params }: PageProps) {
   const risksActive = risks.filter(riskIsActive).length;
   const risksMine = risks.filter((r) => riskIsActive(r) && matchRoleFromText(r.owner) === myRoleType).length;
 
+  // -------- Portfolio earned value (Phase 3 flagship, computed from the
+  // canonical model). Resilient: tables exist only after migration 0017, and
+  // WBS codes are unique only within a project, so we group by project_id and
+  // compute each project's EV before rolling the dollar totals up. --------
+  let portfolioEv: PortfolioEv | null = null;
+  try {
+    const [wpRes, taskRes, costRes] = await Promise.all([
+      supabase.from('work_packages').select('project_id, wbs_code, parent_wbs_code, budget_bac'),
+      supabase.from('tasks').select('project_id, wbs_code, percent_complete'),
+      supabase.from('cost_actuals').select('project_id, actual_cost, planned_value'),
+    ]);
+    const wps = (wpRes.data ?? []) as Array<{ project_id: string; wbs_code: string; parent_wbs_code: string | null; budget_bac: number | null }>;
+    const tks = (taskRes.data ?? []) as Array<{ project_id: string; wbs_code: string | null; percent_complete: number | null }>;
+    const cst = (costRes.data ?? []) as Array<{ project_id: string; actual_cost: number | null; planned_value: number | null }>;
+    if (wps.length > 0) {
+      const byProj = <T extends { project_id: string }>(rows: T[]) => {
+        const m = new Map<string, T[]>();
+        for (const r of rows) {
+          const a = m.get(r.project_id) ?? [];
+          a.push(r);
+          m.set(r.project_id, a);
+        }
+        return m;
+      };
+      const wpByP = byProj(wps);
+      const tkByP = byProj(tks);
+      const cstByP = byProj(cst);
+      const perProject = [...wpByP.entries()].map(([pid, rows]) => {
+        const leaves = rows.filter((w) => w.parent_wbs_code).map((w) => ({ wbs_code: w.wbs_code, budget_bac: w.budget_bac }));
+        const tasksForP = (tkByP.get(pid) ?? []).map((t) => ({ wbs_code: t.wbs_code, percent_complete: t.percent_complete }));
+        const costForP = (cstByP.get(pid) ?? []).map((c) => ({ actual_cost: c.actual_cost, planned_value: c.planned_value }));
+        return computeEv(leaves, tasksForP, costForP);
+      });
+      portfolioEv = rollUpEv(perProject);
+    }
+  } catch {
+    portfolioEv = null;
+  }
+
   return (
     <>
       <WelcomeGate token={token} />
@@ -545,6 +585,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
       canWrite={resolved.definition.can_write}
       allowedAgentCount={resolved.definition.allowed_agents.length}
       kpis={kpis}
+      portfolioEv={portfolioEv}
       roleId={resolved.role.id}
       workspaceActivity={workspaceActivity}
       operational={operational}
