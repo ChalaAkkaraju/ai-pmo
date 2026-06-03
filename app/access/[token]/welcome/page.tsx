@@ -173,11 +173,12 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
       </div>
 
       {/* EV flagship — with mini S-curve */}
-      <div className="mt-12 grid grid-cols-1 gap-5 rounded-xl border bg-gradient-to-br from-emerald-50/50 via-card to-card p-6 md:grid-cols-2 md:items-center">
+      <p className="mt-12 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Earned value · the flagship</p>
+      <div className="mt-4 grid grid-cols-1 gap-5 rounded-xl border bg-gradient-to-br from-emerald-50/50 via-card to-card p-6 md:grid-cols-2 md:items-center">
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"><TrendingUp className="h-5 w-5" strokeWidth={1.75} /></span>
-            <p className="text-sm font-semibold">Earned value is the flagship</p>
+            <h3 className="text-sm font-semibold">The one metric no single system owns</h3>
           </div>
           <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
             CPI, SPI, EAC and variance need cost from the ERP, percent-complete from the scheduler and the budget
@@ -210,9 +211,10 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
       </div>
 
       {/* What it does / is not */}
-      <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <p className="mt-12 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">What it is — and isn&apos;t</p>
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-xl border bg-card p-5">
-          <h2 className="text-sm font-semibold">What it does</h2>
+          <h3 className="text-sm font-semibold">What it does</h3>
           <ul className="mt-3 space-y-2.5">
             {DOES.map((d) => (
               <li key={d} className="flex gap-2.5 text-[13px]">
@@ -223,7 +225,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
           </ul>
         </div>
         <div className="rounded-xl border bg-card p-5">
-          <h2 className="text-sm font-semibold">What it is not</h2>
+          <h3 className="text-sm font-semibold">What it is not</h3>
           <ul className="mt-3 space-y-2.5">
             {IS_NOT.map((d) => (
               <li key={d} className="flex gap-2.5 text-[13px]">
@@ -283,7 +285,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
           <div key={g.title} className="rounded-xl border bg-card p-5 transition hover:-translate-y-0.5 hover:shadow-sm">
             <div className="flex items-center gap-2">
               <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${g.cls}`}><g.Icon className="h-4 w-4" strokeWidth={1.75} /></span>
-              <p className="text-sm font-semibold">{g.title}</p>
+              <h3 className="text-sm font-semibold">{g.title}</h3>
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {g.agents.map((a) => (
