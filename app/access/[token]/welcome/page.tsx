@@ -94,9 +94,6 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
             <span key={c} className="rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">{c}</span>
           ))}
         </div>
-        <p className="mt-5 text-sm text-muted-foreground">
-          You are signed in as <span className="font-medium text-foreground">{resolved.role.name}</span> · {resolved.definition.display_name}
-        </p>
       </div>
 
       {/* The problem */}
