@@ -173,7 +173,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
       </div>
 
       {/* EV flagship — with mini S-curve */}
-      <div className="mt-6 grid grid-cols-1 gap-5 rounded-xl border bg-gradient-to-br from-emerald-50/50 via-card to-card p-6 md:grid-cols-2 md:items-center">
+      <div className="mt-12 grid grid-cols-1 gap-5 rounded-xl border bg-gradient-to-br from-emerald-50/50 via-card to-card p-6 md:grid-cols-2 md:items-center">
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"><TrendingUp className="h-5 w-5" strokeWidth={1.75} /></span>
@@ -210,7 +210,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
       </div>
 
       {/* What it does / is not */}
-      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-xl border bg-card p-5">
           <h2 className="text-sm font-semibold">What it does</h2>
           <ul className="mt-3 space-y-2.5">
