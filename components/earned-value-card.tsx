@@ -4,7 +4,7 @@
  * derived CPI / SPI / EAC / VAC, with a plain-language read of cost & schedule.
  */
 
-import type { EvMetrics } from '@/lib/earned-value';
+import type { EvMetrics, EvCurve } from '@/lib/earned-value';
 
 function money(n: number | null): string {
   if (n == null) return '—';
@@ -15,7 +15,7 @@ function num(n: number | null): string {
   return n == null ? '—' : n.toFixed(2);
 }
 
-export function EarnedValueCard({ metrics, syncedAt }: { metrics: EvMetrics; syncedAt: string | null }) {
+export function EarnedValueCard({ metrics, syncedAt, curve }: { metrics: EvMetrics; syncedAt: string | null; curve: EvCurve | null }) {
   if (!metrics.ready) {
     return (
       <section className="mt-6 rounded-lg border bg-card p-6 text-center">
@@ -43,14 +43,6 @@ export function EarnedValueCard({ metrics, syncedAt }: { metrics: EvMetrics; syn
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={`mt-0.5 text-lg font-semibold tabular-nums ${cls}`}>{value}</p>
       {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
-    </div>
-  );
-
-  // PV / EV / AC bars, scaled to the largest of the three.
-  const scale = Math.max(pv, ev, ac, 1);
-  const bar = (v: number, color: string) => (
-    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
-      <div className="h-full" style={{ width: `${(v / scale) * 100}%`, backgroundColor: color }} />
     </div>
   );
 
@@ -82,20 +74,33 @@ export function EarnedValueCard({ metrics, syncedAt }: { metrics: EvMetrics; syn
           <Metric label="Variance (VAC)" value={money(vac)} cls={vac != null && vac < 0 ? 'text-red-600' : 'text-emerald-700'} />
         </div>
 
-        <div className="mt-5 max-w-xl">
-          <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Planned vs earned vs actual</p>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 text-[11px]">
-              <span className="w-16 flex-none text-muted-foreground">Planned</span>{bar(pv, '#378ADD')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(pv)}</span>
+        {curve && curve.bac > 0 && (() => {
+          const px = (x: number) => 20 + x * 560;
+          const py = (v: number) => 190 - (v / curve.bac) * 170;
+          const pvPts = curve.points.map((p) => `${px(p.x).toFixed(1)},${py(p.pv).toFixed(1)}`).join(' ');
+          const evPts = curve.points.filter((p) => p.ev != null).map((p) => `${px(p.x).toFixed(1)},${py(p.ev as number).toFixed(1)}`).join(' ');
+          const acPts = curve.points.filter((p) => p.ac != null).map((p) => `${px(p.x).toFixed(1)},${py(p.ac as number).toFixed(1)}`).join(' ');
+          const tx = px(curve.todayX);
+          return (
+            <div className="mt-5 max-w-2xl">
+              <div className="mb-2 flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2 border-dashed" style={{ borderColor: '#378ADD' }} />Planned (PV)</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2" style={{ borderColor: '#639922' }} />Earned (EV)</span>
+                <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2" style={{ borderColor: '#BA7517' }} />Actual (AC)</span>
+              </div>
+              <svg viewBox="0 0 600 200" className="w-full" role="img" aria-label="Earned value S-curve: planned value rising to budget, with earned value and actual cost up to today">
+                <line x1="20" y1="20" x2="580" y2="20" stroke="currentColor" strokeOpacity="0.15" strokeDasharray="3 3" />
+                <text x="20" y="14" fontSize="9" fill="currentColor" fillOpacity="0.5">BAC {money(curve.bac)}</text>
+                <line x1="20" y1="190" x2="580" y2="190" stroke="currentColor" strokeOpacity="0.15" />
+                <line x1={tx} y1="20" x2={tx} y2="190" stroke="#DC2626" strokeOpacity="0.55" strokeWidth="1" />
+                <text x={tx + 3} y="30" fontSize="9" fill="#DC2626">today</text>
+                <polyline points={pvPts} fill="none" stroke="#378ADD" strokeWidth="2" strokeDasharray="5 3" />
+                <polyline points={evPts} fill="none" stroke="#639922" strokeWidth="2.5" />
+                <polyline points={acPts} fill="none" stroke="#BA7517" strokeWidth="2.5" />
+              </svg>
             </div>
-            <div className="flex items-center gap-3 text-[11px]">
-              <span className="w-16 flex-none text-muted-foreground">Earned</span>{bar(ev, '#639922')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(ev)}</span>
-            </div>
-            <div className="flex items-center gap-3 text-[11px]">
-              <span className="w-16 flex-none text-muted-foreground">Actual</span>{bar(ac, '#BA7517')}<span className="w-16 flex-none text-right tabular-nums text-muted-foreground">{money(ac)}</span>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
     </section>
   );

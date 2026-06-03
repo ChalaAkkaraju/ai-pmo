@@ -16,7 +16,7 @@ import { AssignTaskButton } from '@/components/assign-task-button';
 import { WbsCanonicalTree, type WorkPackage } from '@/components/wbs-canonical-tree';
 import { ScheduleView, type Task } from '@/components/schedule-view';
 import { EarnedValueCard } from '@/components/earned-value-card';
-import { computeEv } from '@/lib/earned-value';
+import { computeEv, evCurve } from '@/lib/earned-value';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -146,7 +146,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const workPackages = await loadWorkPackages(supabase, project.id);
   const tasks = await loadTasks(supabase, project.id);
   const costActuals = await loadCostActuals(supabase, project.id);
-  const evMetrics = computeEv(workPackages.filter((w) => w.parent_wbs_code), tasks, costActuals);
+  const evLeaves = workPackages.filter((w) => w.parent_wbs_code);
+  const evMetrics = computeEv(evLeaves, tasks, costActuals);
+  const evC = evCurve(evLeaves, tasks, evMetrics.spi, evMetrics.cpi);
 
   const realisedCount = risks.filter((r) => String(r.status).toLowerCase().startsWith('realised')).length;
   const mitigatedCount = risks.filter((r) => String(r.status).toLowerCase().includes('mitigated')).length;
@@ -280,7 +282,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
       <ScheduleView tasks={tasks} workPackages={workPackages} />
 
-      <EarnedValueCard metrics={evMetrics} syncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null} />
+      <EarnedValueCard metrics={evMetrics} syncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null} curve={evC} />
 
       <ProjectTabs
         token={token}

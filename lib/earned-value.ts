@@ -60,3 +60,53 @@ export function computeEv(leaves: EvLeaf[], tasks: EvTask[], cost: EvCost[]): Ev
 
   return { bac, pv, ev, ac, cpi, spi, eac, vac, complete_pct, ready: bac > 0 && ac > 0 };
 }
+
+export interface EvTaskDated {
+  wbs_code: string | null;
+  start_date: string | null;
+  finish_date: string | null;
+}
+export interface EvCurvePoint {
+  x: number; // 0..1 across the timeline
+  pv: number;
+  ev: number | null; // only up to today
+  ac: number | null;
+}
+export interface EvCurve {
+  points: EvCurvePoint[];
+  todayX: number;
+  bac: number;
+}
+
+/**
+ * Build the earned-value S-curve. PV is computed from the task schedule
+ * (cumulative planned value over time → BAC). We only have an as-of snapshot
+ * for EV/AC, so they are modelled as tracking PV at the project's SPI (and
+ * AC = EV / CPI) up to today — which lands them exactly on the current EV/AC.
+ */
+export function evCurve(leaves: EvLeaf[], tasks: EvTaskDated[], spi: number | null, cpi: number | null): EvCurve | null {
+  const bacByWbs = new Map(leaves.map((l) => [l.wbs_code, Number(l.budget_bac) || 0]));
+  const segs = tasks
+    .map((t) => ({ s: t.start_date ? Date.parse(t.start_date) : NaN, f: t.finish_date ? Date.parse(t.finish_date) : NaN, bac: bacByWbs.get(t.wbs_code ?? '') || 0 }))
+    .filter((x) => !Number.isNaN(x.s) && !Number.isNaN(x.f) && x.f > x.s);
+  if (segs.length === 0) return null;
+
+  const t0 = Math.min(...segs.map((x) => x.s));
+  const t1 = Math.max(...segs.map((x) => x.f));
+  const span = t1 - t0 || 1;
+  const todayX = Math.max(0, Math.min(1, (Date.now() - t0) / span));
+  const s = spi ?? 1;
+  const c = cpi ?? 1;
+  const pvAt = (d: number) => segs.reduce((a, x) => a + Math.max(0, Math.min(1, (d - x.s) / (x.f - x.s))) * x.bac, 0);
+
+  const N = 24;
+  const points: EvCurvePoint[] = [];
+  for (let i = 0; i <= N; i++) {
+    const x = i / N;
+    const pv = pvAt(t0 + x * span);
+    const within = x <= todayX;
+    points.push({ x, pv, ev: within ? pv * s : null, ac: within ? (pv * s) / (c || 1) : null });
+  }
+  const bac = leaves.reduce((a, l) => a + (Number(l.budget_bac) || 0), 0);
+  return { points, todayX, bac };
+}
