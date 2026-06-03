@@ -47,6 +47,12 @@ function extractTitle(md: string, fallback: string): string {
   return m ? m[1].replace(/\*\*/g, '').trim() : fallback;
 }
 
+/** Drop the leading H1 — the header band already shows it, so the body would
+ * otherwise repeat the title in large type. Only strips a title at the very top. */
+function stripLeadingH1(md: string): string {
+  return md.replace(/^\s*#\s+.+(\r?\n)+/, '');
+}
+
 /** Rough reading-time + size hint for the header band. */
 function readingStats(md: string): { words: number; mins: number } {
   const words = (md.trim().match(/\S+/g) ?? []).length;
@@ -155,6 +161,7 @@ export function PlanningArtefactView({ rows, artefactLabel, token, blurb, canEdi
   const effective = meta.edited_md ?? current.output_md;
 
   const title = extractTitle(effective, artefactLabel);
+  const bodyMd = stripLeadingH1(effective);
   const stats = readingStats(effective);
 
   async function save() {
@@ -337,7 +344,7 @@ export function PlanningArtefactView({ rows, artefactLabel, token, blurb, canEdi
       ) : (
         <article className="prose prose-sm max-w-none rounded-xl border bg-card p-6 prose-headings:scroll-mt-20 prose-p:text-[13px] prose-li:text-[13px] dark:prose-invert">
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
-            {effective}
+            {bodyMd}
           </ReactMarkdown>
         </article>
       )}
