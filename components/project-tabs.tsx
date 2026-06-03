@@ -124,12 +124,16 @@ export function ProjectTabs({
 
       <Tabs.Content value="structure" className="space-y-6 pt-6">
         <WbsCanonicalTree workPackages={workPackages} />
-        <PlanningAside rows={planningByAgent['wbs_builder'] ?? []} label="WBS" token={token} canEdit={canWrite} />
+        {workPackages.length === 0 && (
+          <PlanningAside rows={planningByAgent['wbs_builder'] ?? []} label="WBS" token={token} canEdit={canWrite} />
+        )}
       </Tabs.Content>
 
       <Tabs.Content value="schedule" className="space-y-6 pt-6">
         <ScheduleView tasks={tasks} workPackages={workPackages} />
-        <PlanningAside rows={planningByAgent['schedule_reasoner'] ?? []} label="Schedule" token={token} canEdit={canWrite} />
+        {tasks.length === 0 && (
+          <PlanningAside rows={planningByAgent['schedule_reasoner'] ?? []} label="Schedule" token={token} canEdit={canWrite} />
+        )}
       </Tabs.Content>
 
       <Tabs.Content value="ev" className="pt-6">
