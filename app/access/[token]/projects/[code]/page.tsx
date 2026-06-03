@@ -14,6 +14,7 @@ import { ProjectTabs } from '@/components/project-tabs';
 import { SetupChecklist } from '@/components/setup-checklist';
 import { AssignTaskButton } from '@/components/assign-task-button';
 import { WbsCanonicalTree, type WorkPackage } from '@/components/wbs-canonical-tree';
+import { ScheduleView, type Task } from '@/components/schedule-view';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -73,6 +74,19 @@ async function loadWorkPackages(
   return (res.data ?? []) as WorkPackage[];
 }
 
+// Tasks (canonical schedule, mirrored from the scheduler). Resilient pre-0017.
+async function loadTasks(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<Task[]> {
+  const res = await supabase
+    .from('tasks')
+    .select('wbs_code, name, start_date, finish_date, percent_complete, is_critical, owner_role_type, source_system, synced_at')
+    .eq('project_id', projectId);
+  if (res.error) return [];
+  return (res.data ?? []) as Task[];
+}
+
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { token, code } = await params;
 
@@ -115,6 +129,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const doneAgents = Array.from(new Set(planning_outputs.map((o) => String(o.agent_type))));
   const isFreshProject = project.created_via === 'intake_form' || Number(project.current_week) === 0;
   const workPackages = await loadWorkPackages(supabase, project.id);
+  const tasks = await loadTasks(supabase, project.id);
 
   const realisedCount = risks.filter((r) => String(r.status).toLowerCase().startsWith('realised')).length;
   const mitigatedCount = risks.filter((r) => String(r.status).toLowerCase().includes('mitigated')).length;
@@ -245,6 +260,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       {resolved.definition.can_write && <AssignTaskButton token={token} projectCode={code} />}
 
       <WbsCanonicalTree workPackages={workPackages} />
+
+      <ScheduleView tasks={tasks} workPackages={workPackages} />
 
       <ProjectTabs
         token={token}
