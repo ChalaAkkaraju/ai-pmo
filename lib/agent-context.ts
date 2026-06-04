@@ -142,6 +142,8 @@ export async function loadReferenceGrounding(
  * data the agent might need to reason about. The agent's system prompt
  * determines which subset matters; we pass everything and let the LLM filter.
  */
+import { loadStructuredFacts } from './project-facts';
+
 export async function loadProjectState(
   supabase: SupabaseClient,
   projectCode: string,
@@ -152,6 +154,7 @@ export async function loadProjectState(
   change_orders: Array<Record<string, unknown>>;
   variance_reports: Array<Record<string, unknown>>;
   reference?: ReferenceGrounding | null;
+  structured_facts?: string | null;
 }> {
   const { data: project } = await supabase
     .from('projects')
@@ -160,7 +163,7 @@ export async function loadProjectState(
     .maybeSingle();
 
   if (!project) {
-    return { project: null, issues: [], risks: [], change_orders: [], variance_reports: [], reference: null };
+    return { project: null, issues: [], risks: [], change_orders: [], variance_reports: [], reference: null, structured_facts: null };
   }
 
   const [issuesRes, risksRes, cosRes, variancesRes] = await Promise.all([
@@ -194,6 +197,8 @@ export async function loadProjectState(
     reference = await loadReferenceGrounding(supabase, refCode);
   }
 
+  const structured_facts = await loadStructuredFacts(supabase, (project as { id: string }).id, project as Record<string, unknown>);
+
   return {
     project,
     issues: issuesRes.data ?? [],
@@ -201,6 +206,7 @@ export async function loadProjectState(
     change_orders: cosRes.data ?? [],
     variance_reports: variancesRes.data ?? [],
     reference,
+    structured_facts,
   };
 }
 
@@ -292,6 +298,10 @@ Rules for the vague-question shape:
 - **Contingency:** $${Number(p.contingency).toLocaleString()}
 - **Hard deadline:** ${p.hard_deadline_description ?? 'none specified'}`,
     );
+
+    if (params.projectState.structured_facts) {
+      sections.push(params.projectState.structured_facts);
+    }
 
     if (params.projectState.issues.length > 0) {
       sections.push(
