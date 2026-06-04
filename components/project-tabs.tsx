@@ -32,8 +32,10 @@ import { WbsCanonicalTree, type WorkPackage } from './wbs-canonical-tree';
 import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
+import { ResourceLoadPanel } from './resource-load-view';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
 import type { EvMetrics, EvCurve } from '@/lib/earned-value';
+import type { LoadResult } from '@/lib/resource-load';
 import type { AgentType } from '@/lib/types';
 
 /** AI planning artefacts, shown inside the Planning tab via an inner selector. */
@@ -64,6 +66,7 @@ interface ProjectTabsProps {
   evMetrics: EvMetrics;
   evCurve: EvCurve | null;
   evSyncedAt: string | null;
+  resourceLoad: LoadResult;
   data: {
     issues: Array<Record<string, unknown>>;
     risks: Array<Record<string, unknown>>;
@@ -89,6 +92,7 @@ export function ProjectTabs({
   evMetrics,
   evCurve,
   evSyncedAt,
+  resourceLoad,
   data,
 }: ProjectTabsProps) {
   const [tab, setTab] = useState('overview');
@@ -109,6 +113,7 @@ export function ProjectTabs({
         <TabTrigger value="structure" label="Structure" count={workPackages.length} />
         <TabTrigger value="schedule" label="Schedule" count={tasks.length} />
         <TabTrigger value="ev" label="Earned value" highlight />
+        <TabTrigger value="resources" label="Resources" count={resourceLoad.roles.length} />
         <span className="mx-2 self-center text-muted-foreground/40">|</span>
         <TabTrigger value="risks" label="Risks & issues" count={data.risks.length + data.issues.length} />
         <TabTrigger value="cos" label="Changes" count={data.change_orders.length} />
@@ -152,6 +157,15 @@ export function ProjectTabs({
 
       <Tabs.Content value="ev" className="pt-6">
         <EarnedValueCard metrics={evMetrics} syncedAt={evSyncedAt} curve={evCurve} />
+      </Tabs.Content>
+
+      <Tabs.Content value="resources" className="pt-6">
+        <ResourceLoadPanel
+          load={resourceLoad}
+          mode="project"
+          title="Resource demand by discipline"
+          subtitle="FTE per month from the scheduler (Dataverse / P6) · read-only"
+        />
       </Tabs.Content>
 
       <Tabs.Content value="risks" className="space-y-6 pt-6">

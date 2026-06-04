@@ -16,6 +16,7 @@ import { AssignTaskButton } from '@/components/assign-task-button';
 import type { WorkPackage } from '@/components/wbs-canonical-tree';
 import type { Task } from '@/components/schedule-view';
 import { computeEv, evCurve } from '@/lib/earned-value';
+import { computeLoad, type ResAssignment, type LoadResult } from '@/lib/resource-load';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -107,6 +108,19 @@ async function loadCostActuals(
   return res.data ?? [];
 }
 
+async function loadResourceLoad(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<LoadResult> {
+  const res = await supabase
+    .from('resource_assignments')
+    .select('resource_role, period, planned_work_hours')
+    .eq('project_id', projectId)
+    .limit(20000);
+  if (res.error) return { months: [], roles: [], ready: false };
+  return computeLoad((res.data ?? []) as ResAssignment[], false);
+}
+
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { token, code } = await params;
 
@@ -151,6 +165,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const workPackages = await loadWorkPackages(supabase, project.id);
   const tasks = await loadTasks(supabase, project.id);
   const costActuals = await loadCostActuals(supabase, project.id);
+  const resourceLoad = await loadResourceLoad(supabase, project.id);
   const evLeaves = workPackages.filter((w) => w.parent_wbs_code);
   const evMetrics = computeEv(evLeaves, tasks, costActuals);
   const evC = evCurve(evLeaves, tasks, evMetrics.spi, evMetrics.cpi);
@@ -298,6 +313,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         evMetrics={evMetrics}
         evCurve={evC}
         evSyncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null}
+        resourceLoad={resourceLoad}
         data={{ issues, risks, change_orders, variance_reports, planning_outputs, action_items }}
       />
     </div>
