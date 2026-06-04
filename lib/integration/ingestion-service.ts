@@ -132,17 +132,25 @@ export async function ingestSchedulerProject(
     const res = mapSchedulerResources(resDtos, project.id, validWbs, source, syncedAt);
     const allExceptions = [...tasks.exceptions, ...res.exceptions];
 
-    // tasks + resource_assignments are replace-by-source (no natural upsert key).
-    const { count: priorTasks } = await supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('project_id', project.id).eq('source_system', source);
-    await supabase.from('tasks').delete().eq('project_id', project.id).eq('source_system', source);
-    if (tasks.rows.length > 0) {
-      const { error } = await supabase.from('tasks').insert(tasks.rows);
-      if (error) throw new Error(`tasks insert: ${error.message}`);
+    // tasks + resource_assignments are replace-by-source, but only for the data
+    // types this sync actually carries (so a tasks-only file upload doesn't wipe
+    // resources, and vice-versa).
+    let priorTasks = 0;
+    if (taskDtos.length > 0) {
+      const { count } = await supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('project_id', project.id).eq('source_system', source);
+      priorTasks = count ?? 0;
+      await supabase.from('tasks').delete().eq('project_id', project.id).eq('source_system', source);
+      if (tasks.rows.length > 0) {
+        const { error } = await supabase.from('tasks').insert(tasks.rows);
+        if (error) throw new Error(`tasks insert: ${error.message}`);
+      }
     }
-    await supabase.from('resource_assignments').delete().eq('project_id', project.id).eq('source_system', source);
-    if (res.rows.length > 0) {
-      const { error } = await supabase.from('resource_assignments').insert(res.rows);
-      if (error) throw new Error(`resource_assignments insert: ${error.message}`);
+    if (resDtos.length > 0) {
+      await supabase.from('resource_assignments').delete().eq('project_id', project.id).eq('source_system', source);
+      if (res.rows.length > 0) {
+        const { error } = await supabase.from('resource_assignments').insert(res.rows);
+        if (error) throw new Error(`resource_assignments insert: ${error.message}`);
+      }
     }
 
     await supabase.from('projects').update({ last_synced_at: syncedAt }).eq('id', project.id);
@@ -157,7 +165,7 @@ export async function ingestSchedulerProject(
       await supabase.from('sync_exceptions').insert(exRows);
     }
 
-    const firstLoad = (priorTasks ?? 0) === 0;
+    const firstLoad = priorTasks === 0;
     const inserted = firstLoad ? tasks.rows.length : 0;
     const updated = firstLoad ? 0 : tasks.rows.length;
     const status = allExceptions.length > 0 ? 'partial' : 'success';

@@ -64,6 +64,7 @@ export function IntegrationClient({
   const [projectCode, setProjectCode] = useState(projects[0]?.code ?? '');
   const [source, setSource] = useState<'SAP_PS' | 'DATAVERSE'>('SAP_PS');
   const [uploadProject, setUploadProject] = useState(projects[0]?.code ?? '');
+  const [uploadType, setUploadType] = useState<'wbs' | 'cost' | 'tasks' | 'resources'>('wbs');
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -119,7 +120,7 @@ export function IntegrationClient({
       const csv = await file.text();
       const res = await fetch('/api/integration/upload', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, projectCode: uploadProject, csv }),
+        body: JSON.stringify({ token, projectCode: uploadProject, csv, type: uploadType }),
       });
       const j = await res.json();
       if (!res.ok || !j.ok) setUploadMsg({ tone: 'err', text: j.error ?? j.message ?? 'Import failed' });
@@ -191,9 +192,15 @@ export function IntegrationClient({
               <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">live</span>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">Upload a WBS CSV against the published template — runs through the same mapper &amp; exception pipeline as the API channel.</p>
-            <a href="/api/integration/template?source=SAP_PS" className="mt-2 inline-block text-[11px] font-medium text-sky-700 underline underline-offset-2">↓ Download WBS template</a>
+            <a href={`/api/integration/template?type=${uploadType}`} className="mt-2 inline-block text-[11px] font-medium text-sky-700 underline underline-offset-2">↓ Download {uploadType} template</a>
             {canWrite && (
               <div className="mt-3 space-y-2">
+                <select value={uploadType} onChange={(e) => setUploadType(e.target.value as 'wbs' | 'cost' | 'tasks' | 'resources')} className="w-full rounded-md border bg-background px-2 py-1.5 text-xs">
+                  <option value="wbs">WBS (structure)</option>
+                  <option value="cost">Cost actuals</option>
+                  <option value="tasks">Schedule (tasks)</option>
+                  <option value="resources">Resource assignments</option>
+                </select>
                 <select value={uploadProject} onChange={(e) => setUploadProject(e.target.value)} className="w-full rounded-md border bg-background px-2 py-1.5 text-xs">
                   {projects.map((p) => (<option key={p.code} value={p.code}>{p.code} — {p.name}</option>))}
                 </select>
