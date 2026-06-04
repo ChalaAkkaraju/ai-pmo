@@ -65,6 +65,7 @@ export function IntegrationClient({
   const [source, setSource] = useState<'SAP_PS' | 'DATAVERSE'>('SAP_PS');
   const [uploadProject, setUploadProject] = useState(projects[0]?.code ?? '');
   const [uploadType, setUploadType] = useState<'wbs' | 'cost' | 'tasks' | 'resources'>('wbs');
+  const TYPE_LABEL: Record<string, string> = { wbs: 'WBS structure', cost: 'cost actuals', tasks: 'schedule (tasks)', resources: 'resource assignments' };
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -191,8 +192,8 @@ export function IntegrationClient({
               <p className="text-sm font-semibold">Manual upload</p>
               <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">live</span>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Upload a WBS CSV against the published template — runs through the same mapper &amp; exception pipeline as the API channel.</p>
-            <a href={`/api/integration/template?type=${uploadType}`} className="mt-2 inline-block text-[11px] font-medium text-sky-700 underline underline-offset-2">↓ Download {uploadType} template</a>
+            <p className="mt-2 text-xs text-muted-foreground">Download a template, fill it in, then upload — WBS, cost, schedule or resources. Same mapper &amp; exception pipeline as the live connectors.</p>
+            <a href={`/api/integration/template?type=${uploadType}`} className="mt-2 inline-block text-[11px] font-medium text-sky-700 underline underline-offset-2">↓ Download {TYPE_LABEL[uploadType]} template</a>
             {canWrite && (
               <div className="mt-3 space-y-2">
                 <select value={uploadType} onChange={(e) => setUploadType(e.target.value as 'wbs' | 'cost' | 'tasks' | 'resources')} className="w-full rounded-md border bg-background px-2 py-1.5 text-xs">
