@@ -185,36 +185,46 @@ export function IntegrationClient({
             <p className="mt-2 text-[11px] text-muted-foreground">Schedule: <span className="font-medium">Daily 02:00</span> · Path: <span className="font-mono">/data/imports</span></p>
           </div>
 
-          {/* Manual upload — file channel (live) */}
+          {/* Templates & data file — file channel (live), as a decision tree */}
           <div className="rounded-xl border bg-card p-5">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-700">⬆️</span>
-              <p className="text-sm font-semibold">Manual upload</p>
+              <p className="text-sm font-semibold">Templates &amp; data file</p>
               <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">live</span>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Each entity has a blank template and a data upload, through the same mapper &amp; exception pipeline. WBS structure can also be downloaded with data — the SAP-load file to feed back into SAP.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Pick an object, download its template, then upload the filled file — same mapper &amp; exception pipeline as the live connectors.</p>
+
+            {/* 1 · Object */}
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">1 · Object</p>
+            <select value={uploadType} onChange={(e) => setUploadType(e.target.value as 'wbs' | 'cost' | 'tasks' | 'resources')} className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
+              <option value="wbs">WBS structure</option>
+              <option value="cost">Cost actuals</option>
+              <option value="tasks">Schedule (tasks)</option>
+              <option value="resources">Resource assignments</option>
+            </select>
+
+            {/* 2 · Template (no project needed) */}
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">2 · Template</p>
+            <a href={`/api/integration/template?type=${uploadType}`} className="mt-1 inline-block text-xs font-medium text-sky-700 underline underline-offset-2">↓ Download blank {TYPE_LABEL[uploadType]} template</a>
+
+            {/* 3 · Data — project-scoped upload / download */}
             {canWrite && (
-              <div className="mt-3 space-y-2">
-                <select value={uploadType} onChange={(e) => setUploadType(e.target.value as 'wbs' | 'cost' | 'tasks' | 'resources')} className="w-full rounded-md border bg-background px-2 py-1.5 text-xs">
-                  <option value="wbs">WBS (structure)</option>
-                  <option value="cost">Cost actuals</option>
-                  <option value="tasks">Schedule (tasks)</option>
-                  <option value="resources">Resource assignments</option>
-                </select>
-                <select value={uploadProject} onChange={(e) => setUploadProject(e.target.value)} className="w-full rounded-md border bg-background px-2 py-1.5 text-xs">
+              <div className="mt-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">3 · Data — pick a project</p>
+                <select value={uploadProject} onChange={(e) => setUploadProject(e.target.value)} className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
                   {projects.map((p) => (<option key={p.code} value={p.code}>{p.code} — {p.name}</option>))}
                 </select>
-                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
-                  <a href={`/api/integration/template?type=${uploadType}`} className="font-medium text-sky-700 underline underline-offset-2">↓ Blank {TYPE_LABEL[uploadType]} template</a>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <label className={`cursor-pointer rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90 ${uploading ? 'opacity-50' : ''}`}>
+                    {uploading ? 'Uploading…' : '⬆ Upload data file'}
+                    <input type="file" accept=".csv,text/csv" onChange={handleUpload} disabled={uploading} className="hidden" />
+                  </label>
                   {uploadType === 'wbs' && (
-                    <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="font-medium text-emerald-700 underline underline-offset-2">↓ Download WBS data (for SAP load)</a>
+                    <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100">↓ Download data (for SAP)</a>
                   )}
                 </div>
-                <input type="file" accept=".csv,text/csv" onChange={handleUpload} disabled={uploading}
-                  className="block w-full text-[11px] file:mr-2 file:rounded-md file:border-0 file:bg-foreground file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-background hover:file:opacity-90" />
-                <p className="text-[10px] text-muted-foreground">{uploadType === 'tasks' || uploadType === 'resources' ? 'Imports as scheduler data (from your scheduling tool) — tasks join on WBS code.' : 'Imports as SAP PS data.'}</p>
-                {uploading && <p className="text-[11px] text-muted-foreground">Importing…</p>}
-                {uploadMsg && <p className={`text-[11px] ${uploadMsg.tone === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}>{uploadMsg.text}</p>}
+                <p className="mt-1.5 text-[10px] text-muted-foreground">{uploadType === 'tasks' || uploadType === 'resources' ? 'Upload represents data from your scheduling tool — tasks join on WBS code.' : 'Upload represents data from SAP.'}</p>
+                {uploadMsg && <p className={`mt-1 text-[11px] ${uploadMsg.tone === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}>{uploadMsg.text}</p>}
               </div>
             )}
           </div>
