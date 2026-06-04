@@ -1,0 +1,139 @@
+<svg viewBox="0 0 1040 700" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif" role="img">
+<title>End-to-end lifecycle swim lanes with AI-authored WBS booking and SAP-to-scheduler WBS publish</title>
+<desc>Lifecycle across CRM/CPQ (out of scope), SAP PS, AI PMO, and the scheduler. SAP publishes the WBS structure to the scheduler as a read-only scaffold so planners create WBS-tagged activities; the as-sold, as-planned, as-built reconciliation runs across it.</desc>
+<rect x="0" y="0" width="1040" height="700" rx="10" fill="#FBFBF9"/>
+<defs>
+<marker id="up" markerWidth="8" markerHeight="8" refX="4" refY="2" orient="auto"><path d="M0,6 L4,0 L8,6 Z" fill="#3B6D11"/></marker>
+<marker id="dn" markerWidth="9" markerHeight="9" refX="4.5" refY="6" orient="auto"><path d="M0,2 L9,2 L4.5,8 Z" fill="#185FA5"/></marker>
+</defs>
+<line x1="214" y1="60" x2="214" y2="536" stroke="#C9C7BE"/>
+<rect x="214" y="10" width="133" height="44" rx="6" fill="#EFEDE7" stroke="#C9C7BE"/>
+<text x="282" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#23231F">1 · Win &amp; Book</text>
+<rect x="350" y="10" width="133" height="44" rx="6" fill="#EFEDE7" stroke="#C9C7BE"/>
+<text x="418" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#23231F">2 · Project + WBS</text>
+<rect x="486" y="10" width="133" height="44" rx="6" fill="#EFEDE7" stroke="#C9C7BE"/>
+<text x="554" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#23231F">3 · Schedule</text>
+<rect x="622" y="10" width="133" height="44" rx="6" fill="#EFEDE7" stroke="#C9C7BE"/>
+<text x="690" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#23231F">4 · Execute</text>
+<rect x="758" y="10" width="133" height="44" rx="6" fill="#EFEDE7" stroke="#C9C7BE"/>
+<text x="826" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#23231F">5 · Change</text>
+<rect x="894" y="10" width="133" height="44" rx="6" fill="#EFEDE7" stroke="#C9C7BE"/>
+<text x="962" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#23231F">6 · Close</text>
+<rect x="6" y="64" width="1024" height="58" rx="8" fill="#F1EFE8"/>
+<line x1="350" y1="70" x2="350" y2="116" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="486" y1="70" x2="486" y2="116" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="622" y1="70" x2="622" y2="116" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="758" y1="70" x2="758" y2="116" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="894" y1="70" x2="894" y2="116" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<rect x="6" y="126" width="1024" height="128" rx="8" fill="#E6F1FB"/>
+<line x1="350" y1="132" x2="350" y2="248" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="486" y1="132" x2="486" y2="248" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="622" y1="132" x2="622" y2="248" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="758" y1="132" x2="758" y2="248" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="894" y1="132" x2="894" y2="248" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<rect x="6" y="258" width="1024" height="150" rx="8" fill="#EAF3DE"/>
+<line x1="350" y1="264" x2="350" y2="402" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="486" y1="264" x2="486" y2="402" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="622" y1="264" x2="622" y2="402" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="758" y1="264" x2="758" y2="402" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="894" y1="264" x2="894" y2="402" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<rect x="6" y="412" width="1024" height="124" rx="8" fill="#FAEEDA"/>
+<line x1="350" y1="418" x2="350" y2="530" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="486" y1="418" x2="486" y2="530" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="622" y1="418" x2="622" y2="530" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="758" y1="418" x2="758" y2="530" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<line x1="894" y1="418" x2="894" y2="530" stroke="#C9C7BE" stroke-opacity="0.7"/>
+<rect x="351" y="126" width="134" height="282" rx="4" fill="#97C459" fill-opacity="0.10" stroke="#639922" stroke-opacity="0.5" stroke-dasharray="4 3"/>
+<text x="20" y="86" font-size="12.5" font-weight="700" fill="#23231F">CRM / CPQ</text>
+<text x="20" y="102" font-size="8.6" fill="#5F5E5A">Sales · Bid</text>
+<rect x="20" y="109" width="98" height="15" rx="7.5" fill="#D3D1C7"/>
+<text x="69" y="119" text-anchor="middle" font-size="8" font-weight="700" fill="#444441">OUT OF SCOPE</text>
+<text x="20" y="148" font-size="12.5" font-weight="700" fill="#23231F">SAP PS — ERP</text>
+<text x="20" y="164" font-size="8.6" fill="#5F5E5A">Commercial·Cost·PMO</text>
+<rect x="20" y="171" width="126" height="15" rx="7.5" fill="#B5D4F4"/>
+<text x="83" y="181" text-anchor="middle" font-size="8" font-weight="700" fill="#0C447C">SYSTEM OF RECORD</text>
+<text x="20" y="280" font-size="12.5" font-weight="700" fill="#23231F">AI PMO — layer</text>
+<text x="20" y="296" font-size="8.6" fill="#5F5E5A">Writes once at booking, else read-only</text>
+<rect x="20" y="303" width="147" height="15" rx="7.5" fill="#97C459"/>
+<text x="94" y="313" text-anchor="middle" font-size="8" font-weight="700" fill="#173404">READS · AUTHORS WBS</text>
+<text x="20" y="434" font-size="12.5" font-weight="700" fill="#23231F">Scheduler</text>
+<text x="20" y="450" font-size="8.6" fill="#5F5E5A">Planner</text>
+<rect x="20" y="457" width="126" height="15" rx="7.5" fill="#FAC775"/>
+<text x="83" y="467" text-anchor="middle" font-size="8" font-weight="700" fill="#633806">SYSTEM OF RECORD</text>
+<text x="222" y="84.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Quote → win</text>
+<text x="222" y="96.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">As-sold value &amp; margin</text>
+<text x="690" y="98" text-anchor="middle" font-size="10" font-style="italic" fill="#5F5E5A">no further integration — the as-sold baseline crosses into SAP at booking</text>
+<text x="222" y="146.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Sales order booked</text>
+<text x="222" y="158.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">Contract value,</text>
+<text x="222" y="170.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">original budget</text>
+<text x="358" y="146.0" font-size="9.4" font-weight="700" fill="#2C6606" opacity="1">WBS booked</text>
+<text x="358" y="158.4" font-size="9.4" font-weight="400" fill="#2C6606" opacity="1">(AI proposal/template)</text>
+<text x="358" y="170.8" font-size="9.4" font-weight="400" fill="#2C6606" opacity="1">→ publish to scheduler</text>
+<text x="630" y="146.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Cost actuals</text>
+<text x="630" y="158.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">PO · GR/IR ·</text>
+<text x="630" y="170.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">timesheets · invoices</text>
+<text x="766" y="146.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Contract + budget</text>
+<text x="766" y="158.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">revision → re-publish</text>
+<text x="902" y="146.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Final settlement</text>
+<text x="902" y="158.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">Actual cost &amp;</text>
+<text x="902" y="170.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">revenue · close</text>
+<text x="222" y="278.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Snapshot AS-SOLD</text>
+<text x="222" y="290.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">baseline</text>
+<text x="222" y="302.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">(value, margin, BAC)</text>
+<text x="358" y="278.0" font-size="9.4" font-weight="700" fill="#2C6606" opacity="1">AUTHOR scope-true WBS</text>
+<text x="358" y="290.4" font-size="9.4" font-weight="400" fill="#2C6606" opacity="1">approve → ▲ BOOK to SAP</text>
+<text x="358" y="302.8" font-size="9.4" font-weight="400" fill="#2C6606" opacity="1">then reconcile sold↔planned</text>
+<text x="494" y="278.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Join cost ↔ schedule</text>
+<text x="494" y="290.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">by WBS code</text>
+<text x="494" y="302.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">Flag unmapped / orphans</text>
+<text x="630" y="278.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">EARNED VALUE</text>
+<text x="630" y="290.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">CPI / SPI / EAC</text>
+<text x="630" y="302.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">narrative · breach alert</text>
+<text x="766" y="278.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Change ripple</text>
+<text x="766" y="290.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">contract→budget→sched</text>
+<text x="766" y="302.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">Margin impact</text>
+<text x="902" y="278.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Delivered vs sold</text>
+<text x="902" y="290.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">margin · lessons</text>
+<text x="902" y="302.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">→ feed next bid</text>
+<text x="222" y="432.0" font-size="9.4" font-weight="400" fill="#5F5E5A" opacity="0.6">—</text>
+<text x="358" y="432.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Receive WBS scaffold</text>
+<text x="358" y="444.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">(code + hierarchy,</text>
+<text x="358" y="456.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">read-only)</text>
+<text x="494" y="432.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Build schedule</text>
+<text x="494" y="444.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">Activities UNDER WBS</text>
+<text x="494" y="456.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">→ each carries WBS code</text>
+<text x="630" y="432.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Progress</text>
+<text x="630" y="444.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">% complete,</text>
+<text x="630" y="456.8" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">forecast dates</text>
+<text x="766" y="432.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">Re-baseline</text>
+<text x="766" y="444.4" font-size="9.4" font-weight="400" fill="#23231F" opacity="1">schedule</text>
+<text x="902" y="432.0" font-size="9.4" font-weight="700" fill="#23231F" opacity="1">As-built dates</text>
+<line x1="472" y1="300" x2="472" y2="206" stroke="#3B6D11" stroke-width="1.6" marker-end="url(#up)"/>
+<text x="468" y="258" text-anchor="end" font-size="8" font-weight="700" fill="#3B6D11" transform="rotate(-90 468 258)">book (1 write)</text>
+<line x1="486" y1="230" x2="486" y2="430" stroke="#185FA5" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#dn)"/>
+<rect x="491" y="312" width="152" height="16" rx="8" fill="#E6F1FB"/>
+<text x="498" y="324" font-size="8.4" font-weight="700" fill="#0C447C">publish WBS → scheduler</text>
+<text x="20" y="552" font-size="9.3" font-style="italic" fill="#5F5E5A">▲ The one write: AI PMO authors the WBS and books the approved version into SAP at setup. Read-only everywhere else.</text>
+<text x="20" y="566" font-size="9.3" font-style="italic" fill="#5F5E5A">▼ SAP publishes the WBS structure (code + hierarchy only, no cost/dates) to the scheduler; planners build WBS-tagged activities under it.</text>
+<rect x="6" y="576" width="1024" height="58" rx="8" fill="#EFEDE7" stroke="#C9C7BE"/>
+<text x="20" y="593" font-size="11" font-weight="700" fill="#23231F">The three states AI PMO reconciles</text>
+<rect x="120" y="602" width="250" height="26" rx="6" fill="#D7E8FA"/>
+<text x="132" y="619" font-size="11" font-weight="700" fill="#0C447C">AS-SOLD</text>
+<text x="230" y="619" font-size="9.5" fill="#5F5E5A">snapshot @ booking</text>
+<text x="378" y="620" font-size="16" font-weight="700" fill="#5F5E5A">→</text>
+<rect x="410" y="602" width="250" height="26" rx="6" fill="#DCEBC6"/>
+<text x="422" y="619" font-size="11" font-weight="700" fill="#27500A">AS-PLANNED</text>
+<text x="520" y="619" font-size="9.5" fill="#5F5E5A">current WBS budget</text>
+<text x="668" y="620" font-size="16" font-weight="700" fill="#5F5E5A">→</text>
+<rect x="700" y="602" width="250" height="26" rx="6" fill="#F7E4C2"/>
+<text x="712" y="619" font-size="11" font-weight="700" fill="#633806">AS-BUILT</text>
+<text x="810" y="619" font-size="9.5" fill="#5F5E5A">actuals + progress</text>
+<rect x="20" y="648" width="12" height="12" rx="3" fill="#B5D4F4"/>
+<text x="38" y="658" font-size="9.5" fill="#5F5E5A">SAP PS · system of record</text>
+<rect x="213.0" y="648" width="12" height="12" rx="3" fill="#FAC775"/>
+<text x="231.0" y="658" font-size="9.5" fill="#5F5E5A">Scheduler · system of record</text>
+<rect x="425.79999999999995" y="648" width="12" height="12" rx="3" fill="#97C459"/>
+<text x="443.79999999999995" y="658" font-size="9.5" fill="#5F5E5A">AI PMO · reads + authors WBS</text>
+<rect x="638.5999999999999" y="648" width="12" height="12" rx="3" fill="#D3D1C7"/>
+<text x="656.5999999999999" y="658" font-size="9.5" fill="#5F5E5A">CRM/CPQ · out of scope</text>
+</svg>

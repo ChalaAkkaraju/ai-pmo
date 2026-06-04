@@ -6,6 +6,7 @@
  * any ERP and any scheduler, how it works, what it does, and what it is not.
  */
 
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   Sparkles,
@@ -340,6 +341,13 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
       {/* CTA */}
       <p className="mt-12 text-center text-xl font-semibold">Ready to see what&apos;s really going on?</p>
       <WelcomeActions token={token} />
+
+      <div className="mt-12 flex flex-wrap items-center justify-center gap-2.5 text-sm">
+        <span className="text-muted-foreground">Explore the design:</span>
+        <Link href={`/access/${token}/architecture`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">Overall architecture →</Link>
+        <Link href={`/access/${token}/framework`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">PMBOK coverage →</Link>
+        <Link href={`/access/${token}/agents`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">The 13 agents →</Link>
+      </div>
 
       <p className="mt-10 text-center text-xs text-muted-foreground">
         Portfolio shown is illustrative sample data. You can return to this page anytime at <span className="font-mono">/welcome</span>.
