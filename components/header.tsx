@@ -74,6 +74,12 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
             PMBOK
           </Link>
           <Link
+            href={`/access/${token}/integration`}
+            className="text-muted-foreground transition hover:text-foreground"
+          >
+            Integration
+          </Link>
+          <Link
             href={`/access/${token}/usage`}
             className="text-muted-foreground transition hover:text-foreground"
           >
