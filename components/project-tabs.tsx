@@ -71,6 +71,7 @@ interface ProjectTabsProps {
   resourceLoad: LoadResult;
   marginBridge: MarginBridge;
   marginSyncedAt: string | null;
+  scheduleEnvelope: { forecastFinish: string | null; targetFinish: string | null; breachDays: number | null };
   data: {
     issues: Array<Record<string, unknown>>;
     risks: Array<Record<string, unknown>>;
@@ -99,6 +100,7 @@ export function ProjectTabs({
   resourceLoad,
   marginBridge,
   marginSyncedAt,
+  scheduleEnvelope,
   data,
 }: ProjectTabsProps) {
   const [tab, setTab] = useState('overview');
@@ -137,6 +139,7 @@ export function ProjectTabs({
           actions={data.action_items ?? []}
           marginBridge={marginBridge}
           marginSyncedAt={marginSyncedAt}
+          scheduleEnvelope={scheduleEnvelope}
           go={setTab}
         />
       </Tabs.Content>
@@ -218,6 +221,7 @@ function OverviewPanel({
   actions,
   marginBridge,
   marginSyncedAt,
+  scheduleEnvelope,
   go,
 }: {
   metrics: EvMetrics;
@@ -228,6 +232,7 @@ function OverviewPanel({
   actions: Array<Record<string, unknown>>;
   marginBridge: MarginBridge;
   marginSyncedAt: string | null;
+  scheduleEnvelope: { forecastFinish: string | null; targetFinish: string | null; breachDays: number | null };
   go: (tab: string) => void;
 }) {
   const closedRisk = (s: string) => ['mitigated', 'realised', 'realized', 'not materialised', 'not materialized', 'closed', 'retired'].some((k) => s.includes(k));
@@ -257,6 +262,11 @@ function OverviewPanel({
         <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">{status} · Week {currentWeek}</span>
         {metrics.ready && <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium tabular-nums">{metrics.complete_pct.toFixed(0)}% complete</span>}
         {(sched || cost) && <span className={`rounded-full px-3 py-1 text-xs font-medium ${readChip}`}>{readout}</span>}
+        {scheduleEnvelope.breachDays != null && (
+          scheduleEnvelope.breachDays > 0
+            ? <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">⚠ {scheduleEnvelope.breachDays}d past target finish</span>
+            : <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">within target finish</span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

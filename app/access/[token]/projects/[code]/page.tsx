@@ -109,6 +109,27 @@ async function loadCostActuals(
   return res.data ?? [];
 }
 
+async function loadScheduleEnvelope(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<{ forecastFinish: string | null; targetFinish: string | null; breachDays: number | null }> {
+  const [wpRes, tRes] = await Promise.all([
+    supabase.from('work_packages').select('parent_wbs_code, target_finish').eq('project_id', projectId),
+    supabase.from('tasks').select('finish_date').eq('project_id', projectId),
+  ]);
+  if (wpRes.error || tRes.error) return { forecastFinish: null, targetFinish: null, breachDays: null };
+  const targets = (wpRes.data ?? [])
+    .filter((w) => (w as { parent_wbs_code: string | null }).parent_wbs_code && (w as { target_finish: string | null }).target_finish)
+    .map((w) => Date.parse(String((w as { target_finish: string | null }).target_finish)))
+    .filter((n) => !Number.isNaN(n));
+  const finishes = (tRes.data ?? []).map((t) => Date.parse(String((t as { finish_date: string | null }).finish_date))).filter((n) => !Number.isNaN(n));
+  const forecastFinish = finishes.length ? new Date(Math.max(...finishes)).toISOString() : null;
+  if (!targets.length || !finishes.length) return { forecastFinish, targetFinish: null, breachDays: null };
+  const env = Math.max(...targets);
+  const fc = Math.max(...finishes);
+  return { forecastFinish, targetFinish: new Date(env).toISOString(), breachDays: Math.round((fc - env) / 86400000) };
+}
+
 async function loadSoldBudget(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   projectId: string,
@@ -185,6 +206,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const costActuals = await loadCostActuals(supabase, project.id);
   const resourceLoad = await loadResourceLoad(supabase, project.id);
   const soldBudget = await loadSoldBudget(supabase, project.id);
+  const scheduleEnvelope = await loadScheduleEnvelope(supabase, project.id);
   const evLeaves = workPackages.filter((w) => w.parent_wbs_code);
   const evMetrics = computeEv(evLeaves, tasks, costActuals);
   const evC = evCurve(evLeaves, tasks, evMetrics.spi, evMetrics.cpi);
@@ -342,6 +364,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         resourceLoad={resourceLoad}
         marginBridge={marginBridge}
         marginSyncedAt={project.baseline_captured_at ?? null}
+        scheduleEnvelope={scheduleEnvelope}
         data={{ issues, risks, change_orders, variance_reports, planning_outputs, action_items }}
       />
     </div>
