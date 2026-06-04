@@ -1,9 +1,9 @@
 /**
- * Resource-load panel — Phase 4 visibility, as time-vs-FTE histograms.
- * Both views are small multiples: ONE chart per discipline, FTE demand spread
- * across the months.
- *   project  : demand over the project timeline (no capacity — single project).
- *   portfolio: demand vs a dashed capacity line; months over capacity are red.
+ * Resource-load panel — Phase 4 visibility, as time-vs-FTE line/area charts.
+ *   project  : a stacked-area "total staffing over time" overview + one
+ *              line/area chart per discipline across the project timeline.
+ *   portfolio: one line/area chart per discipline vs a dashed capacity line;
+ *              months over capacity are marked red.
  * Display only; figures from lib/resource-load. No levelling.
  */
 
@@ -59,7 +59,6 @@ export function ResourceLoadPanel({
 
   const months = load.months;
   const range = months.length ? `${fmtMonth(months[0])} – ${fmtMonth(months[months.length - 1])}` : '';
-  // Project: order by total effort so the heaviest disciplines lead. Portfolio: keep peak order.
   const roles = mode === 'project' ? [...load.roles].sort((a, b) => b.totalFteMonths - a.totalFteMonths) : load.roles;
 
   return (
@@ -78,7 +77,7 @@ export function ResourceLoadPanel({
       {mode === 'project' && (
         <div className="border-b px-5 py-5">
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total staffing over time</p>
-          <StackedColumns months={months} roles={roles} />
+          <StackedArea months={months} roles={roles} />
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
             {roles.map((r) => (
               <span key={r.role} className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -113,22 +112,34 @@ export function ResourceLoadPanel({
   );
 }
 
-/* Stacked FTE-by-month histogram — the combined staffing curve (project view). */
-function StackedColumns({ months, roles }: { months: string[]; roles: LoadResult['roles'] }) {
+function xAt(i: number, n: number, x0: number, x1: number) {
+  return n <= 1 ? (x0 + x1) / 2 : x0 + (i / (n - 1)) * (x1 - x0);
+}
+
+/* Stacked area — the combined staffing curve (project view). */
+function StackedArea({ months, roles }: { months: string[]; roles: LoadResult['roles'] }) {
   const W = 860, H = 230, padL = 30, padR = 8, padT = 10, padB = 30;
   const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
+  const n = months.length;
   const totals = months.map((_, i) => roles.reduce((a, r) => a + (r.series[i] ?? 0), 0));
   const ymax = niceMax(Math.max(1, ...totals));
-  const n = months.length;
-  const colW = (x1 - x0) / Math.max(1, n);
-  const barW = Math.min(26, colW * 0.72);
   const yOf = (v: number) => y1 - (v / ymax) * (y1 - y0);
   const step = Math.max(1, Math.ceil(n / 9));
   const peakIdx = totals.length ? totals.indexOf(Math.max(...totals)) : -1;
 
+  const lower = new Array(n).fill(0);
+  const bands = roles.map((r) => {
+    const upper = lower.map((lo, i) => lo + (r.series[i] ?? 0));
+    const top = upper.map((v, i) => `${xAt(i, n, x0, x1).toFixed(1)},${yOf(v).toFixed(1)}`);
+    const bot = lower.map((v, i) => `${xAt(i, n, x0, x1).toFixed(1)},${yOf(v).toFixed(1)}`).reverse();
+    const path = `M ${top.join(' L ')} L ${bot.join(' L ')} Z`;
+    for (let i = 0; i < n; i++) lower[i] = upper[i];
+    return { role: r.role, path };
+  });
+
   return (
     <div className="overflow-x-auto">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[680px]" role="img" aria-label="Stacked FTE demand by discipline per month">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[680px]" role="img" aria-label="Stacked FTE demand by discipline over time">
         {[0, 0.5, 1].map((f) => (
           <g key={f}>
             <line x1={x0} y1={yOf(ymax * f)} x2={x1} y2={yOf(ymax * f)} stroke="currentColor" strokeOpacity="0.12" />
@@ -136,25 +147,12 @@ function StackedColumns({ months, roles }: { months: string[]; roles: LoadResult
           </g>
         ))}
         <text x={x0 - 22} y={(y0 + y1) / 2} fontSize="8" fill="currentColor" fillOpacity="0.5" transform={`rotate(-90 ${x0 - 22} ${(y0 + y1) / 2})`} textAnchor="middle">FTE</text>
-        {months.map((m, i) => {
-          const cx = x0 + i * colW + (colW - barW) / 2;
-          let acc = 0;
-          return (
-            <g key={m}>
-              {roles.map((r) => {
-                const v = r.series[i] ?? 0;
-                if (v <= 0) return null;
-                const yTop = yOf(acc + v);
-                const h = yOf(acc) - yTop;
-                acc += v;
-                return <rect key={r.role} x={cx} y={yTop} width={barW} height={Math.max(0, h)} fill={colorOf(r.role)} />;
-              })}
-              {i % step === 0 && (
-                <text x={cx + barW / 2} y={y1 + 12} textAnchor="middle" fontSize="8" fill="currentColor" fillOpacity="0.55">{fmtMonth(m)}</text>
-              )}
-            </g>
-          );
-        })}
+        {bands.map((b) => (
+          <path key={b.role} d={b.path} fill={colorOf(b.role)} fillOpacity="0.82" stroke="#fff" strokeWidth="0.4" />
+        ))}
+        {months.map((m, i) => (i % step === 0 ? (
+          <text key={m} x={xAt(i, n, x0, x1)} y={y1 + 12} textAnchor="middle" fontSize="8" fill="currentColor" fillOpacity="0.55">{fmtMonth(m)}</text>
+        ) : null))}
       </svg>
       {peakIdx >= 0 && (
         <p className="mt-1 text-[11px] text-muted-foreground">
@@ -165,8 +163,7 @@ function StackedColumns({ months, roles }: { months: string[]; roles: LoadResult
   );
 }
 
-/* One discipline's FTE demand over time. Capacity line + red over-months in
- * portfolio mode; plain demand over the project timeline when capacity is null. */
+/* One discipline's FTE demand over time as a line + area. */
 function DisciplineChart({
   months,
   role,
@@ -184,16 +181,18 @@ function DisciplineChart({
   over: number;
   total: number;
 }) {
-  const W = 320, H = 134, padL = 26, padR = 6, padT = 8, padB = 22;
+  const W = 320, H = 134, padL = 26, padR = 8, padT = 10, padB = 22;
   const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
   const ymax = niceMax(Math.max(1, peak, capacity ?? 0));
   const n = months.length;
-  const colW = (x1 - x0) / Math.max(1, n);
-  const barW = Math.max(1.5, colW * 0.82);
   const yOf = (v: number) => y1 - (v / ymax) * (y1 - y0);
   const step = Math.max(1, Math.ceil(n / 5));
   const c = colorOf(role);
   const hasCap = capacity != null;
+
+  const pts = series.map((v, i) => [xAt(i, n, x0, x1), yOf(v)] as const);
+  const line = pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const area = `M ${xAt(0, n, x0, x1).toFixed(1)},${y1} L ${line} L ${xAt(n - 1, n, x0, x1).toFixed(1)},${y1} Z`;
 
   return (
     <div className={`rounded-lg border p-3 ${hasCap && over > 0 ? 'border-red-200 bg-red-50/30' : 'bg-card'}`}>
@@ -216,18 +215,14 @@ function DisciplineChart({
         <line x1={x0} y1={y1} x2={x1} y2={y1} stroke="currentColor" strokeOpacity="0.15" />
         <text x={x0 - 4} y={y0 + 4} textAnchor="end" fontSize="7" fill="currentColor" fillOpacity="0.5">{ymax}</text>
         <text x={x0 - 4} y={y1 + 1} textAnchor="end" fontSize="7" fill="currentColor" fillOpacity="0.4">0</text>
-        {months.map((m, i) => {
-          const v = series[i] ?? 0;
-          const cx = x0 + i * colW + (colW - barW) / 2;
-          const yt = yOf(v);
-          const isOver = hasCap && v > (capacity as number);
-          return (
-            <g key={m}>
-              <rect x={cx} y={yt} width={barW} height={Math.max(0, y1 - yt)} fill={isOver ? '#E24B4A' : c} fillOpacity={isOver ? 0.95 : 0.7} />
-              {i % step === 0 && <text x={cx + barW / 2} y={y1 + 11} textAnchor="middle" fontSize="6.5" fill="currentColor" fillOpacity="0.5">{fmtMonth(m)}</text>}
-            </g>
-          );
-        })}
+        <path d={area} fill={c} fillOpacity="0.14" />
+        <polyline points={line} fill="none" stroke={c} strokeWidth="1.7" />
+        {hasCap && series.map((v, i) => (v > (capacity as number) ? (
+          <circle key={i} cx={xAt(i, n, x0, x1)} cy={yOf(v)} r="2" fill="#E24B4A" />
+        ) : null))}
+        {months.map((m, i) => (i % step === 0 ? (
+          <text key={m} x={xAt(i, n, x0, x1)} y={y1 + 11} textAnchor="middle" fontSize="6.5" fill="currentColor" fillOpacity="0.5">{fmtMonth(m)}</text>
+        ) : null))}
         {hasCap && (
           <>
             <line x1={x0} y1={yOf(capacity as number)} x2={x1} y2={yOf(capacity as number)} stroke="#475569" strokeWidth="1" strokeDasharray="4 2" />
