@@ -29,27 +29,20 @@ export function MarginBridgeCard({ bridge, syncedAt }: { bridge: MarginBridge; s
   const chip = slipPct < -0.5 ? 'bg-red-100 text-red-800' : slipPct > 0.5 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
   const verdict = slipPct < -0.5 ? 'below the margin we sold' : slipPct > 0.5 ? 'above the margin we sold' : 'on the margin we sold';
 
-  // Waterfall geometry
-  const steps = [
-    { label: 'Sold', kind: 'anchor' as const, value: bridge.soldMargin },
-    { label: 'Budget', kind: 'delta' as const, value: bridge.dBudget },
-    { label: 'Contract', kind: 'delta' as const, value: bridge.dContract },
-    { label: 'Cost perf.', kind: 'delta' as const, value: bridge.dExecution },
-    { label: 'Forecast', kind: 'anchor' as const, value: bridge.forecastMargin },
+  // Line trajectory: margin moves Sold → (−budget) → (+contract) → (−cost perf.) → Forecast.
+  const nodes = [
+    { label: 'Sold', v: bridge.soldMargin },
+    { label: 'Budget', v: bridge.soldMargin + bridge.dBudget },
+    { label: 'Contract', v: bridge.soldMargin + bridge.dBudget + bridge.dContract },
+    { label: 'Forecast', v: bridge.forecastMargin },
   ];
-  const running: number[] = [];
-  let acc = 0;
-  for (const s of steps) {
-    if (s.kind === 'anchor') { acc = s.value; running.push(acc); }
-    else { running.push(acc + s.value); acc += s.value; }
-  }
-  const maxV = Math.max(bridge.soldMargin, bridge.plannedMargin, bridge.forecastMargin, ...running, 1);
-  const W = 560, H = 190, padT = 14, padB = 30, padL = 8, padR = 8;
+  const drivers = ['', 'budget', 'contract', 'cost perf.'];
+  const maxV = Math.max(...nodes.map((x) => x.v), 1);
+  const W = 560, H = 200, padT = 28, padB = 28, padL = 16, padR = 16;
   const y1 = H - padB, y0 = padT;
   const yOf = (v: number) => y1 - (v / maxV) * (y1 - y0);
-  const n = steps.length;
-  const colW = (W - padL - padR) / n;
-  const barW = colW * 0.56;
+  const n = nodes.length;
+  const px = (i: number) => padL + (n <= 1 ? 0 : (i / (n - 1)) * (W - padL - padR));
 
   return (
     <section className="overflow-hidden rounded-lg border bg-gradient-to-br from-sky-50/40 via-card to-card">
@@ -78,24 +71,30 @@ export function MarginBridgeCard({ bridge, syncedAt }: { bridge: MarginBridge; s
           </div>
         </div>
 
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Margin waterfall from sold to forecast">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Margin trajectory from sold to forecast">
           <line x1={padL} y1={y1} x2={W - padR} y2={y1} stroke="currentColor" strokeOpacity="0.15" />
-          {steps.map((s, i) => {
-            const cx = padL + i * colW + (colW - barW) / 2;
-            const isAnchor = s.kind === 'anchor';
-            const top = isAnchor ? yOf(s.value) : yOf(Math.max(running[i], running[i] - s.value));
-            const bot = isAnchor ? y1 : yOf(Math.min(running[i], running[i] - s.value));
-            const fill = isAnchor ? '#378ADD' : s.value >= 0 ? '#639922' : '#E24B4A';
+          {nodes.map((nd, i) => {
+            if (i === n - 1) return null;
+            const x1s = px(i), y1s = yOf(nd.v), x2s = px(i + 1), y2s = yOf(nodes[i + 1].v);
+            const delta = nodes[i + 1].v - nd.v;
+            const up = delta >= 0;
+            const midX = (x1s + x2s) / 2, midY = (y1s + y2s) / 2;
             return (
-              <g key={s.label}>
-                {!isAnchor && i > 0 && (
-                  <line x1={padL + (i - 1) * colW + (colW + barW) / 2} y1={yOf(running[i - 1])} x2={cx} y2={yOf(running[i - 1])} stroke="currentColor" strokeOpacity="0.18" strokeDasharray="2 2" />
-                )}
-                <rect x={cx} y={top} width={barW} height={Math.max(1.5, bot - top)} rx="1.5" fill={fill} fillOpacity={isAnchor ? 0.9 : 0.85} />
-                <text x={cx + barW / 2} y={top - 3} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="currentColor" fillOpacity="0.75">
-                  {isAnchor ? money(s.value) : `${s.value >= 0 ? '+' : ''}${money(s.value)}`}
+              <g key={`seg${i}`}>
+                <line x1={x1s} y1={y1s} x2={x2s} y2={y2s} stroke={up ? '#639922' : '#E24B4A'} strokeWidth="2.4" />
+                <text x={midX} y={up ? midY + 14 : midY - 7} textAnchor="middle" fontSize="8.5" fontWeight="600" fill={up ? '#3B6D11' : '#A32D2D'}>
+                  {delta >= 0 ? '+' : ''}{money(delta)} {drivers[i + 1]}
                 </text>
-                <text x={cx + barW / 2} y={y1 + 12} textAnchor="middle" fontSize="8" fill="currentColor" fillOpacity="0.6">{s.label}</text>
+              </g>
+            );
+          })}
+          {nodes.map((nd, i) => {
+            const isAnchor = i === 0 || i === n - 1;
+            return (
+              <g key={`pt${i}`}>
+                <circle cx={px(i)} cy={yOf(nd.v)} r={isAnchor ? 4 : 2.8} fill={isAnchor ? '#378ADD' : '#64748B'} />
+                <text x={px(i)} y={yOf(nd.v) - 10} textAnchor="middle" fontSize="9" fontWeight="700" fill="currentColor" fillOpacity="0.8">{money(nd.v)}</text>
+                <text x={px(i)} y={y1 + 14} textAnchor="middle" fontSize="8.5" fill="currentColor" fillOpacity="0.6">{nd.label}</text>
               </g>
             );
           })}
@@ -103,7 +102,7 @@ export function MarginBridgeCard({ bridge, syncedAt }: { bridge: MarginBridge; s
       </div>
 
       <p className="border-t px-5 py-2.5 text-[11px] text-muted-foreground">
-        Bars: <span className="font-medium" style={{ color: '#378ADD' }}>sold</span> &amp; <span className="font-medium" style={{ color: '#378ADD' }}>forecast</span> margin · steps in between are{' '}
+        Line: margin trajectory from <span className="font-medium" style={{ color: '#378ADD' }}>sold</span> to <span className="font-medium" style={{ color: '#378ADD' }}>forecast</span> · segments are{' '}
         <span className="font-medium" style={{ color: '#639922' }}>gains</span> / <span className="font-medium" style={{ color: '#E24B4A' }}>erosion</span> from budget growth, contract change and cost performance.
       </p>
     </section>
