@@ -18,6 +18,11 @@
 
 export interface MarginBridge {
   ready: boolean;
+  soldContract: number;
+  soldBudget: number;
+  currentContract: number;
+  plannedBudget: number;
+  eac: number;
   soldMargin: number;      // $
   plannedMargin: number;   // $
   forecastMargin: number;  // $
@@ -47,6 +52,11 @@ export function computeMarginBridge(input: {
 
   return {
     ready,
+    soldContract: input.soldContract,
+    soldBudget: input.soldBudget,
+    currentContract: input.currentContract,
+    plannedBudget: input.plannedBudget,
+    eac,
     soldMargin,
     plannedMargin,
     forecastMargin,
