@@ -55,9 +55,10 @@ export async function ingestSapProject(
       if (error) throw new Error(`work_packages upsert: ${error.message}`);
     }
 
-    // cost_actuals are replace-by-source (no natural upsert key in schema).
-    await supabase.from('cost_actuals').delete().eq('project_id', project.id).eq('source_system', 'SAP_PS');
+    // cost_actuals replace-by-source — only when the source actually returned
+    // cost (so a WBS-only file upload doesn't wipe cost from a prior API sync).
     if (cost.rows.length > 0) {
+      await supabase.from('cost_actuals').delete().eq('project_id', project.id).eq('source_system', 'SAP_PS');
       const { error } = await supabase.from('cost_actuals').insert(cost.rows);
       if (error) throw new Error(`cost_actuals insert: ${error.message}`);
     }

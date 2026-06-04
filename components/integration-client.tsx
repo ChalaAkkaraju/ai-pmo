@@ -7,7 +7,7 @@
  * the exception queue with resolve / ignore actions.
  */
 
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
 export interface SyncRunRow {
@@ -63,6 +63,9 @@ export function IntegrationClient({
   const router = useRouter();
   const [projectCode, setProjectCode] = useState(projects[0]?.code ?? '');
   const [source, setSource] = useState<'SAP_PS' | 'DATAVERSE'>('SAP_PS');
+  const [uploadProject, setUploadProject] = useState(projects[0]?.code ?? '');
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn' | 'err'; text: string } | null>(null);
 
@@ -104,6 +107,25 @@ export function IntegrationClient({
       if (res.ok) router.refresh();
     } catch { /* noop */ }
     setBusy(null);
+  }
+
+  async function handleUpload(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!uploadProject) { setUploadMsg({ tone: 'err', text: 'Pick a project first' }); return; }
+    setUploading(true); setUploadMsg(null);
+    try {
+      const csv = await file.text();
+      const res = await fetch('/api/integration/upload', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, projectCode: uploadProject, csv }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.ok) setUploadMsg({ tone: 'err', text: j.error ?? j.message ?? 'Import failed' });
+      else { setUploadMsg({ tone: 'ok', text: j.message }); router.refresh(); }
+    } catch { setUploadMsg({ tone: 'err', text: 'Could not read file' }); }
+    setUploading(false);
   }
 
   const msgCls = msg?.tone === 'ok' ? 'text-emerald-700' : msg?.tone === 'warn' ? 'text-amber-700' : 'text-red-600';
@@ -161,15 +183,26 @@ export function IntegrationClient({
             <p className="mt-2 text-[11px] text-muted-foreground">Schedule: <span className="font-medium">Daily 02:00</span> · Path: <span className="font-mono">/data/imports</span></p>
           </div>
 
-          {/* Manual upload — channel (scaffold) */}
-          <div className="rounded-xl border bg-card p-5 opacity-90">
+          {/* Manual upload — file channel (live) */}
+          <div className="rounded-xl border bg-card p-5">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-700">⬆️</span>
               <p className="text-sm font-semibold">Manual upload</p>
-              <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">channel</span>
+              <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">live</span>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Ad-hoc CSV / XLSX against the published template — for corrections or environments without connectivity.</p>
-            <p className="mt-2 text-[11px] text-muted-foreground">Supported: .csv, .xlsx</p>
+            <p className="mt-2 text-xs text-muted-foreground">Upload a WBS CSV against the published template — runs through the same mapper &amp; exception pipeline as the API channel.</p>
+            <a href="/api/integration/template?source=SAP_PS" className="mt-2 inline-block text-[11px] font-medium text-sky-700 underline underline-offset-2">↓ Download WBS template</a>
+            {canWrite && (
+              <div className="mt-3 space-y-2">
+                <select value={uploadProject} onChange={(e) => setUploadProject(e.target.value)} className="w-full rounded-md border bg-background px-2 py-1.5 text-xs">
+                  {projects.map((p) => (<option key={p.code} value={p.code}>{p.code} — {p.name}</option>))}
+                </select>
+                <input type="file" accept=".csv,text/csv" onChange={handleUpload} disabled={uploading}
+                  className="block w-full text-[11px] file:mr-2 file:rounded-md file:border-0 file:bg-foreground file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-background hover:file:opacity-90" />
+                {uploading && <p className="text-[11px] text-muted-foreground">Importing…</p>}
+                {uploadMsg && <p className={`text-[11px] ${uploadMsg.tone === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}>{uploadMsg.text}</p>}
+              </div>
+            )}
           </div>
         </div>
       </section>
