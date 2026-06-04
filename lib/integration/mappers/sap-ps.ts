@@ -30,6 +30,8 @@ function mapRole(person: string | null): string | null {
   return RESPONSIBLE_TO_ROLE[key] ?? null;
 }
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
 /** Normalise a WBS code so equivalent codes join (trim, collapse separators). */
 export function normalizeWbs(code: string): string {
   return code.trim().replace(/\s+/g, '');
@@ -65,6 +67,17 @@ export function mapSapWbs(dtos: SapWbsElementDTO[], projectId: string, syncedAt:
       is_app_native: false,
     });
   }
+
+  // SAP often carries budget at the leaf; roll phase (parent-less) budgets up
+  // from their direct children so the WBS tree shows subtotals and a real BAC.
+  for (const phase of rows.filter((r) => !r.parent_wbs_code)) {
+    if (phase.budget_bac != null) continue;
+    const kids = rows.filter((r) => r.parent_wbs_code === phase.wbs_code);
+    if (kids.length === 0) continue;
+    phase.budget_bac = round2(kids.reduce((sum, k) => sum + (k.budget_bac ?? 0), 0));
+    phase.baseline_bac = round2(kids.reduce((sum, k) => sum + (k.baseline_bac ?? 0), 0));
+  }
+
   return { rows, exceptions };
 }
 
