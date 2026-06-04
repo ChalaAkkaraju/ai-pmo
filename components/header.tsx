@@ -46,7 +46,7 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
         </div>
 
         {/* Right — nav */}
-        <div className="flex items-center gap-5 justify-self-end text-sm">
+        <div className="flex items-center gap-4 justify-self-end text-sm">
           {canCreate && (
             <Link
               href={`/access/${token}/intake`}
@@ -60,6 +60,18 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
             className="text-muted-foreground transition hover:text-foreground"
           >
             Agents
+          </Link>
+          <Link
+            href={`/access/${token}/architecture`}
+            className="text-muted-foreground transition hover:text-foreground"
+          >
+            Architecture
+          </Link>
+          <Link
+            href={`/access/${token}/framework`}
+            className="text-muted-foreground transition hover:text-foreground"
+          >
+            PMBOK
           </Link>
           <Link
             href={`/access/${token}/usage`}
