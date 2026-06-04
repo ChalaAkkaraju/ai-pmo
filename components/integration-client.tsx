@@ -192,8 +192,7 @@ export function IntegrationClient({
               <p className="text-sm font-semibold">Manual upload</p>
               <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">live</span>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Download a blank template or export the current data, edit, then upload — WBS, cost, schedule or resources. WBS can also be exported in SAP-load format to feed back into SAP.</p>
-            <a href={`/api/integration/template?type=${uploadType}`} className="mt-2 inline-block text-[11px] font-medium text-sky-700 underline underline-offset-2">↓ Download {TYPE_LABEL[uploadType]} template</a>
+            <p className="mt-2 text-xs text-muted-foreground">Each entity has a blank template and a data upload, through the same mapper &amp; exception pipeline. WBS structure can also be downloaded with data — the SAP-load file to feed back into SAP.</p>
             {canWrite && (
               <div className="mt-3 space-y-2">
                 <select value={uploadType} onChange={(e) => setUploadType(e.target.value as 'wbs' | 'cost' | 'tasks' | 'resources')} className="w-full rounded-md border bg-background px-2 py-1.5 text-xs">
@@ -206,13 +205,14 @@ export function IntegrationClient({
                   {projects.map((p) => (<option key={p.code} value={p.code}>{p.code} — {p.name}</option>))}
                 </select>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
-                  <a href={`/api/integration/export?type=${uploadType}&projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="font-medium text-sky-700 underline underline-offset-2">↓ Export current {TYPE_LABEL[uploadType]}</a>
+                  <a href={`/api/integration/template?type=${uploadType}`} className="font-medium text-sky-700 underline underline-offset-2">↓ Blank {TYPE_LABEL[uploadType]} template</a>
                   {uploadType === 'wbs' && (
-                    <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="font-medium text-emerald-700 underline underline-offset-2">↓ Export WBS for SAP load</a>
+                    <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="font-medium text-emerald-700 underline underline-offset-2">↓ Download WBS data (for SAP load)</a>
                   )}
                 </div>
                 <input type="file" accept=".csv,text/csv" onChange={handleUpload} disabled={uploading}
                   className="block w-full text-[11px] file:mr-2 file:rounded-md file:border-0 file:bg-foreground file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-background hover:file:opacity-90" />
+                <p className="text-[10px] text-muted-foreground">{uploadType === 'tasks' || uploadType === 'resources' ? 'Imports as scheduler data (from your scheduling tool) — tasks join on WBS code.' : 'Imports as SAP PS data.'}</p>
                 {uploading && <p className="text-[11px] text-muted-foreground">Importing…</p>}
                 {uploadMsg && <p className={`text-[11px] ${uploadMsg.tone === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}>{uploadMsg.text}</p>}
               </div>
