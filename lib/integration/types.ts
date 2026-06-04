@@ -102,3 +102,58 @@ export interface SyncResult {
   exceptions: number;
   message: string;
 }
+
+/* ---- Scheduler (Dataverse / P6) source DTOs ----
+ * Adapters normalise their source schema (Dataverse msdyn_projecttask, P6
+ * activity) into this neutral scheduler shape; the mapper then joins on WBS
+ * code (shared across schedulers — that's where the join exception lives). */
+
+export interface SchedulerTaskDTO {
+  external_id: string;          // msdyn_projecttaskid / P6 ObjectId
+  name: string;                 // msdyn_subject / Activity.Name
+  wbs_code: string | null;      // custom column cr_wbscode / activity WBS code
+  start: string | null;         // YYYY-MM-DD
+  finish: string | null;        // YYYY-MM-DD
+  percent_complete: number | null;
+}
+
+export interface SchedulerResourceDTO {
+  external_id: string;
+  wbs_code: string | null;
+  resource_name: string;        // discipline pool / named resource
+  resource_role: string | null; // discipline (role type)
+  period: string;               // YYYY-MM-01
+  hours: number | null;
+}
+
+export interface TaskRow {
+  project_id: string;
+  wbs_code: string;
+  name: string;
+  start_date: string | null;
+  finish_date: string | null;
+  percent_complete: number;
+  owner_role_type: string | null;
+  source_system: SourceSystem;
+  external_id: string | null;
+  synced_at: string;
+  is_app_native: boolean;
+}
+
+export interface ResourceRow {
+  project_id: string;
+  resource_name: string;
+  resource_role: string | null;
+  period: string;
+  planned_work_hours: number | null;
+  source_system: SourceSystem;
+  external_id: string | null;
+  synced_at: string;
+}
+
+export interface SchedulerConnector {
+  source: 'DATAVERSE' | 'P6';
+  testConnection(): Promise<ConnectionStatus>;
+  fetchTasks(projectExternalId: string): Promise<SchedulerTaskDTO[]>;
+  fetchResourceAssignments(projectExternalId: string): Promise<SchedulerResourceDTO[]>;
+}

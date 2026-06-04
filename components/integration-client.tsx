@@ -62,6 +62,7 @@ export function IntegrationClient({
 }) {
   const router = useRouter();
   const [projectCode, setProjectCode] = useState(projects[0]?.code ?? '');
+  const [source, setSource] = useState<'SAP_PS' | 'DATAVERSE'>('SAP_PS');
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn' | 'err'; text: string } | null>(null);
 
@@ -70,7 +71,7 @@ export function IntegrationClient({
     try {
       const res = await fetch('/api/integration/test', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, source: 'SAP_PS' }),
+        body: JSON.stringify({ token, source }),
       });
       const j = await res.json();
       setMsg({ tone: j.ok ? 'ok' : 'warn', text: j.message ?? (j.ok ? 'Connection OK' : 'Connection failed') });
@@ -84,7 +85,7 @@ export function IntegrationClient({
     try {
       const res = await fetch('/api/integration/sync', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, projectCode, source: 'SAP_PS' }),
+        body: JSON.stringify({ token, projectCode, source }),
       });
       const j = await res.json();
       if (!res.ok || !j.ok) setMsg({ tone: 'err', text: j.error ?? j.message ?? 'Sync failed' });
@@ -120,9 +121,15 @@ export function IntegrationClient({
               <p className="text-sm font-semibold">API integration</p>
               <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">live</span>
             </div>
-            <p className="mt-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Endpoint</p>
-            <p className="rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[11px]">SAP S/4HANA · API_ENTERPRISE_PROJECT_SRV <span className="text-muted-foreground">(BTP, mock)</span></p>
-            <p className="mt-2 text-[11px] text-muted-foreground">Last sync: <span className="font-medium">{fmtTime(lastSyncBySource['SAP_PS'])}</span></p>
+            <p className="mt-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Source &amp; endpoint</p>
+            {canWrite ? (
+              <select value={source} onChange={(e) => setSource(e.target.value as 'SAP_PS' | 'DATAVERSE')} className="mb-1.5 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
+                <option value="SAP_PS">SAP PS — WBS &amp; cost</option>
+                <option value="DATAVERSE">Dataverse — tasks &amp; resources</option>
+              </select>
+            ) : null}
+            <p className="rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[11px]">{source === 'DATAVERSE' ? 'Dataverse · msdyn_projecttask (Web API, mock)' : 'SAP S/4HANA · API_ENTERPRISE_PROJECT_SRV (BTP, mock)'}</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">Last sync: <span className="font-medium">{fmtTime(lastSyncBySource[source] ?? null)}</span></p>
             {canWrite && (
               <div className="mt-3 space-y-2">
                 <select value={projectCode} onChange={(e) => setProjectCode(e.target.value)} className="w-full rounded-md border bg-background px-2 py-1.5 text-xs">

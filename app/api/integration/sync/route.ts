@@ -12,8 +12,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { resolveRoleFromToken } from '@/lib/role-context';
-import { ingestSapProject } from '@/lib/integration/ingestion-service';
+import { ingestSapProject, ingestSchedulerProject } from '@/lib/integration/ingestion-service';
 import { SapPsMockAdapter } from '@/lib/integration/adapters/sap-ps-mock';
+import { DataverseMockAdapter } from '@/lib/integration/adapters/dataverse-mock';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,14 +38,17 @@ export async function POST(request: NextRequest) {
   if (!resolved.definition.can_write) {
     return NextResponse.json({ error: 'Your role cannot run a data sync.' }, { status: 403 });
   }
-  if (body.source !== 'SAP_PS') {
-    return NextResponse.json({ error: `Connector for ${body.source} not implemented yet (SAP PS only).` }, { status: 501 });
+  if (body.source === 'P6') {
+    return NextResponse.json({ error: 'P6 connector not implemented yet.' }, { status: 501 });
   }
 
   const supabase = createSupabaseServiceClient();
   const { data: project } = await supabase.from('projects').select('id, code').eq('code', body.projectCode).maybeSingle();
   if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+  const proj = project as { id: string; code: string };
 
-  const result = await ingestSapProject(supabase, project as { id: string; code: string }, new SapPsMockAdapter(), body.channel);
+  const result = body.source === 'DATAVERSE'
+    ? await ingestSchedulerProject(supabase, proj, new DataverseMockAdapter(), body.channel)
+    : await ingestSapProject(supabase, proj, new SapPsMockAdapter(), body.channel);
   return NextResponse.json(result, { status: result.ok ? 200 : 500 });
 }

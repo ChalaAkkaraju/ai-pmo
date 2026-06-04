@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { SapPsMockAdapter } from '@/lib/integration/adapters/sap-ps-mock';
+import { DataverseMockAdapter } from '@/lib/integration/adapters/dataverse-mock';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,10 +25,11 @@ export async function POST(request: NextRequest) {
 
   const resolved = await resolveRoleFromToken(body.token);
   if (!resolved) return NextResponse.json({ ok: false, message: 'Invalid token' }, { status: 401 });
-  if (body.source !== 'SAP_PS') {
-    return NextResponse.json({ ok: false, message: `${body.source} connector not implemented yet.` }, { status: 200 });
+  if (body.source === 'P6') {
+    return NextResponse.json({ ok: false, message: 'P6 connector not implemented yet.' }, { status: 200 });
   }
-
-  const status = await new SapPsMockAdapter().testConnection();
+  const status = body.source === 'DATAVERSE'
+    ? await new DataverseMockAdapter().testConnection()
+    : await new SapPsMockAdapter().testConnection();
   return NextResponse.json(status, { status: 200 });
 }
