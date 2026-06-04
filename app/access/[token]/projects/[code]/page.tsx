@@ -17,6 +17,7 @@ import type { WorkPackage } from '@/components/wbs-canonical-tree';
 import type { Task } from '@/components/schedule-view';
 import { computeEv, evCurve } from '@/lib/earned-value';
 import { computeLoad, type ResAssignment, type LoadResult } from '@/lib/resource-load';
+import { computeMarginBridge } from '@/lib/margin';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
 
 // Always fetch fresh from Supabase — no Next.js data cache
@@ -108,6 +109,23 @@ async function loadCostActuals(
   return res.data ?? [];
 }
 
+async function loadSoldBudget(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<number | null> {
+  const res = await supabase
+    .from('work_packages')
+    .select('parent_wbs_code, baseline_bac')
+    .eq('project_id', projectId);
+  if (res.error) return null;
+  let sum = 0;
+  let any = false;
+  for (const r of (res.data ?? []) as Array<{ parent_wbs_code: string | null; baseline_bac: number | null }>) {
+    if (r.parent_wbs_code && r.baseline_bac != null) { sum += Number(r.baseline_bac); any = true; }
+  }
+  return any ? sum : null;
+}
+
 async function loadResourceLoad(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   projectId: string,
@@ -166,6 +184,14 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const tasks = await loadTasks(supabase, project.id);
   const costActuals = await loadCostActuals(supabase, project.id);
   const resourceLoad = await loadResourceLoad(supabase, project.id);
+  const soldBudget = await loadSoldBudget(supabase, project.id);
+  const marginBridge = computeMarginBridge({
+    soldContract: Number(project.sold_contract_value) || 0,
+    soldBudget: soldBudget ?? 0,
+    currentContract: Number(project.contract_value_current) || 0,
+    plannedBudget: evMetrics.bac,
+    eac: evMetrics.eac,
+  });
   const evLeaves = workPackages.filter((w) => w.parent_wbs_code);
   const evMetrics = computeEv(evLeaves, tasks, costActuals);
   const evC = evCurve(evLeaves, tasks, evMetrics.spi, evMetrics.cpi);
@@ -314,6 +340,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         evCurve={evC}
         evSyncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null}
         resourceLoad={resourceLoad}
+        marginBridge={marginBridge}
+        marginSyncedAt={project.baseline_captured_at ?? null}
         data={{ issues, risks, change_orders, variance_reports, planning_outputs, action_items }}
       />
     </div>

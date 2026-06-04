@@ -33,9 +33,11 @@ import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
 import { ResourceLoadPanel } from './resource-load-view';
+import { MarginBridgeCard } from './margin-bridge';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
 import type { EvMetrics, EvCurve } from '@/lib/earned-value';
 import type { LoadResult } from '@/lib/resource-load';
+import type { MarginBridge } from '@/lib/margin';
 import type { AgentType } from '@/lib/types';
 
 /** AI planning artefacts, shown inside the Planning tab via an inner selector. */
@@ -67,6 +69,8 @@ interface ProjectTabsProps {
   evCurve: EvCurve | null;
   evSyncedAt: string | null;
   resourceLoad: LoadResult;
+  marginBridge: MarginBridge;
+  marginSyncedAt: string | null;
   data: {
     issues: Array<Record<string, unknown>>;
     risks: Array<Record<string, unknown>>;
@@ -93,6 +97,8 @@ export function ProjectTabs({
   evCurve,
   evSyncedAt,
   resourceLoad,
+  marginBridge,
+  marginSyncedAt,
   data,
 }: ProjectTabsProps) {
   const [tab, setTab] = useState('overview');
@@ -129,6 +135,8 @@ export function ProjectTabs({
           risks={data.risks}
           issues={data.issues}
           actions={data.action_items ?? []}
+          marginBridge={marginBridge}
+          marginSyncedAt={marginSyncedAt}
           go={setTab}
         />
       </Tabs.Content>
@@ -208,6 +216,8 @@ function OverviewPanel({
   risks,
   issues,
   actions,
+  marginBridge,
+  marginSyncedAt,
   go,
 }: {
   metrics: EvMetrics;
@@ -216,6 +226,8 @@ function OverviewPanel({
   risks: Array<Record<string, unknown>>;
   issues: Array<Record<string, unknown>>;
   actions: Array<Record<string, unknown>>;
+  marginBridge: MarginBridge;
+  marginSyncedAt: string | null;
   go: (tab: string) => void;
 }) {
   const closedRisk = (s: string) => ['mitigated', 'realised', 'realized', 'not materialised', 'not materialized', 'closed', 'retired'].some((k) => s.includes(k));
@@ -283,6 +295,8 @@ function OverviewPanel({
           )}
         </div>
       </div>
+
+      {marginBridge.ready && <MarginBridgeCard bridge={marginBridge} syncedAt={marginSyncedAt} />}
 
       <p className="text-xs text-muted-foreground">
         Tip: the tabs above hold the detail — structure (WBS), schedule, the full earned-value S-curve, and the AI planning artefacts.
