@@ -50,7 +50,7 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
           load={load}
           mode="portfolio"
           title="Resource demand vs capacity"
-          subtitle="Peak FTE per discipline across all projects · bar = peak demand, marker = capacity, line = monthly demand"
+          subtitle="Monthly FTE demand per discipline vs capacity across all projects · red months exceed capacity"
         />
       </div>
 
