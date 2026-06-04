@@ -37,10 +37,12 @@ export function ResourceLoadPanel({
   }
 
   const months = load.months;
+  const roles = mode === 'project' ? [...load.roles].sort((a, b) => b.totalFteMonths - a.totalFteMonths) : load.roles;
   const scale = Math.max(
     1,
-    ...load.roles.map((r) => (mode === 'portfolio' ? Math.max(r.peakFte, r.capacityFte) : r.peakFte)),
+    ...roles.map((r) => (mode === 'portfolio' ? Math.max(r.peakFte, r.capacityFte) : r.totalFteMonths)),
   );
+  const peakScale = Math.max(1, ...roles.map((r) => r.peakFte));
   const range = months.length ? `${fmtMonth(months[0])} – ${fmtMonth(months[months.length - 1])}` : '';
 
   return (
@@ -62,9 +64,9 @@ export function ResourceLoadPanel({
       </div>
 
       <div className="divide-y">
-        {load.roles.map((r) => {
+        {roles.map((r) => {
           const over = mode === 'portfolio' && r.peakFte > r.capacityFte;
-          const barPct = Math.min(100, (r.peakFte / scale) * 100);
+          const barPct = Math.min(100, ((mode === 'portfolio' ? r.peakFte : r.totalFteMonths) / scale) * 100);
           const capPct = mode === 'portfolio' ? Math.min(100, (r.capacityFte / scale) * 100) : 0;
           return (
             <div key={r.role} className="grid grid-cols-1 gap-2 px-5 py-3 md:grid-cols-[150px_1fr_auto] md:items-center">
@@ -92,7 +94,7 @@ export function ResourceLoadPanel({
 
               {/* Sparkline + flag */}
               <div className="flex items-center gap-3">
-                <Sparkline series={r.series} cap={mode === 'portfolio' ? r.capacityFte : null} scale={scale} />
+                <Sparkline series={r.series} cap={mode === 'portfolio' ? r.capacityFte : null} scale={mode === 'portfolio' ? scale : peakScale} />
                 {over ? (
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">
                     over {r.overMonths} mo

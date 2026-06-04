@@ -164,7 +164,7 @@ export function ProjectTabs({
           load={resourceLoad}
           mode="project"
           title="Resource demand by discipline"
-          subtitle="FTE per month from the scheduler (Dataverse / P6) · read-only"
+          subtitle="Bar = total effort (FTE-months); line = headcount by month · from the scheduler, read-only"
         />
       </Tabs.Content>
 
