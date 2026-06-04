@@ -185,6 +185,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const costActuals = await loadCostActuals(supabase, project.id);
   const resourceLoad = await loadResourceLoad(supabase, project.id);
   const soldBudget = await loadSoldBudget(supabase, project.id);
+  const evLeaves = workPackages.filter((w) => w.parent_wbs_code);
+  const evMetrics = computeEv(evLeaves, tasks, costActuals);
+  const evC = evCurve(evLeaves, tasks, evMetrics.spi, evMetrics.cpi);
   const marginBridge = computeMarginBridge({
     soldContract: Number(project.sold_contract_value) || 0,
     soldBudget: soldBudget ?? 0,
@@ -192,9 +195,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
     plannedBudget: evMetrics.bac,
     eac: evMetrics.eac,
   });
-  const evLeaves = workPackages.filter((w) => w.parent_wbs_code);
-  const evMetrics = computeEv(evLeaves, tasks, costActuals);
-  const evC = evCurve(evLeaves, tasks, evMetrics.spi, evMetrics.cpi);
 
   const realisedCount = risks.filter((r) => String(r.status).toLowerCase().startsWith('realised')).length;
   const mitigatedCount = risks.filter((r) => String(r.status).toLowerCase().includes('mitigated')).length;
