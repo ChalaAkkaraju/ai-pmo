@@ -198,3 +198,67 @@ export const TEMPLATE_META: Record<TemplateType, { label: string; filename: stri
   tasks: { label: 'Schedule (tasks)', filename: 'tasks-import-template.csv', build: buildTaskTemplate },
   resources: { label: 'Resource assignments', filename: 'resources-import-template.csv', build: buildResourceTemplate },
 };
+
+/* ===================== Exporters (current data → CSV) =====================
+ * Download what's in the canonical model in the SAME template column order, so
+ * you can edit and re-upload (round-trip). Plus an SAP-loadable WBS export. */
+
+function csvCell(v: unknown): string {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function toCsv(columns: readonly string[], rows: Array<Record<string, unknown>>): string {
+  const lines = [columns.join(',')];
+  for (const r of rows) lines.push(columns.map((c) => csvCell(r[c])).join(','));
+  return lines.join('\n') + '\n';
+}
+
+const ROLE_TO_CODE: Record<string, string> = {
+  pm: 'PM', engineering_manager: 'ENG', construction_manager: 'CON', procurement: 'PROC',
+  commercial: 'COMM', project_controls: 'CTRL', hse_manager: 'HSE',
+};
+
+type WP = { wbs_code: string; parent_wbs_code: string | null; name: string; responsible_role_type: string | null; is_billing_element: boolean; budget_bac: number | null; baseline_bac: number | null; target_finish: string | null };
+
+export function exportWbsCsv(wps: WP[]): string {
+  return toCsv(WBS_TEMPLATE_COLUMNS, wps.map((w) => ({
+    wbs_code: w.wbs_code, parent_wbs_code: w.parent_wbs_code ?? '', name: w.name,
+    responsible: w.responsible_role_type ? (ROLE_TO_CODE[w.responsible_role_type] ?? '') : '',
+    billing_element: w.is_billing_element ? 'true' : 'false',
+    budget: w.budget_bac ?? '', baseline: w.baseline_bac ?? '', target_finish: w.target_finish ?? '',
+  })));
+}
+export function exportCostCsv(rows: Array<Record<string, unknown>>): string {
+  return toCsv(COST_TEMPLATE_COLUMNS, rows.map((r) => ({
+    wbs_code: r.wbs_code, period: r.period, actual_cost: r.actual_cost, commitment: r.commitment, planned_value: r.planned_value,
+  })));
+}
+export function exportTaskCsv(rows: Array<Record<string, unknown>>): string {
+  return toCsv(TASK_TEMPLATE_COLUMNS, rows.map((r) => ({
+    wbs_code: r.wbs_code, external_id: r.external_id, name: r.name, start: r.start_date, finish: r.finish_date, percent_complete: r.percent_complete,
+  })));
+}
+export function exportResourceCsv(rows: Array<Record<string, unknown>>): string {
+  return toCsv(RESOURCE_TEMPLATE_COLUMNS, rows.map((r) => ({
+    wbs_code: '', external_id: r.external_id, resource_name: r.resource_name, resource_role: r.resource_role, period: r.period, hours: r.planned_work_hours,
+  })));
+}
+
+/* SAP PS WBS load file — columns shaped for an SAP project-structure upload
+ * (Project Builder / LSMW). PSPID=project def, POSID=WBS element, POST1=short
+ * text, STUFE=level, FAKKZ=billing-element flag, VERNR=responsible, plan budget. */
+export const SAP_WBS_LOAD_COLUMNS = ['PSPID', 'POSID', 'POST1', 'STUFE', 'PARENT_POSID', 'FAKKZ', 'VERNR', 'PLAN_BUDGET'] as const;
+export function buildSapWbsLoad(projectCode: string, wps: WP[]): string {
+  const rows = [...wps].sort((a, b) => a.wbs_code.localeCompare(b.wbs_code, undefined, { numeric: true })).map((w) => ({
+    PSPID: projectCode,
+    POSID: w.wbs_code,
+    POST1: w.name,
+    STUFE: w.wbs_code.split('.').length,
+    PARENT_POSID: w.parent_wbs_code ?? '',
+    FAKKZ: w.is_billing_element ? 'X' : '',
+    VERNR: w.responsible_role_type ? (ROLE_TO_CODE[w.responsible_role_type] ?? '') : '',
+    PLAN_BUDGET: w.budget_bac ?? '',
+  }));
+  return toCsv(SAP_WBS_LOAD_COLUMNS, rows);
+}
