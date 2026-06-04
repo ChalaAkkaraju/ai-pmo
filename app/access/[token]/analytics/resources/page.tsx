@@ -32,6 +32,7 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
   const load = computeLoad(rows, true);
   const overRoles = load.roles.filter((r) => r.peakFte > r.capacityFte).length;
   const peakRole = load.roles[0] ?? null;
+  const withSpare = load.roles.filter((r) => r.peakFte <= r.capacityFte).length;
 
   return (
     <div className="container mx-auto max-w-screen-2xl px-8 py-8">
@@ -39,10 +40,11 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
       <p className="mt-1 text-sm text-muted-foreground">Cross-project breakdowns. Resource view is visibility only — levelling stays in the scheduler.</p>
       <div className="mt-5"><AnalyticsNav token={token} /></div>
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Disciplines tracked" value={String(load.roles.length)} />
         <Stat label="Over-allocated disciplines" value={String(overRoles)} tone={overRoles > 0 ? 'warn' : 'ok'} sub="peak demand above capacity" />
         <Stat label="Highest-demand discipline" value={peakRole ? `${peakRole.peakFte.toFixed(0)} FTE` : '—'} sub={peakRole ? roleName(peakRole.role) : ''} />
+        <Stat label="Disciplines with spare capacity" value={String(withSpare)} tone={withSpare > 0 ? 'ok' : 'neutral'} sub="headroom at peak demand" />
       </div>
 
       <div className="mt-6">
@@ -50,13 +52,13 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
           load={load}
           mode="portfolio"
           title="Resource demand vs capacity"
-          subtitle="Monthly FTE demand per discipline vs capacity across all projects · red months exceed capacity"
+          subtitle="Monthly FTE demand vs capacity across all projects · gray = available headroom, red months exceed capacity"
         />
       </div>
 
       <p className="mt-4 max-w-3xl text-xs text-muted-foreground">
         Demand is aggregated from scheduler assignments (Dataverse / P6) into FTE per month at {''}
-        160 hours per FTE-month. Capacity is a portfolio stand-in per discipline. Over-allocation flags where peak monthly
+        160 hours per FTE-month. Capacity is a portfolio stand-in per discipline. The gray band is available headroom (capacity not yet committed). Over-allocation flags where peak monthly
         demand exceeds capacity — a signal to re-sequence in the scheduler, not something this layer resolves.
       </p>
     </div>

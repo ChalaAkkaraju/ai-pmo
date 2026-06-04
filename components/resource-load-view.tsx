@@ -210,12 +210,21 @@ function DisciplineChart({
       </div>
       <p className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
         peak {peak.toFixed(1)}{hasCap ? ` / cap ${capacity}` : ''} FTE
+        {hasCap && (peak <= (capacity as number)
+          ? <span className="text-emerald-700"> · ≥{((capacity as number) - peak).toFixed(0)} free</span>
+          : <span className="text-red-600"> · short {(peak - (capacity as number)).toFixed(0)} at peak</span>)}
       </p>
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-1.5 w-full" role="img" aria-label={`${role} FTE demand over time`}>
         <line x1={x0} y1={y1} x2={x1} y2={y1} stroke="currentColor" strokeOpacity="0.15" />
         <text x={x0 - 4} y={y0 + 4} textAnchor="end" fontSize="7" fill="currentColor" fillOpacity="0.5">{ymax}</text>
         <text x={x0 - 4} y={y1 + 1} textAnchor="end" fontSize="7" fill="currentColor" fillOpacity="0.4">0</text>
-        <path d={area} fill={c} fillOpacity="0.14" />
+        {hasCap && (() => {
+          const cap = capacity as number;
+          const bottom = series.map((v, i) => `${xAt(i, n, x0, x1).toFixed(1)},${yOf(Math.min(v, cap)).toFixed(1)}`);
+          const d = `M ${bottom.join(' L ')} L ${xAt(n - 1, n, x0, x1).toFixed(1)},${yOf(cap).toFixed(1)} L ${xAt(0, n, x0, x1).toFixed(1)},${yOf(cap).toFixed(1)} Z`;
+          return <path d={d} fill="#94A3B8" fillOpacity="0.18" />;
+        })()}
+        <path d={area} fill={c} fillOpacity="0.16" />
         <polyline points={line} fill="none" stroke={c} strokeWidth="1.7" />
         {hasCap && series.map((v, i) => (v > (capacity as number) ? (
           <circle key={i} cx={xAt(i, n, x0, x1)} cy={yOf(v)} r="2" fill="#E24B4A" />
