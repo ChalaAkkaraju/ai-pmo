@@ -55,6 +55,7 @@ const STEPS = [
 const DOES = [
   'Computes earned value across cost and schedule — CPI, SPI, EAC, variance',
   'Drafts the planning artefacts: charter, stakeholders, WBS, schedule, budget',
+  'Authors a scope-true WBS and books it into the ERP at setup — its one deliberate write, with your approval',
   'Synthesises risks, issues and change orders into cross-project patterns',
   'Writes the status narrative and recommends actions to the right role',
   'Keeps a human in the loop — every draft is reviewable, editable and traceable',
@@ -63,7 +64,7 @@ const DOES = [
 const IS_NOT = [
   'Not a scheduler — no critical-path engine or resource levelling (that stays in your scheduler, e.g. Microsoft Planner Premium or Primavera P6)',
   'Not an accounting system — cost, commitment, billing and revenue stay in your ERP, e.g. SAP PS or Oracle',
-  'Not a data-entry replacement — it consumes those systems of record, it does not replace them',
+  'Not a replacement for your systems of record — it authors the WBS into the ERP at setup, then only reads from them',
 ];
 
 const CAPABILITIES = [
@@ -158,6 +159,34 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
           Tool-agnostic by design — it works with any ERP and any scheduler, including but not limited to the products named here.
         </p>
       </div>
+
+      {/* Two bookends — author upstream, synthesise downstream */}
+      <p className="mt-12 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Two bookends</p>
+      <p className="mx-auto mt-2 max-w-2xl text-center text-[13px] text-muted-foreground">
+        It touches the systems of record at two moments only — and writes just once.
+      </p>
+      <div className="mx-auto mt-4 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border bg-card p-5">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-700"><Wand2 className="h-5 w-5" strokeWidth={1.75} /></span>
+          <h3 className="mt-3 text-sm font-semibold">Authors the WBS — upstream</h3>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            ERPs build a WBS from rigid templates. Instead, the AI proposes a scope-true structure; you approve it, and
+            it&apos;s booked into the ERP as the real project — the one deliberate write. The same WBS is published to the
+            scheduler, so every task is born tagged to it.
+          </p>
+        </div>
+        <div className="rounded-xl border bg-card p-5">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"><TrendingUp className="h-5 w-5" strokeWidth={1.75} /></span>
+          <h3 className="mt-3 text-sm font-semibold">Synthesises the result — downstream</h3>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            From there it only reads — cost from the ERP, progress from the scheduler, joined by the WBS code — to compute
+            earned value and the explained portfolio picture. The systems of record stay untouched.
+          </p>
+        </div>
+      </div>
+      <p className="mx-auto mt-3 max-w-2xl text-center text-[11px] text-muted-foreground">
+        Write once, at setup, with your approval — then read-only for the life of the project.
+      </p>
 
       {/* How it works */}
       <p className="mt-12 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">How it works</p>
