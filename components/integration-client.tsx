@@ -45,6 +45,13 @@ function statusCls(s: string): string {
   return s === 'failed' ? 'bg-red-100 text-red-800' : s === 'partial' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800';
 }
 
+const FILE_OBJECTS: Array<{ type: 'wbs' | 'cost' | 'tasks' | 'resources'; label: string; source: string }> = [
+  { type: 'wbs', label: 'WBS structure', source: 'SAP PS' },
+  { type: 'cost', label: 'Cost actuals', source: 'SAP PS' },
+  { type: 'tasks', label: 'Schedule (tasks)', source: 'Scheduler' },
+  { type: 'resources', label: 'Resource assignments', source: 'Scheduler' },
+];
+
 export function IntegrationClient({
   token,
   projects,
@@ -64,9 +71,7 @@ export function IntegrationClient({
   const [projectCode, setProjectCode] = useState(projects[0]?.code ?? '');
   const [source, setSource] = useState<'SAP_PS' | 'DATAVERSE'>('SAP_PS');
   const [uploadProject, setUploadProject] = useState(projects[0]?.code ?? '');
-  const [uploadType, setUploadType] = useState<'wbs' | 'cost' | 'tasks' | 'resources'>('wbs');
-  const TYPE_LABEL: Record<string, string> = { wbs: 'WBS structure', cost: 'cost actuals', tasks: 'schedule (tasks)', resources: 'resource assignments' };
-  const [uploading, setUploading] = useState(false);
+  const [uploadingType, setUploadingType] = useState<string | null>(null);
   const [uploadMsg, setUploadMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ tone: 'ok' | 'warn' | 'err'; text: string } | null>(null);
@@ -111,23 +116,23 @@ export function IntegrationClient({
     setBusy(null);
   }
 
-  async function handleUpload(e: ChangeEvent<HTMLInputElement>) {
+  async function handleUpload(e: ChangeEvent<HTMLInputElement>, type: 'wbs' | 'cost' | 'tasks' | 'resources') {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
     if (!uploadProject) { setUploadMsg({ tone: 'err', text: 'Pick a project first' }); return; }
-    setUploading(true); setUploadMsg(null);
+    setUploadingType(type); setUploadMsg(null);
     try {
       const csv = await file.text();
       const res = await fetch('/api/integration/upload', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, projectCode: uploadProject, csv, type: uploadType }),
+        body: JSON.stringify({ token, projectCode: uploadProject, csv, type }),
       });
       const j = await res.json();
       if (!res.ok || !j.ok) setUploadMsg({ tone: 'err', text: j.error ?? j.message ?? 'Import failed' });
       else { setUploadMsg({ tone: 'ok', text: j.message }); router.refresh(); }
     } catch { setUploadMsg({ tone: 'err', text: 'Could not read file' }); }
-    setUploading(false);
+    setUploadingType(null);
   }
 
   const msgCls = msg?.tone === 'ok' ? 'text-emerald-700' : msg?.tone === 'warn' ? 'text-amber-700' : 'text-red-600';
@@ -136,8 +141,8 @@ export function IntegrationClient({
     <div className="space-y-8">
       {/* Import methods */}
       <section>
-        <h2 className="text-base font-semibold">Import methods</h2>
-        <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <h2 className="text-base font-semibold">Connectors</h2>
+        <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* API — live */}
           <div className="rounded-xl border bg-card p-5">
             <div className="flex items-center gap-2">
@@ -185,50 +190,59 @@ export function IntegrationClient({
             <p className="mt-2 text-[11px] text-muted-foreground">Schedule: <span className="font-medium">Daily 02:00</span> · Path: <span className="font-mono">/data/imports</span></p>
           </div>
 
-          {/* Templates & data file — file channel (live), as a decision tree */}
-          <div className="rounded-xl border bg-card p-5">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-700">⬆️</span>
-              <p className="text-sm font-semibold">Templates &amp; data file</p>
-              <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">live</span>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">Pick an object, download its template, then upload the filled file — same mapper &amp; exception pipeline as the live connectors.</p>
-
-            {/* 1 · Object */}
-            <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">1 · Object</p>
-            <select value={uploadType} onChange={(e) => setUploadType(e.target.value as 'wbs' | 'cost' | 'tasks' | 'resources')} className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
-              <option value="wbs">WBS structure</option>
-              <option value="cost">Cost actuals</option>
-              <option value="tasks">Schedule (tasks)</option>
-              <option value="resources">Resource assignments</option>
-            </select>
-
-            {/* 2 · Template (no project needed) */}
-            <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">2 · Template</p>
-            <a href={`/api/integration/template?type=${uploadType}`} className="mt-1 inline-block text-xs font-medium text-sky-700 underline underline-offset-2">↓ Download blank {TYPE_LABEL[uploadType]} template</a>
-
-            {/* 3 · Data — project-scoped upload / download */}
-            {canWrite && (
-              <div className="mt-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">3 · Data — pick a project</p>
-                <select value={uploadProject} onChange={(e) => setUploadProject(e.target.value)} className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
-                  {projects.map((p) => (<option key={p.code} value={p.code}>{p.code} — {p.name}</option>))}
-                </select>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <label className={`cursor-pointer rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90 ${uploading ? 'opacity-50' : ''}`}>
-                    {uploading ? 'Uploading…' : '⬆ Upload data file'}
-                    <input type="file" accept=".csv,text/csv" onChange={handleUpload} disabled={uploading} className="hidden" />
-                  </label>
-                  {uploadType === 'wbs' && (
-                    <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100">↓ Download data (for SAP)</a>
-                  )}
-                </div>
-                <p className="mt-1.5 text-[10px] text-muted-foreground">{uploadType === 'tasks' || uploadType === 'resources' ? 'Upload represents data from your scheduling tool — tasks join on WBS code.' : 'Upload represents data from SAP.'}</p>
-                {uploadMsg && <p className={`mt-1 text-[11px] ${uploadMsg.tone === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}>{uploadMsg.text}</p>}
-              </div>
-            )}
-          </div>
         </div>
+      </section>
+
+      {/* Templates & data files — object x action matrix */}
+      <section>
+        <h2 className="text-base font-semibold">Templates &amp; data files</h2>
+        <p className="mt-1 max-w-3xl text-xs text-muted-foreground">Download a blank template, fill it in, and upload — per object, through the same mapper &amp; exception pipeline as the live connectors. Only WBS can be downloaded with data (the SAP-load file). Templates need no project.</p>
+        {canWrite && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <span className="font-medium text-muted-foreground">Project for upload / download:</span>
+            <select value={uploadProject} onChange={(e) => setUploadProject(e.target.value)} className="rounded-md border bg-background px-2 py-1.5 text-xs">
+              {projects.map((p) => (<option key={p.code} value={p.code}>{p.code} — {p.name}</option>))}
+            </select>
+          </div>
+        )}
+        <div className="mt-3 overflow-x-auto rounded-xl border">
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2 font-medium">Object</th>
+                <th className="px-3 py-2 font-medium">Source</th>
+                <th className="px-3 py-2 font-medium">Template</th>
+                <th className="px-3 py-2 font-medium">Upload data</th>
+                <th className="px-3 py-2 font-medium">Download data</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {FILE_OBJECTS.map((o) => (
+                <tr key={o.type}>
+                  <td className="px-3 py-2.5 font-medium">{o.label}</td>
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{o.source}</td>
+                  <td className="px-3 py-2.5">
+                    <a href={`/api/integration/template?type=${o.type}`} className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition hover:bg-muted">↓ Template</a>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    {canWrite ? (
+                      <label className={`inline-flex cursor-pointer items-center gap-1 rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background transition hover:opacity-90 ${uploadingType === o.type ? 'opacity-50' : ''}`}>
+                        {uploadingType === o.type ? 'Uploading…' : '↑ Upload'}
+                        <input type="file" accept=".csv,text/csv" className="hidden" disabled={uploadingType !== null} onChange={(e) => handleUpload(e, o.type)} />
+                      </label>
+                    ) : (<span className="text-muted-foreground">—</span>)}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    {o.type === 'wbs' && canWrite ? (
+                      <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100">↓ For SAP</a>
+                    ) : (<span className="text-muted-foreground">—</span>)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {uploadMsg && <p className={`mt-2 text-[11px] ${uploadMsg.tone === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}>{uploadMsg.text}</p>}
       </section>
 
       {/* Sync history */}
