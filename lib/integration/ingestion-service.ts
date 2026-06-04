@@ -64,6 +64,10 @@ export async function ingestSapProject(
     // Provenance: the project is now SAP-sourced.
     await supabase.from('projects').update({ source_system: 'SAP_PS', external_id: project.code, last_synced_at: syncedAt }).eq('id', project.id);
 
+    // Open exceptions reflect the CURRENT source state: clear this source's open
+    // ones, then re-insert what's still failing — so re-syncing the same data
+    // shows one row per real problem, not one per run. Resolved/ignored are kept.
+    await supabase.from('sync_exceptions').delete().eq('project_id', project.id).eq('source_system', 'SAP_PS').eq('status', 'open');
     if (allExceptions.length > 0) {
       const exRows = allExceptions.map((e) => ({
         sync_run_id: runId, project_id: project.id, source_system: 'SAP_PS',
