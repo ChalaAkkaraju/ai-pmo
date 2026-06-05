@@ -89,6 +89,11 @@ export const LIFECYCLE: Record<'Active' | 'SC' | 'Closed', { bar: string; dot: s
   Closed: { bar: 'bg-gray-400', dot: 'bg-gray-400', badge: 'bg-gray-100 text-gray-700 border border-gray-200' },
 };
 
+/** Friendly status label — spells out the SC abbreviation. */
+export function statusLabel(status: string): string {
+  return status === 'SC' ? 'Subst. complete' : status;
+}
+
 /** Status (Active/SC/Closed) badge styling — sourced from LIFECYCLE. */
 export function statusBadge(status: string): string {
   return (LIFECYCLE as Record<string, { badge: string }>)[status]?.badge ?? LIFECYCLE.Active.badge;

@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { segmentStyle, statusBadge, LIFECYCLE } from '@/lib/segment-style';
+import { segmentStyle, statusBadge, statusLabel, LIFECYCLE } from '@/lib/segment-style';
 import { issueBadge, riskBadge } from '@/lib/badge-styles';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { ActionRibbon } from '@/components/action-ribbon';
@@ -376,7 +376,7 @@ function LifecycleBar({
       {showLegend && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           <span onClick={onStatusClick ? () => onStatusClick('Active') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className={`h-2 w-2 rounded-full ${LIFECYCLE.Active.dot}`} />Active <strong className="tabular-nums">{active}</strong></span>
-          <span onClick={onStatusClick ? () => onStatusClick('SC') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className={`h-2 w-2 rounded-full ${LIFECYCLE.SC.dot}`} />Substantial Completion <strong className="tabular-nums">{sc}</strong></span>
+          <span onClick={onStatusClick ? () => onStatusClick('SC') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className={`h-2 w-2 rounded-full ${LIFECYCLE.SC.dot}`} />Subst. complete <strong className="tabular-nums">{sc}</strong></span>
           <span onClick={onStatusClick ? () => onStatusClick('Closed') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className={`h-2 w-2 rounded-full ${LIFECYCLE.Closed.dot}`} />Closed <strong className="tabular-nums">{closed}</strong></span>
         </div>
       )}
@@ -669,7 +669,7 @@ export function DashboardClient({
       columns: [
         { key: 'project', label: 'Project' },
         { key: 'client', label: 'Client' },
-        { key: 'status', label: 'Status', render: (v) => <span className={`inline-block rounded-full px-2 py-0.5 ${statusBadge(String(v))}`}>{String(v)}</span> },
+        { key: 'status', label: 'Status', render: (v) => <span className={`inline-block rounded-full px-2 py-0.5 ${statusBadge(String(v))}`}>{statusLabel(String(v))}</span> },
         { key: 'current_week', label: 'Week', numeric: true },
         { key: 'contract_value_current', label: 'Contract', numeric: true, render: (v) => fmtMoneyM(Number(v)) },
       ],
@@ -1151,7 +1151,7 @@ export function DashboardClient({
                           {h.name}
                         </Link>
                         <p className="mt-0.5 text-[11px] text-muted-foreground">
-                          {h.code} · <span className={`rounded px-1 py-0.5 text-[10px] font-medium ${statusBadge(h.status)}`}>{h.status}</span>
+                          {h.code} · <span className={`rounded px-1 py-0.5 text-[10px] font-medium ${statusBadge(h.status)}`}>{statusLabel(h.status)}</span>
                         </p>
                       </td>
                       <td className="px-3 py-2.5">
@@ -1244,7 +1244,7 @@ export function DashboardClient({
                     <LifecycleBar active={s.active_count} sc={s.sc_count} closed={s.closed_count} showLegend={false} inlineCounts />
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
                       <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.Active.dot}`} />Active</span>
-                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.SC.dot}`} />SC</span>
+                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.SC.dot}`} />Subst. complete</span>
                       <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.Closed.dot}`} />Closed</span>
                     </div>
                   </div>
