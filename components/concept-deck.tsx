@@ -14,7 +14,7 @@
  *   Last slide — hallucination + the three guardrails (the payoff).
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   Brain, MessageSquare, Bot, BookOpen, Search, Calculator, Route, Layers,
@@ -154,6 +154,16 @@ function FlowDiagram() {
   );
 }
 
+function Slide({ idx, refCb, children }: { idx: number; refCb: (i: number) => (el: HTMLElement | null) => void; children: ReactNode }) {
+  return (
+    <section data-idx={idx} ref={refCb(idx)} className="h-full min-h-full w-full min-w-full flex-none snap-start overflow-y-auto px-6 py-10">
+      <div className="mx-auto flex min-h-full w-full max-w-4xl items-center">
+        <div className="w-full">{children}</div>
+      </div>
+    </section>
+  );
+}
+
 export function ConceptDeck({ token }: { token: string }) {
   const slideCount = CONCEPTS.length + 2; // overview + concepts + capstone
   const capIdx = CONCEPTS.length + 1;
@@ -212,7 +222,6 @@ export function ConceptDeck({ token }: { token: string }) {
   const atStart = active === 0;
   const atEnd = active === slideCount - 1;
   const setRef = (i: number) => (el: HTMLElement | null) => { slideRefs.current[i] = el; };
-  const slideCls = 'flex h-full min-h-full w-full min-w-full flex-none snap-start items-start justify-center overflow-y-auto px-6 py-6';
 
   return (
     <div className="relative flex h-[calc(100vh-3.5rem)] flex-col">
@@ -236,15 +245,14 @@ export function ConceptDeck({ token }: { token: string }) {
       {/* Deck */}
       <div ref={containerRef} className="concept-deck-scroll flex flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth">
         {/* Slide 0 — overview */}
-        <section data-idx={0} ref={setRef(0)} className={slideCls}>
-          <div className="mx-auto w-full max-w-4xl">
-            <div className="rounded-2xl border p-5" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.16), rgba(99,102,241,0.05))', borderColor: 'rgba(99,102,241,0.25)' }}>
+        <Slide idx={0} refCb={setRef}>
+            <div className="rounded-2xl border p-7" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.16), rgba(99,102,241,0.05))', borderColor: 'rgba(99,102,241,0.25)' }}>
               <div className="mb-2 flex items-center gap-2.5">
                 <span className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-600"><Sparkles size={22} strokeWidth={2} /></span>
                 <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AI PMO · the ideas underneath</span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground">The ideas behind AI PMO — in plain terms</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/80 sm:text-base">
+              <p className="mt-2 max-w-3xl text-base leading-relaxed text-foreground/80 text-justify">
                 No AI background needed. These are the handful of ideas the whole app is built on. Scroll through one at a
                 time — each has a plain explanation, what it means and what it is not, an analogy, and where you have already
                 seen it here.
@@ -268,17 +276,15 @@ export function ConceptDeck({ token }: { token: string }) {
 
             <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">How a question flows through them</p>
             <div className="mt-2"><FlowDiagram /></div>
-          </div>
-        </section>
+        </Slide>
 
         {/* Concept slides */}
         {CONCEPTS.map((c, idx) => {
           const Icon = c.Icon;
           const i = idx + 1;
           return (
-            <section key={c.term} data-idx={i} ref={setRef(i)} className={slideCls}>
-              <div className="mx-auto w-full max-w-4xl">
-                <div className="rounded-2xl border p-5" style={{ background: `linear-gradient(135deg, ${c.accent}1f, ${c.accent}08)`, borderColor: `${c.accent}33` }}>
+            <Slide key={c.term} idx={i} refCb={setRef}>
+                <div className="rounded-2xl border p-7" style={{ background: `linear-gradient(135deg, ${c.accent}1f, ${c.accent}08)`, borderColor: `${c.accent}33` }}>
                   <div className="mb-2.5 flex items-center gap-3">
                     <span className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: `${c.accent}26`, color: c.accent }}><Icon size={24} strokeWidth={2} /></span>
                     <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: `${c.accent}1a`, color: c.accent }}>{c.cat}</span>
@@ -287,19 +293,19 @@ export function ConceptDeck({ token }: { token: string }) {
                   <p className="mt-1 text-sm text-foreground/70">{c.tagline}</p>
                 </div>
 
-                <p className="mt-4 text-base leading-relaxed text-foreground/80 sm:text-lg">{c.plain}</p>
+                <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">{c.plain}</p>
 
                 <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
+                  <div className="flex h-full flex-col rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
                     <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">What it means</p>
                     <ul className="mt-2.5 space-y-1.5">
-                      {c.means.map((m, k) => <li key={k} className="flex gap-2.5 text-sm text-foreground/85"><Check size={17} strokeWidth={2.5} className="mt-0.5 flex-none text-emerald-500" /><span>{m}</span></li>)}
+                      {c.means.map((m, k) => <li key={k} className="flex gap-2.5 text-sm leading-relaxed text-foreground/85"><Check size={17} strokeWidth={2.5} className="mt-0.5 flex-none text-emerald-500" /><span>{m}</span></li>)}
                     </ul>
                   </div>
-                  <div className="rounded-xl border border-rose-200 bg-rose-50/40 p-4">
+                  <div className="flex h-full flex-col rounded-xl border border-rose-200 bg-rose-50/40 p-4">
                     <p className="text-sm font-semibold uppercase tracking-wider text-rose-700">What it&apos;s not</p>
                     <ul className="mt-2.5 space-y-1.5">
-                      {c.notThis.map((m, k) => <li key={k} className="flex gap-2.5 text-sm text-foreground/85"><X size={17} strokeWidth={2.5} className="mt-0.5 flex-none text-rose-400" /><span>{m}</span></li>)}
+                      {c.notThis.map((m, k) => <li key={k} className="flex gap-2.5 text-sm leading-relaxed text-foreground/85"><X size={17} strokeWidth={2.5} className="mt-0.5 flex-none text-rose-400" /><span>{m}</span></li>)}
                     </ul>
                   </div>
                 </div>
@@ -316,15 +322,13 @@ export function ConceptDeck({ token }: { token: string }) {
                 </div>
 
                 <p className="mt-4 text-sm text-muted-foreground"><span className="font-semibold uppercase tracking-wider text-foreground/60">Why it matters: </span>{c.why}</p>
-              </div>
-            </section>
+            </Slide>
           );
         })}
 
         {/* Capstone slide */}
-        <section data-idx={capIdx} ref={setRef(capIdx)} className={slideCls}>
-          <div className="mx-auto w-full max-w-4xl">
-            <div className="rounded-2xl border p-5" style={{ background: 'linear-gradient(135deg, #10b9811f, #10b98108)', borderColor: '#10b98133' }}>
+        <Slide idx={capIdx} refCb={setRef}>
+            <div className="rounded-2xl border p-7" style={{ background: 'linear-gradient(135deg, #10b9811f, #10b98108)', borderColor: '#10b98133' }}>
               <div className="mb-2.5 flex items-center gap-3">
                 <span className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: '#10b98126', color: '#10b981' }}><ShieldCheck size={24} strokeWidth={2} /></span>
                 <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: '#10b9811a', color: '#10b981' }}>The payoff</span>
@@ -333,7 +337,7 @@ export function ConceptDeck({ token }: { token: string }) {
               <p className="mt-1 text-sm text-foreground/70">What can go wrong, and the three things that stop it</p>
             </div>
 
-            <p className="mt-4 text-base leading-relaxed text-foreground/80 sm:text-lg">
+            <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">
               Left unchecked, an LLM will sometimes produce a confident, fluent answer that is simply wrong — a
               &ldquo;hallucination&rdquo;. It is not lying; it is predicting plausible words past the edge of what it
               actually knows. You cannot switch this off, so a trustworthy system is built to make it rare and catchable.
@@ -342,16 +346,15 @@ export function ConceptDeck({ token }: { token: string }) {
 
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {GUARDRAILS.map((x) => (
-                <div key={x.g} className="rounded-xl border bg-card p-4">
+                <div key={x.g} className="flex h-full flex-col rounded-xl border bg-card p-4">
                   <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-800"><Check size={16} strokeWidth={3} className="text-emerald-500" />{x.g}</p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{x.t}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{x.t}</p>
                 </div>
               ))}
             </div>
 
             <p className="mt-4 text-base font-medium text-emerald-900">That is why you can trust the numbers it shows you.</p>
-          </div>
-        </section>
+        </Slide>
       </div>
 
       {/* Prev / Next */}
