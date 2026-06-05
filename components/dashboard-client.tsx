@@ -12,6 +12,7 @@
 
 import { CHART } from '@/lib/chart-palette';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -424,6 +425,7 @@ function StackedRibbon({ items, onSegmentClick }: { items: BarItem[]; onSegmentC
 }
 
 function DrillModal({ title, columns, data, seeAllHref, rowHref, onClose }: DrillState & { onClose: () => void }) {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -480,7 +482,7 @@ function DrillModal({ title, columns, data, seeAllHref, rowHref, onClose }: Dril
               </thead>
               <tbody className="divide-y">
                 {rows.map((r, i) => (
-                  <tr key={i} onClick={rowHref ? () => { window.location.href = rowHref(r); } : undefined} className={`align-top ${rowHref ? 'cursor-pointer hover:bg-muted/40' : ''}`}>
+                  <tr key={i} onClick={rowHref ? () => { onClose(); router.push(rowHref(r)); } : undefined} className={`align-top ${rowHref ? 'cursor-pointer hover:bg-muted/40' : ''}`}>
                     {columns.map((c) => <td key={c.key} className="py-1.5 pr-3">{c.render ? c.render(r[c.key], r) : String(r[c.key] ?? '')}</td>)}
                   </tr>
                 ))}
@@ -583,6 +585,7 @@ export function DashboardClient({
   recentlyAdded,
   activity: initialActivity,
 }: Props) {
+  const router = useRouter();
   const [drill, setDrill] = useState<DrillState | null>(null);
   const statusCol = (badge: (s: string) => string): DrillColumn => ({ key: 'status', label: 'Status', render: (v) => <span className={`inline-block rounded-full px-2 py-0.5 ${badge(String(v))}`}>{String(v)}</span> });
   const sevByLabel: Record<string, 'H' | 'M' | 'L'> = { High: 'H', Medium: 'M', Low: 'L' };
@@ -1111,7 +1114,7 @@ export function DashboardClient({
                   return (
                     <tr
                       key={h.id}
-                      onClick={() => { window.location.href = href; }}
+                      onClick={() => { router.push(href); }}
                       className="cursor-pointer transition hover:bg-muted/40"
                     >
                       <td className="px-3 py-2.5 text-muted-foreground tabular-nums">{idx + 1}</td>
