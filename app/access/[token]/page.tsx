@@ -53,8 +53,8 @@ export default async function RoleLandingPage({ params }: PageProps) {
         .from('projects')
         .select('id, code, name, client, segment, status, current_week, contract_value_current, approved_budget_current, contingency, hard_deadline_description, created_via, created_at')
         .order('code', { ascending: true }),
-      supabase.from('risks').select('project_id, status, impact, cross_cutting_class, owner'),
-      supabase.from('issues').select('project_id, severity, status, category, owner'),
+      supabase.from('risks').select('project_id, status, impact, cross_cutting_class, owner, description'),
+      supabase.from('issues').select('project_id, severity, status, category, owner, description'),
       supabase.from('variance_reports').select('project_id, report_week, cpi, spi, contingency_consumed_m'),
       supabase.from('change_orders').select('project_id, status, revenue_impact_m, margin_realized_pct'),
       supabase.from('portfolio_patterns').select('status, threshold_projects, supporting_projects, cross_cutting_class'),
@@ -87,8 +87,8 @@ export default async function RoleLandingPage({ params }: PageProps) {
     created_via: string | null;
     created_at: string;
   }>;
-  const risks = (risksRes.data ?? []) as Array<{ project_id: string; status: string; impact: string; cross_cutting_class: string; owner: string | null }>;
-  const issues = (issuesRes.data ?? []) as Array<{ project_id: string; severity: string; status: string; category: string; owner: string | null }>;
+  const risks = (risksRes.data ?? []) as Array<{ project_id: string; status: string; impact: string; cross_cutting_class: string; owner: string | null; description: string }>;
+  const issues = (issuesRes.data ?? []) as Array<{ project_id: string; severity: string; status: string; category: string; owner: string | null; description: string }>;
   const variance = (varianceRes.data ?? []) as Array<{ project_id: string; report_week: number; cpi: number | string; spi: number | string; contingency_consumed_m: number | string | null }>;
   const changeOrders = (changeOrdersRes.data ?? []) as Array<{ project_id: string; status: string; revenue_impact_m: number | string | null; margin_realized_pct: number | string | null }>;
   const patterns = (patternsRes.data ?? []) as Array<{ status: string; threshold_projects: number; supporting_projects: string[] | null; cross_cutting_class: string }>;
@@ -333,10 +333,34 @@ export default async function RoleLandingPage({ params }: PageProps) {
     else buckets['>100%']++;
   }
 
+  // Drill-down detail rows (shown in the dashboard insight popups).
+  const projMetaById = new Map<string, { code: string; name: string; segment: string }>();
+  for (const p of projects) projMetaById.set(p.id, { code: p.code, name: p.name, segment: p.segment });
+  const issue_rows = issues.map((i) => {
+    const m = projMetaById.get(i.project_id);
+    return { code: m?.code ?? '\u2014', project: m?.name ?? '\u2014', severity: i.severity, status: i.status, owner: i.owner ?? '\u2014', description: i.description };
+  });
+  const risk_rows = risks.map((r) => {
+    const m = projMetaById.get(r.project_id);
+    return { code: m?.code ?? '\u2014', project: m?.name ?? '\u2014', klass: r.cross_cutting_class, impact: r.impact, status: r.status, owner: r.owner ?? '\u2014', description: r.description };
+  });
+  const bandOf = (pct: number) => (pct < 25 ? '0-25%' : pct < 50 ? '25-50%' : pct < 75 ? '50-75%' : pct < 100 ? '75-100%' : '>100%');
+  const contingency_rows: PortfolioInsights['contingency_rows'] = [];
+  for (const p of projects) {
+    const budget = Number(p.contingency) || 0;
+    if (budget <= 0) continue;
+    const consumedM = latestVariance.get(p.id)?.contingency_m ?? 0;
+    const pct = ((consumedM * 1_000_000) / budget) * 100;
+    contingency_rows.push({ code: p.code, name: p.name, segment: p.segment, pct: Math.round(pct), consumedM, budgetM: budget / 1_000_000, band: bandOf(pct) });
+  }
+
   const insights: PortfolioInsights = {
     risk_class_counts: riskClassCounts,
     issue_severity_counts: issueSeverityCounts,
     contingency_buckets: buckets,
+    issue_rows,
+    risk_rows,
+    contingency_rows,
   };
 
   // -------- Hot 5 — top projects of concern --------

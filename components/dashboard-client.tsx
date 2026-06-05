@@ -11,11 +11,12 @@
  */
 
 import { CHART } from '@/lib/chart-palette';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
+import { issueBadge, riskBadge } from '@/lib/badge-styles';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { ActionRibbon } from '@/components/action-ribbon';
 import type { PortfolioEv } from '@/lib/earned-value';
@@ -72,10 +73,16 @@ export interface SegmentSummary {
   margin_pct: number | null;
 }
 
+export interface DrillIssue { code: string; project: string; severity: string; status: string; owner: string; description: string; }
+export interface DrillRisk { code: string; project: string; klass: string; impact: string; status: string; owner: string; description: string; }
+export interface DrillContingency { code: string; name: string; segment: string; pct: number; consumedM: number; budgetM: number; band: string; }
 export interface PortfolioInsights {
   risk_class_counts: Record<string, number>;
   issue_severity_counts: Record<string, number>;
   contingency_buckets: Record<string, number>;
+  issue_rows: DrillIssue[];
+  risk_rows: DrillRisk[];
+  contingency_rows: DrillContingency[];
 }
 
 export interface HotItem {
@@ -354,14 +361,14 @@ function LifecycleBar({
 
 interface BarItem { label: string; value: number; color: string; }
 
-function MiniBarChart({ items, maxLabelWidth = 'flex-1', wrapLabels = false, fill = false }: { items: BarItem[]; maxLabelWidth?: string; wrapLabels?: boolean; fill?: boolean }) {
+function MiniBarChart({ items, maxLabelWidth = 'flex-1', wrapLabels = false, fill = false, onItemClick }: { items: BarItem[]; maxLabelWidth?: string; wrapLabels?: boolean; fill?: boolean; onItemClick?: (label: string) => void }) {
   const max = Math.max(...items.map((i) => i.value), 1);
   return (
     <div className={fill ? 'flex h-full flex-1 flex-col justify-between gap-2' : 'space-y-2'}>
       {items.map((item) => {
         const pct = (item.value / max) * 100;
         return (
-          <div key={item.label} className="flex items-center gap-3 text-xs">
+          <div key={item.label} onClick={onItemClick ? () => onItemClick(item.label) : undefined} className={`flex items-center gap-3 text-xs ${onItemClick ? 'cursor-pointer rounded hover:bg-muted/40' : ''}`}>
             <div className={`${maxLabelWidth} ${wrapLabels ? 'whitespace-normal leading-tight' : 'truncate'} text-muted-foreground`} title={item.label}>{item.label}</div>
             <div className="relative h-5 flex-[2] overflow-hidden rounded bg-muted">
               <div className="h-full rounded transition-all" style={{ width: `${pct}%`, backgroundColor: item.color }} />
@@ -376,7 +383,7 @@ function MiniBarChart({ items, maxLabelWidth = 'flex-1', wrapLabels = false, fil
 
 /** Stacked proportion ribbon — one bar split by share of total, with a legend below.
  *  Items should be ordered good -> bad (left -> right) for a consistent health read. */
-function StackedRibbon({ items }: { items: BarItem[] }) {
+function StackedRibbon({ items, onSegmentClick }: { items: BarItem[]; onSegmentClick?: (label: string) => void }) {
   const total = items.reduce((a, i) => a + i.value, 0) || 1;
   return (
     <div>
@@ -387,9 +394,10 @@ function StackedRibbon({ items }: { items: BarItem[] }) {
           return (
             <div
               key={item.label}
-              className="flex items-center justify-center text-[11px] font-semibold tabular-nums"
+              onClick={onSegmentClick ? () => onSegmentClick(item.label) : undefined}
+              className={`flex items-center justify-center text-[11px] font-semibold tabular-nums ${onSegmentClick ? 'cursor-pointer' : ''}`}
               style={{ width: `${pct}%`, backgroundColor: item.color, color: 'rgba(0,0,0,0.7)' }}
-              title={`${item.label}: ${item.value}`}
+              title={onSegmentClick ? `View ${item.label} (${item.value})` : `${item.label}: ${item.value}`}
             >
               {pct >= 14 ? item.value : ''}
             </div>
@@ -398,11 +406,52 @@ function StackedRibbon({ items }: { items: BarItem[] }) {
       </div>
       <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5">
         {items.map((item) => (
-          <span key={item.label} className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span key={item.label} onClick={onSegmentClick ? () => onSegmentClick(item.label) : undefined} className={`inline-flex items-center gap-1.5 text-[11px] text-muted-foreground ${onSegmentClick ? 'cursor-pointer hover:text-foreground' : ''}`}>
             <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
             {item.label} <span className="font-medium tabular-nums text-foreground">{item.value}</span>
           </span>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function DrillModal({ title, sub, headers, rows, onClose }: { title: string; sub?: string; headers: string[]; rows: ReactNode[][]; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8" onClick={onClose}>
+      <div className="mt-6 w-full max-w-3xl rounded-xl border bg-card shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3 border-b px-5 py-3">
+          <div>
+            <p className="text-sm font-semibold">{title}</p>
+            {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+          </div>
+          <button type="button" onClick={onClose} className="rounded-md px-2 py-0.5 text-sm text-muted-foreground hover:bg-muted" aria-label="Close">&times;</button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-5 py-3">
+          {rows.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">No records.</p>
+          ) : (
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                  {headers.map((h) => <th key={h} className="py-1.5 pr-3 font-medium">{h}</th>)}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {rows.map((r, i) => (
+                  <tr key={i} className="align-top">
+                    {r.map((c, j) => <td key={j} className="py-1.5 pr-3">{c}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -493,6 +542,33 @@ export function DashboardClient({
   recentlyAdded,
   activity: initialActivity,
 }: Props) {
+  const [drill, setDrill] = useState<{ title: string; sub?: string; headers: string[]; rows: ReactNode[][] } | null>(null);
+  const sevByLabel: Record<string, 'H' | 'M' | 'L'> = { High: 'H', Medium: 'M', Low: 'L' };
+  function openIssuesDrill(label: string) {
+    const sev = sevByLabel[label];
+    const rows = insights.issue_rows.filter((r) => r.severity === sev);
+    setDrill({
+      title: `${rows.length} ${label.toLowerCase()}-severity issue${rows.length === 1 ? '' : 's'}`,
+      headers: ['Project', 'Issue', 'Owner', 'Status'],
+      rows: rows.map((r) => [r.code, r.description, r.owner, <span key="s" className={`inline-block rounded-full px-2 py-0.5 ${issueBadge(r.status)}`}>{r.status}</span>]),
+    });
+  }
+  function openRisksDrill(klass: string) {
+    const rows = insights.risk_rows.filter((r) => r.klass === klass);
+    setDrill({
+      title: `${rows.length} risk${rows.length === 1 ? '' : 's'} · ${klass}`,
+      headers: ['Project', 'Risk', 'Owner', 'Impact', 'Status'],
+      rows: rows.map((r) => [r.code, r.description, r.owner, r.impact, <span key="s" className={`inline-block rounded-full px-2 py-0.5 ${riskBadge(r.status)}`}>{r.status}</span>]),
+    });
+  }
+  function openContingencyDrill(band: string) {
+    const rows = insights.contingency_rows.filter((r) => r.band === band).sort((a, b) => b.pct - a.pct);
+    setDrill({
+      title: `${rows.length} project${rows.length === 1 ? '' : 's'} · ${band} contingency used`,
+      headers: ['Project', 'Segment', 'Used', 'Consumed / budget'],
+      rows: rows.map((r) => [`${r.name} (${r.code})`, r.segment, `${r.pct}%`, `$${r.consumedM.toFixed(2)}M / $${r.budgetM.toFixed(1)}M`]),
+    });
+  }
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
@@ -908,7 +984,7 @@ export function DashboardClient({
               <h3 className="text-base font-semibold">Risks by category</h3>
               <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total</span>
             </div>
-            <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels fill />
+            <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels fill onItemClick={openRisksDrill} />
           </div>
           <div className="flex flex-col gap-4">
           <div className="rounded-lg border bg-card p-4">
@@ -916,7 +992,7 @@ export function DashboardClient({
               <h3 className="text-base font-semibold">Issues by severity</h3>
               <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.issue_severity_counts).reduce((a, b) => a + b, 0)} total</span>
             </div>
-            <StackedRibbon items={issueBars} />
+            <StackedRibbon items={issueBars} onSegmentClick={openIssuesDrill} />
             <p className="mt-3 text-xs text-muted-foreground">
               {insights.issue_severity_counts.H ?? 0} high-severity items currently in flight.
             </p>
@@ -926,7 +1002,7 @@ export function DashboardClient({
               <h3 className="text-base font-semibold">Contingency consumption</h3>
               <span className="text-xs text-muted-foreground">projects by % of contingency used</span>
             </div>
-            <StackedRibbon items={contingencyBars} />
+            <StackedRibbon items={contingencyBars} onSegmentClick={openContingencyDrill} />
             <p className="mt-3 text-xs text-muted-foreground">
               Each band is a project&rsquo;s contingency drawn as a share of its contingency budget.
             </p>
@@ -934,6 +1010,10 @@ export function DashboardClient({
           </div>
         </div>
       </section>
+
+      {drill && (
+        <DrillModal title={drill.title} sub={drill.sub} headers={drill.headers} rows={drill.rows} onClose={() => setDrill(null)} />
+      )}
 
       {/* HOT 5 — projects needing attention */}
       {hotItems.length > 0 && (
