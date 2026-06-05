@@ -902,14 +902,15 @@ export function DashboardClient({
       {/* INSIGHTS — 3 mini charts */}
       <section>
         <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio insights</h2>
-        <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border bg-card p-4 md:col-span-2">
+        <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="rounded-lg border bg-card p-4">
             <div className="mb-3 flex items-baseline justify-between">
               <h3 className="text-base font-semibold">Risks by category</h3>
               <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total</span>
             </div>
             <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels />
           </div>
+          <div className="flex flex-col gap-4">
           <div className="rounded-lg border bg-card p-4">
             <div className="mb-3 flex items-baseline justify-between">
               <h3 className="text-base font-semibold">Issues by severity</h3>
@@ -929,6 +930,7 @@ export function DashboardClient({
             <p className="mt-3 text-xs text-muted-foreground">
               Each band is a project&rsquo;s contingency drawn as a share of its contingency budget.
             </p>
+          </div>
           </div>
         </div>
       </section>
