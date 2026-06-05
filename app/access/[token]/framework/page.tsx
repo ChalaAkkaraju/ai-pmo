@@ -41,7 +41,7 @@ export default async function FrameworkPage({ params }: PageProps) {
       </p>
 
       <div className="mt-6">
-        <FrameworkMatrix />
+        <FrameworkMatrix token={token} />
       </div>
 
       <p className="mt-5 max-w-3xl rounded-lg border bg-muted/30 px-4 py-3 text-[13px] text-muted-foreground">
