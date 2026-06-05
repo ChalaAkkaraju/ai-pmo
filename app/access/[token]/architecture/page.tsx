@@ -96,7 +96,7 @@ export default async function ArchitecturePage({ params }: PageProps) {
         <img
           src="/ai-pmo-process-flow.svg"
           alt="End-to-end process flowchart from booking: CRM/CPQ origin, project booked, AI drafts the plan, WBS approval decision, book WBS to SAP PS, publish WBS to scheduler, parallel SAP PS cost and scheduler progress lanes merging on the WBS code, AI PMO ingest, exception decision, earned value, synthesis, brief approval, assign actions, project-complete decision looping each reporting cycle, and closeout."
-          className="mx-auto block min-w-[700px] max-w-[760px]"
+          className="mx-auto block min-w-[760px] max-w-[820px]"
         />
       </div>
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
