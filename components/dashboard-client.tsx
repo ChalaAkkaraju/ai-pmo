@@ -158,6 +158,7 @@ interface Props {
   operational: OperationalKpis;
   roleKpis: RoleKpiStrip | null;
   insights: PortfolioInsights;
+  evProjectRows: Array<{ code: string; name: string; segment: string; cpi: number | null; spi: number | null }>;
   hotItems: HotItem[];
   segmentSummaries: SegmentSummary[];
   projects: DashboardProject[];
@@ -504,7 +505,7 @@ function DrillModal({ title, columns, data, seeAllHref, rowHref, onClose }: Dril
 // Main
 // =============================================================================
 
-function PortfolioEvBand({ ev }: { ev: PortfolioEv }) {
+function PortfolioEvBand({ ev, onBehindClick, onOverClick }: { ev: PortfolioEv; onBehindClick?: () => void; onOverClick?: () => void }) {
   const money = (n: number | null) => {
     if (n == null) return '\u2014';
     const m = n / 1_000_000;
@@ -540,8 +541,8 @@ function PortfolioEvBand({ ev }: { ev: PortfolioEv }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {(sched || cost) && <span className={`rounded-full px-3 py-1 text-xs font-medium ${chip}`}>{readout}</span>}
-          {ev.behind_count > 0 && <span className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700">{ev.behind_count} behind</span>}
-          {ev.over_count > 0 && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700">{ev.over_count} over cost</span>}
+          {ev.behind_count > 0 && <button type="button" onClick={onBehindClick} className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700 transition hover:bg-red-100">{ev.behind_count} behind</button>}
+          {ev.over_count > 0 && <button type="button" onClick={onOverClick} className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 transition hover:bg-amber-100">{ev.over_count} over cost</button>}
         </div>
       </div>
 
@@ -579,6 +580,7 @@ export function DashboardClient({
   operational,
   roleKpis,
   insights,
+  evProjectRows,
   hotItems,
   segmentSummaries,
   projects,
@@ -662,6 +664,14 @@ export function DashboardClient({
       data,
       rowHref: (r) => `/access/${token}/projects/${r.code}`,
     });
+  }
+  function openBehindDrill() {
+    const data = evProjectRows.filter((r) => r.spi != null && r.spi < 0.97).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => (a.spi ?? 9) - (b.spi ?? 9));
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} behind schedule · SPI < 0.97`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=ev` });
+  }
+  function openOverDrill() {
+    const data = evProjectRows.filter((r) => r.cpi != null && r.cpi < 0.97).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => (a.cpi ?? 9) - (b.cpi ?? 9));
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} over cost · CPI < 0.97`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=ev` });
   }
 
   // Always-visible global project search (separate from the segment
@@ -947,7 +957,7 @@ export function DashboardClient({
                 const maxCount = Math.max(...segmentSummaries.map((x) => x.project_count), 1);
                 const pct = Math.round((s.project_count / maxCount) * 100);
                 return (
-                  <div key={s.segment}>
+                  <div key={s.segment} onClick={() => openSegmentDrill(s.segment)} className="cursor-pointer rounded-md p-1.5 -m-1.5 transition hover:bg-muted/40">
                     <div className="mb-1.5 flex items-baseline justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: ss.hex }}>
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ss.hex }} />
@@ -1015,7 +1025,7 @@ export function DashboardClient({
           structure together. Computed from the canonical model (sum of
           BAC/PV/EV/AC across projects, indices recomputed from the totals). */}
       {portfolioEv && portfolioEv.ready && (
-        <PortfolioEvBand ev={portfolioEv} />
+        <PortfolioEvBand ev={portfolioEv} onBehindClick={openBehindDrill} onOverClick={openOverDrill} />
       )}
 
       {/* Role-specific KPI strip — shown only for roles with a tailored set.

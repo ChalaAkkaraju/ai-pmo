@@ -571,6 +571,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
   // canonical model). Resilient: tables exist only after migration 0017, and
   // WBS codes are unique only within a project, so we group by project_id and
   // compute each project's EV before rolling the dollar totals up. --------
+  const evProjectRows: Array<{ code: string; name: string; segment: string; cpi: number | null; spi: number | null }> = [];
   let portfolioEv: PortfolioEv | null = null;
   try {
     const [wpRes, taskRes, costRes] = await Promise.all([
@@ -598,7 +599,12 @@ export default async function RoleLandingPage({ params }: PageProps) {
         const leaves = rows.filter((w) => w.parent_wbs_code).map((w) => ({ wbs_code: w.wbs_code, budget_bac: w.budget_bac }));
         const tasksForP = (tkByP.get(pid) ?? []).map((t) => ({ wbs_code: t.wbs_code, percent_complete: t.percent_complete }));
         const costForP = (cstByP.get(pid) ?? []).map((c) => ({ actual_cost: c.actual_cost, planned_value: c.planned_value }));
-        return computeEv(leaves, tasksForP, costForP);
+        const m = computeEv(leaves, tasksForP, costForP);
+        if (m.ready) {
+          const meta = projMetaById.get(pid);
+          if (meta) evProjectRows.push({ code: meta.code, name: meta.name, segment: meta.segment, cpi: m.cpi, spi: m.spi });
+        }
+        return m;
       });
       portfolioEv = rollUpEv(perProject);
     }
@@ -625,6 +631,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
       allowedAgentCount={resolved.definition.allowed_agents.length}
       kpis={kpis}
       portfolioEv={portfolioEv}
+      evProjectRows={evProjectRows}
       roleId={resolved.role.id}
       workspaceActivity={workspaceActivity}
       operational={operational}
