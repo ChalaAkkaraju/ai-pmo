@@ -1,4 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 1690" width="820" height="1690" font-family="Inter,Arial,sans-serif"><defs><marker id="ah" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 1736" width="820" height="1736" font-family="Inter,Arial,sans-serif"><defs><marker id="ah" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+<g>
+<rect x="40" y="18" width="13" height="13" rx="2" fill="#97C459"/>
+<text x="59" y="29" font-family="Inter,Arial,sans-serif" font-size="12" fill="#475569">AI PMO</text>
+<rect x="130" y="18" width="13" height="13" rx="2" fill="#85B7EB"/>
+<text x="149" y="29" font-family="Inter,Arial,sans-serif" font-size="12" fill="#475569">SAP PS</text>
+<rect x="222" y="18" width="13" height="13" rx="2" fill="#FAC775"/>
+<text x="241" y="29" font-family="Inter,Arial,sans-serif" font-size="12" fill="#475569">Scheduler</text>
+<rect x="330" y="18" width="13" height="13" rx="2" fill="#AFA9EC"/>
+<text x="349" y="29" font-family="Inter,Arial,sans-serif" font-size="12" fill="#475569">Human-in-the-loop</text>
+<rect x="492" y="18" width="13" height="13" rx="2" fill="#CBD5E1"/>
+<text x="511" y="29" font-family="Inter,Arial,sans-serif" font-size="12" fill="#475569">CRM / CPQ · out of scope</text>
+</g>
+<g transform="translate(0,46)">
 <rect x="30" y="50" width="6" height="182" rx="3" fill="#CBD5E1"/><text transform="rotate(-90 20 141.0)" x="20" y="141.0" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="600" letter-spacing="0.5" fill="#64748b">Commercial origin</text>
 <rect x="30" y="266" width="6" height="436" rx="3" fill="#97C459"/><text transform="rotate(-90 20 484.0)" x="20" y="484.0" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="600" letter-spacing="0.5" fill="#64748b">Setup &amp; authoring</text>
 <rect x="30" y="716" width="6" height="272" rx="3" fill="#85B7EB"/><text transform="rotate(-90 20 852.0)" x="20" y="852.0" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="600" letter-spacing="0.5" fill="#64748b">Execution</text>
@@ -74,4 +87,5 @@
 <rect x="270" y="1452" width="280" height="50" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/><text x="410" y="1474" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#534AB7">Broadcast the brief</text><text x="410" y="1491" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">dashboard · pinned brief · alerts</text>
 <polygon points="410,1526.0 520.0,1554 410,1582.0 300.0,1554" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/><text x="410" y="1558" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#334155">Project complete?</text>
 <rect x="270" y="1614" width="280" height="46" rx="23.0" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/><text x="410" y="1634" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#334155">Closeout</text><text x="410" y="1651" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">lessons learned · final report</text>
+</g>
 </svg>

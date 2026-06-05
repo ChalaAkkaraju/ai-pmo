@@ -22,14 +22,6 @@ const KEY = [
   { c: '#D3D1C7', t: 'CRM / CPQ', d: 'Out of integration scope; as-sold baseline crosses at booking' },
 ];
 
-const FLOW_KEY = [
-  { c: '#97C459', t: 'AI PMO' },
-  { c: '#85B7EB', t: 'SAP PS — ERP' },
-  { c: '#FAC775', t: 'Scheduler' },
-  { c: '#AFA9EC', t: 'Human-in-the-loop' },
-  { c: '#CBD5E1', t: 'CRM / CPQ · out of scope' },
-];
-
 export default async function ArchitecturePage({ params }: PageProps) {
   const { token } = await params;
   const resolved = await resolveRoleFromToken(token);
@@ -98,14 +90,6 @@ export default async function ArchitecturePage({ params }: PageProps) {
           alt="End-to-end process flowchart from booking: CRM/CPQ origin, project booked, AI drafts the plan, WBS approval decision, book WBS to SAP PS, publish WBS to scheduler, parallel SAP PS cost and scheduler progress lanes merging on the WBS code, AI PMO ingest, exception decision, earned value, synthesis, brief approval, assign actions, project-complete decision looping each reporting cycle, and closeout."
           className="mx-auto block min-w-[760px] max-w-[820px]"
         />
-      </div>
-      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-        {FLOW_KEY.map((k) => (
-          <div key={k.t} className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: k.c }} />
-            <p className="text-xs text-muted-foreground">{k.t}</p>
-          </div>
-        ))}
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
