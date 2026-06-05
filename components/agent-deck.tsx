@@ -244,12 +244,13 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           ref={(el) => {
             slideRefs.current[0] = el;
           }}
-          className="flex h-full min-h-full w-full min-w-full flex-none snap-start items-start justify-center overflow-y-auto px-6 py-6"
+          className="h-full min-h-full w-full min-w-full flex-none snap-start overflow-y-auto px-6 py-10"
         >
-          <div className="mx-auto w-full max-w-4xl">
+          <div className="mx-auto flex min-h-full w-full max-w-4xl items-center">
+          <div className="w-full">
             {/* Hero band */}
             <div
-              className="rounded-2xl border p-5"
+              className="rounded-2xl border p-7"
               style={{
                 background: 'linear-gradient(135deg, rgba(100,116,139,0.16), rgba(100,116,139,0.05))',
                 borderColor: 'rgba(100,116,139,0.25)',
@@ -266,7 +267,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               <h1 className="text-3xl font-bold tracking-tight text-foreground">
                 Fourteen specialists, one assistant
               </h1>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/80 sm:text-base">
+              <p className="mt-2 max-w-3xl text-base leading-relaxed text-foreground/80 text-justify">
                 Ask in plain English. The assistant routes you to the right specialist, which returns a
                 draft grounded in PMBOK standards — with every assumption flagged for your review. It
                 supports your judgment rather than replacing it.
@@ -340,6 +341,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               </span>
             </div>
           </div>
+          </div>
         </section>
 
         {/* Slide 1 — how to work with the assistant */}
@@ -349,12 +351,13 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
           ref={(el) => {
             slideRefs.current[1] = el;
           }}
-          className="flex h-full min-h-full w-full min-w-full flex-none snap-start items-start justify-center overflow-y-auto px-6 py-6"
+          className="h-full min-h-full w-full min-w-full flex-none snap-start overflow-y-auto px-6 py-10"
         >
-          <div className="mx-auto w-full max-w-4xl">
+          <div className="mx-auto flex min-h-full w-full max-w-4xl items-center">
+          <div className="w-full">
             {/* Hero band */}
             <div
-              className="rounded-2xl border p-5"
+              className="rounded-2xl border p-7"
               style={{
                 background: 'linear-gradient(135deg, rgba(14,165,233,0.16), rgba(14,165,233,0.05))',
                 borderColor: 'rgba(14,165,233,0.25)',
@@ -371,7 +374,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               <h1 className="text-3xl font-bold tracking-tight text-foreground">
                 Working with the assistant
               </h1>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/80 sm:text-base">
+              <p className="mt-2 max-w-3xl text-base leading-relaxed text-foreground/80 text-justify">
                 Four things to know: how to ask, how a quick answer becomes a full report, how the
                 assistant hands work to your colleagues, and when to let it choose the specialist for you.
               </p>
@@ -380,7 +383,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
             {/* Four workflow cards */}
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {/* 1. Ask from anywhere */}
-              <div className="rounded-xl border bg-card p-4">
+              <div className="flex h-full flex-col rounded-xl border bg-card p-4">
                 <div className="flex items-center gap-2.5">
                   <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-sky-100 text-sky-700">
                     <MessageCircle size={17} strokeWidth={2.5} />
@@ -395,7 +398,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               </div>
 
               {/* 2. Auto vs specific */}
-              <div className="rounded-xl border bg-card p-4">
+              <div className="flex h-full flex-col rounded-xl border bg-card p-4">
                 <div className="flex items-center gap-2.5">
                   <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-violet-100 text-violet-700">
                     <Sparkles size={17} strokeWidth={2.5} />
@@ -410,7 +413,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               </div>
 
               {/* 3. Pop out + full report */}
-              <div className="rounded-xl border bg-card p-4">
+              <div className="flex h-full flex-col rounded-xl border bg-card p-4">
                 <div className="flex items-center gap-2.5">
                   <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-amber-100 text-amber-700">
                     <FileCheck size={17} strokeWidth={2.5} />
@@ -425,7 +428,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               </div>
 
               {/* 4. Assign actions */}
-              <div className="rounded-xl border bg-card p-4">
+              <div className="flex h-full flex-col rounded-xl border bg-card p-4">
                 <div className="flex items-center gap-2.5">
                   <span className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-rose-100 text-rose-700">
                     <GitPullRequest size={17} strokeWidth={2.5} />
@@ -454,6 +457,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800">They respond</span>
             </div>
           </div>
+          </div>
         </section>
 
         {/* Agent slides */}
@@ -469,12 +473,13 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
               ref={(el) => {
                 slideRefs.current[slideIdx] = el;
               }}
-              className="flex h-full min-h-full w-full min-w-full flex-none snap-start items-start justify-center overflow-y-auto px-6 py-6"
+              className="h-full min-h-full w-full min-w-full flex-none snap-start overflow-y-auto px-6 py-10"
             >
-              <div className="mx-auto w-full max-w-4xl">
+              <div className="mx-auto flex min-h-full w-full max-w-4xl items-center">
+          <div className="w-full">
                 {/* Hero band — scope-tinted gradient with icon + badge + name */}
                 <div
-                  className="rounded-2xl border p-5"
+                  className="rounded-2xl border p-7"
                   style={{
                     background: `linear-gradient(135deg, ${s.accent}1f, ${s.accent}08)`,
                     borderColor: `${s.accent}33`,
@@ -497,7 +502,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
                 </div>
 
                 {/* Plain-English explanation — the main reading content */}
-                <p className="mt-4 text-base leading-relaxed text-foreground/80 sm:text-lg">
+                <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">
                   {entry.plain}
                 </p>
 
@@ -506,7 +511,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
 
                 {/* Does / Doesn't — two columns with check / cross icons */}
                 <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
+                  <div className="flex h-full flex-col rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
                     <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
                       Does well
                     </p>
@@ -520,7 +525,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
                     </ul>
                   </div>
 
-                  <div className="rounded-xl border border-rose-200 bg-rose-50/40 p-4">
+                  <div className="flex h-full flex-col rounded-xl border border-rose-200 bg-rose-50/40 p-4">
                     <p className="text-sm font-semibold uppercase tracking-wider text-rose-700">
                       Doesn&apos;t do
                     </p>
@@ -551,6 +556,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
                   <span className="font-semibold uppercase tracking-wider text-foreground/60">Based on: </span>
                   {entry.methodology}
                 </p>
+              </div>
               </div>
             </section>
           );
