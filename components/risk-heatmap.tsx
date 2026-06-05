@@ -1,5 +1,6 @@
-import { riskDot } from '@/lib/badge-styles';
 'use client';
+
+import { riskDot } from '@/lib/badge-styles';
 
 /**
  * 3×3 Probability × Impact risk heat map.
