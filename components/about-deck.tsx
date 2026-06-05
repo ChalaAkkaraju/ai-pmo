@@ -12,7 +12,7 @@ import Link from 'next/link';
 import {
   Sparkles, Database, CalendarClock, ArrowDown, Check, X, Boxes, MessagesSquare,
   FilePlus2, ListChecks, TrendingUp, Link2, Wand2, Target, Brain, Bot, Puzzle,
-  Workflow, Scale, ChevronLeft, ChevronRight, type LucideIcon,
+  Workflow, Scale, GitCompare, ChevronLeft, ChevronRight, type LucideIcon,
 } from 'lucide-react';
 
 const LAYER_OUTPUTS = ['earned value', 'risk & change synthesis', 'portfolio patterns', 'status narrative', 'recommendations'];
@@ -98,6 +98,7 @@ const SLIDES: Array<{ label: string; accent: string }> = [
   { label: 'What it is / isn’t', accent: '#64748b' },
   { label: 'The differentiator', accent: '#8b5cf6' },
   { label: 'The agents', accent: '#8b5cf6' },
+  { label: 'vs SAP', accent: '#0ea5e9' },
   { label: 'What you can do', accent: '#2563eb' },
 ];
 
@@ -422,8 +423,29 @@ export function AboutDeck({ token }: { token: string }) {
           <Link href={`/access/${token}/agents`} className="mt-5 inline-flex rounded-full border px-4 py-1.5 text-sm font-medium transition hover:bg-muted hover:border-foreground/20">Meet the 14 agents →</Link>
         </Slide>
 
-        {/* 9 — Capabilities */}
+        {/* 9 — vs SAP */}
         <Slide idx={9} refCb={setRef}>
+          <Hero Icon={GitCompare} label="Positioning" accent="#0ea5e9" title="How we compare to SAP's own agents" tagline="SAP is building agents too — here is where AI PMO fits" />
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">SAP is investing heavily in AI agents — more than 30 already, with hundreds planned. But they run inside SAP&apos;s own systems and automate tasks within them. The one closest to AI PMO is SAP&apos;s Project Setup Agent, which speeds up standing a project up inside S/4HANA. What none of them do is the cross-system synthesis at the heart of AI PMO — joining cost in SAP with a schedule that lives in a separate tool. That makes AI PMO complementary to SAP, not a competitor.</p>
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="flex h-full flex-col rounded-xl border border-sky-200 bg-sky-50/40 p-5">
+              <p className="text-sm font-semibold text-sky-800">What SAP ships</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">30+ agents embedded across finance, procurement, supply chain and HR — plus a Project Setup Agent for S/4HANA projects.</p>
+            </div>
+            <div className="flex h-full flex-col rounded-xl border border-emerald-200 bg-emerald-50/40 p-5">
+              <p className="text-sm font-semibold text-emerald-800">What is distinct here</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">Earned value, schedule reasoning, risk and status — synthesised across SAP and your separate scheduler, which no in-SAP agent can reach.</p>
+            </div>
+            <div className="flex h-full flex-col rounded-xl border border-violet-200 bg-violet-50/40 p-5">
+              <p className="text-sm font-semibold text-violet-800">Why complementary</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">SAP&apos;s agents assume everything lives in S/4. AI PMO fills the gap when cost is in SAP PS but the schedule is in P6 or MS Project.</p>
+            </div>
+          </div>
+          <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">Sources: SAP News (Connect 2025, Sapphire 2026), sap.com, SAP Community — as of June 2026. <Link href={`/access/${token}/technical`} className="font-medium text-sky-700 hover:underline">See the detailed agent-by-agent comparison →</Link></p>
+        </Slide>
+
+        {/* 10 — Capabilities */}
+        <Slide idx={10} refCb={setRef}>
           <Hero Icon={Boxes} label="In the app" accent="#2563eb" title="What you can do here" />
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {CAPABILITIES.map((c) => (

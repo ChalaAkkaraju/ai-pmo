@@ -26,6 +26,7 @@ const LEARN_LINKS: Array<{ path: string; label: string }> = [
   { path: 'framework', label: 'PMBOK coverage' },
   { path: 'agents', label: 'The 14 agents' },
   { path: 'concepts', label: 'AI concepts' },
+  { path: 'technical', label: 'Technical notes' },
 ];
 
 export function Header({ token, resolved }: { token: string; resolved: ResolvedRole }) {
