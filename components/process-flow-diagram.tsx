@@ -107,7 +107,7 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
       <p className="mb-2 text-xs text-muted-foreground">Tip: click any green agent box to see what that agent does.</p>
       <div className="overflow-x-auto rounded-xl border bg-card p-4">
         {svg ? (
-          <div ref={ref} className="mx-auto min-w-[1040px] max-w-[1300px]" dangerouslySetInnerHTML={{ __html: svg }} />
+          <div ref={ref} className="mx-auto min-w-[760px] max-w-[820px]" dangerouslySetInnerHTML={{ __html: svg }} />
         ) : (
           <div className="flex min-h-[300px] items-center justify-center text-sm text-muted-foreground">Loading diagram…</div>
         )}
