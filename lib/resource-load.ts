@@ -1,7 +1,7 @@
 /**
  * Resource-load engine — Phase 4 (visibility, not levelling).
  *
- * Resource assignments are mirrored from the scheduler (Dataverse / P6). We
+ * Resource assignments are mirrored from the scheduler (Microsoft Project / P6). We
  * aggregate planned hours into FTE demand per discipline (resource_role) per
  * month, compare against a portfolio capacity per discipline, and flag months
  * where demand exceeds capacity. We do NOT level — that stays in the scheduler.

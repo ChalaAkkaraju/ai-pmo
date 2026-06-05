@@ -51,7 +51,7 @@ export function ResourceLoadPanel({
       <section className="rounded-lg border bg-card p-6 text-center">
         <p className="text-sm font-medium">No resource assignments yet.</p>
         <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
-          Resource demand is mirrored from the scheduler (Dataverse / P6). Run the resource sync to populate it.
+          Resource demand is mirrored from the scheduler (Microsoft Project / P6). Run the resource sync to populate it.
         </p>
       </section>
     );

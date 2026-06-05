@@ -34,7 +34,7 @@ function money(n: number | null): string {
 }
 
 function sourceLabel(s: string): string {
-  return s === 'SAP_PS' ? 'SAP PS' : s === 'DATAVERSE' ? 'Dataverse' : s === 'P6' ? 'Primavera P6' : 'App';
+  return s === 'SAP_PS' ? 'SAP PS' : s === 'MS_PROJECT' ? 'Microsoft Project' : s === 'P6' ? 'Primavera P6' : 'App';
 }
 
 export function WbsCanonicalTree({ workPackages, mode = 'synced' }: { workPackages: WorkPackage[]; mode?: 'synced' | 'proposed' }) {

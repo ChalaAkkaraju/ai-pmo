@@ -8,7 +8,7 @@
 -- (is_app_native = true, source_system = 'APP') are the ones the app itself
 -- creates today.
 --
---   source_system : 'APP' | 'SAP_PS' | 'DATAVERSE' | 'P6'
+--   source_system : 'APP' | 'SAP_PS' | 'MS_PROJECT' | 'P6'
 --   external_id   : the id in the source system (for idempotent sync)
 --   synced_at     : when the row was last refreshed from its source
 --
@@ -30,7 +30,7 @@ create table if not exists work_packages (
   is_billing_element boolean not null default false,
   budget_bac numeric(15, 2),
   target_finish date,
-  source_system text not null default 'APP' check (source_system in ('APP', 'SAP_PS', 'DATAVERSE', 'P6')),
+  source_system text not null default 'APP' check (source_system in ('APP', 'SAP_PS', 'MS_PROJECT', 'P6')),
   external_id text,
   synced_at timestamptz,
   is_app_native boolean not null default true,
@@ -40,7 +40,7 @@ create table if not exists work_packages (
 create index if not exists work_packages_project_idx on work_packages(project_id);
 create index if not exists work_packages_wbs_idx on work_packages(project_id, wbs_code);
 
--- Tasks — schedule activities, sourced from the scheduler (Dataverse / P6).
+-- Tasks — schedule activities, sourced from the scheduler (Microsoft Project / P6).
 create table if not exists tasks (
   id uuid primary key default uuid_generate_v4(),
   project_id uuid not null references projects(id) on delete cascade,
@@ -54,7 +54,7 @@ create table if not exists tasks (
   predecessors text,
   is_critical boolean not null default false,
   owner_role_type text,
-  source_system text not null default 'APP' check (source_system in ('APP', 'SAP_PS', 'DATAVERSE', 'P6')),
+  source_system text not null default 'APP' check (source_system in ('APP', 'SAP_PS', 'MS_PROJECT', 'P6')),
   external_id text,
   synced_at timestamptz,
   is_app_native boolean not null default true,
@@ -74,7 +74,7 @@ create table if not exists milestones (
   is_contractual boolean not null default false,
   achieved boolean not null default false,
   achieved_date date,
-  source_system text not null default 'APP' check (source_system in ('APP', 'SAP_PS', 'DATAVERSE', 'P6')),
+  source_system text not null default 'APP' check (source_system in ('APP', 'SAP_PS', 'MS_PROJECT', 'P6')),
   external_id text,
   synced_at timestamptz,
   created_at timestamptz not null default now()
@@ -90,7 +90,7 @@ create table if not exists cost_actuals (
   actual_cost numeric(15, 2) not null default 0,
   commitment numeric(15, 2) not null default 0,
   planned_value numeric(15, 2),
-  source_system text not null default 'SAP_PS' check (source_system in ('APP', 'SAP_PS', 'DATAVERSE', 'P6')),
+  source_system text not null default 'SAP_PS' check (source_system in ('APP', 'SAP_PS', 'MS_PROJECT', 'P6')),
   external_id text,
   synced_at timestamptz,
   created_at timestamptz not null default now()
@@ -108,7 +108,7 @@ create table if not exists resource_assignments (
   period date,
   planned_work_hours numeric(12, 2),
   allocation_pct numeric(5, 2),
-  source_system text not null default 'APP' check (source_system in ('APP', 'SAP_PS', 'DATAVERSE', 'P6')),
+  source_system text not null default 'APP' check (source_system in ('APP', 'SAP_PS', 'MS_PROJECT', 'P6')),
   external_id text,
   synced_at timestamptz,
   created_at timestamptz not null default now()

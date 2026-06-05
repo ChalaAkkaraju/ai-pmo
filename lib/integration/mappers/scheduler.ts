@@ -1,6 +1,6 @@
 /**
  * Scheduler mapper — neutral scheduler DTO → canonical tasks / resource
- * assignments. Pure functions. Shared across Dataverse and P6 because the hard
+ * assignments. Pure functions. Shared across Microsoft Project and P6 because the hard
  * part is the same: JOIN each task on its WBS code against the WBS that came
  * from SAP. A task whose WBS code matches no work package is an `unmapped_wbs`
  * exception (queued, never ingested with a dangling reference).

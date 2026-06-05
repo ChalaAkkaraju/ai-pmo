@@ -1,5 +1,5 @@
 /**
- * Simulate scheduler ingestion (Dataverse / Primavera P6) — Phase 2.
+ * Simulate scheduler ingestion (Microsoft Project / Primavera P6) — Phase 2.
  *
  * Pure data, NO LLM. For each project that has a WBS (work_packages), creates
  * one task per leaf work package — joined to it by wbs_code — with start/finish
@@ -9,7 +9,7 @@
  * Dates are anchored so the project's as-of point (current_week) lands on
  * TODAY — so the Gantt's "today" line is real. Each project gets a deterministic
  * schedule-health factor, so some run ahead and some slip (this feeds SPI in
- * Phase 3). source_system alternates DATAVERSE / P6 to show both feeding in.
+ * Phase 3). source_system alternates MS_PROJECT / P6 to show both feeding in.
  *
  * Requires migration 0017 + generator 07 (work packages). Idempotent: skips
  * projects that already have tasks unless --force.
@@ -116,7 +116,7 @@ async function main() {
     // Schedule-health completion factor: <1 behind, >1 ahead.
     const cf = 0.75 + ((rng >>> 5) % 36) / 100; // 0.75 .. 1.10 (unsigned shift; ahead/behind)
     const front = now * cf; // progress front: < now = behind schedule, > now = ahead
-    const src = (rng & 1) === 0 ? 'DATAVERSE' : 'P6';
+    const src = (rng & 1) === 0 ? 'MS_PROJECT' : 'P6';
     const ntp = addDays(today, -now * 7); // as-of (now) maps to today
     const ntpDate = new Date(ntp);
 

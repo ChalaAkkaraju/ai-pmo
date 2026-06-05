@@ -41,7 +41,7 @@ const DATE_LAYERS = [
   {
     tier: 'Task dates — live schedule',
     field: 'tasks.start_date · finish_date',
-    owner: 'Scheduler (P6 / MS Project / Dataverse)',
+    owner: 'Scheduler (P6 / Microsoft Project)',
     c: '#FAC775',
     when: 'The bottom-up working schedule, refreshed every reporting cycle as work progresses. Rolls up within the WBS target finish, and within the project window.',
   },

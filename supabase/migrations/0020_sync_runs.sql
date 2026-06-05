@@ -12,7 +12,7 @@
 create table if not exists sync_runs (
   id uuid primary key default uuid_generate_v4(),
   project_id uuid references projects(id) on delete cascade,
-  source_system text not null check (source_system in ('SAP_PS', 'DATAVERSE', 'P6')),
+  source_system text not null check (source_system in ('SAP_PS', 'MS_PROJECT', 'P6')),
   channel text not null default 'api' check (channel in ('api', 'file', 'manual')),
   status text not null default 'success' check (status in ('success', 'partial', 'failed')),
   started_at timestamptz not null default now(),

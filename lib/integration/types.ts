@@ -7,7 +7,7 @@
  * See AI-PMO-Integration-Sync-Contract.md.
  */
 
-export type SourceSystem = 'SAP_PS' | 'DATAVERSE' | 'P6';
+export type SourceSystem = 'SAP_PS' | 'MS_PROJECT' | 'P6';
 export type IngestChannel = 'api' | 'file' | 'manual';
 
 /* ---- SAP PS source DTOs (shaped like S/4HANA Enterprise Project OData) ---- */
@@ -103,8 +103,8 @@ export interface SyncResult {
   message: string;
 }
 
-/* ---- Scheduler (Dataverse / P6) source DTOs ----
- * Adapters normalise their source schema (Dataverse msdyn_projecttask, P6
+/* ---- Scheduler (Microsoft Project / P6) source DTOs ----
+ * Adapters normalise their source schema (Microsoft Project (msdyn_projecttask), P6
  * activity) into this neutral scheduler shape; the mapper then joins on WBS
  * code (shared across schedulers — that's where the join exception lives). */
 
@@ -152,7 +152,7 @@ export interface ResourceRow {
 }
 
 export interface SchedulerConnector {
-  source: 'DATAVERSE' | 'P6';
+  source: 'MS_PROJECT' | 'P6';
   testConnection(): Promise<ConnectionStatus>;
   fetchTasks(projectExternalId: string): Promise<SchedulerTaskDTO[]>;
   fetchResourceAssignments(projectExternalId: string): Promise<SchedulerResourceDTO[]>;

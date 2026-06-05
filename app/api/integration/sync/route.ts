@@ -14,14 +14,14 @@ import { createSupabaseServiceClient } from '@/lib/supabase';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { ingestSapProject, ingestSchedulerProject } from '@/lib/integration/ingestion-service';
 import { SapPsMockAdapter } from '@/lib/integration/adapters/sap-ps-mock';
-import { DataverseMockAdapter } from '@/lib/integration/adapters/dataverse-mock';
+import { MsProjectMockAdapter } from '@/lib/integration/adapters/msproject-mock';
 
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
   token: z.string().min(8),
   projectCode: z.string().min(1),
-  source: z.enum(['SAP_PS', 'DATAVERSE', 'P6']).optional().default('SAP_PS'),
+  source: z.enum(['SAP_PS', 'MS_PROJECT', 'P6']).optional().default('SAP_PS'),
   channel: z.enum(['api', 'file', 'manual']).optional().default('api'),
 });
 
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
   if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
   const proj = project as { id: string; code: string };
 
-  const result = body.source === 'DATAVERSE'
-    ? await ingestSchedulerProject(supabase, proj, new DataverseMockAdapter(), body.channel)
+  const result = body.source === 'MS_PROJECT'
+    ? await ingestSchedulerProject(supabase, proj, new MsProjectMockAdapter(), body.channel)
     : await ingestSapProject(supabase, proj, new SapPsMockAdapter(), body.channel);
   return NextResponse.json(result, { status: result.ok ? 200 : 500 });
 }

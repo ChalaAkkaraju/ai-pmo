@@ -8,7 +8,7 @@
  * Top-level tabs:
  *   Overview     — the executive read: EV headline + what needs attention.
  *   Structure    — canonical WBS tree (synced from SAP PS).
- *   Schedule     — canonical Gantt + task list (Planner Premium / P6).
+ *   Schedule     — canonical Gantt + task list (Microsoft Project / P6).
  *   Earned value — full EV card + S-curve (flagship).
  *   Risks & issues — heat map + risk register + issue register.
  *   Changes      — change orders.

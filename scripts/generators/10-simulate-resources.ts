@@ -94,7 +94,7 @@ async function main() {
         period: m.key,
         planned_work_hours: hours,
         allocation_pct: Math.round(Math.min(1, m.frac) * 100),
-        source_system: t.source_system === 'P6' ? 'P6' : 'DATAVERSE',
+        source_system: t.source_system === 'P6' ? 'P6' : 'MS_PROJECT',
         external_id: `${t.id}:${m.key}`,
         synced_at: new Date().toISOString(),
       });

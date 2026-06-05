@@ -6,13 +6,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { SapPsMockAdapter } from '@/lib/integration/adapters/sap-ps-mock';
-import { DataverseMockAdapter } from '@/lib/integration/adapters/dataverse-mock';
+import { MsProjectMockAdapter } from '@/lib/integration/adapters/msproject-mock';
 
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
   token: z.string().min(8),
-  source: z.enum(['SAP_PS', 'DATAVERSE', 'P6']).optional().default('SAP_PS'),
+  source: z.enum(['SAP_PS', 'MS_PROJECT', 'P6']).optional().default('SAP_PS'),
 });
 
 export async function POST(request: NextRequest) {
@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
   if (body.source === 'P6') {
     return NextResponse.json({ ok: false, message: 'P6 connector not implemented yet.' }, { status: 200 });
   }
-  const status = body.source === 'DATAVERSE'
-    ? await new DataverseMockAdapter().testConnection()
+  const status = body.source === 'MS_PROJECT'
+    ? await new MsProjectMockAdapter().testConnection()
     : await new SapPsMockAdapter().testConnection();
   return NextResponse.json(status, { status: 200 });
 }

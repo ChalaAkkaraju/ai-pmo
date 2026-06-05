@@ -1,11 +1,11 @@
 /**
- * DataverseMockAdapter — implements SchedulerConnector against fixtures shaped
- * like Microsoft Dataverse / Planner Premium (msdyn_projecttask, mapped to the
+ * MsProjectMockAdapter — implements SchedulerConnector against fixtures shaped
+ * like Microsoft Project (msdyn_projecttask, mapped to the
  * neutral SchedulerTaskDTO). Tasks are tagged with a WBS code via the custom
  * column cr_wbscode. One task references a WBS code that is NOT in the SAP WBS,
  * to demonstrate the unmapped_wbs (join) exception end-to-end.
  *
- * Swap for a live Dataverse Web API adapter behind the same interface.
+ * Swap for a live Microsoft Project Web API adapter behind the same interface.
  */
 
 import type { SchedulerConnector, SchedulerTaskDTO, SchedulerResourceDTO, ConnectionStatus } from '../types';
@@ -20,12 +20,12 @@ function addMonths(base: Date, m: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export class DataverseMockAdapter implements SchedulerConnector {
-  readonly source = 'DATAVERSE' as const;
+export class MsProjectMockAdapter implements SchedulerConnector {
+  readonly source = 'MS_PROJECT' as const;
 
   async testConnection(): Promise<ConnectionStatus> {
     await new Promise((r) => setTimeout(r, 250));
-    return { ok: true, message: 'Mock Dataverse connection OK (Entra ID service principal simulated)' };
+    return { ok: true, message: 'Mock Microsoft Project connection OK (Entra ID service principal simulated)' };
   }
 
   async fetchTasks(projectExternalId: string): Promise<SchedulerTaskDTO[]> {

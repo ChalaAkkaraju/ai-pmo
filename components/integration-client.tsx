@@ -67,7 +67,7 @@ export function IntegrationClient({
 }) {
   const router = useRouter();
   const [projectCode, setProjectCode] = useState(projects[0]?.code ?? '');
-  const [source, setSource] = useState<'SAP_PS' | 'DATAVERSE'>('SAP_PS');
+  const [source, setSource] = useState<'SAP_PS' | 'MS_PROJECT'>('SAP_PS');
   const [uploadProject, setUploadProject] = useState(projects[0]?.code ?? '');
   const [uploadingType, setUploadingType] = useState<string | null>(null);
   const [uploadMsg, setUploadMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
@@ -150,12 +150,12 @@ export function IntegrationClient({
             </div>
             <p className="mt-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Source &amp; endpoint</p>
             {canWrite ? (
-              <select value={source} onChange={(e) => setSource(e.target.value as 'SAP_PS' | 'DATAVERSE')} className="mb-1.5 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
+              <select value={source} onChange={(e) => setSource(e.target.value as 'SAP_PS' | 'MS_PROJECT')} className="mb-1.5 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
                 <option value="SAP_PS">SAP PS — WBS &amp; cost</option>
-                <option value="DATAVERSE">Dataverse — tasks &amp; resources</option>
+                <option value="MS_PROJECT">Microsoft Project — tasks &amp; resources</option>
               </select>
             ) : null}
-            <p className="rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[11px]">{source === 'DATAVERSE' ? 'Dataverse · msdyn_projecttask (Web API, mock)' : 'SAP S/4HANA · API_ENTERPRISE_PROJECT_SRV (BTP, mock)'}</p>
+            <p className="rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[11px]">{source === 'MS_PROJECT' ? 'Microsoft Project · msdyn_projecttask (Web API, mock)' : 'SAP S/4HANA · API_ENTERPRISE_PROJECT_SRV (BTP, mock)'}</p>
             <p className="mt-2 text-[11px] text-muted-foreground">Last sync: <span className="font-medium">{fmtTime(lastSyncBySource[source] ?? null)}</span></p>
             {canWrite && (
               <div className="mt-3 space-y-2">

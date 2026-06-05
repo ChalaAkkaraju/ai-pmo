@@ -4,7 +4,7 @@
  * Data-driven schedule — Phase 2 of the integration roadmap.
  *
  * Renders a real phase Gantt computed from `tasks` (mirrored from the scheduler
- * — Microsoft Planner Premium / Primavera P6) plus a collapsible task list.
+ * — Microsoft Project / Primavera P6) plus a collapsible task list.
  * Read-only; provenance is shown. Phases are grouped from the WBS code, so the
  * schedule hangs off the same work packages as the WBS tree.
  */
@@ -31,7 +31,7 @@ interface Phase {
 }
 
 function sourceLabel(s: string): string {
-  return s === 'DATAVERSE' ? 'Microsoft Planner Premium' : s === 'P6' ? 'Primavera P6' : s === 'SAP_PS' ? 'SAP PS' : 'App';
+  return s === 'MS_PROJECT' ? 'Microsoft Project' : s === 'P6' ? 'Primavera P6' : s === 'SAP_PS' ? 'SAP PS' : 'App';
 }
 function ms(d: string | null): number {
   return d ? new Date(d).getTime() : NaN;
@@ -80,7 +80,7 @@ export function ScheduleView({ tasks, workPackages }: { tasks: Task[]; workPacka
     return { ph, left: pct(s), width: Math.max(1.5, pct(f) - pct(s)), avgPct, critical };
   });
 
-  const source = tasks[0]?.source_system ?? 'DATAVERSE';
+  const source = tasks[0]?.source_system ?? 'MS_PROJECT';
   const synced = tasks.find((t) => t.synced_at)?.synced_at ?? null;
   const overall = Math.round(tasks.reduce((a, t) => a + (Number(t.percent_complete) || 0), 0) / tasks.length);
 

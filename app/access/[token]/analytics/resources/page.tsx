@@ -1,7 +1,7 @@
 /**
  * Analytics → Resources. Portfolio resource-load: FTE demand per discipline
  * over time vs capacity, with over-allocation flags. Visibility only — no
- * levelling (that stays in the scheduler). Data mirrored from Dataverse / P6.
+ * levelling (that stays in the scheduler). Data mirrored from Microsoft Project / P6.
  *
  * Supports drill-down by segment: the server pre-computes a load view for all
  * projects and one per segment; the client toggles between them.
@@ -80,7 +80,7 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
       <ResourceAnalyticsClient views={views} />
 
       <p className="mt-4 max-w-3xl text-xs text-muted-foreground">
-        Demand is aggregated from scheduler assignments (Dataverse / P6) into FTE per month at {''}
+        Demand is aggregated from scheduler assignments (Microsoft Project / P6) into FTE per month at {''}
         160 hours per FTE-month. Capacity is a portfolio-level stand-in per discipline, so it is shown only in the
         all-segments view; drilling into a single segment shows demand only, because that capacity pool is not
         attributable to one segment. Over-allocation (all-segments view) flags where peak monthly demand exceeds
