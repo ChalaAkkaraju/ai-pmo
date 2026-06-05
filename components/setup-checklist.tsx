@@ -50,6 +50,7 @@ const LABEL: Record<AgentType, string> = {
   lessons_learned_synthesiser: 'Lessons-Learned Synthesiser',
   closeout_reporter: 'Closeout Reporter',
   portfolio_risk_reviewer: 'Portfolio Risk Reviewer',
+  status_reporter: 'Status Reporter',
 };
 
 function seededPrompt(step: AgentType, name: string, code: string): string {

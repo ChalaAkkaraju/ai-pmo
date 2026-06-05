@@ -34,7 +34,7 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
     type: 'pm',
     display_name: 'Senior PM (PMO Director)',
     description:
-      'Portfolio-level PM. Sees the full ~100-project portfolio across renewables, water, industrial, and power, plus every artefact category. Can invoke any of the 13 agents.',
+      'Portfolio-level PM. Sees the full ~100-project portfolio across renewables, water, industrial, and power, plus every artefact category. Can invoke any of the 14 agents.',
     allowed_agents: [
       'charter_drafter',
       'stakeholder_analyst',
@@ -49,6 +49,7 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
       'lessons_learned_synthesiser',
       'closeout_reporter',
       'portfolio_risk_reviewer',
+      'status_reporter',
     ],
     dashboard_sections: [
       'projects_overview',
@@ -129,6 +130,7 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
       'risk_analyst',
       'portfolio_risk_reviewer',
       'closeout_reporter',
+      'status_reporter',
     ],
     dashboard_sections: [
       'projects_overview',

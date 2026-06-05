@@ -281,12 +281,12 @@ export default async function AboutPage({ params }: { params: Promise<{ token: s
       {/* Specialist agents — folded into /agents */}
       <div className="mt-12 flex flex-col items-center gap-3 rounded-xl border bg-gradient-to-br from-violet-50/40 via-card to-card p-6 text-center">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-700"><Bot className="h-5 w-5" strokeWidth={1.75} /></span>
-        <p className="text-sm font-semibold">One assistant, thirteen specialists</p>
+        <p className="text-sm font-semibold">One assistant, fourteen specialists</p>
         <p className="mx-auto max-w-xl text-[13px] text-muted-foreground">
           Ask in plain language and the assistant routes your question to the right method-aware (PMBOK-aligned)
           specialist — each output reviewable and editable.
         </p>
-        <Link href={`/access/${token}/agents`} className="mt-1 rounded-full border px-4 py-1.5 text-sm font-medium transition hover:bg-muted hover:border-foreground/20">Meet the 13 agents →</Link>
+        <Link href={`/access/${token}/agents`} className="mt-1 rounded-full border px-4 py-1.5 text-sm font-medium transition hover:bg-muted hover:border-foreground/20">Meet the 14 agents →</Link>
       </div>
 
       {/* Capabilities */}
@@ -306,7 +306,7 @@ export default async function AboutPage({ params }: { params: Promise<{ token: s
         <span className="text-muted-foreground">Go deeper:</span>
         <Link href={`/access/${token}/architecture`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">Overall architecture →</Link>
         <Link href={`/access/${token}/framework`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">PMBOK coverage →</Link>
-        <Link href={`/access/${token}/agents`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">The 13 agents →</Link>
+        <Link href={`/access/${token}/agents`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">The 14 agents →</Link>
       </div>
       <div className="mt-8 text-center">
         <Link href={`/access/${token}`} className="inline-flex rounded-md bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90">Enter dashboard</Link>

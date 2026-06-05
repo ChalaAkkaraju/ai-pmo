@@ -300,6 +300,28 @@ export const AGENT_CATALOG: AgentCatalogEntry[] = [
     methodology:
       'Uses Northwood’s cross-cutting risk taxonomy with a pattern-emergence threshold of two or more projects.',
   },
+  {
+    agent_type: 'status_reporter',
+    name: 'Status Reporter',
+    purpose: 'Produces the one-page weekly status report — RAG status, progress, risks, asks — tailored to the audience.',
+    plain:
+      'When you need to tell people where the project stands, this agent writes a one-page status report from your notes and the project data: an overall RAG (red/amber/green) status with the headline reason, progress against milestones, the cost and schedule position, the live risks and issues, and the asks. It tailors the report to who is reading it — full detail for the internal team, exception-based for the sponsor, milestones-and-change-orders for the client. Anywhere a number or fact is missing it writes "[NEEDS PM INPUT: …]" rather than inventing it.',
+    scope: 'project',
+    does: [
+      'Writes a one-page RAG status report from PM notes + project data',
+      'Tailors depth to the audience (internal team / sponsor / client)',
+      'Always surfaces active change orders for pipeline visibility',
+      'Substantiates Amber/Red with a one-line reason; flags gaps with "[NEEDS PM INPUT: …]"',
+    ],
+    doesNot: [
+      'Doesn\'t invent percentages, dates, costs or incidents not in the input',
+      'Doesn\'t compute earned value (use Variance Analyst)',
+      'Doesn\'t decide the RAG colour for you — it substantiates the one you set',
+    ],
+    samplePrompt: 'Write this week\'s status report for the sponsor.',
+    methodology:
+      'Follows PMBOK performance-reporting practice, using Northwood’s one-page status template, audience-adapted.',
+  },
 ];
 
 /** Lookup helper. */

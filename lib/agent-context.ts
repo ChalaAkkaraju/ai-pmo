@@ -36,6 +36,7 @@ const AGENT_PROMPT_FILES: Record<AgentType, string> = {
   lessons_learned_synthesiser: 'lessons_learned_synthesiser.md',
   closeout_reporter: 'closeout_reporter.md',
   portfolio_risk_reviewer: 'portfolio_risk_reviewer.md',
+  status_reporter: 'status_reporter.md',
 };
 
 /**

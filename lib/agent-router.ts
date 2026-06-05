@@ -47,6 +47,8 @@ const AGENT_DESCRIPTIONS: Record<AgentType, string> = {
     'Drafts the project closeout report: final cost & schedule outcome vs baseline, scope changes, risk closeout, lessons captured, outstanding items.',
   portfolio_risk_reviewer:
     'Reviews portfolio-level risk pattern emergence across multiple projects, recommends portfolio-level mitigation strategies.',
+  status_reporter:
+    'Writes a one-page weekly status report (RAG status, progress, cost/schedule, risks, asks) tailored to the audience — internal team, sponsor, or client.',
 };
 
 let cachedClient: OpenAI | null = null;

@@ -154,7 +154,8 @@ export type AgentType =
   | 'risk_analyst'
   | 'lessons_learned_synthesiser'
   | 'closeout_reporter'
-  | 'portfolio_risk_reviewer';
+  | 'portfolio_risk_reviewer'
+  | 'status_reporter';
 
 export interface AgentOutput {
   id: string;
