@@ -76,9 +76,20 @@ export function segmentStyle(segment: string): SegmentStyle {
   );
 }
 
-/** Status (Active/SC/Closed) badge styling — kept here for one-place styling. */
+/**
+ * Canonical lifecycle (Active / SC / Closed) palette — one source for the
+ * lifecycle bar fills, legend dots, and status badges. These are CATEGORICAL
+ * states, not a health gradient: blue = active/in-progress, emerald = good/done
+ * (substantial completion), gray = closed/inactive. Greens are emerald to match
+ * the app-wide "good/done" convention (see lib/badge-styles).
+ */
+export const LIFECYCLE: Record<'Active' | 'SC' | 'Closed', { bar: string; dot: string; badge: string }> = {
+  Active: { bar: 'bg-blue-500', dot: 'bg-blue-500', badge: 'bg-blue-50 text-blue-900 border border-blue-200' },
+  SC: { bar: 'bg-emerald-500', dot: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-900 border border-emerald-200' },
+  Closed: { bar: 'bg-gray-400', dot: 'bg-gray-400', badge: 'bg-gray-100 text-gray-700 border border-gray-200' },
+};
+
+/** Status (Active/SC/Closed) badge styling — sourced from LIFECYCLE. */
 export function statusBadge(status: string): string {
-  if (status === 'SC') return 'bg-green-100 text-green-900 border border-green-200';
-  if (status === 'Closed') return 'bg-gray-100 text-gray-700 border border-gray-200';
-  return 'bg-blue-50 text-blue-900 border border-blue-200';
+  return (LIFECYCLE as Record<string, { badge: string }>)[status]?.badge ?? LIFECYCLE.Active.badge;
 }

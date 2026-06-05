@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { segmentStyle, statusBadge } from '@/lib/segment-style';
+import { segmentStyle, statusBadge, LIFECYCLE } from '@/lib/segment-style';
 import { issueBadge, riskBadge } from '@/lib/badge-styles';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { ActionRibbon } from '@/components/action-ribbon';
@@ -352,15 +352,15 @@ function LifecycleBar({
   return (
     <div className="space-y-2">
       <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className={`bg-blue-500 ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(active / total) * 100}%` }} title={`Active: ${active}`} onClick={onStatusClick ? () => onStatusClick('Active') : undefined} />
-        <div className={`bg-emerald-500 ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(sc / total) * 100}%` }} title={`SC: ${sc}`} onClick={onStatusClick ? () => onStatusClick('SC') : undefined} />
-        <div className={`bg-gray-400 ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(closed / total) * 100}%` }} title={`Closed: ${closed}`} onClick={onStatusClick ? () => onStatusClick('Closed') : undefined} />
+        <div className={`${LIFECYCLE.Active.bar} ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(active / total) * 100}%` }} title={`Active: ${active}`} onClick={onStatusClick ? () => onStatusClick('Active') : undefined} />
+        <div className={`${LIFECYCLE.SC.bar} ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(sc / total) * 100}%` }} title={`SC: ${sc}`} onClick={onStatusClick ? () => onStatusClick('SC') : undefined} />
+        <div className={`${LIFECYCLE.Closed.bar} ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(closed / total) * 100}%` }} title={`Closed: ${closed}`} onClick={onStatusClick ? () => onStatusClick('Closed') : undefined} />
       </div>
       {showLegend && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <span onClick={onStatusClick ? () => onStatusClick('Active') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className="h-2 w-2 rounded-full bg-blue-500" />Active <strong className="tabular-nums">{active}</strong></span>
-          <span onClick={onStatusClick ? () => onStatusClick('SC') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className="h-2 w-2 rounded-full bg-emerald-500" />Substantial Completion <strong className="tabular-nums">{sc}</strong></span>
-          <span onClick={onStatusClick ? () => onStatusClick('Closed') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className="h-2 w-2 rounded-full bg-gray-400" />Closed <strong className="tabular-nums">{closed}</strong></span>
+          <span onClick={onStatusClick ? () => onStatusClick('Active') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className={`h-2 w-2 rounded-full ${LIFECYCLE.Active.dot}`} />Active <strong className="tabular-nums">{active}</strong></span>
+          <span onClick={onStatusClick ? () => onStatusClick('SC') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className={`h-2 w-2 rounded-full ${LIFECYCLE.SC.dot}`} />Substantial Completion <strong className="tabular-nums">{sc}</strong></span>
+          <span onClick={onStatusClick ? () => onStatusClick('Closed') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className={`h-2 w-2 rounded-full ${LIFECYCLE.Closed.dot}`} />Closed <strong className="tabular-nums">{closed}</strong></span>
         </div>
       )}
     </div>
