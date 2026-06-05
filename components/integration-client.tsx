@@ -222,11 +222,11 @@ export function IntegrationClient({
                   <td className="px-3 py-2.5 font-medium">{o.label}</td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground">{o.source}</td>
                   <td className="px-3 py-2.5">
-                    <a href={`/api/integration/template?type=${o.type}`} className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium transition hover:bg-muted">↓ Template</a>
+                    <a href={`/api/integration/template?type=${o.type}`} className="inline-flex items-center gap-1 rounded-md border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800 transition hover:bg-sky-100">↓ Template</a>
                   </td>
                   <td className="px-3 py-2.5">
                     {canWrite ? (
-                      <label className={`inline-flex cursor-pointer items-center gap-1 rounded-md bg-foreground px-2.5 py-1 text-xs font-medium text-background transition hover:opacity-90 ${uploadingType === o.type ? 'opacity-50' : ''}`}>
+                      <label className={`inline-flex cursor-pointer items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-800 transition hover:bg-violet-100 ${uploadingType === o.type ? 'opacity-50' : ''}`}>
                         {uploadingType === o.type ? 'Uploading…' : '↑ Upload'}
                         <input type="file" accept=".csv,text/csv" className="hidden" disabled={uploadingType !== null} onChange={(e) => handleUpload(e, o.type)} />
                       </label>
