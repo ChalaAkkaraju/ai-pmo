@@ -1072,7 +1072,7 @@ export function DashboardClient({
       </section>
 
       {drill && (
-        <DrillModal title={drill.title} columns={drill.columns} data={drill.data} seeAllHref={drill.seeAllHref} onClose={() => setDrill(null)} />
+        <DrillModal title={drill.title} columns={drill.columns} data={drill.data} seeAllHref={drill.seeAllHref} rowHref={drill.rowHref} onClose={() => setDrill(null)} />
       )}
 
       {/* HOT 5 — projects needing attention */}
