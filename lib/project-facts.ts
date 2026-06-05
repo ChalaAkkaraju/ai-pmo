@@ -30,7 +30,7 @@ export async function loadStructuredFacts(
 ): Promise<string | null> {
   const [wpRes, taskRes, costRes, resRes] = await Promise.all([
     supabase.from('work_packages').select('wbs_code, parent_wbs_code, name, budget_bac, baseline_bac, target_finish, is_billing_element').eq('project_id', projectId),
-    supabase.from('tasks').select('wbs_code, percent_complete, finish_date').eq('project_id', projectId),
+    supabase.from('tasks').select('wbs_code, percent_complete, start_date, finish_date').eq('project_id', projectId),
     supabase.from('cost_actuals').select('actual_cost, planned_value').eq('project_id', projectId),
     supabase.from('resource_assignments').select('resource_role, period, planned_work_hours').eq('project_id', projectId),
   ]);
@@ -85,6 +85,36 @@ export async function loadStructuredFacts(
       }
     }
     out.push(sched);
+  }
+
+  // Top-down contractual project window (start_date … contract_finish).
+  // The Schedule Reasoner validates that scheduler task dates fall inside it.
+  {
+    const startMs = Date.parse(String(project.start_date ?? ''));
+    const finMs = Date.parse(String(project.contract_finish ?? ''));
+    const hasStart = !Number.isNaN(startMs);
+    const hasFin = !Number.isNaN(finMs);
+    if (hasStart || hasFin) {
+      const tStarts = tasks.map((t) => Date.parse(String(t.start_date))).filter((n) => !Number.isNaN(n));
+      const tFinishes = tasks.map((t) => Date.parse(String(t.finish_date))).filter((n) => !Number.isNaN(n));
+      const earliest = tStarts.length ? Math.min(...tStarts) : null;
+      const latest = tFinishes.length ? Math.max(...tFinishes) : null;
+      const before = hasStart ? tStarts.filter((s) => s < startMs).length : 0;
+      const after = hasFin ? tFinishes.filter((f) => f > finMs).length : 0;
+      let w = '## Project window (contractual, top-down)';
+      w += `\n- Committed window: ${hasStart ? d(startMs) : '\u2014'} \u2192 ${hasFin ? d(finMs) : '\u2014'}`;
+      if (hasStart && earliest != null && earliest < startMs) {
+        w += `\n- \u26a0 ${before} scheduler task(s) START before the contractual project start (earliest ${d(earliest)}). Flag this.`;
+      }
+      if (hasFin && latest != null && latest > finMs) {
+        const over = Math.round((latest - finMs) / 86400000);
+        w += `\n- \u26a0 CONTRACT-FINISH BREACH: ${after} scheduler task(s) finish after the contractual finish; the latest (${d(latest)}) is ${over} day(s) past ${d(finMs)}. Flag this.`;
+      }
+      if (before === 0 && after === 0 && (hasStart || hasFin)) {
+        w += '\n- All scheduler task dates fall within the contractual window.';
+      }
+      out.push(w);
+    }
   }
 
   // Resources
