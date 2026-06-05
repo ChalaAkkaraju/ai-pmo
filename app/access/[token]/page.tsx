@@ -353,6 +353,12 @@ export default async function RoleLandingPage({ params }: PageProps) {
     const pct = ((consumedM * 1_000_000) / budget) * 100;
     contingency_rows.push({ code: p.code, name: p.name, segment: p.segment, pct: Math.round(pct), consumedM, budgetM: budget / 1_000_000, band: bandOf(pct) });
   }
+  const project_rows: PortfolioInsights['project_rows'] = [];
+  for (const p of projects) {
+    const v = latestVariance.get(p.id);
+    if (!v) continue;
+    project_rows.push({ code: p.code, name: p.name, segment: p.segment, cpi: v.cpi, spi: v.spi });
+  }
 
   const insights: PortfolioInsights = {
     risk_class_counts: riskClassCounts,
@@ -361,6 +367,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
     issue_rows,
     risk_rows,
     contingency_rows,
+    project_rows,
   };
 
   // -------- Hot 5 — top projects of concern --------

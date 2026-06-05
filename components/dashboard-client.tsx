@@ -76,6 +76,7 @@ export interface SegmentSummary {
 export interface DrillIssue { code: string; project: string; severity: string; status: string; owner: string; description: string; }
 export interface DrillRisk { code: string; project: string; klass: string; impact: string; status: string; owner: string; description: string; }
 export interface DrillContingency { code: string; name: string; segment: string; pct: number; consumedM: number; budgetM: number; band: string; }
+export interface ProjectRow { code: string; name: string; segment: string; cpi: number; spi: number; }
 export interface PortfolioInsights {
   risk_class_counts: Record<string, number>;
   issue_severity_counts: Record<string, number>;
@@ -83,6 +84,7 @@ export interface PortfolioInsights {
   issue_rows: DrillIssue[];
   risk_rows: DrillRisk[];
   contingency_rows: DrillContingency[];
+  project_rows: ProjectRow[];
 }
 
 type DrillColumn = { key: string; label: string; numeric?: boolean; render?: (v: unknown, row: Record<string, unknown>) => ReactNode };
@@ -608,6 +610,26 @@ export function DashboardClient({
       columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }],
       data,
     });
+  }
+  function openOpenHIssues() {
+    const data = insights.issue_rows.filter((r) => r.severity === 'H' && (r.status === 'Open' || r.status === 'In progress'));
+    setDrill({ title: `${data.length} open high-severity issue${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Issue' }, { key: 'owner', label: 'Owner' }, statusCol(issueBadge)], data, seeAllHref: `/access/${token}/analytics/issues` });
+  }
+  function openRealisedRisks() {
+    const data = insights.risk_rows.filter((r) => r.status.toLowerCase().startsWith('realis'));
+    setDrill({ title: `${data.length} realised risk${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Risk' }, { key: 'klass', label: 'Class' }, { key: 'owner', label: 'Owner' }, statusCol(riskBadge)], data, seeAllHref: `/access/${token}/analytics/risks` });
+  }
+  function openCostOffTrack() {
+    const data = insights.project_rows.filter((r) => r.cpi < 0.95).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => a.cpi - b.cpi);
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} cost off-track · CPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data });
+  }
+  function openSchedOffTrack() {
+    const data = insights.project_rows.filter((r) => r.spi < 0.95).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => a.spi - b.spi);
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} schedule off-track · SPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data });
+  }
+  function openContingencyDrawn() {
+    const data = insights.contingency_rows.filter((r) => r.consumedM > 0).map((r) => ({ ...r, project: `${r.name} (${r.code})`, consumed: `$${r.consumedM.toFixed(2)}M / $${r.budgetM.toFixed(1)}M` })).sort((a, b) => b.consumedM - a.consumedM);
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} with contingency drawn`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }], data });
   }
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -1155,11 +1177,11 @@ export function DashboardClient({
       <section>
         <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio watchlist</h2>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <KpiCard label="Open H issues" value={String(operational.open_h_issues)} sub="needs attention" tone={operational.open_h_issues > 0 ? 'warn' : 'ok'} />
-          <KpiCard label="Realised risks" value={String(operational.realised_risks)} sub="pattern signal" tone="info" />
-          <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} />
-          <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} />
-          <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" />
+          <KpiCard label="Open H issues" value={String(operational.open_h_issues)} sub="needs attention" tone={operational.open_h_issues > 0 ? 'warn' : 'ok'} onClick={openOpenHIssues} />
+          <KpiCard label="Realised risks" value={String(operational.realised_risks)} sub="pattern signal" tone="info" onClick={openRealisedRisks} />
+          <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} onClick={openCostOffTrack} />
+          <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} onClick={openSchedOffTrack} />
+          <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" onClick={openContingencyDrawn} />
           <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" />
         </div>
       </section>
@@ -1528,16 +1550,16 @@ export function DashboardClient({
   );
 }
 
-function KpiCard({ label, value, sub, tone = 'neutral' }: { label: string; value: string; sub: string; tone?: 'neutral' | 'ok' | 'warn' | 'info' }) {
+function KpiCard({ label, value, sub, tone = 'neutral', onClick }: { label: string; value: string; sub: string; tone?: 'neutral' | 'ok' | 'warn' | 'info'; onClick?: () => void }) {
   const toneCls =
     tone === 'warn' ? 'border-amber-300 bg-amber-50' :
     tone === 'ok' ? 'border-emerald-200 bg-emerald-50/40' :
     tone === 'info' ? 'border-sky-200 bg-sky-50/40' : 'bg-card';
   return (
-    <div className={`rounded-lg border p-4 ${toneCls}`}>
+    <div onClick={onClick} className={`rounded-lg border p-4 ${toneCls} ${onClick ? 'cursor-pointer transition hover:border-foreground/30 hover:shadow-sm' : ''}`}>
       <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
-      <p className="mt-0.5 text-sm text-muted-foreground">{sub}</p>
+      <p className="mt-0.5 text-sm text-muted-foreground">{sub}{onClick ? ' · view →' : ''}</p>
     </div>
   );
 }
