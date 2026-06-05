@@ -87,8 +87,11 @@ export async function loadStructuredFacts(
     out.push(sched);
   }
 
-  // Top-down contractual project window (start_date … contract_finish).
-  // The Schedule Reasoner validates that scheduler task dates fall inside it.
+  // Cross-system reconciliation: the contractual window lives in SAP; the live
+  // forecast lives in the scheduler, and they drift independently. Headline check
+  // is whether the scheduler's forecast finish breaches the contractual finish —
+  // neither system flags the other's copy. (NOT a re-do of the scheduler's own
+  // within-window constraint.)
   {
     const startMs = Date.parse(String(project.start_date ?? ''));
     const finMs = Date.parse(String(project.contract_finish ?? ''));
@@ -97,21 +100,21 @@ export async function loadStructuredFacts(
     if (hasStart || hasFin) {
       const tStarts = tasks.map((t) => Date.parse(String(t.start_date))).filter((n) => !Number.isNaN(n));
       const tFinishes = tasks.map((t) => Date.parse(String(t.finish_date))).filter((n) => !Number.isNaN(n));
-      const earliest = tStarts.length ? Math.min(...tStarts) : null;
-      const latest = tFinishes.length ? Math.max(...tFinishes) : null;
+      const fcFinish = tFinishes.length ? Math.max(...tFinishes) : null;
+      let w = '## Contractual window (SAP) vs scheduler forecast';
+      w += `\n- Committed window (SAP system of record): ${hasStart ? d(startMs) : '\u2014'} \u2192 ${hasFin ? d(finMs) : '\u2014'}`;
+      // Headline: does the live forecast breach the contractual finish?
+      if (hasFin && fcFinish != null) {
+        const over = Math.round((fcFinish - finMs) / 86400000);
+        w += over > 0
+          ? `\n- \u26a0 CONTRACT-FINISH BREACH: scheduler forecast finish (${d(fcFinish)}) is ${over} day(s) past the contractual finish (${d(finMs)}). SAP still shows the committed date \u2014 the two have drifted; escalate.`
+          : `\n- Forecast finish (${d(fcFinish)}) sits within the contractual finish \u2014 ${Math.abs(over)} day(s) of contractual headroom.`;
+      }
+      // Demoted to a quiet data-integrity note: should be 0 if SAP's window fed the
+      // scheduler as a constraint. Non-zero hints at a stale/overridden feed.
       const before = hasStart ? tStarts.filter((s) => s < startMs).length : 0;
-      const after = hasFin ? tFinishes.filter((f) => f > finMs).length : 0;
-      let w = '## Project window (contractual, top-down)';
-      w += `\n- Committed window: ${hasStart ? d(startMs) : '\u2014'} \u2192 ${hasFin ? d(finMs) : '\u2014'}`;
-      if (hasStart && earliest != null && earliest < startMs) {
-        w += `\n- \u26a0 ${before} scheduler task(s) START before the contractual project start (earliest ${d(earliest)}). Flag this.`;
-      }
-      if (hasFin && latest != null && latest > finMs) {
-        const over = Math.round((latest - finMs) / 86400000);
-        w += `\n- \u26a0 CONTRACT-FINISH BREACH: ${after} scheduler task(s) finish after the contractual finish; the latest (${d(latest)}) is ${over} day(s) past ${d(finMs)}. Flag this.`;
-      }
-      if (before === 0 && after === 0 && (hasStart || hasFin)) {
-        w += '\n- All scheduler task dates fall within the contractual window.';
+      if (before > 0) {
+        w += `\n- Data check: ${before} task(s) start before the contractual start \u2014 possible stale or overridden constraint in the SAP\u2192scheduler feed.`;
       }
       out.push(w);
     }
