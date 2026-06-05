@@ -23,10 +23,37 @@ const STATS = [
   { n: '1', l: 'deliberate write — the WBS' },
 ];
 
+const LEAD = {
+  overview: "Two systems of record hold the truth about every project — the ERP holds the money, the scheduler holds the time. Neither can tell you what they mean together. AI PMO is the layer that does: it reads both, authors the structure that ties them, and turns the result into a decision-ready picture every reporting cycle — with a human in the loop on every output.",
+  where: "AI PMO does not compete with your ERP or your scheduler, and it does not ask you to migrate anything into it. It sits one level up and does the single thing neither can do alone: read both, join them on the WBS code, and explain the combined picture.",
+  bookends: "Most tools live at one of two extremes — they only read (and quietly drift out of step with reality), or they write everywhere (and start to fight your system of record). AI PMO does neither. It makes exactly one deliberate write — the WBS, at setup, with your approval — and reads for the rest of the project's life.",
+  ev: "If the whole thesis needed one proof point, it is earned value. CPI, SPI, EAC and variance each need cost from the ERP, percent-complete from the scheduler and the budget structure from the WBS — together. No single system has all three, which is precisely why almost nobody computes it well. Sitting across both, this layer can — automatically, every cycle.",
+  diff: "Pulling cost and schedule into one view is table stakes — every BI and PPM tool gestures at it. The moat here is not the integration; it is what the AI does on top of it.",
+  agents: "Behind the single assistant are fourteen narrow, method-aware specialists. Narrow beats general here: each is easier to keep accurate, every answer is traceable to the expert that produced it, and each is grounded in PMBOK practice. You ask in plain language; the right one is routed automatically, and you can always override.",
+};
+
+const PAINS = [
+  { t: 'Stale on arrival', cls: 'border-rose-200 bg-rose-50/40 text-rose-700', body: 'By the time the pack is built, the numbers have already moved. Decisions get made on last week\u2019s picture.' },
+  { t: 'No single truth', cls: 'border-amber-200 bg-amber-50/40 text-amber-700', body: 'Every PM rolls things up their own way. The portfolio view is a patchwork no two people read the same.' },
+  { t: 'Costly', cls: 'border-slate-200 bg-slate-50 text-slate-600', body: 'Your most senior people spend the cycle re-keying and reconciling \u2014 not deciding.' },
+];
+
+const WHERE_WHY = [
+  'Tool-agnostic — works with any ERP and any scheduler',
+  'No rip-and-replace — your systems of record stay exactly where they are',
+  'Joined by the WBS code — one shared key ties every cost to its schedule',
+];
+
+const EV_UNLOCKS = [
+  { t: 'Early warning', body: 'A falling CPI flags an overrun before it lands.' },
+  { t: 'Defensible forecasts', body: 'EAC and VAC you can take straight to a sponsor.' },
+  { t: 'One honest number', body: 'The same picture for every project and every reviewer.' },
+];
+
 const STEPS = [
-  { Icon: Link2, cls: 'bg-sky-100 text-sky-700', title: 'Connect', body: 'Point it at your ERP and your scheduler. It reads cost and structure from one, dates and progress from the other.' },
-  { Icon: Wand2, cls: 'bg-violet-100 text-violet-700', title: 'Draft & synthesise', body: 'Specialist agents draft the planning artefacts and pull cost, schedule, risk and change into one picture.' },
-  { Icon: Target, cls: 'bg-emerald-100 text-emerald-700', title: 'Decide & act', body: 'Earned value, the status narrative and recommended actions — reviewed and corrected by you, then assigned.' },
+  { Icon: Link2, cls: 'bg-sky-100 text-sky-700', title: 'Connect', body: 'Point it at your ERP and your scheduler. It pulls cost and structure from one, dates and progress from the other — read-only, on a schedule.' },
+  { Icon: Wand2, cls: 'bg-violet-100 text-violet-700', title: 'Draft & synthesise', body: 'Specialist agents draft the planning artefacts and fold cost, schedule, risk and change into one coherent, explained picture.' },
+  { Icon: Target, cls: 'bg-emerald-100 text-emerald-700', title: 'Decide & act', body: 'Earned value, a plain-language status narrative and recommended next actions — each reviewed and corrected by you, then assigned to the right colleague.' },
 ];
 
 const DOES = [
@@ -168,10 +195,10 @@ export function AboutDeck({ token }: { token: string }) {
         {/* 0 — Overview */}
         <Slide idx={0} refCb={setRef}>
           <Hero Icon={Sparkles} label="How it works" accent="#d97706" title="How AI PMO works — the full picture" tagline="The complete argument — scroll through one piece at a time" />
-          <p className="mt-4 max-w-3xl text-base leading-relaxed text-foreground/80 sm:text-lg">
-            The intelligence layer that turns two systems of record into one explained picture: the problem it solves,
-            where it sits, how it touches your systems, and what makes it more than a dashboard.
-          </p>
+          <p className="mt-4 max-w-3xl text-base leading-relaxed text-foreground/80 sm:text-lg">{LEAD.overview}</p>
+          <div className="mt-3 rounded-xl border-l-4 border-amber-400 bg-amber-50/50 px-4 py-3">
+            <p className="text-[15px] font-medium text-amber-900">The promise: from two systems to one explained picture — without replacing either.</p>
+          </div>
           <div className="mt-5 grid grid-cols-3 gap-3">
             {STATS.map((s) => (
               <div key={s.l} className="rounded-xl border bg-muted/40 px-4 py-3">
@@ -198,21 +225,21 @@ export function AboutDeck({ token }: { token: string }) {
             happens by hand, in spreadsheets and slide decks, every reporting cycle. That synthesis is the PMO&apos;s
             real job. This tool does it.
           </p>
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-rose-200 bg-rose-50/40 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">By hand today</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-foreground/80">Re-keyed into spreadsheets and slide decks every cycle — slow, error-prone, and stale the moment it is finished.</p>
-            </div>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">With AI PMO</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-foreground/80">Synthesised automatically from the live systems, explained in plain language, and reviewed by you before it goes out.</p>
-            </div>
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {PAINS.map((p) => (
+              <div key={p.t} className={`rounded-xl border p-4 ${p.cls}`}>
+                <p className="text-xs font-semibold uppercase tracking-wider">{p.t}</p>
+                <p className="mt-2 text-[13px] leading-relaxed text-foreground/80">{p.body}</p>
+              </div>
+            ))}
           </div>
+          <p className="mt-4 text-[15px] text-foreground/80">The bottleneck is not data — both systems are full of it. It is the <span className="font-semibold">synthesis</span>. That is the job AI PMO takes on.</p>
         </Slide>
 
         {/* 2 — Where it fits */}
         <Slide idx={2} refCb={setRef}>
-          <Hero Icon={Sparkles} label="Where it fits" accent="#d97706" title="An intelligence layer over your systems" tagline="It consumes from your systems of record — it never replaces them" />
+          <Hero Icon={Sparkles} label="Where it fits" accent="#d97706" title="An intelligence layer — not another system" tagline="It sits above your systems of record and explains them together" />
+          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80">{LEAD.where}</p>
           <div className="mt-4 rounded-xl border-2 border-amber-300 bg-amber-50/40 p-5">
             <div className="flex items-center justify-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-600" strokeWidth={1.75} />
@@ -235,12 +262,17 @@ export function AboutDeck({ token }: { token: string }) {
               <p className="mt-1.5 text-[11px] text-muted-foreground/80">e.g. Microsoft Planner Premium · Primavera P6 · and others</p>
             </div>
           </div>
-          <p className="mt-3 text-center text-[11px] text-muted-foreground">Tool-agnostic by design — it works with any ERP and any scheduler.</p>
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {WHERE_WHY.map((w) => (
+              <div key={w} className="flex items-start gap-2 rounded-lg border bg-card px-3 py-2 text-[12px] text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 flex-none text-emerald-600" strokeWidth={2.5} /><span>{w}</span></div>
+            ))}
+          </div>
         </Slide>
 
         {/* 3 — Two bookends */}
         <Slide idx={3} refCb={setRef}>
           <Hero Icon={Wand2} label="Two bookends" accent="#8b5cf6" title="It writes exactly once" tagline="It touches the systems of record at two moments only" />
+          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80">{LEAD.bookends}</p>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-xl border bg-card p-5">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-700"><Wand2 className="h-5 w-5" strokeWidth={1.75} /></span>
@@ -253,7 +285,7 @@ export function AboutDeck({ token }: { token: string }) {
               <p className="mt-1 text-[13px] text-muted-foreground">From there it only reads — cost from the ERP, progress from the scheduler, joined by the WBS code — to compute earned value and the explained portfolio picture. The systems of record stay untouched.</p>
             </div>
           </div>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-[12px] text-muted-foreground">Write once, at setup, with your approval — then read-only for the life of the project.</p>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-[12px] text-muted-foreground">One deliberate write keeps your ERP the single source of truth — the layer never becomes a shadow system.</p>
         </Slide>
 
         {/* 4 — How it works */}
@@ -280,17 +312,14 @@ export function AboutDeck({ token }: { token: string }) {
             <ChevronRight size={14} />
             <span className="text-muted-foreground/70">repeat next cycle</span>
           </div>
+          <p className="mt-3 text-center text-[12px] text-muted-foreground">Nothing happens behind your back — every output is a draft until you accept it.</p>
         </Slide>
 
         {/* 5 — Earned value */}
         <Slide idx={5} refCb={setRef}>
           <Hero Icon={TrendingUp} label="The flagship" accent="#10b981" title="Earned value — the metric no single system owns" />
           <div className="mt-4 grid grid-cols-1 gap-5 rounded-xl border bg-gradient-to-br from-emerald-50/50 via-card to-card p-6 md:grid-cols-2 md:items-center">
-            <p className="text-[14px] leading-relaxed text-foreground/80">
-              CPI, SPI, EAC and variance need cost from the ERP, percent-complete from the scheduler and the budget
-              structure from the WBS — together. No single system has all three, which is exactly why nobody computes it
-              well today. Sitting across both, this tool can.
-            </p>
+            <p className="text-[14px] leading-relaxed text-foreground/80">{LEAD.ev}</p>
             <div className="rounded-lg border bg-card p-4">
               <div className="mb-2 flex items-center gap-3 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1"><span className="inline-block h-0 w-3.5 border-t-2 border-dashed" style={{ borderColor: '#378ADD' }} />planned</span>
@@ -313,6 +342,14 @@ export function AboutDeck({ token }: { token: string }) {
               </div>
             </div>
           </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {EV_UNLOCKS.map((u) => (
+              <div key={u.t} className="rounded-xl border bg-card p-4">
+                <p className="text-sm font-semibold text-emerald-800">{u.t}</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{u.body}</p>
+              </div>
+            ))}
+          </div>
           <p className="mt-3 text-center text-[12px] text-muted-foreground">The flagship synthesis: cost × progress × structure, computed in code and narrated by the Variance Analyst.</p>
         </Slide>
 
@@ -334,6 +371,7 @@ export function AboutDeck({ token }: { token: string }) {
         {/* 7 — Differentiator */}
         <Slide idx={7} refCb={setRef}>
           <Hero Icon={Brain} label="The moat" accent="#8b5cf6" title="What makes it different" tagline="The difference is the AI synthesis itself — not the integration" />
+          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80">{LEAD.diff}</p>
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-xl border bg-muted/20 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Table stakes · any BI tool</p>
@@ -350,10 +388,7 @@ export function AboutDeck({ token }: { token: string }) {
         {/* 8 — The agents */}
         <Slide idx={8} refCb={setRef}>
           <Hero Icon={Bot} label="The specialists" accent="#8b5cf6" title="One assistant, fourteen specialists" />
-          <p className="mt-4 text-base leading-relaxed text-foreground/80 sm:text-lg">
-            Ask in plain language and the assistant routes your question to the right method-aware (PMBOK-aligned)
-            specialist — each output reviewable and editable. Fourteen narrow experts behave like one assistant.
-          </p>
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 sm:text-lg">{LEAD.agents}</p>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {AGENTS.map((a) => <span key={a} className="rounded-full px-2.5 py-1 text-xs font-medium" style={{ backgroundColor: '#8b5cf61f', color: '#7c3aed' }}>{a}</span>)}
           </div>
@@ -372,7 +407,8 @@ export function AboutDeck({ token }: { token: string }) {
               </div>
             ))}
           </div>
-          <div className="mt-6 text-center">
+          <p className="mt-5 text-center text-[15px] text-foreground/80">Everything above, in one place — the portfolio explained, a question away, with the next action ready to assign.</p>
+          <div className="mt-5 text-center">
             <Link href={`/access/${token}`} className="inline-flex rounded-md bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90">Enter dashboard</Link>
             <p className="mt-4 text-xs text-muted-foreground">Portfolio shown is illustrative sample data.</p>
           </div>
