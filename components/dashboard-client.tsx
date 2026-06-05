@@ -354,7 +354,7 @@ function LifecycleBar({
 
 interface BarItem { label: string; value: number; color: string; }
 
-function MiniBarChart({ items, maxLabelWidth = 'flex-1' }: { items: BarItem[]; maxLabelWidth?: string }) {
+function MiniBarChart({ items, maxLabelWidth = 'flex-1', wrapLabels = false }: { items: BarItem[]; maxLabelWidth?: string; wrapLabels?: boolean }) {
   const max = Math.max(...items.map((i) => i.value), 1);
   return (
     <div className="space-y-2">
@@ -362,11 +362,32 @@ function MiniBarChart({ items, maxLabelWidth = 'flex-1' }: { items: BarItem[]; m
         const pct = (item.value / max) * 100;
         return (
           <div key={item.label} className="flex items-center gap-3 text-xs">
-            <div className={`${maxLabelWidth} truncate text-muted-foreground`} title={item.label}>{item.label}</div>
+            <div className={`${maxLabelWidth} ${wrapLabels ? 'whitespace-normal leading-tight' : 'truncate'} text-muted-foreground`} title={item.label}>{item.label}</div>
             <div className="relative h-5 flex-[2] overflow-hidden rounded bg-muted">
               <div className="h-full rounded transition-all" style={{ width: `${pct}%`, backgroundColor: item.color }} />
               <span className="absolute inset-0 flex items-center justify-end pr-2 text-[11px] font-semibold tabular-nums text-foreground">{item.value}</span>
             </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Compact vertical bar chart — for short-label distributions (severity, CPI bands). */
+function VerticalBarChart({ items, trackHeight = 112 }: { items: BarItem[]; trackHeight?: number }) {
+  const max = Math.max(...items.map((i) => i.value), 1);
+  return (
+    <div className="flex items-end justify-around gap-3">
+      {items.map((item) => {
+        const pct = (item.value / max) * 100;
+        return (
+          <div key={item.label} className="flex flex-1 flex-col items-center gap-1">
+            <span className="text-[11px] font-semibold tabular-nums text-foreground">{item.value}</span>
+            <div className="flex w-full max-w-[52px] items-end overflow-hidden rounded bg-muted" style={{ height: trackHeight }}>
+              <div className="w-full rounded-t transition-all" style={{ height: `${pct}%`, backgroundColor: item.color, minHeight: item.value > 0 ? 4 : 0 }} />
+            </div>
+            <span className="text-center text-[10px] leading-tight text-muted-foreground">{item.label}</span>
           </div>
         );
       })}
@@ -639,7 +660,7 @@ export function DashboardClient({
   const riskBars: BarItem[] = Object.entries(insights.risk_class_counts)
     .sort((a, b) => b[1] - a[1])
     .map(([cls, count]) => ({
-      label: cls.length > 26 ? cls.slice(0, 24) + '…' : cls,
+      label: cls,
       value: count,
       color: RISK_CLASS_COLORS[cls] ?? '#64748b',
     }));
@@ -868,20 +889,20 @@ export function DashboardClient({
       {/* INSIGHTS — 3 mini charts */}
       <section>
         <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio insights</h2>
-        <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-lg border bg-card p-4">
+        <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border bg-card p-4 md:col-span-2">
             <div className="mb-3 flex items-baseline justify-between">
               <h3 className="text-base font-semibold">Risks by cross-cutting class</h3>
               <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total</span>
             </div>
-            <MiniBarChart items={riskBars} />
+            <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels />
           </div>
           <div className="rounded-lg border bg-card p-4">
             <div className="mb-3 flex items-baseline justify-between">
               <h3 className="text-base font-semibold">Issues by severity</h3>
               <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.issue_severity_counts).reduce((a, b) => a + b, 0)} total</span>
             </div>
-            <MiniBarChart items={issueBars} maxLabelWidth="w-16" />
+            <VerticalBarChart items={issueBars} />
             <p className="mt-3 text-xs text-muted-foreground">
               {insights.issue_severity_counts.H ?? 0} high-severity items currently in flight.
             </p>
@@ -891,7 +912,7 @@ export function DashboardClient({
               <h3 className="text-base font-semibold">Cost-performance distribution</h3>
               <span className="text-xs text-muted-foreground">project count by CPI deviation</span>
             </div>
-            <MiniBarChart items={contingencyBars} maxLabelWidth="w-16" />
+            <VerticalBarChart items={contingencyBars} />
             <p className="mt-3 text-xs text-muted-foreground">
               Bands estimate contingency consumption from CPI deviation.
             </p>
