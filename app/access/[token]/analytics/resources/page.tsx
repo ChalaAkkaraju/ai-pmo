@@ -2,16 +2,24 @@
  * Analytics → Resources. Portfolio resource-load: FTE demand per discipline
  * over time vs capacity, with over-allocation flags. Visibility only — no
  * levelling (that stays in the scheduler). Data mirrored from Dataverse / P6.
+ *
+ * Supports drill-down by segment: the server pre-computes a load view for all
+ * projects and one per segment; the client toggles between them.
  */
 
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
-import { ResourceLoadPanel } from '@/components/resource-load-view';
+import { ResourceAnalyticsClient, type ResourceView } from '@/components/resource-analytics-client';
 import { computeLoad, type ResAssignment } from '@/lib/resource-load';
+import { SEGMENT_STYLES, segmentStyle } from '@/lib/segment-style';
 
 export const dynamic = 'force-dynamic';
+
+interface Row extends ResAssignment {
+  project_id: string;
+}
 
 export default async function ResourcesAnalyticsPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -19,20 +27,49 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
-  let rows: ResAssignment[] = [];
+  let rows: Row[] = [];
+  const segById = new Map<string, string>();
   try {
-    const { data } = await supabase
-      .from('resource_assignments')
-      .select('resource_role, period, planned_work_hours')
-      .limit(100000);
-    rows = (data ?? []) as ResAssignment[];
+    const [{ data: ra }, { data: projs }] = await Promise.all([
+      supabase.from('resource_assignments').select('project_id, resource_role, period, planned_work_hours').limit(100000),
+      supabase.from('projects').select('id, segment').limit(100000),
+    ]);
+    rows = (ra ?? []) as Row[];
+    for (const p of (projs ?? []) as Array<{ id: string; segment: string | null }>) {
+      segById.set(p.id, p.segment ?? 'other');
+    }
   } catch {
     rows = [];
   }
-  const load = computeLoad(rows, true);
-  const overRoles = load.roles.filter((r) => r.peakFte > r.capacityFte).length;
-  const peakRole = load.roles[0] ?? null;
-  const withSpare = load.roles.filter((r) => r.peakFte <= r.capacityFte).length;
+
+  // Group assignments by segment + count distinct projects per segment.
+  const bySeg = new Map<string, Row[]>();
+  const projBySeg = new Map<string, Set<string>>();
+  const allProjects = new Set<string>();
+  for (const r of rows) {
+    if (r.project_id) allProjects.add(r.project_id);
+    const seg = segById.get(r.project_id) ?? 'other';
+    (bySeg.get(seg) ?? bySeg.set(seg, []).get(seg)!).push(r);
+    (projBySeg.get(seg) ?? projBySeg.set(seg, new Set()).get(seg)!).add(r.project_id);
+  }
+
+  const views: ResourceView[] = [
+    { key: 'all', label: 'All segments', dotCls: 'bg-foreground', projectCount: allProjects.size, load: computeLoad(rows, true) },
+  ];
+  // Known segments first (stable order), then any others present.
+  const ordered = [...Object.keys(SEGMENT_STYLES), ...[...bySeg.keys()].filter((s) => !(s in SEGMENT_STYLES))];
+  for (const seg of ordered) {
+    const segRows = bySeg.get(seg);
+    if (!segRows || segRows.length === 0) continue;
+    const style = segmentStyle(seg);
+    views.push({
+      key: seg,
+      label: style.label,
+      dotCls: style.dot,
+      projectCount: projBySeg.get(seg)?.size ?? 0,
+      load: computeLoad(segRows, true),
+    });
+  }
 
   return (
     <div className="container mx-auto max-w-screen-2xl px-8 py-8">
@@ -40,42 +77,14 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
       <p className="mt-1 text-sm text-muted-foreground">Cross-project breakdowns. Resource view is visibility only — levelling stays in the scheduler.</p>
       <div className="mt-5"><AnalyticsNav token={token} /></div>
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Disciplines tracked" value={String(load.roles.length)} />
-        <Stat label="Over-allocated disciplines" value={String(overRoles)} tone={overRoles > 0 ? 'warn' : 'ok'} sub="peak demand above capacity" />
-        <Stat label="Highest-demand discipline" value={peakRole ? `${peakRole.peakFte.toFixed(0)} FTE` : '—'} sub={peakRole ? roleName(peakRole.role) : ''} />
-        <Stat label="Disciplines with spare capacity" value={String(withSpare)} tone={withSpare > 0 ? 'ok' : 'neutral'} sub="headroom at peak demand" />
-      </div>
-
-      <div className="mt-6">
-        <ResourceLoadPanel
-          load={load}
-          mode="portfolio"
-          title="Resource demand vs capacity"
-          subtitle="Monthly FTE demand vs capacity across all projects · gray = available headroom, red months exceed capacity"
-        />
-      </div>
+      <ResourceAnalyticsClient views={views} />
 
       <p className="mt-4 max-w-3xl text-xs text-muted-foreground">
         Demand is aggregated from scheduler assignments (Dataverse / P6) into FTE per month at {''}
-        160 hours per FTE-month. Capacity is a portfolio stand-in per discipline. The gray band is available headroom (capacity not yet committed). Over-allocation flags where peak monthly
-        demand exceeds capacity — a signal to re-sequence in the scheduler, not something this layer resolves.
+        160 hours per FTE-month. Capacity is a portfolio stand-in per discipline and is held constant across segment
+        views, so a single segment reads as the share of total capacity it consumes. Over-allocation flags where peak
+        monthly demand exceeds capacity — a signal to re-sequence in the scheduler, not something this layer resolves.
       </p>
-    </div>
-  );
-}
-
-function roleName(role: string): string {
-  return role.replace(/_/g, ' ');
-}
-
-function Stat({ label, value, sub, tone = 'neutral' }: { label: string; value: string; sub?: string; tone?: 'neutral' | 'ok' | 'warn' }) {
-  const cls = tone === 'warn' ? 'text-red-600' : tone === 'ok' ? 'text-emerald-700' : 'text-foreground';
-  return (
-    <div className="rounded-lg border bg-card p-4">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums ${cls}`}>{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-muted-foreground">{sub}</p>}
     </div>
   );
 }
