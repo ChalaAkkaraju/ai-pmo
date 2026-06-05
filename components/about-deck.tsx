@@ -44,6 +44,12 @@ const WHERE_WHY = [
   'Joined by the WBS code — one shared key ties every cost to its schedule',
 ];
 
+const WHY_AGENTS = [
+  { t: 'Accurate', body: 'A narrow brief is far easier to keep correct than one assistant trying to do everything.' },
+  { t: 'Traceable', body: 'Every answer is attributed to the specialist that produced it — you always know who said what.' },
+  { t: 'Method-aware', body: 'Each is grounded in PMBOK practice and your past projects, not generic advice.' },
+];
+
 const EV_UNLOCKS = [
   { t: 'Early warning', body: 'A falling CPI flags an overrun before it lands.' },
   { t: 'Defensible forecasts', body: 'EAC and VAC you can take straight to a sponsor.' },
@@ -98,7 +104,7 @@ const SLIDES: Array<{ label: string; accent: string }> = [
 
 function Hero({ Icon, label, accent, title, tagline }: { Icon: LucideIcon; label: string; accent: string; title: string; tagline?: string }) {
   return (
-    <div className="rounded-2xl border p-5" style={{ background: `linear-gradient(135deg, ${accent}1f, ${accent}08)`, borderColor: `${accent}33` }}>
+    <div className="rounded-2xl border p-7" style={{ background: `linear-gradient(135deg, ${accent}1f, ${accent}08)`, borderColor: `${accent}33` }}>
       <div className="mb-2.5 flex items-center gap-3">
         <span className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: `${accent}26`, color: accent }}><Icon size={24} strokeWidth={2} /></span>
         <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: `${accent}1a`, color: accent }}>{label}</span>
@@ -112,7 +118,7 @@ function Hero({ Icon, label, accent, title, tagline }: { Icon: LucideIcon; label
 function Slide({ idx, refCb, children }: { idx: number; refCb: (i: number) => (el: HTMLElement | null) => void; children: ReactNode }) {
   return (
     <section data-idx={idx} ref={refCb(idx)} className="h-full min-h-full w-full min-w-full flex-none snap-start overflow-y-auto px-6 py-10">
-      <div className="mx-auto flex min-h-full w-full max-w-4xl items-start">
+      <div className="mx-auto flex min-h-full w-full max-w-4xl items-center">
         <div className="w-full">{children}</div>
       </div>
     </section>
@@ -195,7 +201,7 @@ export function AboutDeck({ token }: { token: string }) {
         {/* 0 — Overview */}
         <Slide idx={0} refCb={setRef}>
           <Hero Icon={Sparkles} label="How it works" accent="#d97706" title="How AI PMO works — the full picture" tagline="The complete argument — scroll through one piece at a time" />
-          <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-foreground/80 text-justify">{LEAD.overview}</p>
+          <p className="mt-4 max-w-3xl text-base leading-relaxed text-foreground/80 text-justify">{LEAD.overview}</p>
           <div className="mt-3 rounded-xl border-l-4 border-amber-400 bg-amber-50/50 px-4 py-3">
             <p className="text-[15px] font-medium text-amber-900">The promise: from two systems to one explained picture — without replacing either.</p>
           </div>
@@ -218,28 +224,28 @@ export function AboutDeck({ token }: { token: string }) {
         {/* 1 — The problem */}
         <Slide idx={1} refCb={setRef}>
           <Hero Icon={Puzzle} label="The problem" accent="#d97706" title="The synthesis nobody owns" />
-          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80 text-justify">
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">
             Your ERP knows the <span className="font-medium text-foreground">money</span>. Your scheduler knows the{' '}
             <span className="font-medium text-foreground">dates</span>. But the work that matters most — pulling them
             together into <em>&ldquo;what is actually going on, and what should we do about it&rdquo;</em> — still
             happens by hand, in spreadsheets and slide decks, every reporting cycle. That synthesis is the PMO&apos;s
-            real job. This tool does it.
+            real job. AI PMO does it.
           </p>
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
             {PAINS.map((p) => (
-              <div key={p.t} className={`flex h-full flex-col rounded-xl border p-4 ${p.cls}`}>
+              <div key={p.t} className={`flex h-full flex-col rounded-xl border p-5 ${p.cls}`}>
                 <p className="text-xs font-semibold uppercase tracking-wider">{p.t}</p>
-                <p className="mt-2 text-[13px] leading-relaxed text-foreground/80">{p.body}</p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/80">{p.body}</p>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80 text-justify">The bottleneck is not data — both systems are full of it. It is the <span className="font-semibold">synthesis</span>. That is the job AI PMO takes on.</p>
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">The bottleneck is not data — both systems are full of it. It is the <span className="font-semibold">synthesis</span>. That is the job AI PMO takes on.</p>
         </Slide>
 
         {/* 2 — Where it fits */}
         <Slide idx={2} refCb={setRef}>
           <Hero Icon={Sparkles} label="Where it fits" accent="#d97706" title="An intelligence layer — not another system" tagline="It sits above your systems of record and explains them together" />
-          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80 text-justify">{LEAD.where}</p>
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">{LEAD.where}</p>
           <div className="mt-4 rounded-xl border-2 border-amber-300 bg-amber-50/40 p-5">
             <div className="flex items-center justify-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-600" strokeWidth={1.75} />
@@ -272,17 +278,17 @@ export function AboutDeck({ token }: { token: string }) {
         {/* 3 — Two bookends */}
         <Slide idx={3} refCb={setRef}>
           <Hero Icon={Wand2} label="Two bookends" accent="#8b5cf6" title="It writes exactly once" tagline="It touches the systems of record at two moments only" />
-          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80 text-justify">{LEAD.bookends}</p>
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">{LEAD.bookends}</p>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex h-full flex-col rounded-xl border bg-card p-5">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-700"><Wand2 className="h-5 w-5" strokeWidth={1.75} /></span>
               <h3 className="mt-3 text-sm font-semibold">Authors the WBS — upstream</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">ERPs build a WBS from rigid templates. Instead, the AI proposes a scope-true structure; you approve it, and it&apos;s booked into the ERP as the real project — the one deliberate write. The same WBS is published to the scheduler, so every task is born tagged to it.</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">ERPs build a WBS from rigid templates. Instead, the AI proposes a scope-true structure; you approve it, and it&apos;s booked into the ERP as the real project — the one deliberate write. The same WBS is published to the scheduler, so every task is born tagged to it.</p>
             </div>
             <div className="flex h-full flex-col rounded-xl border bg-card p-5">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"><TrendingUp className="h-5 w-5" strokeWidth={1.75} /></span>
               <h3 className="mt-3 text-sm font-semibold">Synthesises the result — downstream</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">From there it only reads — cost from the ERP, progress from the scheduler, joined by the WBS code — to compute earned value and the explained portfolio picture. The systems of record stay untouched.</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">From there it only reads — cost from the ERP, progress from the scheduler, joined by the WBS code — to compute earned value and the explained portfolio picture. The systems of record stay untouched.</p>
             </div>
           </div>
           <p className="mx-auto mt-3 max-w-2xl text-center text-[12px] text-muted-foreground">One deliberate write keeps your ERP the single source of truth — the layer never becomes a shadow system.</p>
@@ -297,7 +303,7 @@ export function AboutDeck({ token }: { token: string }) {
                 <span className="absolute right-4 top-4 text-2xl font-bold text-muted-foreground/15">{i + 1}</span>
                 <span className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${s.cls}`}><s.Icon className="h-5 w-5" strokeWidth={1.75} /></span>
                 <h3 className="mt-3 text-sm font-semibold">{s.title}</h3>
-                <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{s.body}</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
               </div>
             ))}
           </div>
@@ -319,7 +325,7 @@ export function AboutDeck({ token }: { token: string }) {
         <Slide idx={5} refCb={setRef}>
           <Hero Icon={TrendingUp} label="The flagship" accent="#10b981" title="Earned value — the metric no single system owns" />
           <div className="mt-4 grid grid-cols-1 gap-5 rounded-xl border bg-gradient-to-br from-emerald-50/50 via-card to-card p-6 md:grid-cols-2 md:items-center">
-            <p className="text-[15px] leading-relaxed text-foreground/80 text-justify">{LEAD.ev}</p>
+            <p className="text-base leading-relaxed text-foreground/80 text-justify">{LEAD.ev}</p>
             <div className="rounded-lg border bg-card p-4">
               <div className="mb-2 flex items-center gap-3 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1"><span className="inline-block h-0 w-3.5 border-t-2 border-dashed" style={{ borderColor: '#378ADD' }} />planned</span>
@@ -344,9 +350,9 @@ export function AboutDeck({ token }: { token: string }) {
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
             {EV_UNLOCKS.map((u) => (
-              <div key={u.t} className="flex h-full flex-col rounded-xl border bg-card p-4">
+              <div key={u.t} className="flex h-full flex-col rounded-xl border bg-card p-5">
                 <p className="text-sm font-semibold text-emerald-800">{u.t}</p>
-                <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{u.body}</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{u.body}</p>
               </div>
             ))}
           </div>
@@ -359,11 +365,11 @@ export function AboutDeck({ token }: { token: string }) {
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-5">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-emerald-700">What it does</h3>
-              <ul className="mt-3 space-y-2.5">{DOES.map((d) => <li key={d} className="flex gap-2.5 text-[13px]"><Check className="mt-0.5 h-4 w-4 flex-none text-emerald-600" strokeWidth={2.25} /><span className="text-foreground/85">{d}</span></li>)}</ul>
+              <ul className="mt-3 space-y-2.5">{DOES.map((d) => <li key={d} className="flex gap-2.5 text-sm"><Check className="mt-0.5 h-4 w-4 flex-none text-emerald-600" strokeWidth={2.25} /><span className="text-foreground/85">{d}</span></li>)}</ul>
             </div>
             <div className="rounded-xl border border-rose-200 bg-rose-50/40 p-5">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-rose-700">What it is not</h3>
-              <ul className="mt-3 space-y-2.5">{IS_NOT.map((d) => <li key={d} className="flex gap-2.5 text-[13px]"><X className="mt-0.5 h-4 w-4 flex-none text-rose-400" strokeWidth={2.25} /><span className="text-foreground/85">{d}</span></li>)}</ul>
+              <ul className="mt-3 space-y-2.5">{IS_NOT.map((d) => <li key={d} className="flex gap-2.5 text-sm"><X className="mt-0.5 h-4 w-4 flex-none text-rose-400" strokeWidth={2.25} /><span className="text-foreground/85">{d}</span></li>)}</ul>
             </div>
           </div>
         </Slide>
@@ -371,26 +377,34 @@ export function AboutDeck({ token }: { token: string }) {
         {/* 7 — Differentiator */}
         <Slide idx={7} refCb={setRef}>
           <Hero Icon={Brain} label="The moat" accent="#8b5cf6" title="What makes it different" tagline="The difference is the AI synthesis itself — not the integration" />
-          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80 text-justify">{LEAD.diff}</p>
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">{LEAD.diff}</p>
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-xl border bg-muted/20 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Table stakes · any BI tool</p>
-              <ul className="mt-3 space-y-2.5">{TABLE_STAKES.map((t) => <li key={t} className="flex gap-2.5 text-[13px] text-muted-foreground"><span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-muted-foreground/40" /><span>{t}</span></li>)}</ul>
+              <ul className="mt-3 space-y-2.5">{TABLE_STAKES.map((t) => <li key={t} className="flex gap-2.5 text-sm text-muted-foreground"><span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-muted-foreground/40" /><span>{t}</span></li>)}</ul>
             </div>
             <div className="rounded-xl border-2 border-violet-300 bg-violet-50/40 p-5">
               <div className="flex items-center gap-2"><span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-700"><Brain className="h-4 w-4" strokeWidth={1.75} /></span><p className="text-[11px] font-semibold uppercase tracking-wider text-violet-800">The differentiator · AI synthesis</p></div>
-              <ul className="mt-3 space-y-2.5">{DIFFERENTIATOR.map((t) => <li key={t} className="flex gap-2.5 text-[13px]"><Check className="mt-0.5 h-4 w-4 flex-none text-violet-600" strokeWidth={2.25} /><span className="text-foreground/80">{t}</span></li>)}</ul>
+              <ul className="mt-3 space-y-2.5">{DIFFERENTIATOR.map((t) => <li key={t} className="flex gap-2.5 text-sm"><Check className="mt-0.5 h-4 w-4 flex-none text-violet-600" strokeWidth={2.25} /><span className="text-foreground/80">{t}</span></li>)}</ul>
             </div>
           </div>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-[13px] text-muted-foreground">The test: if a normal BI dashboard could do it, it is table stakes. The moat is what the AI uniquely adds.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-muted-foreground">The test: if a normal BI dashboard could do it, it is table stakes. The moat is what the AI uniquely adds.</p>
         </Slide>
 
         {/* 8 — The agents */}
         <Slide idx={8} refCb={setRef}>
           <Hero Icon={Bot} label="The specialists" accent="#8b5cf6" title="One assistant, fourteen specialists" />
-          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80 text-justify">{LEAD.agents}</p>
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">{LEAD.agents}</p>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {AGENTS.map((a) => <span key={a} className="rounded-full px-2.5 py-1 text-xs font-medium" style={{ backgroundColor: '#8b5cf61f', color: '#7c3aed' }}>{a}</span>)}
+          </div>
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {WHY_AGENTS.map((w) => (
+              <div key={w.t} className="flex h-full flex-col rounded-xl border bg-card p-5">
+                <p className="text-sm font-semibold">{w.t}</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{w.body}</p>
+              </div>
+            ))}
           </div>
           <Link href={`/access/${token}/agents`} className="mt-5 inline-flex rounded-full border px-4 py-1.5 text-sm font-medium transition hover:bg-muted hover:border-foreground/20">Meet the 14 agents →</Link>
         </Slide>
@@ -403,7 +417,7 @@ export function AboutDeck({ token }: { token: string }) {
               <div key={c.title} className="flex h-full flex-col rounded-xl border bg-card p-5">
                 <span className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${c.cls}`}><c.Icon className="h-5 w-5" strokeWidth={1.75} /></span>
                 <h3 className="mt-3 text-sm font-semibold">{c.title}</h3>
-                <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{c.body}</p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{c.body}</p>
               </div>
             ))}
           </div>
