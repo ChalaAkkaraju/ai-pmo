@@ -513,13 +513,6 @@ function PortfolioEvBand({ ev, onBehindClick, onOverClick }: { ev: PortfolioEv; 
   };
   const ratioTone = (v: number | null) =>
     v == null ? 'text-slate-900' : v < 0.97 ? 'text-red-600' : v >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
-  const sched = ev.spi == null ? null : ev.spi < 0.97 ? 'behind schedule' : ev.spi > 1.03 ? 'ahead of schedule' : 'on schedule';
-  const cost = ev.cpi == null ? null : ev.cpi < 0.97 ? 'over cost' : ev.cpi > 1.03 ? 'under cost' : 'on budget';
-  const trouble = (ev.cpi != null && ev.cpi < 0.97) || (ev.spi != null && ev.spi < 0.97);
-  const great = ev.cpi != null && ev.cpi >= 1.0 && ev.spi != null && ev.spi >= 1.0;
-  const chip = trouble ? 'bg-red-100 text-red-800' : great ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
-  const readout = [sched, cost].filter(Boolean).join(' \u00b7 ') || 'in progress';
-
   const Cell = ({ label, value, cls = 'text-slate-900', accent }: { label: string; value: string; cls?: string; accent?: string }) => (
     <div className="rounded-md bg-white/70 px-3 py-2" style={accent ? { backgroundColor: `${accent}14` } : undefined}>
       <p className="text-[10px] font-medium uppercase tracking-wider" style={accent ? { color: accent } : undefined}>{label}</p>
@@ -540,8 +533,7 @@ function PortfolioEvBand({ ev, onBehindClick, onOverClick }: { ev: PortfolioEv; 
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {(sched || cost) && <span className={`rounded-full px-3 py-1 text-xs font-medium ${chip}`}>{readout}</span>}
-          {ev.behind_count > 0 && <button type="button" onClick={onBehindClick} className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700 transition hover:bg-red-100">{ev.behind_count} behind</button>}
+          {ev.behind_count > 0 && <button type="button" onClick={onBehindClick} className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-medium text-red-700 transition hover:bg-red-100">{ev.behind_count} behind schedule</button>}
           {ev.over_count > 0 && <button type="button" onClick={onOverClick} className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 transition hover:bg-amber-100">{ev.over_count} over cost</button>}
         </div>
       </div>
