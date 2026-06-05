@@ -77,6 +77,7 @@ export interface DrillIssue { code: string; project: string; severity: string; s
 export interface DrillRisk { code: string; project: string; klass: string; impact: string; status: string; owner: string; description: string; }
 export interface DrillContingency { code: string; name: string; segment: string; pct: number; consumedM: number; budgetM: number; band: string; }
 export interface ProjectRow { code: string; name: string; segment: string; cpi: number; spi: number; }
+export interface PatternRow { klass: string; status: string; supporting: number; threshold: number; }
 export interface PortfolioInsights {
   risk_class_counts: Record<string, number>;
   issue_severity_counts: Record<string, number>;
@@ -85,6 +86,7 @@ export interface PortfolioInsights {
   risk_rows: DrillRisk[];
   contingency_rows: DrillContingency[];
   project_rows: ProjectRow[];
+  pattern_rows: PatternRow[];
 }
 
 type DrillColumn = { key: string; label: string; numeric?: boolean; render?: (v: unknown, row: Record<string, unknown>) => ReactNode };
@@ -339,21 +341,22 @@ function LifecycleBar({
   sc,
   closed,
   showLegend = true,
-}: { active: number; sc: number; closed: number; showLegend?: boolean }) {
+  onStatusClick,
+}: { active: number; sc: number; closed: number; showLegend?: boolean; onStatusClick?: (status: 'Active' | 'SC' | 'Closed') => void }) {
   const total = active + sc + closed;
   if (total === 0) return null;
   return (
     <div className="space-y-2">
       <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className="bg-blue-500" style={{ width: `${(active / total) * 100}%` }} title={`Active: ${active}`} />
-        <div className="bg-emerald-500" style={{ width: `${(sc / total) * 100}%` }} title={`SC: ${sc}`} />
-        <div className="bg-gray-400" style={{ width: `${(closed / total) * 100}%` }} title={`Closed: ${closed}`} />
+        <div className={`bg-blue-500 ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(active / total) * 100}%` }} title={`Active: ${active}`} onClick={onStatusClick ? () => onStatusClick('Active') : undefined} />
+        <div className={`bg-emerald-500 ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(sc / total) * 100}%` }} title={`SC: ${sc}`} onClick={onStatusClick ? () => onStatusClick('SC') : undefined} />
+        <div className={`bg-gray-400 ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(closed / total) * 100}%` }} title={`Closed: ${closed}`} onClick={onStatusClick ? () => onStatusClick('Closed') : undefined} />
       </div>
       {showLegend && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-500" />Active <strong className="tabular-nums">{active}</strong></span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />Substantial Completion <strong className="tabular-nums">{sc}</strong></span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-gray-400" />Closed <strong className="tabular-nums">{closed}</strong></span>
+          <span onClick={onStatusClick ? () => onStatusClick('Active') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className="h-2 w-2 rounded-full bg-blue-500" />Active <strong className="tabular-nums">{active}</strong></span>
+          <span onClick={onStatusClick ? () => onStatusClick('SC') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className="h-2 w-2 rounded-full bg-emerald-500" />Substantial Completion <strong className="tabular-nums">{sc}</strong></span>
+          <span onClick={onStatusClick ? () => onStatusClick('Closed') : undefined} className={`inline-flex items-center gap-1.5 ${onStatusClick ? 'cursor-pointer' : ''}`}><span className="h-2 w-2 rounded-full bg-gray-400" />Closed <strong className="tabular-nums">{closed}</strong></span>
         </div>
       )}
     </div>
@@ -630,6 +633,15 @@ export function DashboardClient({
   function openContingencyDrawn() {
     const data = insights.contingency_rows.filter((r) => r.consumedM > 0).map((r) => ({ ...r, project: `${r.name} (${r.code})`, consumed: `$${r.consumedM.toFixed(2)}M / $${r.budgetM.toFixed(1)}M` })).sort((a, b) => b.consumedM - a.consumedM);
     setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} with contingency drawn`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }], data });
+  }
+  function openPatterns() {
+    const data = insights.pattern_rows.filter((r) => r.supporting >= r.threshold).sort((a, b) => b.supporting - a.supporting);
+    setDrill({ title: `${data.length} pattern${data.length === 1 ? '' : 's'} at emergence`, columns: [{ key: 'klass', label: 'Class' }, { key: 'status', label: 'Status' }, { key: 'supporting', label: 'Projects', numeric: true }, { key: 'threshold', label: 'Threshold', numeric: true }], data });
+  }
+  function openStatusDrill(status: 'Active' | 'SC' | 'Closed') {
+    const data = projects.filter((p) => p.status === status).map((p) => ({ ...p, project: `${p.name} (${p.code})` }));
+    const labelMap: Record<string, string> = { Active: 'active', SC: 'in substantial completion', Closed: 'closed' };
+    setDrill({ title: `${data.length} ${labelMap[status]} project${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'client', label: 'Client' }, { key: 'current_week', label: 'Week', numeric: true }], data });
   }
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -974,7 +986,7 @@ export function DashboardClient({
 
           <div className="flex flex-col justify-center md:pl-6">
             <p className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">Lifecycle mix</p>
-            <LifecycleBar active={totalActive} sc={totalSc} closed={totalClosed} />
+            <LifecycleBar active={totalActive} sc={totalSc} closed={totalClosed} onStatusClick={openStatusDrill} />
             <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Portfolio health pulse</p>
               <div className="mt-2 flex items-baseline gap-2">
@@ -1182,7 +1194,7 @@ export function DashboardClient({
           <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} onClick={openCostOffTrack} />
           <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} onClick={openSchedOffTrack} />
           <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" onClick={openContingencyDrawn} />
-          <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" />
+          <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" onClick={openPatterns} />
         </div>
       </section>
 
