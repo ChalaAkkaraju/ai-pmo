@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
     intake_json: body.intake ?? {},
     created_via: 'intake_form',
     created_by_role_type: role.role_type,
+    source_system: 'APP', // authored in AI PMO, not yet booked to SAP
   };
 
   // Insert with a one-shot retry on the code unique constraint (race).
