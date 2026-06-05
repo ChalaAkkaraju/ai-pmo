@@ -345,16 +345,33 @@ function LifecycleBar({
   sc,
   closed,
   showLegend = true,
+  inlineCounts = false,
   onStatusClick,
-}: { active: number; sc: number; closed: number; showLegend?: boolean; onStatusClick?: (status: 'Active' | 'SC' | 'Closed') => void }) {
+}: { active: number; sc: number; closed: number; showLegend?: boolean; inlineCounts?: boolean; onStatusClick?: (status: 'Active' | 'SC' | 'Closed') => void }) {
   const total = active + sc + closed;
   if (total === 0) return null;
   return (
     <div className="space-y-2">
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className={`${LIFECYCLE.Active.bar} ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(active / total) * 100}%` }} title={`Active: ${active}`} onClick={onStatusClick ? () => onStatusClick('Active') : undefined} />
-        <div className={`${LIFECYCLE.SC.bar} ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(sc / total) * 100}%` }} title={`SC: ${sc}`} onClick={onStatusClick ? () => onStatusClick('SC') : undefined} />
-        <div className={`${LIFECYCLE.Closed.bar} ${onStatusClick ? 'cursor-pointer' : ''}`} style={{ width: `${(closed / total) * 100}%` }} title={`Closed: ${closed}`} onClick={onStatusClick ? () => onStatusClick('Closed') : undefined} />
+      <div className={`flex w-full overflow-hidden bg-muted ${inlineCounts ? 'h-6 rounded-md' : 'h-2.5 rounded-full'}`}>
+        {([
+          ['Active', active, LIFECYCLE.Active.bar, 'text-white'],
+          ['SC', sc, LIFECYCLE.SC.bar, 'text-white'],
+          ['Closed', closed, LIFECYCLE.Closed.bar, 'text-gray-900'],
+        ] as const).map(([key, val, barCls, textCls]) => {
+          if (val === 0) return null;
+          const pct = (val / total) * 100;
+          return (
+            <div
+              key={key}
+              onClick={onStatusClick ? () => onStatusClick(key) : undefined}
+              className={`flex items-center justify-center ${barCls} ${onStatusClick ? 'cursor-pointer' : ''} ${inlineCounts ? `text-[11px] font-semibold tabular-nums ${textCls}` : ''}`}
+              style={{ width: `${pct}%` }}
+              title={`${key}: ${val}`}
+            >
+              {inlineCounts && pct >= 8 ? val : ''}
+            </div>
+          );
+        })}
       </div>
       {showLegend && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -1224,11 +1241,11 @@ export function DashboardClient({
                   <p className="text-sm text-muted-foreground">projects · {fmtBillions(s.contract_value_b)}</p>
                   {/* Lifecycle mini-bar */}
                   <div className="mt-4">
-                    <LifecycleBar active={s.active_count} sc={s.sc_count} closed={s.closed_count} showLegend={false} />
-                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                      <span><span className="font-medium text-foreground tabular-nums">{s.active_count}</span> Active</span>
-                      <span><span className="font-medium text-foreground tabular-nums">{s.sc_count}</span> SC</span>
-                      <span><span className="font-medium text-foreground tabular-nums">{s.closed_count}</span> Closed</span>
+                    <LifecycleBar active={s.active_count} sc={s.sc_count} closed={s.closed_count} showLegend={false} inlineCounts />
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.Active.dot}`} />Active</span>
+                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.SC.dot}`} />SC</span>
+                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.Closed.dot}`} />Closed</span>
                     </div>
                   </div>
                   <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-1 text-xs">
