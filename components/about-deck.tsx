@@ -20,7 +20,6 @@ const LAYER_OUTPUTS = ['earned value', 'risk & change synthesis', 'portfolio pat
 const STATS = [
   { n: '2', l: 'systems unified — ERP + scheduler' },
   { n: '14', l: 'specialist agents' },
-  { n: '1', l: 'deliberate write — the WBS' },
 ];
 
 const LEAD = {
@@ -201,11 +200,11 @@ export function AboutDeck({ token }: { token: string }) {
         {/* 0 — Overview */}
         <Slide idx={0} refCb={setRef}>
           <Hero Icon={Sparkles} label="How it works" accent="#d97706" title="How AI PMO works — the full picture" tagline="The complete argument — scroll through one piece at a time" />
-          <p className="mt-4 max-w-3xl text-base leading-relaxed text-foreground/80 text-justify">{LEAD.overview}</p>
+          <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">{LEAD.overview}</p>
           <div className="mt-3 rounded-xl border-l-4 border-amber-400 bg-amber-50/50 px-4 py-3">
             <p className="text-[15px] font-medium text-amber-900">The promise: from two systems to one explained picture — without replacing either.</p>
           </div>
-          <div className="mt-5 grid grid-cols-3 gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-3">
             {STATS.map((s) => (
               <div key={s.l} className="rounded-xl border bg-muted/40 px-4 py-3">
                 <div className="text-2xl font-bold text-foreground">{s.n}</div>
