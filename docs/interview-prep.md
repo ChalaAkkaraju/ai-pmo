@@ -130,6 +130,24 @@ The cost picture, if I ever needed to add this: embeddings ingest is about $0.02
 
 ---
 
+### Q18. How did you build a multi-agent system this quickly, when a company like SAP — with vastly more resources — moves more slowly?
+
+Good question, and the honest answer is that we aren't building the same thing, so the speed comparison is misleading. Five reasons, roughly in order of weight:
+
+1. **"Agent" means something different on each side.** Mine are well-scoped LLM prompts — a system prompt, the right grounding, and computed facts handed in. SAP's are production enterprise features: multi-tenant, permissioned, audited, localized into 40-plus languages, integrated with real transactional data, reversible, supportable under an SLA, across public-cloud, private-cloud and on-prem editions. The engineering *around* the prompt is 10–100× the prompt itself.
+
+2. **I read; they act.** My agents synthesise and *draft*, read-only, with a human approving everything. SAP's increasingly *execute* — release a production order, post a reconciliation, move real money. Writing to a system of record at scale needs rollback, approvals, and correctness against millions of real rows. That's where the time goes.
+
+3. **Nothing is at stake for me.** No real users, no real data, no compliance surface, no liability, no security review, no backward compatibility. A learning project moves fast precisely *because* a wrong number hurts no one.
+
+4. **Greenfield versus decades of legacy.** I built on a clean modern stack; SAP has to thread new behaviour through S/4HANA's ABAP and 30-year-old data models. Building fresh is far easier than retrofitting.
+
+5. **The reasoning engine is now a commodity.** The genuinely hard part — the intelligence — is an API call to a frontier model. What used to need an ML team is now prompt-engineering plus grounding. That democratization, plus a narrow, self-defined scope (one domain, one methodology, data I control), is what lets a focused effort move quickly.
+
+The honest caveat — and the part that actually shows judgment — is that this does **not** mean I out-engineered SAP. SAP shipped 30-plus agents in about a year, which is *fast* for an enterprise; they carry far more weight, not less skill. So I'd never frame it as "I built agents faster than SAP." The credible framing is: *the new tooling collapses the cost of the reasoning layer, so a focused team can build the cross-system synthesis SAP's embedded agents structurally can't — without taking on the transactional, regulated burden that makes SAP's work slow.* That's the consume-vs-build, complementary-not-competitive story, and the lesson worth drawing is about **leverage and scope, not speed as superiority**.
+
+---
+
 ## Key numbers worth memorizing
 
 | Fact | Value |
@@ -150,31 +168,4 @@ The cost picture, if I ever needed to add this: embeddings ingest is about $0.02
 
 ## Things NOT to say
 
-- **"It's production-ready."** It isn't. It's a portfolio-quality build. Acknowledging that is a strength, not a weakness.
-- **"I built it from scratch with no AI assistance."** Untrue and an experienced hiring manager will know. The honest framing — "I designed the system; Claude wrote much of the code under my direction" — is what they want to hear.
-- **"The system never hallucinates."** Strong claim, hard to defend. Better: "The architecture grounds outputs in real data so the agent can't invent IDs or numbers. The consistency test verified zero hallucinated facts across the five runs, but five is a small sample; a wider eval would tighten the bound."
-- **"It's perfectly consistent."** Same problem. Better: "Five runs, 5/5 decision agreement. Variation exists in prose, not in conclusion."
-- **"I haven't thought about [X]."** If you genuinely haven't, say "I haven't formally evaluated [X], but the way I'd think about it is..." then reason out loud. Demonstrates judgment under uncertainty.
-- **Vendor-marketing language.** Don't call it "transformational" or "revolutionary." Engineers smell that immediately. Just describe what it does.
-
----
-
-## Questions worth asking the interviewer (when they ask "do you have questions for us?")
-
-Choose 2-3 from this list:
-
-- "What does the lifecycle of an LLM-based feature look like at your company — from spec to evaluation to production deployment?"
-- "How does your team think about the reliability-vs-creativity tradeoff for agentic systems? Where do you turn temperature down?"
-- "What's the current ratio of human-in-the-loop vs. autonomous decision-making in your agentic systems? Where would you want that ratio to move?"
-- "What's the most common failure mode you've seen in LLM systems you've shipped, and how did you find it?"
-- "How does your team evaluate prompts and agents — are there dedicated eval harnesses, or is it part of the normal QA loop?"
-
-Asking these signals you operate at the architect tier, not the implementer tier. Hiring managers notice.
-
----
-
-## Final note on practice
-
-Reading this document is necessary but not sufficient. To actually internalize: pick three of the Q&A items above, close the document, and try to deliver each answer out loud from memory. If you stumble, re-read that section, then try again. Repeat with three different questions tomorrow. By the time you've cycled through all 15 questions twice, you'll have the substance internalized enough to handle a real interview without sounding like you're reciting.
-
-The single highest-leverage skill is being able to deliver the 60-second elevator pitch *fluently* — most candidates can't, and it's the first 60 seconds that anchors the interviewer's impression. Prioritize that.
+- **"It's production-ready."** It isn't. It's a portfolio-quality build. Acknowledging that is 

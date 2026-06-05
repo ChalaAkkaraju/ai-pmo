@@ -441,7 +441,10 @@ export function AboutDeck({ token }: { token: string }) {
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">SAP&apos;s agents assume everything lives in S/4. AI PMO fills the gap when cost is in SAP PS but the schedule is in P6 or MS Project.</p>
             </div>
           </div>
-          <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">Sources: SAP News (Connect 2025, Sapphire 2026), sap.com, SAP Community — as of June 2026. <Link href={`/access/${token}/technical`} className="font-medium text-sky-700 hover:underline">See the detailed agent-by-agent comparison →</Link></p>
+          <div className="mt-4 rounded-lg border-l-4 border-slate-300 bg-muted/40 px-4 py-2.5">
+            <p className="text-[13px] leading-relaxed text-muted-foreground">A note on humility: SAP ships secure, audited, transactional agents to thousands of enterprises — a far heavier lift than a focused, read-only synthesis layer. This is not a claim to be faster or better than SAP; it is a different, narrower job that sits alongside it.</p>
+          </div>
+          <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">Sources: SAP News (Connect 2025, Sapphire 2026), sap.com, SAP Community — as of June 2026. <Link href={`/access/${token}/technical`} className="font-medium text-sky-700 hover:underline">See the detailed agent-by-agent comparison →</Link></p>
         </Slide>
 
         {/* 10 — Capabilities */}
