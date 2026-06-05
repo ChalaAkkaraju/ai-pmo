@@ -71,7 +71,7 @@ const DOES = [
 ];
 
 const IS_NOT = [
-  'Not a scheduler — no critical-path engine or resource levelling (that stays in your scheduler, e.g. Microsoft Planner Premium or Primavera P6)',
+  'Not a scheduler — no critical-path engine or resource levelling (that stays in your scheduler, e.g. Primavera P6 or Microsoft Project)',
   'Not an accounting system — cost, commitment, billing and revenue stay in your ERP, e.g. SAP PS or Oracle',
   'Not a replacement for your systems of record — it authors the WBS into the ERP at setup, then only reads from them',
 ];
@@ -266,7 +266,7 @@ export function AboutDeck({ token }: { token: string }) {
             <div className="rounded-xl border bg-card p-4">
               <div className="flex items-center gap-2"><span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700"><CalendarClock className="h-4 w-4" strokeWidth={1.75} /></span><p className="text-sm font-medium">Any scheduler</p></div>
               <p className="mt-2 text-xs text-muted-foreground">Schedule &amp; resources — dates · critical path · levelling</p>
-              <p className="mt-1.5 text-[11px] text-muted-foreground/80">e.g. Microsoft Planner Premium · Primavera P6 · and others</p>
+              <p className="mt-1.5 text-[11px] text-muted-foreground/80">e.g. Primavera P6 · Microsoft Project · Microsoft Planner · and others</p>
             </div>
           </div>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
