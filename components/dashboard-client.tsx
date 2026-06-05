@@ -6,7 +6,7 @@
  *   Insights ribbon — 3 mini charts (risk by class, issue severity, CPI distribution)
  *   KPI ribbon — 6 financial KPI cards
  *   Theme cards — clickable, each with embedded lifecycle mini-bar
- *   Inline drill-down — filtered project grid
+ *   Segment cards — click to open a project popup (filter/sort/click-through)
  *   Recent activity feed
  */
 
@@ -90,7 +90,7 @@ export interface PortfolioInsights {
 }
 
 type DrillColumn = { key: string; label: string; numeric?: boolean; render?: (v: unknown, row: Record<string, unknown>) => ReactNode };
-type DrillState = { title: string; columns: DrillColumn[]; data: Array<Record<string, unknown>>; seeAllHref?: string };
+type DrillState = { title: string; columns: DrillColumn[]; data: Array<Record<string, unknown>>; seeAllHref?: string; rowHref?: (row: Record<string, unknown>) => string };
 
 export interface HotItem {
   id: string;
@@ -164,7 +164,6 @@ interface Props {
   activity: DashboardActivity[];
 }
 
-const ALL_STATUSES = ['Active', 'SC', 'Closed'] as const;
 
 function fmtMoneyM(n: number): string {
   return `$${(n / 1_000_000).toFixed(1)}M`;
@@ -424,7 +423,7 @@ function StackedRibbon({ items, onSegmentClick }: { items: BarItem[]; onSegmentC
   );
 }
 
-function DrillModal({ title, columns, data, seeAllHref, onClose }: DrillState & { onClose: () => void }) {
+function DrillModal({ title, columns, data, seeAllHref, rowHref, onClose }: DrillState & { onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -481,7 +480,7 @@ function DrillModal({ title, columns, data, seeAllHref, onClose }: DrillState & 
               </thead>
               <tbody className="divide-y">
                 {rows.map((r, i) => (
-                  <tr key={i} className="align-top">
+                  <tr key={i} onClick={rowHref ? () => { window.location.href = rowHref(r); } : undefined} className={`align-top ${rowHref ? 'cursor-pointer hover:bg-muted/40' : ''}`}>
                     {columns.map((c) => <td key={c.key} className="py-1.5 pr-3">{c.render ? c.render(r[c.key], r) : String(r[c.key] ?? '')}</td>)}
                   </tr>
                 ))}
@@ -643,9 +642,21 @@ export function DashboardClient({
     const labelMap: Record<string, string> = { Active: 'active', SC: 'in substantial completion', Closed: 'closed' };
     setDrill({ title: `${data.length} ${labelMap[status]} project${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'client', label: 'Client' }, { key: 'current_week', label: 'Week', numeric: true }], data });
   }
-  const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
-  const [selectedStatuses, setSelectedStatuses] = useState<Set<string>>(new Set());
+  function openSegmentDrill(segment: string) {
+    const data = projects.filter((p) => p.segment === segment).map((p) => ({ ...p, project: `${p.name} (${p.code})` }));
+    setDrill({
+      title: `${segmentStyle(segment).label} — ${data.length} project${data.length === 1 ? '' : 's'}`,
+      columns: [
+        { key: 'project', label: 'Project' },
+        { key: 'client', label: 'Client' },
+        { key: 'status', label: 'Status', render: (v) => <span className={`inline-block rounded-full px-2 py-0.5 ${statusBadge(String(v))}`}>{String(v)}</span> },
+        { key: 'current_week', label: 'Week', numeric: true },
+        { key: 'contract_value_current', label: 'Contract', numeric: true, render: (v) => fmtMoneyM(Number(v)) },
+      ],
+      data,
+      rowHref: (r) => `/access/${token}/projects/${r.code}`,
+    });
+  }
 
   // Always-visible global project search (separate from the segment
   // drill-down search above). Matches on code, name, client, or segment.
@@ -780,35 +791,6 @@ export function DashboardClient({
   const totalSc = segmentSummaries.reduce((s, x) => s + x.sc_count, 0);
   const totalClosed = segmentSummaries.reduce((s, x) => s + x.closed_count, 0);
 
-  const filteredProjects = useMemo(() => {
-    if (!selectedSegment) return [];
-    const q = query.trim().toLowerCase();
-    return projects.filter((p) => {
-      if (p.segment !== selectedSegment) return false;
-      if (selectedStatuses.size > 0 && !selectedStatuses.has(p.status)) return false;
-      if (q) {
-        const hay = `${p.name} ${p.code} ${p.client}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [projects, selectedSegment, query, selectedStatuses]);
-
-  function toggleSegment(seg: string) {
-    if (selectedSegment === seg) {
-      setSelectedSegment(null); setQuery(''); setSelectedStatuses(new Set());
-    } else {
-      setSelectedSegment(seg); setQuery(''); setSelectedStatuses(new Set());
-    }
-  }
-
-  function toggleStatus(s: string) {
-    setSelectedStatuses((prev) => {
-      const next = new Set(prev);
-      if (next.has(s)) next.delete(s); else next.add(s);
-      return next;
-    });
-  }
 
   // Insights chart data
   const RISK_CLASS_COLORS: Record<string, string> = {
@@ -1202,25 +1184,21 @@ export function DashboardClient({
       <section>
         <div className="flex items-center justify-between">
           <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Segments</h2>
-          {selectedSegment && (
-            <button onClick={() => toggleSegment(selectedSegment)} className="text-xs text-muted-foreground hover:text-foreground">Collapse</button>
-          )}
         </div>
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {segmentSummaries.map((s) => {
             const ss = segmentStyle(s.segment);
-            const active = selectedSegment === s.segment;
             return (
               <button
                 key={s.segment}
-                onClick={() => toggleSegment(s.segment)}
-                className={`relative overflow-hidden rounded-lg border bg-card p-4 text-left transition ${active ? 'border-foreground/40 shadow-md ring-1 ring-foreground/10' : 'hover:border-foreground/30 hover:shadow-sm'}`}
+                onClick={() => openSegmentDrill(s.segment)}
+                className="relative overflow-hidden rounded-lg border bg-card p-4 text-left transition hover:border-foreground/30 hover:shadow-sm"
               >
                 <span className={`absolute left-0 top-0 h-full w-1.5 ${ss.accentBar}`} />
                 <div className="pl-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold">{ss.label}</span>
-                    <span className="text-base text-muted-foreground/50">{active ? '▾' : '▸'}</span>
+                    <span className="text-base text-muted-foreground/50">▸</span>
                   </div>
                   <p className="mt-2 text-4xl font-semibold tabular-nums">{s.project_count}</p>
                   <p className="text-sm text-muted-foreground">projects · {fmtBillions(s.contract_value_b)}</p>
@@ -1244,59 +1222,6 @@ export function DashboardClient({
           })}
         </div>
       </section>
-
-      {/* Inline drill-down */}
-      {selectedSegment && (
-        <section className="rounded-lg border bg-muted/30 p-5">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="text-lg font-semibold">
-              {segmentStyle(selectedSegment).label} projects
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({filteredProjects.length}{filteredProjects.length !== projects.filter((p) => p.segment === selectedSegment).length ? ` of ${projects.filter((p) => p.segment === selectedSegment).length}` : ''})
-              </span>
-            </h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <input type="text" placeholder="Search…" value={query} onChange={(e) => setQuery(e.target.value)} className="w-48 rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground/30" />
-              {ALL_STATUSES.map((s) => {
-                const active = selectedStatuses.has(s);
-                return (
-                  <button key={s} onClick={() => toggleStatus(s)} className={`rounded-full px-3 py-1 text-xs font-medium transition ${active ? statusBadge(s) : 'bg-muted text-muted-foreground border border-transparent hover:bg-muted/70'}`}>{s}</button>
-                );
-              })}
-            </div>
-          </div>
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.length === 0 ? (
-              <div className="col-span-full rounded-md border border-dashed bg-card p-6 text-center text-sm text-muted-foreground">No projects in this theme match your filters.</div>
-            ) : (
-              filteredProjects.map((p) => {
-                const ss = segmentStyle(p.segment);
-                return (
-                  <Link key={p.id} href={`/access/${token}/projects/${p.code}`} className="group relative overflow-hidden rounded-md border bg-card transition hover:border-foreground/30 hover:shadow-sm">
-                    <span className={`absolute left-0 top-0 h-full w-1 ${ss.accentBar}`} />
-                    <div className="p-4 pl-5">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-base font-semibold leading-tight line-clamp-2">{p.name}</h3>
-                        <div className="flex shrink-0 items-center gap-1.5">
-                          {p.is_new && (
-                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">New</span>
-                          )}
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge(p.status)}`}>{p.status}</span>
-                        </div>
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{p.code} · {p.client}</p>
-                      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                        <div><dt className="text-muted-foreground">Week</dt><dd className="font-medium">{p.current_week}</dd></div>
-                        <div><dt className="text-muted-foreground">Contract</dt><dd className="font-medium">{fmtMoneyM(p.contract_value_current)}</dd></div>
-                      </dl>
-                    </div>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        </section>
-      )}
 
       {/* Recent activity — live via Supabase Realtime */}
       <section>
