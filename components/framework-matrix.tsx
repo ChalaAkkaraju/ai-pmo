@@ -116,6 +116,7 @@ function Chip({ proc, onClick }: { proc: Proc; onClick: () => void }) {
     >
       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: s.dot }} />
       {proc.p}
+      {proc.ag && <span className="ml-0.5 text-[10px] leading-none opacity-60" aria-hidden>⚙</span>}
     </button>
   );
 }
@@ -148,7 +149,7 @@ export function FrameworkMatrix({ token }: { token: string }) {
           </span>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">Tip: click any process to see what it is and how this model handles it — AI-owned processes link to the agent that does the work.</p>
+      <p className="text-xs text-muted-foreground">Tip: click any process to see what it is and how this model handles it. Green processes marked ⚙ are handled by a dedicated agent — click through to meet it.</p>
 
       {/* Matrix */}
       <div className="overflow-x-auto rounded-xl border">
@@ -208,6 +209,11 @@ export function FrameworkMatrix({ token }: { token: string }) {
                 >
                   Meet the {agentName} →
                 </button>
+              )}
+              {!sel.proc.ag && (sel.proc.o === 'author' || sel.proc.o === 'synth') && (
+                <p className="mt-4 rounded-md border border-dashed px-3 py-2 text-[13px] text-muted-foreground" style={{ borderColor: s.bd }}>
+                  No single dedicated agent — the AI produces this as part of the planning assembly / general read-only synthesis.
+                </p>
               )}
               <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">PMBOK process · coloured by who owns it in this model — same colour code as the process flow.</p>
             </div>
