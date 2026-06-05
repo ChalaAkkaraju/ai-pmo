@@ -88,7 +88,7 @@ export default async function RisksAnalyticsPage({ params }: { params: Promise<{
         <DonutPanel title="By status" rows={byStatus} centerLabel="risks" />
         <DonutPanel title="By impact" rows={byImpact} centerLabel="risks" />
         <DonutPanel title="By segment" rows={bySegment} centerLabel="risks" />
-        <RankedBarPanel title="By cross-cutting class" rows={byClass} />
+        <RankedBarPanel title="By category" rows={byClass} />
       </div>
 
       <section className="space-y-2 pt-2">

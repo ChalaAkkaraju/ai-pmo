@@ -302,7 +302,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
   });
 
   // -------- Portfolio insights (for the 3 mini charts) --------
-  // 1. Risks by cross-cutting class
+  // 1. Risks by category
   const riskClassCounts: Record<string, number> = {};
   for (const r of risks) {
     const cls = r.cross_cutting_class || 'Project-specific';

@@ -892,7 +892,7 @@ export function DashboardClient({
         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border bg-card p-4 md:col-span-2">
             <div className="mb-3 flex items-baseline justify-between">
-              <h3 className="text-base font-semibold">Risks by cross-cutting class</h3>
+              <h3 className="text-base font-semibold">Risks by category</h3>
               <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total</span>
             </div>
             <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels />
