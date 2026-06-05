@@ -64,6 +64,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
         <Link href={`/access/${token}/architecture`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">Architecture</Link>
         <Link href={`/access/${token}/framework`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">PMBOK coverage</Link>
         <Link href={`/access/${token}/agents`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">The 14 agents</Link>
+        <Link href={`/access/${token}/concepts`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">AI concepts</Link>
       </div>
 
       <p className="mt-8 text-xs text-muted-foreground">
