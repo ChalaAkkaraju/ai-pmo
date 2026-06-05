@@ -279,6 +279,18 @@ export function AboutDeck({ token }: { token: string }) {
         <Slide idx={3} refCb={setRef}>
           <Hero Icon={Wand2} label="Two bookends" accent="#8b5cf6" title="It writes exactly once" tagline="It touches the systems of record at two moments only" />
           <p className="mt-4 text-base leading-relaxed text-foreground/80 text-justify">{LEAD.bookends}</p>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="rounded-2xl border bg-gradient-to-br from-violet-50/70 to-card p-6">
+              <div className="text-5xl font-extrabold tracking-tight text-violet-700 sm:text-6xl">1</div>
+              <div className="mt-2 text-lg font-bold tracking-tight text-foreground">deliberate write</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">the WBS, at setup — with your approval</div>
+            </div>
+            <div className="rounded-2xl border bg-gradient-to-br from-violet-50/70 to-card p-6">
+              <div className="text-5xl font-extrabold tracking-tight text-violet-700 sm:text-6xl">0</div>
+              <div className="mt-2 text-lg font-bold tracking-tight text-foreground">writes after that</div>
+              <div className="mt-0.5 text-sm text-muted-foreground">read-only for the life of the project</div>
+            </div>
+          </div>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex h-full flex-col rounded-xl border bg-card p-5">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-700"><Wand2 className="h-5 w-5" strokeWidth={1.75} /></span>
@@ -346,6 +358,7 @@ export function AboutDeck({ token }: { token: string }) {
                 <span className="flex-1 rounded-md bg-muted/50 px-2 py-1.5 text-center"><span className="block text-[10px] uppercase tracking-wider text-muted-foreground">SPI</span><span className="text-sm font-semibold text-red-600">0.81</span></span>
                 <span className="flex-1 rounded-md bg-muted/50 px-2 py-1.5 text-center"><span className="block text-[10px] uppercase tracking-wider text-muted-foreground">EAC</span><span className="text-sm font-semibold">$1.70M</span></span>
               </div>
+              <p className="mt-2 text-center text-[11px] text-muted-foreground">Illustrative readout — a project caught slipping early.</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
