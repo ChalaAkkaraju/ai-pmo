@@ -125,11 +125,11 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
                   </span>
                   <span className={`rounded-full px-3 py-1 text-sm font-medium ${s.chip}`}>{s.label}</span>
                 </div>
-                <h2 className="text-2xl font-bold tracking-tight text-foreground">{entry.name}</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-foreground">{entry.name}</h2>
                 <p className="mt-1 text-sm text-foreground/70">{entry.purpose}</p>
               </div>
 
-              <p className="mt-4 text-[15px] leading-relaxed text-foreground/80">{entry.plain}</p>
+              <p className="mt-4 text-base leading-relaxed text-foreground/80">{entry.plain}</p>
 
               <LifecycleStepper phase={AGENT_PHASE[entry.agent_type]} />
 
@@ -154,7 +154,7 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
 
               <div className="mt-4 rounded-xl border-l-4 border-sky-400 bg-sky-50/60 px-4 py-3">
                 <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-sky-700"><MessageCircle size={16} strokeWidth={2.5} />Try asking</p>
-                <p className="mt-1.5 text-[15px] italic leading-relaxed text-foreground/85">&ldquo;{entry.samplePrompt}&rdquo;</p>
+                <p className="mt-1.5 text-base italic leading-relaxed text-foreground/85">&ldquo;{entry.samplePrompt}&rdquo;</p>
               </div>
 
               <p className="mt-4 text-sm text-muted-foreground">
