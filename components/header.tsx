@@ -4,7 +4,13 @@
  * Shown on every page under /access/[token]/. Three zones:
  *   left   — brand mark (logo + product name)
  *   center — the colleague's name + role
- *   right  — nav links (New project / Agents / Usage / Analytics)
+ *   right  — nav: "+ New project", a "Learn" dropdown grouping the education
+ *            pages (About / Architecture / PMBOK / Agents / Concepts), then the
+ *            operational links (Integration / Usage / Analytics).
+ *
+ * The Learn menu is a CSS-only dropdown (shows on hover and on keyboard
+ * focus-within) so this stays a server component. It makes the explainer pages
+ * reachable from anywhere, not just the welcome gateway.
  *
  * "+ New project" only shows for roles that can create one (pm + engineering_manager).
  */
@@ -13,6 +19,14 @@ import Link from 'next/link';
 import type { ResolvedRole } from '@/lib/role-context';
 
 const CREATE_ROLES = ['pm', 'engineering_manager'];
+
+const LEARN_LINKS: Array<{ path: string; label: string }> = [
+  { path: 'about', label: 'How it works' },
+  { path: 'architecture', label: 'Architecture' },
+  { path: 'framework', label: 'PMBOK coverage' },
+  { path: 'agents', label: 'The 14 agents' },
+  { path: 'concepts', label: 'AI concepts' },
+];
 
 export function Header({ token, resolved }: { token: string; resolved: ResolvedRole }) {
   const canCreate = CREATE_ROLES.includes(resolved.role.role_type);
@@ -55,42 +69,39 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
               + New project
             </Link>
           )}
-          <Link
-            href={`/access/${token}/agents`}
-            className="text-muted-foreground transition hover:text-foreground"
-          >
-            Agents
-          </Link>
-          <Link
-            href={`/access/${token}/architecture`}
-            className="text-muted-foreground transition hover:text-foreground"
-          >
-            Architecture
-          </Link>
-          <Link
-            href={`/access/${token}/framework`}
-            className="text-muted-foreground transition hover:text-foreground"
-          >
-            PMBOK
-          </Link>
-          <Link
-            href={`/access/${token}/integration`}
-            className="text-muted-foreground transition hover:text-foreground"
-          >
-            Integration
-          </Link>
-          <Link
-            href={`/access/${token}/usage`}
-            className="text-muted-foreground transition hover:text-foreground"
-          >
-            Usage
-          </Link>
-          <Link
-            href={`/access/${token}/analytics/actions`}
-            className="text-muted-foreground transition hover:text-foreground"
-          >
-            Analytics
-          </Link>
+
+          {/* Learn — CSS-only dropdown grouping the education pages.
+              group-hover keeps it open over the button AND the (descendant)
+              menu; the transparent pt-1.5 bridge removes the dead zone so the
+              menu never closes between them. focus-within handles keyboard/touch. */}
+          <div className="group relative">
+            <button
+              type="button"
+              aria-haspopup="true"
+              className="inline-flex items-center gap-1 text-muted-foreground transition hover:text-foreground group-focus-within:text-foreground focus:outline-none"
+            >
+              Learn
+              <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden className="opacity-70 transition-transform group-hover:rotate-180 group-focus-within:rotate-180"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <div className="invisible absolute right-0 top-full z-50 pt-1.5 opacity-0 transition-opacity duration-100 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+              <div className="w-52 rounded-lg border bg-background py-1.5 shadow-lg">
+                <p className="px-3 pb-1 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Learn about AI PMO</p>
+                {LEARN_LINKS.map((l) => (
+                  <Link
+                    key={l.path}
+                    href={`/access/${token}/${l.path}`}
+                    className="block px-3 py-1.5 text-sm text-foreground/80 transition hover:bg-muted hover:text-foreground"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <Link href={`/access/${token}/integration`} className="text-muted-foreground transition hover:text-foreground">Integration</Link>
+          <Link href={`/access/${token}/usage`} className="text-muted-foreground transition hover:text-foreground">Usage</Link>
+          <Link href={`/access/${token}/analytics/actions`} className="text-muted-foreground transition hover:text-foreground">Analytics</Link>
         </div>
       </div>
     </header>
