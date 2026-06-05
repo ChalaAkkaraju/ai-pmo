@@ -27,7 +27,7 @@ const FLOW_KEY = [
   { c: '#85B7EB', t: 'SAP PS — ERP' },
   { c: '#FAC775', t: 'Scheduler' },
   { c: '#AFA9EC', t: 'Human-in-the-loop' },
-  { c: '#94A3B8', t: 'CRM / CPQ · out of scope' },
+  { c: '#CBD5E1', t: 'CRM / CPQ · out of scope' },
 ];
 
 export default async function ArchitecturePage({ params }: PageProps) {
@@ -91,7 +91,7 @@ export default async function ArchitecturePage({ params }: PageProps) {
         from CRM/CPQ), the AI authors and books the WBS, then execution runs in parallel across SAP PS (cost) and the
         scheduler (progress) before merging on the WBS code for synthesis &mdash; looping each reporting cycle until closeout.
       </p>
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <div className="mt-4 overflow-x-auto rounded-xl border bg-card p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/ai-pmo-process-flow.svg"
