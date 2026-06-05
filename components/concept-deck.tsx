@@ -350,11 +350,6 @@ export function ConceptDeck({ token }: { token: string }) {
             </div>
 
             <p className="mt-4 text-base font-medium text-emerald-900">That is why you can trust the numbers it shows you.</p>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link href={`/access/${token}/agents`} className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90">The 14 agents →</Link>
-              <Link href={`/access/${token}/architecture`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">How it fits — architecture →</Link>
-            </div>
           </div>
         </section>
       </div>
