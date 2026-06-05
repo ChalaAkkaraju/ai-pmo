@@ -18,8 +18,8 @@ import {
 const LAYER_OUTPUTS = ['earned value', 'risk & change synthesis', 'portfolio patterns', 'status narrative', 'recommendations'];
 
 const STATS = [
-  { n: '2', l: 'systems unified — ERP + scheduler' },
-  { n: '14', l: 'specialist agents' },
+  { n: '2', h: 'systems unified', s: 'ERP + scheduler, joined on the WBS code' },
+  { n: '14', h: 'specialist agents', s: 'PMBOK-aligned, behind one assistant' },
 ];
 
 const LEAD = {
@@ -204,11 +204,12 @@ export function AboutDeck({ token }: { token: string }) {
           <div className="mt-3 rounded-xl border-l-4 border-amber-400 bg-amber-50/50 px-4 py-3">
             <p className="text-[15px] font-medium text-amber-900">The promise: from two systems to one explained picture — without replacing either.</p>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            {STATS.map((s) => (
-              <div key={s.l} className="rounded-xl border bg-muted/40 px-4 py-3">
-                <div className="text-2xl font-bold text-foreground">{s.n}</div>
-                <div className="mt-0.5 text-xs text-muted-foreground">{s.l}</div>
+          <div className="mt-5 grid grid-cols-2 gap-4">
+            {STATS.map((st) => (
+              <div key={st.h} className="rounded-2xl border bg-gradient-to-br from-amber-50/70 to-card p-6">
+                <div className="text-5xl font-extrabold tracking-tight text-amber-700 sm:text-6xl">{st.n}</div>
+                <div className="mt-2 text-lg font-bold tracking-tight text-foreground">{st.h}</div>
+                <div className="mt-0.5 text-sm text-muted-foreground">{st.s}</div>
               </div>
             ))}
           </div>
