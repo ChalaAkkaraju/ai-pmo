@@ -64,8 +64,9 @@ export default async function ArchitecturePage({ params }: PageProps) {
 
       <h1 className="text-2xl font-bold tracking-tight">How AI PMO fits — the architecture</h1>
       <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
-        The layer sits above the ERP and the scheduler across the whole project lifecycle. It reads both systems of
-        record and writes exactly once — authoring the WBS and booking it into the ERP at setup, then publishing that
+        The layer sits above the ERP and the scheduler across the whole project lifecycle. The project is created in
+        SAP — shelled from the won quote (CRM/CPQ) at booking — and mirrored into AI PMO, with SAP staying the system of
+        record. AI PMO then writes exactly once — authoring the WBS and booking it back into SAP — and publishes that
         WBS to the scheduler so every task is born tagged. Everything after that is read-only synthesis, joined by the
         WBS code, ending in the three-state margin reconciliation.
       </p>
