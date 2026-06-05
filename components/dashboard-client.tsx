@@ -455,7 +455,7 @@ function DrillModal({ title, columns, data, seeAllHref, rowHref, onClose }: Dril
         <div className="flex items-start justify-between gap-3 border-b px-5 py-3">
           <div>
             <p className="text-sm font-semibold">{title}</p>
-            <p className="text-xs text-muted-foreground">{rows.length} of {data.length} shown</p>
+            <p className="text-xs text-muted-foreground">{rows.length} of {data.length} shown{rowHref ? ' · click a row to open' : ''}</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-md px-2 py-0.5 text-sm text-muted-foreground hover:bg-muted" aria-label="Close">&times;</button>
         </div>
@@ -594,6 +594,7 @@ export function DashboardClient({
       columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Issue' }, { key: 'owner', label: 'Owner' }, statusCol(issueBadge)],
       data,
       seeAllHref: `/access/${token}/analytics/issues`,
+      rowHref: (r) => `/access/${token}/projects/${r.code}?tab=risks`,
     });
   }
   function openRisksDrill(klass: string) {
@@ -603,6 +604,7 @@ export function DashboardClient({
       columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Risk' }, { key: 'owner', label: 'Owner' }, { key: 'impact', label: 'Impact' }, statusCol(riskBadge)],
       data,
       seeAllHref: `/access/${token}/analytics/risks`,
+      rowHref: (r) => `/access/${token}/projects/${r.code}?tab=risks`,
     });
   }
   function openContingencyDrill(band: string) {
@@ -611,27 +613,28 @@ export function DashboardClient({
       title: `${data.length} project${data.length === 1 ? '' : 's'} · ${band} contingency used`,
       columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }],
       data,
+      rowHref: (r) => `/access/${token}/projects/${r.code}?tab=variance`,
     });
   }
   function openOpenHIssues() {
     const data = insights.issue_rows.filter((r) => r.severity === 'H' && (r.status === 'Open' || r.status === 'In progress'));
-    setDrill({ title: `${data.length} open high-severity issue${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Issue' }, { key: 'owner', label: 'Owner' }, statusCol(issueBadge)], data, seeAllHref: `/access/${token}/analytics/issues` });
+    setDrill({ title: `${data.length} open high-severity issue${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Issue' }, { key: 'owner', label: 'Owner' }, statusCol(issueBadge)], data, seeAllHref: `/access/${token}/analytics/issues`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=risks` });
   }
   function openRealisedRisks() {
     const data = insights.risk_rows.filter((r) => r.status.toLowerCase().startsWith('realis'));
-    setDrill({ title: `${data.length} realised risk${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Risk' }, { key: 'klass', label: 'Class' }, { key: 'owner', label: 'Owner' }, statusCol(riskBadge)], data, seeAllHref: `/access/${token}/analytics/risks` });
+    setDrill({ title: `${data.length} realised risk${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Risk' }, { key: 'klass', label: 'Class' }, { key: 'owner', label: 'Owner' }, statusCol(riskBadge)], data, seeAllHref: `/access/${token}/analytics/risks`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=risks` });
   }
   function openCostOffTrack() {
     const data = insights.project_rows.filter((r) => r.cpi < 0.95).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => a.cpi - b.cpi);
-    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} cost off-track · CPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data });
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} cost off-track · CPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=ev` });
   }
   function openSchedOffTrack() {
     const data = insights.project_rows.filter((r) => r.spi < 0.95).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => a.spi - b.spi);
-    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} schedule off-track · SPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data });
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} schedule off-track · SPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=ev` });
   }
   function openContingencyDrawn() {
     const data = insights.contingency_rows.filter((r) => r.consumedM > 0).map((r) => ({ ...r, project: `${r.name} (${r.code})`, consumed: `$${r.consumedM.toFixed(2)}M / $${r.budgetM.toFixed(1)}M` })).sort((a, b) => b.consumedM - a.consumedM);
-    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} with contingency drawn`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }], data });
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} with contingency drawn`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=variance` });
   }
   function openPatterns() {
     const data = insights.pattern_rows.filter((r) => r.supporting >= r.threshold).sort((a, b) => b.supporting - a.supporting);
@@ -640,7 +643,7 @@ export function DashboardClient({
   function openStatusDrill(status: 'Active' | 'SC' | 'Closed') {
     const data = projects.filter((p) => p.status === status).map((p) => ({ ...p, project: `${p.name} (${p.code})` }));
     const labelMap: Record<string, string> = { Active: 'active', SC: 'in substantial completion', Closed: 'closed' };
-    setDrill({ title: `${data.length} ${labelMap[status]} project${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'client', label: 'Client' }, { key: 'current_week', label: 'Week', numeric: true }], data });
+    setDrill({ title: `${data.length} ${labelMap[status]} project${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'client', label: 'Client' }, { key: 'current_week', label: 'Week', numeric: true }], data, rowHref: (r) => `/access/${token}/projects/${r.code}` });
   }
   function openSegmentDrill(segment: string) {
     const data = projects.filter((p) => p.segment === segment).map((p) => ({ ...p, project: `${p.name} (${p.code})` }));

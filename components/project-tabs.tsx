@@ -52,6 +52,7 @@ const PLANNING_TABS: Array<{ value: string; label: string; agentType: AgentType 
 
 interface ProjectTabsProps {
   token: string;
+  initialTab?: string;
   projectCode: string;
   allowedAgents: AgentType[];
   canWrite: boolean;
@@ -84,6 +85,7 @@ interface ProjectTabsProps {
 
 export function ProjectTabs({
   token,
+  initialTab,
   projectCode,
   allowedAgents,
   canWrite,
@@ -103,7 +105,7 @@ export function ProjectTabs({
   scheduleEnvelope,
   data,
 }: ProjectTabsProps) {
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(['overview', 'structure', 'schedule', 'ev', 'resources', 'risks', 'cos', 'variance', 'planning'].includes(initialTab ?? '') ? (initialTab as string) : 'overview');
 
   const planningByAgent: Record<string, ArtefactRow[]> = {};
   for (const row of data.planning_outputs ?? []) {

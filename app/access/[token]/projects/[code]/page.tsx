@@ -25,6 +25,7 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ token: string; code: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
 const PLANNING_AGENT_TYPES = [
@@ -160,8 +161,9 @@ async function loadResourceLoad(
   return computeLoad((res.data ?? []) as ResAssignment[], false);
 }
 
-export default async function ProjectDetailPage({ params }: PageProps) {
+export default async function ProjectDetailPage({ params, searchParams }: PageProps) {
   const { token, code } = await params;
+  const { tab: initialTab } = await searchParams;
 
   const resolved = await resolveRoleFromToken(token);
   if (!resolved) notFound();
@@ -348,6 +350,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
       <ProjectTabs
         token={token}
+        initialTab={initialTab}
         projectCode={code}
         allowedAgents={resolved.definition.allowed_agents}
         canWrite={resolved.definition.can_write}
