@@ -46,7 +46,7 @@ function statusCls(s: string): string {
 }
 
 const FILE_OBJECTS: Array<{ type: 'wbs' | 'cost' | 'tasks' | 'resources'; label: string; source: string }> = [
-  { type: 'wbs', label: 'WBS structure', source: 'SAP PS' },
+  { type: 'wbs', label: 'WBS structure', source: 'SAP PS · AI PMO' },
   { type: 'cost', label: 'Cost actuals', source: 'SAP PS' },
   { type: 'tasks', label: 'Schedule (tasks)', source: 'Scheduler' },
   { type: 'resources', label: 'Resource assignments', source: 'Scheduler' },
