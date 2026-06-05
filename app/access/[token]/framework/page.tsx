@@ -50,11 +50,6 @@ export default async function FrameworkPage({ params }: PageProps) {
         teaching model, so it is used here as a familiar coverage map — the ownership story is the same under either lens.
       </p>
 
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link href={`/access/${token}/architecture`} className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90">See the architecture →</Link>
-        <Link href={`/access/${token}/agents`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">The 14 agents →</Link>
-        <Link href={`/access/${token}`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">Back to portfolio</Link>
-      </div>
     </div>
   );
 }

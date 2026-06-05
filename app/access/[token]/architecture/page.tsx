@@ -142,11 +142,6 @@ export default async function ArchitecturePage({ params }: PageProps) {
         <ProcessFlowDiagram token={token} />
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link href={`/access/${token}/framework`} className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90">See the PMBOK coverage →</Link>
-        <Link href={`/access/${token}/agents`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">The 14 agents →</Link>
-        <Link href={`/access/${token}`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">Back to portfolio</Link>
-      </div>
     </div>
   );
 }

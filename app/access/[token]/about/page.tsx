@@ -301,13 +301,6 @@ export default async function AboutPage({ params }: { params: Promise<{ token: s
         ))}
       </div>
 
-      {/* Cross-links + return */}
-      <div className="mt-12 flex flex-wrap items-center justify-center gap-2.5 text-sm">
-        <span className="text-muted-foreground">Go deeper:</span>
-        <Link href={`/access/${token}/architecture`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">Overall architecture →</Link>
-        <Link href={`/access/${token}/framework`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">PMBOK coverage →</Link>
-        <Link href={`/access/${token}/agents`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">The 14 agents →</Link>
-      </div>
       <div className="mt-8 text-center">
         <Link href={`/access/${token}`} className="inline-flex rounded-md bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90">Enter dashboard</Link>
       </div>
