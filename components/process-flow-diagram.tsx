@@ -25,7 +25,6 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
     return () => { on = false; };
   }, []);
 
-  // Native delegated click listener — fires reliably for the injected SVG.
   useEffect(() => {
     const node = ref.current;
     if (!node || !svg) return;
@@ -93,4 +92,14 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Method:</span> {entry.methodology}</p>
-              <div className="rounded-md bg-muted/50 px-3 py-2 tex
+              <div className="rounded-md bg-muted/50 px-3 py-2 text-xs"><span className="font-medium">Try:</span> &ldquo;{entry.samplePrompt}&rdquo;</div>
+            </div>
+            <div className="border-t px-5 py-2.5 text-right">
+              <Link href={`/access/${token}/agents`} className="text-xs font-medium text-foreground hover:underline">See all 13 agents →</Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
