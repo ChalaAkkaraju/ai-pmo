@@ -42,7 +42,7 @@ export function ResourceLoadPanel({
   subtitle,
 }: {
   load: LoadResult;
-  mode: 'portfolio' | 'project';
+  mode: 'portfolio' | 'project' | 'demand';
   title: string;
   subtitle?: string;
 }) {

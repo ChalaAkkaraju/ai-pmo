@@ -2,10 +2,10 @@
 
 /**
  * Resources analytics with segment drill-down. The server pre-computes a
- * LoadResult for "All segments" and one per segment; this component just lets
- * the user toggle which view is shown (stats + demand-vs-capacity panel).
- * Capacity is the same portfolio stand-in in every view, so a single segment
- * reads as the share of total capacity it consumes.
+ * LoadResult for "All segments" (with capacity) and one per segment (demand
+ * only). The all-segments view compares demand against the portfolio capacity
+ * stand-in; segment views show demand only, because that capacity pool is not
+ * attributable to a single segment.
  */
 
 import { useState } from 'react';
@@ -30,10 +30,8 @@ export function ResourceAnalyticsClient({ views }: { views: ResourceView[] }) {
   if (!active) return null;
 
   const load = active.load;
-  const overRoles = load.roles.filter((r) => r.peakFte > r.capacityFte).length;
-  const peakRole = load.roles[0] ?? null;
-  const withSpare = load.roles.filter((r) => r.peakFte <= r.capacityFte).length;
   const isAll = active.key === 'all';
+  const peakRole = load.roles[0] ?? null;
 
   return (
     <>
@@ -62,24 +60,57 @@ export function ResourceAnalyticsClient({ views }: { views: ResourceView[] }) {
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Disciplines tracked" value={String(load.roles.length)} />
-        <Stat label="Over-allocated disciplines" value={String(overRoles)} tone={overRoles > 0 ? 'warn' : 'ok'} sub="peak demand above capacity" />
-        <Stat label="Highest-demand discipline" value={peakRole ? `${peakRole.peakFte.toFixed(0)} FTE` : '—'} sub={peakRole ? roleName(peakRole.role) : ''} />
-        <Stat label="Disciplines with spare capacity" value={String(withSpare)} tone={withSpare > 0 ? 'ok' : 'neutral'} sub="headroom at peak demand" />
+        {isAll ? <CapacityStats load={load} /> : <DemandStats load={load} />}
       </div>
 
       <div className="mt-6">
         <ResourceLoadPanel
           load={load}
-          mode="portfolio"
-          title={isAll ? 'Resource demand vs capacity' : `Resource demand vs capacity · ${active.label}`}
+          mode={isAll ? 'portfolio' : 'demand'}
+          title={isAll ? 'Resource demand vs capacity' : `Resource demand · ${active.label}`}
           subtitle={
             isAll
               ? 'Monthly FTE demand vs capacity across all projects · gray = available headroom, red months exceed capacity'
-              : `Monthly FTE demand for ${active.label} projects vs total portfolio capacity · gray = headroom not used by this segment`
+              : `Monthly FTE demand by discipline for ${active.label} projects · capacity is portfolio-level, so it is not shown at segment level`
           }
         />
       </div>
+
+      {!isAll && peakRole && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {roleName(peakRole.role)} is the busiest discipline in this segment, peaking at {peakRole.peakFte.toFixed(0)} FTE.
+        </p>
+      )}
+    </>
+  );
+}
+
+function CapacityStats({ load }: { load: LoadResult }) {
+  const overRoles = load.roles.filter((r) => r.peakFte > r.capacityFte).length;
+  const peakRole = load.roles[0] ?? null;
+  const withSpare = load.roles.filter((r) => r.peakFte <= r.capacityFte).length;
+  return (
+    <>
+      <Stat label="Disciplines tracked" value={String(load.roles.length)} />
+      <Stat label="Over-allocated disciplines" value={String(overRoles)} tone={overRoles > 0 ? 'warn' : 'ok'} sub="peak demand above capacity" />
+      <Stat label="Highest-demand discipline" value={peakRole ? `${peakRole.peakFte.toFixed(0)} FTE` : '—'} sub={peakRole ? peakRole.role.replace(/_/g, ' ') : ''} />
+      <Stat label="Disciplines with spare capacity" value={String(withSpare)} tone={withSpare > 0 ? 'ok' : 'neutral'} sub="headroom at peak demand" />
+    </>
+  );
+}
+
+function DemandStats({ load }: { load: LoadResult }) {
+  const peakRole = load.roles[0] ?? null;
+  const totalFteMonths = Math.round(load.roles.reduce((a, r) => a + r.totalFteMonths, 0));
+  const peakConcurrent = load.months.length
+    ? Math.max(...load.months.map((_, i) => load.roles.reduce((a, r) => a + (r.series[i] ?? 0), 0)))
+    : 0;
+  return (
+    <>
+      <Stat label="Disciplines tracked" value={String(load.roles.length)} />
+      <Stat label="Highest-demand discipline" value={peakRole ? `${peakRole.peakFte.toFixed(0)} FTE` : '—'} sub={peakRole ? peakRole.role.replace(/_/g, ' ') : ''} />
+      <Stat label="Peak combined staffing" value={`${peakConcurrent.toFixed(0)} FTE`} sub="all disciplines, busiest month" />
+      <Stat label="Total effort" value={`${totalFteMonths}`} sub="FTE-months over the timeline" />
     </>
   );
 }

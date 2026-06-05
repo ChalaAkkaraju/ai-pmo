@@ -67,7 +67,7 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
       label: style.label,
       dotCls: style.dot,
       projectCount: projBySeg.get(seg)?.size ?? 0,
-      load: computeLoad(segRows, true),
+      load: computeLoad(segRows, false),
     });
   }
 
@@ -81,9 +81,10 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
 
       <p className="mt-4 max-w-3xl text-xs text-muted-foreground">
         Demand is aggregated from scheduler assignments (Dataverse / P6) into FTE per month at {''}
-        160 hours per FTE-month. Capacity is a portfolio stand-in per discipline and is held constant across segment
-        views, so a single segment reads as the share of total capacity it consumes. Over-allocation flags where peak
-        monthly demand exceeds capacity — a signal to re-sequence in the scheduler, not something this layer resolves.
+        160 hours per FTE-month. Capacity is a portfolio-level stand-in per discipline, so it is shown only in the
+        all-segments view; drilling into a single segment shows demand only, because that capacity pool is not
+        attributable to one segment. Over-allocation (all-segments view) flags where peak monthly demand exceeds
+        capacity — a signal to re-sequence in the scheduler, not something this layer resolves.
       </p>
     </div>
   );
