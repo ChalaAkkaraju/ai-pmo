@@ -33,11 +33,11 @@ export default async function FrameworkPage({ params }: PageProps) {
       <h1 className="text-2xl font-bold tracking-tight">PMBOK coverage — who does what</h1>
       <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
         The PMBOK process matrix — process groups across, knowledge areas down — used as a coverage map. Every process is
-        coloured by who owns it in this model. Read it as a boundary, not a claim to do all of project management: the AI
-        footprint concentrates in <span className="font-medium text-violet-700">Planning</span> (where it authors and drafts)
-        and <span className="font-medium text-emerald-700">Monitoring &amp; Controlling</span> (where it synthesises earned
-        value and variance). <span className="font-medium text-sky-700">Executing</span> stays with the engines and people —
-        that is the consume-vs-build line.
+        coloured by who owns it, using the <span className="font-medium">same colour code as the process flow</span>. Read it
+        as a boundary, not a claim to do all of project management: the <span className="font-medium" style={{ color: '#3B6D11' }}>AI&nbsp;PMO</span>
+        footprint concentrates in Planning (authoring) and Monitoring &amp; Controlling (synthesis); Executing stays with the
+        engines — <span className="font-medium" style={{ color: '#185FA5' }}>SAP&nbsp;PS</span> and the <span className="font-medium" style={{ color: '#854F0B' }}>scheduler</span> —
+        and with <span className="font-medium" style={{ color: '#534AB7' }}>people</span>. That is the consume-vs-build line.
       </p>
 
       <div className="mt-6">

@@ -1,21 +1,24 @@
 /**
  * PMBOK process matrix as a COVERAGE map. Rows = the 10 knowledge areas,
  * columns = the 5 process groups (which read left-to-right as the lifecycle).
- * Every process is colour-coded by who owns it in this model — what the AI
- * authors, what it synthesises read-only, what stays in the ERP/scheduler, and
- * what stays human-led. The point is not to claim the tool "does" all 49
- * processes, but to show coverage AND the consume-vs-build boundary at once:
- * the AI footprint concentrates in Planning (authoring) and Monitoring &
- * Controlling (synthesis); Executing stays with the engines and people.
+ * Every process is colour-coded by WHO OWNS IT, using the SAME colour code and
+ * legend as the end-to-end process flow on /architecture: green = AI PMO (split
+ * into authoring vs read-only synthesis), blue = SAP PS (ERP), amber = the
+ * scheduler, violet = human-in-the-loop. The point is not to claim the tool
+ * "does" all 49 processes, but to show coverage AND the consume-vs-build
+ * boundary at once: the AI footprint concentrates in Planning (authoring) and
+ * Monitoring & Controlling (synthesis); Executing stays with the engines/people.
  */
 
-type Own = 'author' | 'synth' | 'engine' | 'human';
+type Own = 'author' | 'synth' | 'erp' | 'scheduler' | 'human';
 
-const OWN: Record<Own, { label: string; chip: string; dot: string }> = {
-  author: { label: 'AI authors / drafts', chip: 'border-violet-200 bg-violet-50 text-violet-900', dot: 'bg-violet-500' },
-  synth: { label: 'AI synthesises (read-only)', chip: 'border-emerald-200 bg-emerald-50 text-emerald-900', dot: 'bg-emerald-500' },
-  engine: { label: 'Stays in ERP / scheduler', chip: 'border-sky-200 bg-sky-50 text-sky-900', dot: 'bg-sky-500' },
-  human: { label: 'Human-led', chip: 'border-slate-200 bg-slate-50 text-slate-700', dot: 'bg-slate-400' },
+// Palette matches the swim-lane / process-flow legend exactly.
+const OWN: Record<Own, { label: string; bg: string; bd: string; tx: string; dot: string }> = {
+  author:    { label: 'AI PMO — authors',                 bg: '#EAF3DE', bd: '#97C459', tx: '#3B6D11', dot: '#3B6D11' },
+  synth:     { label: 'AI PMO — synthesises (read-only)', bg: '#F4F9EC', bd: '#BFD89A', tx: '#5C8A1E', dot: '#97C459' },
+  erp:       { label: 'SAP PS — ERP',                     bg: '#E6F1FB', bd: '#85B7EB', tx: '#185FA5', dot: '#85B7EB' },
+  scheduler: { label: 'Scheduler',                        bg: '#FAEEDA', bd: '#FAC775', tx: '#854F0B', dot: '#E0A23C' },
+  human:     { label: 'Human-in-the-loop',                bg: '#EEEDFE', bd: '#AFA9EC', tx: '#534AB7', dot: '#AFA9EC' },
 };
 
 const GROUPS = ['Initiating', 'Planning', 'Executing', 'Monitoring & Controlling', 'Closing'];
@@ -40,14 +43,14 @@ const MATRIX: Row[] = [
   ] },
   { ka: 'Schedule', cells: [
     [],
-    [{ p: 'Plan Schedule Mgmt', o: 'author' }, { p: 'Define Activities', o: 'engine' }, { p: 'Sequence Activities', o: 'engine' }, { p: 'Estimate Durations', o: 'engine' }, { p: 'Develop Schedule', o: 'engine' }],
+    [{ p: 'Plan Schedule Mgmt', o: 'author' }, { p: 'Define Activities', o: 'scheduler' }, { p: 'Sequence Activities', o: 'scheduler' }, { p: 'Estimate Durations', o: 'scheduler' }, { p: 'Develop Schedule', o: 'scheduler' }],
     [],
     [{ p: 'Control Schedule', o: 'synth' }],
     [],
   ] },
   { ka: 'Cost', cells: [
     [],
-    [{ p: 'Plan Cost Mgmt', o: 'author' }, { p: 'Estimate Costs', o: 'author' }, { p: 'Determine Budget', o: 'engine' }],
+    [{ p: 'Plan Cost Mgmt', o: 'author' }, { p: 'Estimate Costs', o: 'author' }, { p: 'Determine Budget', o: 'erp' }],
     [],
     [{ p: 'Control Costs (EV)', o: 'synth' }],
     [],
@@ -61,7 +64,7 @@ const MATRIX: Row[] = [
   ] },
   { ka: 'Resource', cells: [
     [],
-    [{ p: 'Plan Resource Mgmt', o: 'author' }, { p: 'Estimate Activity Resources', o: 'engine' }],
+    [{ p: 'Plan Resource Mgmt', o: 'author' }, { p: 'Estimate Activity Resources', o: 'scheduler' }],
     [{ p: 'Acquire Resources', o: 'human' }, { p: 'Develop Team', o: 'human' }, { p: 'Manage Team', o: 'human' }],
     [{ p: 'Control Resources', o: 'synth' }],
     [],
@@ -99,8 +102,11 @@ const MATRIX: Row[] = [
 function Chip({ proc }: { proc: Proc }) {
   const s = OWN[proc.o];
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${s.chip}`}>
-      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${s.dot}`} />
+    <span
+      className="inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[11px] font-medium"
+      style={{ backgroundColor: s.bg, borderColor: s.bd, color: s.tx }}
+    >
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: s.dot }} />
       {proc.p}
     </span>
   );
@@ -109,11 +115,11 @@ function Chip({ proc }: { proc: Proc }) {
 export function FrameworkMatrix() {
   return (
     <div className="space-y-4">
-      {/* Legend */}
-      <div className="flex flex-wrap gap-3">
+      {/* Legend — same colour code as the process flow */}
+      <div className="flex flex-wrap gap-x-4 gap-y-2">
         {(Object.keys(OWN) as Own[]).map((o) => (
           <span key={o} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className={`h-2.5 w-2.5 rounded-full ${OWN[o].dot}`} />
+            <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: OWN[o].bd }} />
             {OWN[o].label}
           </span>
         ))}
