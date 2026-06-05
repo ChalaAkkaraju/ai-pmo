@@ -1102,14 +1102,14 @@ export function DashboardClient({
                   <th className="px-3 py-2 text-left font-medium">Project</th>
                   <th className="px-3 py-2 text-left font-medium">Segment</th>
                   <th className="px-3 py-2 text-left font-medium">Progress</th>
-                  <th className="px-3 py-2 text-right font-medium">CPI</th>
-                  <th className="px-3 py-2 text-right font-medium">SPI</th>
-                  <th className="px-3 py-2 text-right font-medium" title="Variance at completion — forecast cost overrun (budget − budget/CPI)">VAC</th>
-                  <th className="px-3 py-2 text-right font-medium">Contract</th>
-                  <th className="px-3 py-2 text-right font-medium" title="Share of contingency budget consumed">Cont. used</th>
-                  <th className="px-3 py-2 text-right font-medium" title="Open High-severity issues">Open high issues</th>
-                  <th className="px-3 py-2 text-right font-medium" title="Risks that have occurred">Realised risks</th>
-                  <th className="px-3 py-2 text-right font-medium">Score</th>
+                  <th className="px-3 py-2 text-center font-medium">CPI</th>
+                  <th className="px-3 py-2 text-center font-medium">SPI</th>
+                  <th className="px-3 py-2 text-center font-medium" title="Variance at completion — forecast cost overrun (budget − budget/CPI)">VAC</th>
+                  <th className="px-3 py-2 text-center font-medium">Contract</th>
+                  <th className="px-3 py-2 text-center font-medium" title="Share of contingency budget consumed">Cont. used</th>
+                  <th className="px-3 py-2 text-center font-medium" title="Open High-severity issues">Open high issues</th>
+                  <th className="px-3 py-2 text-center font-medium" title="Risks that have occurred">Realised risks</th>
+                  <th className="px-3 py-2 text-center font-medium">Score</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -1155,26 +1155,26 @@ export function DashboardClient({
                           </div>
                         </div>
                       </td>
-                      <td className={`px-3 py-2.5 text-right tabular-nums ${cpiCls}`}>{h.cpi.toFixed(2)}</td>
-                      <td className={`px-3 py-2.5 text-right tabular-nums ${spiCls}`}>{h.spi.toFixed(2)}</td>
-                      <td className={`px-3 py-2.5 text-right tabular-nums ${h.vac_m < 0 ? 'text-red-600 font-semibold' : 'text-emerald-700'}`}>{h.vac_m < 0 ? '-' : ''}${Math.abs(h.vac_m).toFixed(1)}M</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">${h.contract_m.toFixed(0)}M</td>
-                      <td className={`px-3 py-2.5 text-right tabular-nums ${h.contingency_pct == null ? 'text-muted-foreground' : h.contingency_pct >= 100 ? 'text-red-600 font-semibold' : h.contingency_pct >= 50 ? 'text-amber-600' : 'text-foreground'}`}>{h.contingency_pct == null ? '\u2014' : `${h.contingency_pct}%`}</td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">
+                      <td className={`px-3 py-2.5 text-center tabular-nums ${cpiCls}`}>{h.cpi.toFixed(2)}</td>
+                      <td className={`px-3 py-2.5 text-center tabular-nums ${spiCls}`}>{h.spi.toFixed(2)}</td>
+                      <td className={`px-3 py-2.5 text-center tabular-nums ${h.vac_m < 0 ? 'text-red-600 font-semibold' : 'text-emerald-700'}`}>{h.vac_m < 0 ? '-' : ''}${Math.abs(h.vac_m).toFixed(1)}M</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums text-muted-foreground">${h.contract_m.toFixed(0)}M</td>
+                      <td className={`px-3 py-2.5 text-center tabular-nums ${h.contingency_pct == null ? 'text-muted-foreground' : h.contingency_pct >= 100 ? 'text-red-600 font-semibold' : h.contingency_pct >= 50 ? 'text-amber-600' : 'text-foreground'}`}>{h.contingency_pct == null ? '\u2014' : `${h.contingency_pct}%`}</td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">
                         {h.open_h_issues > 0 ? (
                           <span className="inline-block rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-900">{h.open_h_issues}</span>
                         ) : (
                           <span className="text-muted-foreground">0</span>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">
+                      <td className="px-3 py-2.5 text-center tabular-nums">
                         {h.realised_risks > 0 ? (
                           <span className="inline-block rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-900">{h.realised_risks}</span>
                         ) : (
                           <span className="text-muted-foreground">0</span>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-right">
+                      <td className="px-3 py-2.5 text-center">
                         <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold tabular-nums ${scoreCls}`}>{h.score.toFixed(1)}</span>
                       </td>
                     </tr>
