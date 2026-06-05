@@ -8,6 +8,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
+import { ProcessFlowDiagram } from '@/components/process-flow-diagram';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,13 +84,8 @@ export default async function ArchitecturePage({ params }: PageProps) {
         from CRM/CPQ), the AI authors and books the WBS, then execution runs in parallel across SAP PS (cost) and the
         scheduler (progress) before merging on the WBS code for synthesis &mdash; looping each reporting cycle until closeout.
       </p>
-      <div className="mt-4 overflow-x-auto rounded-xl border bg-card p-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/ai-pmo-process-flow.svg"
-          alt="End-to-end process flowchart from booking: CRM/CPQ origin, project booked, AI drafts the plan, WBS approval decision, book WBS to SAP PS, publish WBS to scheduler, parallel SAP PS cost and scheduler progress lanes merging on the WBS code, AI PMO ingest, exception decision, earned value, synthesis, brief approval, assign actions, project-complete decision looping each reporting cycle, and closeout."
-          className="mx-auto block min-w-[760px] max-w-[820px]"
-        />
+      <div className="mt-4">
+        <ProcessFlowDiagram token={token} />
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
