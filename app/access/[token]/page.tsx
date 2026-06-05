@@ -317,14 +317,15 @@ export default async function RoleLandingPage({ params }: PageProps) {
     }
   }
 
-  // 3. Contingency-consumption distribution across projects (bucketed)
-  // Use latest variance per project as a proxy for "current state"
+  // 3. Contingency-consumption distribution across projects (bucketed).
+  // Actual: each project's latest contingency consumed ($M from variance) as a
+  // share of its contingency budget (projects.contingency, in dollars).
   const buckets = { '0-25%': 0, '25-50%': 0, '50-75%': 0, '75-100%': 0, '>100%': 0 };
-  // Latest contingency_consumed_m by project — need a separate small query later or derive
-  // For now, approximate from CPI deviation: lower CPI = more contingency burnt
-  for (const [pid, v] of latestVariance) {
-    const cpiDeviation = Math.max(0, 1 - v.cpi);  // 0 if on plan or better, positive if behind
-    const pct = cpiDeviation * 5 * 100;  // rough proxy
+  for (const p of projects) {
+    const budget = Number(p.contingency) || 0;
+    if (budget <= 0) continue;
+    const consumed = (latestVariance.get(p.id)?.contingency_m ?? 0) * 1_000_000;
+    const pct = (consumed / budget) * 100;
     if (pct < 25) buckets['0-25%']++;
     else if (pct < 50) buckets['25-50%']++;
     else if (pct < 75) buckets['50-75%']++;

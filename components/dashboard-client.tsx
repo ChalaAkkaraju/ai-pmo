@@ -909,12 +909,12 @@ export function DashboardClient({
           </div>
           <div className="rounded-lg border bg-card p-4">
             <div className="mb-3 flex items-baseline justify-between">
-              <h3 className="text-base font-semibold">Cost-performance distribution</h3>
-              <span className="text-xs text-muted-foreground">project count by CPI deviation</span>
+              <h3 className="text-base font-semibold">Contingency consumption</h3>
+              <span className="text-xs text-muted-foreground">projects by % of contingency used</span>
             </div>
             <VerticalBarChart items={contingencyBars} />
             <p className="mt-3 text-xs text-muted-foreground">
-              Bands estimate contingency consumption from CPI deviation.
+              Each band is a project&rsquo;s contingency drawn as a share of its contingency budget.
             </p>
           </div>
         </div>
