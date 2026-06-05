@@ -22,6 +22,14 @@ const KEY = [
   { c: '#D3D1C7', t: 'CRM / CPQ', d: 'Out of integration scope; as-sold baseline crosses at booking' },
 ];
 
+const FLOW_KEY = [
+  { c: '#97C459', t: 'AI PMO' },
+  { c: '#85B7EB', t: 'SAP PS — ERP' },
+  { c: '#FAC775', t: 'Scheduler' },
+  { c: '#AFA9EC', t: 'Human-in-the-loop' },
+  { c: '#CBD5E1', t: 'CRM / CPQ · out of scope' },
+];
+
 export default async function ArchitecturePage({ params }: PageProps) {
   const { token } = await params;
   const resolved = await resolveRoleFromToken(token);
@@ -75,6 +83,29 @@ export default async function ArchitecturePage({ params }: PageProps) {
           WBS-tagged activities. The schedule itself — durations, dependencies, critical path, resources — stays with the
           planner and the scheduler.
         </p>
+      </div>
+
+      <h2 className="mt-12 text-xl font-bold tracking-tight">End-to-end process — from booking</h2>
+      <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
+        The same lifecycle as a step-by-step process flow. It begins at commercial booking (the as-sold baseline crosses
+        from CRM/CPQ), the AI authors and books the WBS, then execution runs in parallel across SAP PS (cost) and the
+        scheduler (progress) before merging on the WBS code for synthesis &mdash; looping each reporting cycle until closeout.
+      </p>
+      <div className="mt-4 overflow-x-auto rounded-xl border bg-card p-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/ai-pmo-process-flow.svg"
+          alt="End-to-end process flowchart from booking: CRM/CPQ origin, project booked, AI drafts the plan, WBS approval decision, book WBS to SAP PS, publish WBS to scheduler, parallel SAP PS cost and scheduler progress lanes merging on the WBS code, AI PMO ingest, exception decision, earned value, synthesis, brief approval, assign actions, project-complete decision looping each reporting cycle, and closeout."
+          className="mx-auto block min-w-[700px] max-w-[760px]"
+        />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+        {FLOW_KEY.map((k) => (
+          <div key={k.t} className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: k.c }} />
+            <p className="text-xs text-muted-foreground">{k.t}</p>
+          </div>
+        ))}
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">

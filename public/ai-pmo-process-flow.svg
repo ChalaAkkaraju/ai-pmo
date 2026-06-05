@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 1308" width="760" height="1308" font-family="Inter,Arial,sans-serif"><defs><marker id="ah" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+<line x1="380" y1="82" x2="380" y2="98" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="136" x2="380" y2="152" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="190" x2="380" y2="222" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="264" x2="380" y2="286" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="332" x2="380" y2="355" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="409" x2="380" y2="438" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="392" y="427" text-anchor="start" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">yes</text>
+<line x1="380" y1="484" x2="380" y2="506" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="552" x2="380" y2="568" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="210" y1="568" x2="550" y2="568" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="210" y1="568" x2="210" y2="590" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="550" y1="568" x2="550" y2="590" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="210" y1="642" x2="210" y2="668" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="550" y1="642" x2="550" y2="668" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="210" y1="668" x2="550" y2="668" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="380" y1="668" x2="380" y2="700" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="748" x2="380" y2="775" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="829" x2="380" y2="858" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="392" y="847" text-anchor="start" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">yes</text>
+<line x1="380" y1="904" x2="380" y2="928" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="974" x2="380" y2="999" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="1053" x2="380" y2="1082" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="392" y="1071" text-anchor="start" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">accept</text>
+<line x1="380" y1="1128" x2="380" y2="1153" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<line x1="380" y1="1207" x2="380" y2="1238" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="392" y="1225" text-anchor="start" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">yes</text>
+<line x1="485" y1="382" x2="560" y2="382" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="522" y="374" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">no</text>
+<polyline points="650,362 650,309 524,309" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)" stroke-dasharray="5 3"/>
+<line x1="485" y1="802" x2="560" y2="802" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="522" y="794" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">no</text>
+<polyline points="650,782 650,724 524,724" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)" stroke-dasharray="5 3"/>
+<line x1="485" y1="1026" x2="560" y2="1026" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="522" y="1018" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">edit</text>
+<polyline points="650,1006 650,951 524,951" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)" stroke-dasharray="5 3"/>
+<polyline points="275,1180 70,1180 70,616 108,616" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ah)" stroke-dasharray="5 3"/>
+<text x="74" y="905" text-anchor="start" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">no · next</text>
+<text x="74" y="920" text-anchor="start" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">reporting cycle</text>
+<line x1="110" y1="206" x2="650" y2="206" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="380" y="200" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#94a3b8">commercial origin — out of integration scope    ·    integration begins at booking</text>
+<rect x="260" y="44" width="240" height="38" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="5 3"/><text x="380" y="60" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#64748B">Opportunity</text><text x="380" y="77" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">CRM</text>
+<rect x="260" y="98" width="240" height="38" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="5 3"/><text x="380" y="114" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#64748B">Quote</text><text x="380" y="131" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">CPQ</text>
+<rect x="260" y="152" width="240" height="38" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="5 3"/><text x="380" y="175" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#64748B">Win — contract signed</text>
+<rect x="240" y="222" width="280" height="42" rx="21.0" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/><text x="380" y="240" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#334155">Project booked</text><text x="380" y="257" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">as-sold baseline set</text>
+<rect x="240" y="286" width="280" height="46" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="1.5"/><text x="380" y="306" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#3B6D11">AI drafts the plan</text><text x="380" y="323" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">charter · WBS · schedule · budget</text>
+<polygon points="380,355.0 485.0,382 380,409.0 275.0,382" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/><text x="380" y="386" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#334155">WBS approved?</text>
+<rect x="560" y="362" width="180" height="40" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/><text x="650" y="386" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#534AB7">PM edits · agent revises</text>
+<rect x="240" y="438" width="280" height="46" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="1.5"/><text x="380" y="458" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#185FA5">Book WBS → SAP PS</text><text x="380" y="475" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">the one deliberate write</text>
+<rect x="240" y="506" width="280" height="46" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="1.5"/><text x="380" y="526" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#854F0B">Publish WBS → scheduler</text><text x="380" y="543" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">tasks tagged to WBS code</text>
+<rect x="110" y="590" width="200" height="52" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="1.5"/><text x="210" y="613" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#185FA5">SAP PS — ERP</text><text x="210" y="630" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">cost · change orders · revenue</text>
+<rect x="450" y="590" width="200" height="52" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="1.5"/><text x="550" y="613" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#854F0B">Scheduler</text><text x="550" y="630" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">% complete · resources · dates</text>
+<polygon points="254.0,700 520.0,700 506.0,748 240.0,748" fill="#EAF3DE" stroke="#97C459" stroke-width="1.5"/><text x="380" y="721" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#3B6D11">AI PMO ingests both</text><text x="380" y="738" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">joined by WBS code</text>
+<polygon points="380,775.0 485.0,802 380,829.0 275.0,802" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/><text x="380" y="806" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#334155">Records mapped?</text>
+<rect x="560" y="782" width="180" height="40" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/><text x="650" y="806" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#534AB7">Exception queue · resolve</text>
+<rect x="240" y="858" width="280" height="46" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="1.5"/><text x="380" y="878" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#3B6D11">Compute earned value</text><text x="380" y="895" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">CPI · SPI · EAC · VAC · margin</text>
+<rect x="240" y="928" width="280" height="46" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="1.5"/><text x="380" y="948" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#3B6D11">Synthesise + recommend</text><text x="380" y="965" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">risk · change · narrative · actions</text>
+<polygon points="380,999.0 485.0,1026 380,1053.0 275.0,1026" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/><text x="380" y="1030" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#334155">Brief approved?</text>
+<rect x="560" y="1006" width="180" height="40" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/><text x="650" y="1030" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#534AB7">PM corrects (tracked)</text>
+<rect x="240" y="1082" width="280" height="46" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1.5"/><text x="380" y="1102" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#534AB7">Assign actions to roles</text><text x="380" y="1119" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">publish the brief</text>
+<polygon points="380,1153.0 485.0,1180 380,1207.0 275.0,1180" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/><text x="380" y="1184" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#334155">Project complete?</text>
+<rect x="240" y="1238" width="280" height="42" rx="21.0" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/><text x="380" y="1256" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#334155">Closeout</text><text x="380" y="1273" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="11" fill="#64748b">lessons learned</text>
+</svg>
