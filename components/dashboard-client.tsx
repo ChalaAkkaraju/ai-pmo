@@ -85,6 +85,9 @@ export interface PortfolioInsights {
   contingency_rows: DrillContingency[];
 }
 
+type DrillColumn = { key: string; label: string; numeric?: boolean; render?: (v: unknown, row: Record<string, unknown>) => ReactNode };
+type DrillState = { title: string; columns: DrillColumn[]; data: Array<Record<string, unknown>>; seeAllHref?: string };
+
 export interface HotItem {
   id: string;
   code: string;
@@ -416,42 +419,76 @@ function StackedRibbon({ items, onSegmentClick }: { items: BarItem[]; onSegmentC
   );
 }
 
-function DrillModal({ title, sub, headers, rows, onClose }: { title: string; sub?: string; headers: string[]; rows: ReactNode[][]; onClose: () => void }) {
+function DrillModal({ title, columns, data, seeAllHref, onClose }: DrillState & { onClose: () => void }) {
+  const [query, setQuery] = useState('');
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let out = q ? data.filter((r) => columns.some((c) => String(r[c.key] ?? '').toLowerCase().includes(q))) : data.slice();
+    if (sortKey) {
+      const col = columns.find((c) => c.key === sortKey);
+      out = [...out].sort((a, b) => {
+        const av = a[sortKey] as string | number, bv = b[sortKey] as string | number;
+        const cmp = col?.numeric ? Number(av) - Number(bv) : String(av).localeCompare(String(bv));
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+    }
+    return out;
+  }, [data, columns, query, sortKey, sortDir]);
+  function toggleSort(key: string) {
+    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir('asc'); }
+  }
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8" onClick={onClose}>
       <div className="mt-6 w-full max-w-3xl rounded-xl border bg-card shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3 border-b px-5 py-3">
           <div>
             <p className="text-sm font-semibold">{title}</p>
-            {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+            <p className="text-xs text-muted-foreground">{rows.length} of {data.length} shown</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-md px-2 py-0.5 text-sm text-muted-foreground hover:bg-muted" aria-label="Close">&times;</button>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-3">
+        <div className="border-b px-5 py-2">
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Filter records…" className="w-full rounded-md border bg-background px-2.5 py-1 text-xs outline-none focus:ring-1 focus:ring-foreground/20" />
+        </div>
+        <div className="max-h-[60vh] overflow-y-auto px-5 py-3">
           {rows.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">No records.</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">No matching records.</p>
           ) : (
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                  {headers.map((h) => <th key={h} className="py-1.5 pr-3 font-medium">{h}</th>)}
+                  {columns.map((c) => (
+                    <th key={c.key} className="py-1.5 pr-3 font-medium">
+                      <button type="button" onClick={() => toggleSort(c.key)} className="inline-flex items-center gap-1 hover:text-foreground">
+                        {c.label}{sortKey === c.key && <span aria-hidden="true">{sortDir === 'asc' ? ' ▲' : ' ▼'}</span>}
+                      </button>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {rows.map((r, i) => (
                   <tr key={i} className="align-top">
-                    {r.map((c, j) => <td key={j} className="py-1.5 pr-3">{c}</td>)}
+                    {columns.map((c) => <td key={c.key} className="py-1.5 pr-3">{c.render ? c.render(r[c.key], r) : String(r[c.key] ?? '')}</td>)}
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
         </div>
+        {seeAllHref && (
+          <div className="border-t px-5 py-2.5 text-right">
+            <Link href={seeAllHref} className="text-xs font-medium text-foreground hover:underline">See all in analytics →</Link>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -542,31 +579,34 @@ export function DashboardClient({
   recentlyAdded,
   activity: initialActivity,
 }: Props) {
-  const [drill, setDrill] = useState<{ title: string; sub?: string; headers: string[]; rows: ReactNode[][] } | null>(null);
+  const [drill, setDrill] = useState<DrillState | null>(null);
+  const statusCol = (badge: (s: string) => string): DrillColumn => ({ key: 'status', label: 'Status', render: (v) => <span className={`inline-block rounded-full px-2 py-0.5 ${badge(String(v))}`}>{String(v)}</span> });
   const sevByLabel: Record<string, 'H' | 'M' | 'L'> = { High: 'H', Medium: 'M', Low: 'L' };
   function openIssuesDrill(label: string) {
     const sev = sevByLabel[label];
-    const rows = insights.issue_rows.filter((r) => r.severity === sev);
+    const data = insights.issue_rows.filter((r) => r.severity === sev);
     setDrill({
-      title: `${rows.length} ${label.toLowerCase()}-severity issue${rows.length === 1 ? '' : 's'}`,
-      headers: ['Project', 'Issue', 'Owner', 'Status'],
-      rows: rows.map((r) => [r.code, r.description, r.owner, <span key="s" className={`inline-block rounded-full px-2 py-0.5 ${issueBadge(r.status)}`}>{r.status}</span>]),
+      title: `${data.length} ${label.toLowerCase()}-severity issue${data.length === 1 ? '' : 's'}`,
+      columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Issue' }, { key: 'owner', label: 'Owner' }, statusCol(issueBadge)],
+      data,
+      seeAllHref: `/access/${token}/analytics/issues`,
     });
   }
   function openRisksDrill(klass: string) {
-    const rows = insights.risk_rows.filter((r) => r.klass === klass);
+    const data = insights.risk_rows.filter((r) => r.klass === klass);
     setDrill({
-      title: `${rows.length} risk${rows.length === 1 ? '' : 's'} · ${klass}`,
-      headers: ['Project', 'Risk', 'Owner', 'Impact', 'Status'],
-      rows: rows.map((r) => [r.code, r.description, r.owner, r.impact, <span key="s" className={`inline-block rounded-full px-2 py-0.5 ${riskBadge(r.status)}`}>{r.status}</span>]),
+      title: `${data.length} risk${data.length === 1 ? '' : 's'} · ${klass}`,
+      columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Risk' }, { key: 'owner', label: 'Owner' }, { key: 'impact', label: 'Impact' }, statusCol(riskBadge)],
+      data,
+      seeAllHref: `/access/${token}/analytics/risks`,
     });
   }
   function openContingencyDrill(band: string) {
-    const rows = insights.contingency_rows.filter((r) => r.band === band).sort((a, b) => b.pct - a.pct);
+    const data = insights.contingency_rows.filter((r) => r.band === band).map((r) => ({ ...r, project: `${r.name} (${r.code})`, consumed: `$${r.consumedM.toFixed(2)}M / $${r.budgetM.toFixed(1)}M` }));
     setDrill({
-      title: `${rows.length} project${rows.length === 1 ? '' : 's'} · ${band} contingency used`,
-      headers: ['Project', 'Segment', 'Used', 'Consumed / budget'],
-      rows: rows.map((r) => [`${r.name} (${r.code})`, r.segment, `${r.pct}%`, `$${r.consumedM.toFixed(2)}M / $${r.budgetM.toFixed(1)}M`]),
+      title: `${data.length} project${data.length === 1 ? '' : 's'} · ${band} contingency used`,
+      columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }],
+      data,
     });
   }
   const [selectedSegment, setSelectedSegment] = useState<string | null>(null);
@@ -978,6 +1018,7 @@ export function DashboardClient({
       {/* INSIGHTS — 3 mini charts */}
       <section>
         <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio insights</h2>
+        <p className="mt-1 text-xs text-muted-foreground">Click any bar, band, or legend item to see the underlying records.</p>
         <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="flex flex-col rounded-lg border bg-card p-4">
             <div className="mb-3 flex items-baseline justify-between">
@@ -1012,7 +1053,7 @@ export function DashboardClient({
       </section>
 
       {drill && (
-        <DrillModal title={drill.title} sub={drill.sub} headers={drill.headers} rows={drill.rows} onClose={() => setDrill(null)} />
+        <DrillModal title={drill.title} columns={drill.columns} data={drill.data} seeAllHref={drill.seeAllHref} onClose={() => setDrill(null)} />
       )}
 
       {/* HOT 5 — projects needing attention */}
