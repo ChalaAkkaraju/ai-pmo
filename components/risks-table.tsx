@@ -1,5 +1,6 @@
 'use client';
 
+import { actionBadge } from '@/lib/badge-styles';
 import { useState } from 'react';
 import { canonicalRiskStatus, riskStatusBadgeClass } from '@/lib/risk-status';
 
@@ -44,13 +45,6 @@ function roleLabel(rt: string): string {
   return ROLE_LABELS[rt] ?? rt;
 }
 
-function actionStatusClass(status: string): string {
-  const s = status.toLowerCase();
-  if (s === 'done') return 'bg-emerald-100 text-emerald-800';
-  if (s === 'in progress') return 'bg-blue-100 text-blue-900';
-  if (s === 'acknowledged') return 'bg-indigo-100 text-indigo-900';
-  return 'bg-amber-100 text-amber-800';
-}
 
 export function RisksTable({
   rows,
@@ -179,7 +173,7 @@ function RiskRow({
                         <span className="rounded-full bg-muted px-2 py-0.5 font-medium">
                           → {roleLabel(a.assigned_to_role_type)}
                         </span>
-                        <span className={`rounded-full px-2 py-0.5 font-medium ${actionStatusClass(a.status)}`}>
+                        <span className={`rounded-full px-2 py-0.5 font-medium ${actionBadge(a.status)}`}>
                           {a.status}
                         </span>
                       </span>

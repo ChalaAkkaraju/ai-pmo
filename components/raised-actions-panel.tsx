@@ -11,6 +11,7 @@
  * raised anything.
  */
 
+import { actionBadge } from '@/lib/badge-styles';
 import { useCallback, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -48,13 +49,6 @@ function roleLabel(rt: string | null): string {
   return ROLE_LABELS[rt] ?? rt;
 }
 
-function statusClass(status: string): string {
-  const s = status.toLowerCase();
-  if (s === 'done') return 'bg-emerald-100 text-emerald-800';
-  if (s === 'in progress') return 'bg-blue-100 text-blue-900';
-  if (s === 'acknowledged') return 'bg-indigo-100 text-indigo-900';
-  return 'bg-amber-100 text-amber-800';
-}
 
 export function RaisedActionsPanel({ token, roleType }: { token: string; roleType: string }) {
   const [items, setItems] = useState<ActionItem[] | null>(null);
@@ -170,7 +164,7 @@ export function RaisedActionsPanel({ token, roleType }: { token: string; roleTyp
                   <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     <span>owner: {roleLabel(a.assigned_to_role_type)}</span>
                     {a.source_ref && <span className="font-mono">{a.source_ref}</span>}
-                    <span className={`rounded-full px-2 py-0.5 font-medium ${statusClass(a.status)}`}>
+                    <span className={`rounded-full px-2 py-0.5 font-medium ${actionBadge(a.status)}`}>
                       {a.status}
                     </span>
                     {hasResponse ? (

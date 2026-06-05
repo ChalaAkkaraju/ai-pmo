@@ -1,3 +1,4 @@
+import { riskDot } from '@/lib/badge-styles';
 'use client';
 
 /**
@@ -47,14 +48,6 @@ function levelLabel(l: Level): string {
   return l === 'H' ? 'High' : l === 'M' ? 'Med' : 'Low';
 }
 
-function dotClass(status: string): string {
-  const s = String(status).toLowerCase();
-  if (s.startsWith('realised')) return 'bg-red-500 ring-red-600';
-  if (s.includes('not materialised')) return 'bg-gray-400 ring-gray-500';
-  if (s.includes('mitigated')) return 'bg-emerald-500 ring-emerald-600';
-  if (s.includes('open') || s.includes('active')) return 'bg-amber-500 ring-amber-600';
-  return 'bg-slate-400 ring-slate-500';
-}
 
 export function RiskHeatmap({ rows }: { rows: Array<Record<string, unknown>> }) {
   const risks = rows as unknown as Risk[];
@@ -167,7 +160,7 @@ function Cell({
             {risks.map((r) => (
               <span
                 key={r.risk_id}
-                className={`inline-block h-3 w-3 rounded-full ring-1 ${dotClass(r.status)}`}
+                className={`inline-block h-3 w-3 rounded-full ring-1 ${riskDot(r.status)}`}
                 title={`${r.risk_id} (${r.status}) — ${r.description.slice(0, 100)}${r.description.length > 100 ? '…' : ''}`}
               />
             ))}

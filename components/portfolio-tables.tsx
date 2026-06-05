@@ -10,6 +10,7 @@
  * fields; column headers sort; the project cell links to the project page.
  */
 
+import { issueBadge, riskBadge, actionBadge } from '@/lib/badge-styles';
 import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { segmentStyle } from '@/lib/segment-style';
@@ -40,20 +41,6 @@ function HmlBadge({ v }: { v: string }) {
   return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-mono ${HML[v as keyof typeof HML] ?? HML.L}`}>{v}</span>;
 }
 
-function issueStatusClass(s: string): string {
-  if (s === 'Closed' || s === 'Resolved') return 'bg-green-100 text-green-900';
-  if (s === 'In progress') return 'bg-amber-100 text-amber-900';
-  if (s === 'Open') return 'bg-red-100 text-red-900';
-  return 'bg-gray-100 text-gray-700';
-}
-function riskStatusClass(s: string): string {
-  const l = s.toLowerCase();
-  if (l.startsWith('realised')) return 'bg-red-100 text-red-900';
-  if (l.includes('mitigated')) return 'bg-green-100 text-green-900';
-  if (l.startsWith('active')) return 'bg-amber-100 text-amber-900';
-  if (l === 'open') return 'bg-sky-100 text-sky-900';
-  return 'bg-gray-100 text-gray-700';
-}
 
 function ProjectCell({ token, code, name, segment }: { token: string; code: string; name: string; segment: string }) {
   const ss = segmentStyle(segment);
@@ -213,7 +200,7 @@ export function PortfolioIssuesTable({ token, rows }: { token: string; rows: Por
     { key: 'issue_id', label: 'ID', mono: true, sortKey: (r) => r.issue_id },
     { key: 'description', label: 'Description', render: (r) => <span className="block max-w-md">{r.description}</span> },
     { key: 'severity', label: 'Sev', align: 'center', sortKey: (r) => hmlRank(r.severity), render: (r) => <HmlBadge v={r.severity} /> },
-    { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${issueStatusClass(r.status)}`}>{r.status}</span> },
+    { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${issueBadge(r.status)}`}>{r.status}</span> },
     { key: 'category', label: 'Category', render: (r) => <span className="text-xs text-muted-foreground">{r.category}</span> },
     { key: 'owner', label: 'Owner', render: (r) => <span className="text-xs">{r.owner || '—'}</span> },
     { key: 'opened_week', label: 'Opened', align: 'center', mono: true, sortKey: (r) => r.opened_week, render: (r) => <>Wk {r.opened_week}</> },
@@ -257,7 +244,7 @@ export function PortfolioRisksTable({ token, rows }: { token: string; rows: Port
     { key: 'impact', label: 'Impact', align: 'center', sortKey: (r) => hmlRank(r.impact), render: (r) => <HmlBadge v={r.impact} /> },
     { key: 'probability', label: 'Prob', align: 'center', sortKey: (r) => hmlRank(r.probability), render: (r) => <HmlBadge v={r.probability} /> },
     { key: 'score', label: 'Score', align: 'right', mono: true, sortKey: (r) => r.score },
-    { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${riskStatusClass(r.status)}`}>{r.status}</span> },
+    { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${riskBadge(r.status)}`}>{r.status}</span> },
     { key: 'cross_cutting_class', label: 'Class', render: (r) => <span className="text-xs text-muted-foreground">{r.cross_cutting_class}</span> },
     { key: 'owner', label: 'Owner', render: (r) => <span className="text-xs">{r.owner || '—'}</span> },
   ];
@@ -279,13 +266,6 @@ export function PortfolioRisksTable({ token, rows }: { token: string; rows: Port
 }
 
 
-function actionStatusClass(s: string): string {
-  if (s === 'Done') return 'bg-green-100 text-green-900';
-  if (s === 'In progress') return 'bg-amber-100 text-amber-900';
-  if (s === 'Acknowledged') return 'bg-sky-100 text-sky-900';
-  if (s === 'Open') return 'bg-red-100 text-red-900';
-  return 'bg-gray-100 text-gray-700';
-}
 
 export interface PortfolioActionRow {
   id: string;
@@ -307,7 +287,7 @@ export function PortfolioActionsTable({ token, rows }: { token: string; rows: Po
     { key: 'assigned_to_role', label: 'Assigned to', sortKey: (r) => r.assigned_to_role, render: (r) => <span className="text-xs font-medium">{roleLabel(r.assigned_to_role as RoleType)}</span> },
     { key: 'raised_by_role', label: 'Raised by', sortKey: (r) => r.raised_by_role ?? '', render: (r) => <span className="text-xs text-muted-foreground">{r.raised_by_role ? roleLabel(r.raised_by_role as RoleType) : '\u2014'}</span> },
     { key: 'urgency', label: 'Urgency', align: 'center', sortKey: (r) => hmlRank(r.urgency), render: (r) => <HmlBadge v={r.urgency} /> },
-    { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${actionStatusClass(r.status)}`}>{r.status}</span> },
+    { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${actionBadge(r.status)}`}>{r.status}</span> },
     { key: 'created_at', label: 'Created', align: 'center', sortKey: (r) => r.created_at, render: (r) => <span className="text-xs">{new Date(r.created_at).toLocaleDateString()}</span> },
   ];
   const filters: FilterDef<PortfolioActionRow>[] = [

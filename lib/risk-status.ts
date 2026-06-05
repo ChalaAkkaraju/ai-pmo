@@ -13,6 +13,7 @@
  *   Realised         — the risk event occurred (any "Realised …")
  *   Not materialised — window passed without the event occurring
  */
+import { riskBadge } from '@/lib/badge-styles';
 
 export type CanonicalRiskStatus =
   | 'Open'
@@ -48,17 +49,5 @@ export function canonicalRiskStatus(raw: string | null | undefined): CanonicalRi
 
 /** Tailwind badge classes per canonical bucket. */
 export function riskStatusBadgeClass(status: CanonicalRiskStatus): string {
-  switch (status) {
-    case 'Realised':
-      return 'bg-amber-100 text-amber-900';
-    case 'Mitigated':
-      return 'bg-green-100 text-green-900';
-    case 'Not materialised':
-      return 'bg-gray-100 text-gray-700';
-    case 'Active':
-      return 'bg-blue-100 text-blue-900';
-    case 'Open':
-    default:
-      return 'bg-indigo-100 text-indigo-900';
-  }
+  return riskBadge(status);
 }

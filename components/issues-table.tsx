@@ -1,5 +1,6 @@
 'use client';
 
+import { severityBadge, issueBadge } from '@/lib/badge-styles';
 import { useState } from 'react';
 
 interface Issue {
@@ -16,18 +17,7 @@ interface Issue {
   closure_narrative: string | null;
 }
 
-function severityBadgeClass(sev: string): string {
-  if (sev === 'H') return 'bg-red-100 text-red-900';
-  if (sev === 'M') return 'bg-amber-100 text-amber-900';
-  return 'bg-gray-100 text-gray-700';
-}
 
-function statusBadgeClass(status: string): string {
-  if (status === 'Closed') return 'bg-green-100 text-green-900';
-  if (status === 'In progress') return 'bg-amber-100 text-amber-900';
-  if (status === 'Open') return 'bg-red-100 text-red-900';
-  return 'bg-gray-100 text-gray-700';
-}
 
 export function IssuesTable({ rows }: { rows: Array<Record<string, unknown>> }) {
   const issues = rows as unknown as Issue[];
@@ -84,7 +74,7 @@ function IssueRow({
         <td className="px-4 py-3">{issue.description}</td>
         <td className="px-4 py-3 text-center">
           <span
-            className={`inline-block rounded-full px-2 py-0.5 text-xs font-mono ${severityBadgeClass(
+            className={`inline-block rounded-full px-2 py-0.5 text-xs font-mono ${severityBadge(
               issue.severity,
             )}`}
           >
@@ -93,7 +83,7 @@ function IssueRow({
         </td>
         <td className="px-4 py-3">
           <span
-            className={`inline-block rounded-full px-2 py-0.5 text-xs ${statusBadgeClass(
+            className={`inline-block rounded-full px-2 py-0.5 text-xs ${issueBadge(
               issue.status,
             )}`}
           >

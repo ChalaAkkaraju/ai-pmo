@@ -7,6 +7,7 @@
  * the exception queue with resolve / ignore actions.
  */
 
+import { syncBadge } from '@/lib/badge-styles';
 import { useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -40,9 +41,6 @@ export interface ProjectOption {
 
 function fmtTime(s: string | null): string {
   return s ? new Date(s).toLocaleString() : '—';
-}
-function statusCls(s: string): string {
-  return s === 'failed' ? 'bg-red-100 text-red-800' : s === 'partial' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800';
 }
 
 const FILE_OBJECTS: Array<{ type: 'wbs' | 'cost' | 'tasks' | 'resources'; label: string; source: string }> = [
@@ -270,7 +268,7 @@ export function IntegrationClient({
                   <td className="px-3 py-2 text-xs text-muted-foreground">{fmtTime(r.started_at)}</td>
                   <td className="px-3 py-2 text-xs">{r.source_system} · {r.channel}</td>
                   <td className="px-3 py-2 text-xs font-mono">{r.project_code ?? '—'}</td>
-                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCls(r.status)}`}>{r.status}</span></td>
+                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${syncBadge(r.status)}`}>{r.status}</span></td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.rows_inserted}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.rows_updated}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.exceptions > 0 ? <span className="text-amber-700">{r.exceptions}</span> : 0}</td>
