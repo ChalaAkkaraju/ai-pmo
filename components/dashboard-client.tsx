@@ -374,23 +374,36 @@ function MiniBarChart({ items, maxLabelWidth = 'flex-1', wrapLabels = false }: {
   );
 }
 
-/** Compact vertical bar chart — for short-label distributions (severity, CPI bands). */
-function VerticalBarChart({ items, trackHeight = 112 }: { items: BarItem[]; trackHeight?: number }) {
-  const max = Math.max(...items.map((i) => i.value), 1);
+/** Stacked proportion ribbon — one bar split by share of total, with a legend below.
+ *  Items should be ordered good -> bad (left -> right) for a consistent health read. */
+function StackedRibbon({ items }: { items: BarItem[] }) {
+  const total = items.reduce((a, i) => a + i.value, 0) || 1;
   return (
-    <div className="flex items-end justify-around gap-3">
-      {items.map((item) => {
-        const pct = (item.value / max) * 100;
-        return (
-          <div key={item.label} className="flex flex-1 flex-col items-center gap-1">
-            <span className="text-[11px] font-semibold tabular-nums text-foreground">{item.value}</span>
-            <div className="flex w-full max-w-[52px] items-end overflow-hidden rounded bg-muted" style={{ height: trackHeight }}>
-              <div className="w-full rounded-t transition-all" style={{ height: `${pct}%`, backgroundColor: item.color, minHeight: item.value > 0 ? 4 : 0 }} />
+    <div>
+      <div className="flex h-8 overflow-hidden rounded-md">
+        {items.map((item) => {
+          const pct = (item.value / total) * 100;
+          if (item.value === 0) return null;
+          return (
+            <div
+              key={item.label}
+              className="flex items-center justify-center text-[11px] font-semibold tabular-nums"
+              style={{ width: `${pct}%`, backgroundColor: item.color, color: 'rgba(0,0,0,0.7)' }}
+              title={`${item.label}: ${item.value}`}
+            >
+              {pct >= 14 ? item.value : ''}
             </div>
-            <span className="text-center text-[10px] leading-tight text-muted-foreground">{item.label}</span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5">
+        {items.map((item) => (
+          <span key={item.label} className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
+            {item.label} <span className="font-medium tabular-nums text-foreground">{item.value}</span>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -666,9 +679,9 @@ export function DashboardClient({
     }));
 
   const issueBars: BarItem[] = [
-    { label: 'High',   value: insights.issue_severity_counts.H ?? 0, color: '#ef4444' },
-    { label: 'Medium', value: insights.issue_severity_counts.M ?? 0, color: '#f59e0b' },
     { label: 'Low',    value: insights.issue_severity_counts.L ?? 0, color: '#10b981' },
+    { label: 'Medium', value: insights.issue_severity_counts.M ?? 0, color: '#f59e0b' },
+    { label: 'High',   value: insights.issue_severity_counts.H ?? 0, color: '#ef4444' },
   ];
 
   const contingencyBars: BarItem[] = Object.entries(insights.contingency_buckets).map(([label, count]) => ({
@@ -902,7 +915,7 @@ export function DashboardClient({
               <h3 className="text-base font-semibold">Issues by severity</h3>
               <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.issue_severity_counts).reduce((a, b) => a + b, 0)} total</span>
             </div>
-            <VerticalBarChart items={issueBars} />
+            <StackedRibbon items={issueBars} />
             <p className="mt-3 text-xs text-muted-foreground">
               {insights.issue_severity_counts.H ?? 0} high-severity items currently in flight.
             </p>
@@ -912,7 +925,7 @@ export function DashboardClient({
               <h3 className="text-base font-semibold">Contingency consumption</h3>
               <span className="text-xs text-muted-foreground">projects by % of contingency used</span>
             </div>
-            <VerticalBarChart items={contingencyBars} />
+            <StackedRibbon items={contingencyBars} />
             <p className="mt-3 text-xs text-muted-foreground">
               Each band is a project&rsquo;s contingency drawn as a share of its contingency budget.
             </p>
