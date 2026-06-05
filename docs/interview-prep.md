@@ -14,7 +14,7 @@ Before the talking points, one framing note. AI PMO is a personal learning proje
 
 ## The 60-second elevator pitch
 
-> AI PMO is a methodology-aware, multi-agent system for engineering, procurement, and construction project management offices. Fourteen specialist agents — each anchored to a PMBOK 7 process or risk-management discipline — coordinate via a small Claude Haiku router that picks the right specialist from natural-language prompts. The system runs against a 100-project portfolio across four industry segments, with five colleague roles (PM Director, Procurement, Risk, Sponsor, Commercial) accessing role-scoped views via URL tokens. State changes broadcast across colleagues in real time. I built it as a personal project to demonstrate end-to-end enterprise AI engineering — grounded reasoning, reliability evaluation, real-time multi-user state — at a standard that would hold up in a regulated commercial environment, minus the go-to-market layer. The reliability of the agents has been empirically tested: a five-run consistency evaluation on the Risk Analyst produced 5/5 decision agreement and 5/5 factual citation agreement on a grounded ranking question, with prose variation in places where stochasticity doesn't undermine trust.
+> AI PMO is a methodology-aware, multi-agent system for engineering, procurement, and construction project management offices. Fourteen specialist agents — each anchored to a PMBOK 7 process or risk-management discipline — coordinate via a small Claude Haiku router that picks the right specialist from natural-language prompts. The system runs against a 100-project portfolio across four industry segments, with ten colleague roles — from the PMO director and sponsor to procurement, risk, commercial, project controls, engineering, construction and HSE — accessing role-scoped views via URL tokens. State changes broadcast across colleagues in real time. I built it as a personal project to demonstrate end-to-end enterprise AI engineering — grounded reasoning, reliability evaluation, real-time multi-user state — at a standard that would hold up in a regulated commercial environment, minus the go-to-market layer. The reliability of the agents has been empirically tested: a five-run consistency evaluation on the Risk Analyst produced 5/5 decision agreement and 5/5 factual citation agreement on a grounded ranking question, with prose variation in places where stochasticity doesn't undermine trust.
 
 Memorize this. Practice it out loud until you can deliver it in one breath without sounding rehearsed. Vary the words a little each time so it sounds natural.
 
@@ -155,7 +155,7 @@ The honest caveat — and the part that actually shows judgment — is that this
 | Portfolio size | 100 projects |
 | Industry segments | 4 (renewables, water, industrial, power) |
 | Specialist agents | 14 |
-| Roles | 5 (PM Director, Procurement, Risk, Sponsor, Commercial) |
+| Roles | 10 (PMO director, sponsor, procurement, risk, commercial, project controls, program manager, engineering, construction, HSE) |
 | Routing model | Claude Haiku 4.5 (~$0.001/call, ~200ms) |
 | Specialist model | Claude Opus 4.7 via OpenRouter |
 | Quick-mode cost | ~$0.06 per invocation, ~12 seconds |
