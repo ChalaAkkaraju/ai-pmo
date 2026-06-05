@@ -7,11 +7,12 @@
  * sample prompt — so a viewer can understand each of the 13 specialists in place.
  */
 
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AGENT_CATALOG } from '@/lib/agent-catalog';
 
 export function ProcessFlowDiagram({ token }: { token: string }) {
+  const ref = useRef<HTMLDivElement | null>(null);
   const [svg, setSvg] = useState('');
   const [agent, setAgent] = useState<string | null>(null);
 
@@ -24,16 +25,25 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
     return () => { on = false; };
   }, []);
 
+  // Native delegated click listener — fires reliably for the injected SVG.
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || !svg) return;
+    const handler = (e: Event) => {
+      const t = e.target as Element | null;
+      const el = t && typeof t.closest === 'function' ? t.closest('[data-agent]') : null;
+      const id = el?.getAttribute('data-agent');
+      if (id) setAgent(id);
+    };
+    node.addEventListener('click', handler);
+    return () => node.removeEventListener('click', handler);
+  }, [svg]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAgent(null); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-
-  function onClick(e: MouseEvent<HTMLDivElement>) {
-    const el = (e.target as HTMLElement).closest('[data-agent]');
-    if (el) setAgent(el.getAttribute('data-agent'));
-  }
 
   const entry = AGENT_CATALOG.find((a) => a.agent_type === agent) ?? null;
 
@@ -42,7 +52,7 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
       <p className="mb-2 text-xs text-muted-foreground">Tip: click any green agent box to see what that agent does.</p>
       <div className="overflow-x-auto rounded-xl border bg-card p-4">
         {svg ? (
-          <div onClick={onClick} className="mx-auto min-w-[760px] max-w-[820px]" dangerouslySetInnerHTML={{ __html: svg }} />
+          <div ref={ref} className="mx-auto min-w-[760px] max-w-[820px]" dangerouslySetInnerHTML={{ __html: svg }} />
         ) : (
           <div className="flex min-h-[300px] items-center justify-center text-sm text-muted-foreground">Loading diagram…</div>
         )}
@@ -83,14 +93,4 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Method:</span> {entry.methodology}</p>
-              <div className="rounded-md bg-muted/50 px-3 py-2 text-xs"><span className="font-medium">Try:</span> &ldquo;{entry.samplePrompt}&rdquo;</div>
-            </div>
-            <div className="border-t px-5 py-2.5 text-right">
-              <Link href={`/access/${token}/agents`} className="text-xs font-medium text-foreground hover:underline">See all 13 agents →</Link>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
+              <div className="rounded-md bg-muted/50 px-3 py-2 tex
