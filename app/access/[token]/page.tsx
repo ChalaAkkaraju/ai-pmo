@@ -409,6 +409,12 @@ export default async function RoleLandingPage({ params }: PageProps) {
       const openH = openHByProject.get(p.id) ?? 0;
       const realised = realisedByProject.get(p.id) ?? 0;
       const score = cpiPenalty + spiPenalty + openH * 2 + realised * 1;
+      const bac = Number(p.approved_budget_current) || 0;
+      const eac = cpi > 0 ? bac / cpi : bac;
+      const vac_m = (bac - eac) / 1_000_000;
+      const contract_m = (Number(p.contract_value_current) || 0) / 1_000_000;
+      const contBudget = Number(p.contingency) || 0;
+      const contingency_pct = contBudget > 0 ? Math.round((((v?.contingency_m ?? 0) * 1_000_000) / contBudget) * 100) : null;
       // Estimated end + progress (same heuristic as the schedule timeline):
       // Active ~70% elapsed, SC short warranty tail.
       const cw = Number(p.current_week) || 0;
@@ -426,6 +432,9 @@ export default async function RoleLandingPage({ params }: PageProps) {
         progress_pct: progressPct,
         cpi,
         spi,
+        contract_m,
+        vac_m,
+        contingency_pct,
         open_h_issues: openH,
         realised_risks: realised,
         score: Number(score.toFixed(1)),
