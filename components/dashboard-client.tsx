@@ -1112,14 +1112,17 @@ export function DashboardClient({
                   const cpiCls = h.cpi < 0.95 ? 'text-red-600 font-semibold' : h.cpi < 1 ? 'text-amber-600' : 'text-foreground';
                   const spiCls = h.spi < 0.95 ? 'text-red-600 font-semibold' : h.spi < 1 ? 'text-amber-600' : 'text-foreground';
                   const href = `/access/${token}/projects/${h.code}`;
-                  const barTone = h.status === 'SC' ? 'bg-teal-500' : h.status === 'Closed' ? 'bg-slate-400' : 'bg-amber-500';
+                  const band = h.score >= 5 ? 'high' : h.score >= 3 ? 'med' : 'low';
+                  const scoreCls = band === 'high' ? 'bg-red-600 text-white' : band === 'med' ? 'bg-amber-500 text-white' : 'bg-slate-600 text-white';
+                  const accentCls = band === 'high' ? 'border-red-500' : band === 'med' ? 'border-amber-400' : 'border-slate-300';
+                  const barTone = h.spi < 0.95 ? 'bg-red-500' : h.spi < 1 ? 'bg-amber-500' : 'bg-emerald-500';
                   return (
                     <tr
                       key={h.id}
                       onClick={() => { router.push(href); }}
                       className="cursor-pointer transition hover:bg-muted/40"
                     >
-                      <td className="px-3 py-2.5 text-muted-foreground tabular-nums">{idx + 1}</td>
+                      <td className={`border-l-4 px-3 py-2.5 text-muted-foreground tabular-nums ${accentCls}`}>{idx + 1}</td>
                       <td className="px-3 py-2.5">
                         <Link href={href} className="font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
                           {h.name}
@@ -1157,13 +1160,13 @@ export function DashboardClient({
                       </td>
                       <td className="px-3 py-2.5 text-right tabular-nums">
                         {h.realised_risks > 0 ? (
-                          <span className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-900">{h.realised_risks}</span>
+                          <span className="inline-block rounded bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-900">{h.realised_risks}</span>
                         ) : (
                           <span className="text-muted-foreground">0</span>
                         )}
                       </td>
                       <td className="px-3 py-2.5 text-right">
-                        <span className="inline-block rounded bg-foreground/90 px-2 py-0.5 text-xs font-semibold tabular-nums text-background">{h.score.toFixed(1)}</span>
+                        <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold tabular-nums ${scoreCls}`}>{h.score.toFixed(1)}</span>
                       </td>
                     </tr>
                   );
