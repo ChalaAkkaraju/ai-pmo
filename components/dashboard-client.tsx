@@ -1533,7 +1533,7 @@ function KpiCard({ label, value, sub, tone = 'neutral', onClick }: { label: stri
     <div onClick={onClick} className={`rounded-lg border p-4 ${toneCls} ${onClick ? 'cursor-pointer transition hover:border-foreground/30 hover:shadow-sm' : ''}`}>
       <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
-      <p className="mt-0.5 text-sm text-muted-foreground">{sub}{onClick ? ' · view →' : ''}</p>
+      <p className="mt-0.5 text-sm text-muted-foreground">{sub}</p>
     </div>
   );
 }
