@@ -5,6 +5,7 @@
  * Display only; figures from lib/margin.
  */
 
+import { CHART } from '@/lib/chart-palette';
 import type { MarginBridge } from '@/lib/margin';
 
 function money(n: number): string {
@@ -74,8 +75,8 @@ export function MarginBridgeCard({ bridge, syncedAt }: { bridge: MarginBridge; s
       </div>
 
       <p className="border-t px-5 py-2.5 text-[11px] text-muted-foreground">
-        Bars: <span className="font-medium" style={{ color: '#378ADD' }}>sold</span> &amp; <span className="font-medium" style={{ color: '#378ADD' }}>forecast</span> margin · steps between are{' '}
-        <span className="font-medium" style={{ color: '#639922' }}>gains</span> / <span className="font-medium" style={{ color: '#E24B4A' }}>erosion</span> from budget growth, contract change and cost performance.
+        Bars: <span className="font-medium" style={{ color: CHART.planned }}>sold</span> &amp; <span className="font-medium" style={{ color: CHART.planned }}>forecast</span> margin · steps between are{' '}
+        <span className="font-medium" style={{ color: CHART.earned }}>gains</span> / <span className="font-medium" style={{ color: CHART.erosion }}>erosion</span> from budget growth, contract change and cost performance.
       </p>
     </section>
   );
@@ -111,7 +112,7 @@ function Waterfall({ bridge }: { bridge: MarginBridge }) {
         const isAnchor = s.kind === 'anchor';
         const top = isAnchor ? yOf(s.value) : yOf(Math.max(running[i], running[i] - s.value));
         const bot = isAnchor ? y1 : yOf(Math.min(running[i], running[i] - s.value));
-        const fill = isAnchor ? '#378ADD' : s.value >= 0 ? '#639922' : '#E24B4A';
+        const fill = isAnchor ? CHART.planned : s.value >= 0 ? CHART.earned : CHART.erosion;
         return (
           <g key={s.label}>
             {!isAnchor && i > 0 && (

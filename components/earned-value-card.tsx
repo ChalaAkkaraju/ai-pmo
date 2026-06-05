@@ -5,6 +5,7 @@
  * (PV rising to BAC, EV/AC up to today) on the right.
  */
 
+import { CHART } from '@/lib/chart-palette';
 import type { EvMetrics, EvCurve } from '@/lib/earned-value';
 
 function money(n: number | null): string {
@@ -65,9 +66,9 @@ export function EarnedValueCard({ metrics, syncedAt, curve }: { metrics: EvMetri
       <div className="grid grid-cols-1 gap-x-6 gap-y-4 px-5 py-4 md:grid-cols-2 md:items-center">
         <div className="grid grid-cols-2 gap-2">
           <Metric label="Budget (BAC)" value={money(bac)} cls="text-foreground" />
-          <Metric label="Planned (PV)" value={money(pv)} accent="#378ADD" />
-          <Metric label="Earned (EV)" value={money(ev)} accent="#639922" />
-          <Metric label="Actual (AC)" value={money(ac)} accent="#BA7517" />
+          <Metric label="Planned (PV)" value={money(pv)} accent={CHART.planned} />
+          <Metric label="Earned (EV)" value={money(ev)} accent={CHART.earned} />
+          <Metric label="Actual (AC)" value={money(ac)} accent={CHART.actual} />
           <Metric label="CPI · cost" value={num(cpi)} cls={tone(cpi)} />
           <Metric label="SPI · schedule" value={num(spi)} cls={tone(spi)} />
           <Metric label="Forecast (EAC)" value={money(eac)} />
@@ -85,19 +86,19 @@ export function EarnedValueCard({ metrics, syncedAt, curve }: { metrics: EvMetri
             return (
               <div>
                 <div className="mb-1.5 flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2 border-dashed" style={{ borderColor: '#378ADD' }} />Planned (PV)</span>
-                  <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2" style={{ borderColor: '#639922' }} />Earned (EV)</span>
-                  <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2" style={{ borderColor: '#BA7517' }} />Actual (AC)</span>
+                  <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2 border-dashed" style={{ borderColor: CHART.planned }} />Planned (PV)</span>
+                  <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2" style={{ borderColor: CHART.earned }} />Earned (EV)</span>
+                  <span className="flex items-center gap-1.5"><span className="inline-block h-0 w-4 border-t-2" style={{ borderColor: CHART.actual }} />Actual (AC)</span>
                 </div>
                 <svg viewBox="0 0 600 150" className="w-full" role="img" aria-label="Earned value S-curve: planned value rising to budget, with earned value and actual cost up to today">
                   <line x1="20" y1="18" x2="580" y2="18" stroke="currentColor" strokeOpacity="0.15" strokeDasharray="3 3" />
                   <text x="20" y="12" fontSize="9" fill="currentColor" fillOpacity="0.5">BAC {money(curve.bac)}</text>
                   <line x1="20" y1="140" x2="580" y2="140" stroke="currentColor" strokeOpacity="0.15" />
-                  <line x1={tx} y1="18" x2={tx} y2="140" stroke="#DC2626" strokeOpacity="0.55" strokeWidth="1" />
-                  <text x={tx + 3} y="27" fontSize="9" fill="#DC2626">today</text>
-                  <polyline points={pvPts} fill="none" stroke="#378ADD" strokeWidth="2" strokeDasharray="5 3" />
-                  <polyline points={evPts} fill="none" stroke="#639922" strokeWidth="2.5" />
-                  <polyline points={acPts} fill="none" stroke="#BA7517" strokeWidth="2.5" />
+                  <line x1={tx} y1="18" x2={tx} y2="140" stroke={CHART.today} strokeOpacity="0.55" strokeWidth="1" />
+                  <text x={tx + 3} y="27" fontSize="9" fill={CHART.today}>today</text>
+                  <polyline points={pvPts} fill="none" stroke={CHART.planned} strokeWidth="2" strokeDasharray="5 3" />
+                  <polyline points={evPts} fill="none" stroke={CHART.earned} strokeWidth="2.5" />
+                  <polyline points={acPts} fill="none" stroke={CHART.actual} strokeWidth="2.5" />
                 </svg>
               </div>
             );

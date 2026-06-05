@@ -10,6 +10,7 @@
  *   Recent activity feed
  */
 
+import { CHART } from '@/lib/chart-palette';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
@@ -420,9 +421,9 @@ function PortfolioEvBand({ ev }: { ev: PortfolioEv }) {
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         <Cell label="Budget (BAC)" value={money(ev.bac)} />
-        <Cell label="Planned (PV)" value={money(ev.pv)} accent="#378ADD" />
-        <Cell label="Earned (EV)" value={money(ev.ev)} accent="#639922" />
-        <Cell label="Actual (AC)" value={money(ev.ac)} accent="#BA7517" />
+        <Cell label="Planned (PV)" value={money(ev.pv)} accent={CHART.planned} />
+        <Cell label="Earned (EV)" value={money(ev.ev)} accent={CHART.earned} />
+        <Cell label="Actual (AC)" value={money(ev.ac)} accent={CHART.actual} />
         <Cell label="CPI · cost" value={ev.cpi == null ? '\u2014' : ev.cpi.toFixed(2)} cls={ratioTone(ev.cpi)} />
         <Cell label="SPI · sched" value={ev.spi == null ? '\u2014' : ev.spi.toFixed(2)} cls={ratioTone(ev.spi)} />
         <Cell label="Forecast (EAC)" value={money(ev.eac)} />

@@ -491,8 +491,7 @@ export function FloatingAgentWidget({
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="no-print fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-medium text-white shadow-lg transition hover:opacity-90"
-          style={{ backgroundColor: 'rgb(15 23 42)' }}
+          className="no-print fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-3 text-sm font-medium text-background shadow-lg transition hover:opacity-90"
           aria-label="Ask AI Assistant"
         >
           <span className="text-lg leading-none">✨</span>
@@ -512,8 +511,7 @@ export function FloatingAgentWidget({
       aria-label="Agent chat"
     >
       <header
-        className="flex items-start justify-between gap-2 px-4 py-3"
-        style={{ backgroundColor: 'rgb(15 23 42)' }}
+        className="flex items-start justify-between gap-2 bg-foreground px-4 py-3"
       >
         <div className="flex min-w-0 items-center gap-2.5">
           <span
@@ -610,8 +608,7 @@ export function FloatingAgentWidget({
           <button
             type="submit"
             disabled={isInvoking || !prompt.trim()}
-            className="rounded-md px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-40"
-            style={{ backgroundColor: 'rgb(15 23 42)' }}
+            className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-40"
           >
             {isInvoking ? 'Calling…' : 'Send'}
           </button>
@@ -760,7 +757,7 @@ function InvocationCard({
                   <button
                     type="button"
                     onClick={() => onPopOut(invocation)}
-                    className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 transition hover:bg-slate-50"
                     title="Pop this brief into a floating panel beside the widget so you can keep it visible while asking follow-ups"
                   >
                     ↗ Pop out
@@ -769,7 +766,7 @@ function InvocationCard({
                     href={`/access/${token}/report/${invocation.output_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"
+                    className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"
                     title="Opens a polished, printable long-form report (with PDF download) in a new tab"
                   >
                     ↗ Show full report
@@ -788,7 +785,7 @@ function InvocationCard({
                       key={choice.letter}
                       type="button"
                       onClick={() => onUseAsPrompt(choice.text)}
-                      className="text-left rounded border border-sky-200 bg-sky-50 px-2 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100"
+                      className="text-left rounded-md border border-sky-200 bg-sky-50 px-2 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100"
                       title="Pre-fills the prompt with this option — review and Send"
                     >
                       <span className="line-clamp-2">{choice.text}</span>
@@ -808,7 +805,7 @@ function InvocationCard({
                       key={i}
                       type="button"
                       onClick={() => onUseAsPrompt(action)}
-                      className="group text-left rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900 transition hover:border-emerald-400 hover:bg-emerald-100"
+                      className="group text-left rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900 transition hover:border-emerald-400 hover:bg-emerald-100"
                       title="Pre-fills the prompt below with a follow-up question on this action"
                     >
                       <span className="line-clamp-2">{action}</span>
@@ -947,8 +944,8 @@ function PoppedOutBriefPanel({
           title="Drag to move"
         >
           <span
-            className="inline-flex h-6 w-6 flex-none items-center justify-center rounded-md text-sm leading-none"
-            style={{ backgroundColor: 'rgb(15 23 42)', color: '#FBBF24' }}
+            className="inline-flex h-6 w-6 flex-none items-center justify-center rounded-md bg-foreground text-sm leading-none"
+            style={{ color: '#FBBF24' }}
           >
             📌
           </span>
@@ -1054,7 +1051,7 @@ function PoppedOutBriefPanel({
               href={`/access/${token}/report/${invocation.output_id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"
+              className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"
               title="Opens the polished, printable long-form report with PDF download"
             >
               ↗ Full report
@@ -1072,7 +1069,7 @@ function PoppedOutBriefPanel({
                   key={choice.letter}
                   type="button"
                   onClick={() => onUseAsPrompt(choice.text)}
-                  className="text-left rounded border border-sky-200 bg-sky-50 px-2 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100"
+                  className="text-left rounded-md border border-sky-200 bg-sky-50 px-2 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100"
                   title="Pre-fills the agent widget prompt with this option — review and Send"
                 >
                   <span className="line-clamp-2">{choice.text}</span>
@@ -1092,7 +1089,7 @@ function PoppedOutBriefPanel({
                   key={i}
                   type="button"
                   onClick={() => onUseAsPrompt(action)}
-                  className="text-left rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900 transition hover:border-emerald-400 hover:bg-emerald-100"
+                  className="text-left rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-900 transition hover:border-emerald-400 hover:bg-emerald-100"
                   title="Pre-fills the agent widget's prompt with a follow-up question on this action"
                 >
                   <span className="line-clamp-2">{action}</span>
