@@ -354,10 +354,10 @@ function LifecycleBar({
 
 interface BarItem { label: string; value: number; color: string; }
 
-function MiniBarChart({ items, maxLabelWidth = 'flex-1', wrapLabels = false }: { items: BarItem[]; maxLabelWidth?: string; wrapLabels?: boolean }) {
+function MiniBarChart({ items, maxLabelWidth = 'flex-1', wrapLabels = false, fill = false }: { items: BarItem[]; maxLabelWidth?: string; wrapLabels?: boolean; fill?: boolean }) {
   const max = Math.max(...items.map((i) => i.value), 1);
   return (
-    <div className="space-y-2">
+    <div className={fill ? 'flex h-full flex-1 flex-col justify-between gap-2' : 'space-y-2'}>
       {items.map((item) => {
         const pct = (item.value / max) * 100;
         return (
@@ -903,12 +903,12 @@ export function DashboardClient({
       <section>
         <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio insights</h2>
         <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="rounded-lg border bg-card p-4">
+          <div className="flex flex-col rounded-lg border bg-card p-4">
             <div className="mb-3 flex items-baseline justify-between">
               <h3 className="text-base font-semibold">Risks by category</h3>
               <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total</span>
             </div>
-            <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels />
+            <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels fill />
           </div>
           <div className="flex flex-col gap-4">
           <div className="rounded-lg border bg-card p-4">
