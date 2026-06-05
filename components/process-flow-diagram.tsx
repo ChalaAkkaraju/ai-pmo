@@ -113,11 +113,11 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
 
       {entry && s && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8" onClick={() => setAgent(null)}>
-          <div className="relative my-6 w-full max-w-2xl rounded-2xl border bg-card shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative my-4 w-full max-w-4xl rounded-2xl border bg-card shadow-xl" onClick={(e) => e.stopPropagation()}>
             <button type="button" onClick={() => setAgent(null)} aria-label="Close" className="absolute right-3 top-3 z-10 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted">
               <X size={16} strokeWidth={2.5} />
             </button>
-            <div className="max-h-[85vh] overflow-y-auto p-5">
+            <div className="max-h-[90vh] overflow-y-auto p-5">
               <div className="rounded-2xl border p-5" style={{ background: `linear-gradient(135deg, ${s.accent}1f, ${s.accent}08)`, borderColor: `${s.accent}33` }}>
                 <div className="mb-2.5 flex items-center gap-3">
                   <span className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-xl" style={{ backgroundColor: `${s.accent}26`, color: s.accent }}>
