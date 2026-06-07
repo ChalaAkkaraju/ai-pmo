@@ -14,6 +14,7 @@ export interface RiskRow {
   schedule_impact_days?: number | string | null;
   probability_pct?: number | string | null;
   residual_probability_pct?: number | string | null;
+  realised_cost_usd?: number | string | null;
 }
 
 const n = (v: unknown): number => {
@@ -94,3 +95,56 @@ export const STRATEGY_FOR: Record<'threat' | 'opportunity', string[]> = {
   threat: ['Avoid', 'Transfer', 'Mitigate', 'Accept', 'Escalate'],
   opportunity: ['Exploit', 'Share', 'Enhance', 'Accept', 'Escalate'],
 };
+
+
+export interface ContingencyEstimate {
+  p50: number;        // expected exposure (Σ EMV of live threats)
+  p80: number;        // 80th-percentile reserve (mean + 0.84·SD)
+  sd: number;
+  liveThreats: number;
+}
+
+/**
+ * Risk-based contingency reserve from the live-threat EMV distribution.
+ * Model each threat as Bernoulli(p)×cost (independent): mean = Σ p·cost (= EMV),
+ * variance = Σ p(1-p)·cost². P50 ≈ mean; P80 ≈ mean + 0.84·SD (z₀.₈ ≈ 0.84).
+ * Uses residual probability where present.
+ */
+export function contingencyEstimate(risks: RiskRow[]): ContingencyEstimate {
+  let mean = 0, variance = 0, count = 0;
+  for (const r of risks) {
+    if ((r.risk_type ?? 'threat') === 'opportunity') continue;
+    if (!isLive(r.status)) continue;
+    const pct = n(r.residual_probability_pct) || n(r.probability_pct);
+    const p = Math.max(0, Math.min(1, pct / 100));
+    const c = n(r.cost_impact_usd);
+    if (c <= 0) continue;
+    mean += p * c;
+    variance += p * (1 - p) * c * c;
+    count++;
+  }
+  const sd = Math.sqrt(variance);
+  return { p50: mean, p80: mean + 0.84 * sd, sd, liveThreats: count };
+}
+
+export interface ForecastAccuracy {
+  predicted: number;  // Σ predicted cost impact of Realised threats
+  actual: number;     // Σ realised cost
+  ratio: number;      // actual ÷ predicted (1.0 = on the money)
+  n: number;
+}
+
+/** How close predicted impact was to what actually landed, over Realised threats. */
+export function forecastAccuracy(risks: RiskRow[]): ForecastAccuracy {
+  let predicted = 0, actual = 0, count = 0;
+  for (const r of risks) {
+    if ((r.risk_type ?? 'threat') === 'opportunity') continue;
+    if (canonicalRiskStatus(r.status) !== 'Realised') continue;
+    const a = n(r.realised_cost_usd);
+    if (a <= 0) continue;
+    predicted += n(r.cost_impact_usd);
+    actual += a;
+    count++;
+  }
+  return { predicted, actual, ratio: predicted > 0 ? actual / predicted : 0, n: count };
+}

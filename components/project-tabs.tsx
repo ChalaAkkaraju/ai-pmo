@@ -30,6 +30,7 @@ import { ChangeOrdersTable } from './change-orders-table';
 import { VarianceSummary } from './variance-summary';
 import { VarianceTrendChart } from './variance-trend-chart';
 import { WbsCanonicalTree, type WorkPackage } from './wbs-canonical-tree';
+import { RiskByWbs } from './risk-by-wbs';
 import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
@@ -151,7 +152,10 @@ export function ProjectTabs({
 
       <Tabs.Content value="structure" className="space-y-6 pt-6">
         {activeWps.length > 0 ? (
-          <WbsCanonicalTree workPackages={activeWps} />
+          <>
+            <WbsCanonicalTree workPackages={activeWps} />
+            <RiskByWbs risks={data.risks} workPackages={activeWps} />
+          </>
         ) : proposedWps.length > 0 ? (
           <>
             {canWrite && <WbsAuthoring token={token} projectCode={projectCode} proposed />}
@@ -187,7 +191,7 @@ export function ProjectTabs({
       <Tabs.Content value="risks" className="space-y-6 pt-6">
         <RiskExposurePanel risks={data.risks} contingency={contingencyTotal} consumed={contingencyConsumed} />
         <RiskHeatmap rows={data.risks} />
-        <RisksTable rows={data.risks} actions={data.action_items ?? []} />
+        <RisksTable rows={data.risks} actions={data.action_items ?? []} issues={data.issues} />
         <IssuesTable rows={data.issues} />
       </Tabs.Content>
 

@@ -1,9 +1,10 @@
-import { computeExposure, contingencyAdequacy, fmtUsd, type RiskRow } from '@/lib/risk-emv';
+import { computeExposure, contingencyAdequacy, contingencyEstimate, forecastAccuracy, fmtUsd, type RiskRow } from '@/lib/risk-emv';
 
 /**
  * Quantitative risk exposure for a project: live EMV (inherent → residual),
- * mitigation burndown, opportunity upside, and residual exposure measured
- * against contingency remaining. Pure render from the enriched risk rows.
+ * mitigation burndown, opportunity upside, residual exposure vs contingency,
+ * a risk-based P50/P80 contingency size, and EMV forecast accuracy on realised
+ * risks. Pure render from the enriched risk rows.
  */
 export function RiskExposurePanel({
   risks, contingency, consumed,
@@ -12,15 +13,19 @@ export function RiskExposurePanel({
   contingency: number;
   consumed: number;
 }) {
-  const exp = computeExposure(risks as unknown as RiskRow[]);
+  const rows = risks as unknown as RiskRow[];
+  const exp = computeExposure(rows);
   if (exp.liveThreats === 0 && exp.opportunityUpside === 0 && exp.realisedCost === 0) return null;
 
   const adq = contingencyAdequacy(exp.residualEmv, contingency, consumed);
+  const sizing = contingencyEstimate(rows);
+  const fa = forecastAccuracy(rows);
   const bandColor = adq.band === 'Adequate' ? 'text-emerald-600' : adq.band === 'Tight' ? 'text-amber-600' : 'text-rose-600';
   const barColor = adq.band === 'Adequate' ? 'bg-emerald-500' : adq.band === 'Tight' ? 'bg-amber-500' : 'bg-rose-500';
   const covPct = adq.remaining > 0 ? Math.min(100, (adq.residualExposure / adq.remaining) * 100) : 100;
   const burndownPct = exp.inherentEmv > 0 ? Math.round((exp.residualEmv / exp.inherentEmv) * 100) : 0;
   const reduction = Math.round(exp.reductionPct * 100);
+  const p80Covered = contingency >= sizing.p80;
 
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -59,15 +64,35 @@ export function RiskExposurePanel({
           {exp.realisedCost > 0 ? ` · realised risk cost ${fmtUsd(exp.realisedCost)}` : ''}
         </p>
       </div>
+
+      {/* Risk-based contingency sizing (P50 / P80) + forecast accuracy */}
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <Stat label="P50 reserve (expected)" value={fmtUsd(sizing.p50)} sub="Σ EMV of live threats" />
+        <Stat
+          label="P80 reserve (recommended)"
+          value={fmtUsd(sizing.p80)}
+          accent={p80Covered ? 'emerald' : 'rose'}
+          sub={p80Covered ? 'held contingency covers P80' : `held ${fmtUsd(contingency)} < P80`}
+        />
+        {fa.n > 0 && (
+          <Stat
+            label="EMV forecast accuracy"
+            value={`${Math.round(fa.ratio * 100)}%`}
+            accent={fa.ratio <= 1.1 ? 'emerald' : 'rose'}
+            sub={`${fmtUsd(fa.actual)} actual vs ${fmtUsd(fa.predicted)} predicted (${fa.n})`}
+          />
+        )}
+      </div>
     </div>
   );
 }
 
 function Stat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
+  const color = accent === 'emerald' ? 'text-emerald-600' : accent === 'rose' ? 'text-rose-600' : '';
   return (
     <div className="rounded-md border bg-background p-2.5">
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={`mt-0.5 font-mono text-base font-semibold ${accent === 'emerald' ? 'text-emerald-600' : ''}`}>{value}</div>
+      <div className={`mt-0.5 font-mono text-base font-semibold ${color}`}>{value}</div>
       {sub && <div className="text-[11px] text-muted-foreground">{sub}</div>}
     </div>
   );
