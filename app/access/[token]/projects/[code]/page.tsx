@@ -17,6 +17,7 @@ import type { WorkPackage } from '@/components/wbs-canonical-tree';
 import type { Task } from '@/components/schedule-view';
 import { computeEv, evCurve, computeEvByWbs, earnedSchedule } from '@/lib/earned-value';
 import { computeCommitment, costByElement, computeLabourProductivity } from '@/lib/cost-commitment';
+import { computeBilling } from '@/lib/billing';
 import { computeLoad, type ResAssignment, type LoadResult } from '@/lib/resource-load';
 import { computeMarginBridge } from '@/lib/margin';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
@@ -136,6 +137,18 @@ async function loadLabourRows(
   return res.data ?? [];
 }
 
+async function loadBilling(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<Array<{ wbs_code: string | null; invoice_number: string | null; billing_type: string | null; amount: number | null; billed_week: number | null; status: string | null }>> {
+  const res = await supabase
+    .from('billing_events')
+    .select('wbs_code, invoice_number, billing_type, amount, billed_week, status')
+    .eq('project_id', projectId);
+  if (res.error) return [];
+  return res.data ?? [];
+}
+
 async function loadScheduleEnvelope(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   projectId: string,
@@ -245,6 +258,8 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const commitment = computeCommitment(purchaseOrders);
   const costElements = costByElement(costActuals);
   const labourProductivity = computeLabourProductivity(await loadLabourRows(supabase, project.id));
+  const contractValue = Number(project.contract_value_current) || Number(project.sold_contract_value) || 0;
+  const billing = computeBilling(await loadBilling(supabase, project.id), contractValue, evMetrics.complete_pct / 100);
   const marginBridge = computeMarginBridge({
     soldContract: Number(project.sold_contract_value) || 0,
     soldBudget: soldBudget ?? 0,
@@ -404,6 +419,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         costElements={costElements}
         labourProductivity={labourProductivity}
         purchaseOrders={purchaseOrders}
+        billing={billing}
         resourceLoad={resourceLoad}
         marginBridge={marginBridge}
         marginSyncedAt={project.baseline_captured_at ?? null}

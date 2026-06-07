@@ -38,7 +38,9 @@ import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
 import { EvByWbs } from './ev-by-wbs';
-import { CostCommitmentCard } from './cost-commitment-card';
+import { CommitmentPanel } from './commitment-panel';
+import { CostElementMix } from './cost-element-mix';
+import { BillingCard } from './billing-card';
 import { PoTable } from './po-table';
 import { LabourProductivityPanel } from './labour-productivity-panel';
 import { ResourceLoadPanel } from './resource-load-view';
@@ -46,6 +48,7 @@ import { MarginBridgeCard } from './margin-bridge';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
 import type { EvMetrics, EvCurve, EvBranch, EarnedScheduleMetrics } from '@/lib/earned-value';
 import type { CommitmentSummary, PoRow, LabourProductivity } from '@/lib/cost-commitment';
+import type { BillingSummary } from '@/lib/billing';
 import type { LoadResult } from '@/lib/resource-load';
 import type { MarginBridge } from '@/lib/margin';
 import type { AgentType } from '@/lib/types';
@@ -86,6 +89,7 @@ interface ProjectTabsProps {
   costElements: { category: string; actual: number; planned: number }[];
   labourProductivity: LabourProductivity;
   purchaseOrders: PoRow[];
+  billing: BillingSummary;
   resourceLoad: LoadResult;
   marginBridge: MarginBridge;
   marginSyncedAt: string | null;
@@ -123,13 +127,14 @@ export function ProjectTabs({
   costElements,
   labourProductivity,
   purchaseOrders,
+  billing,
   resourceLoad,
   marginBridge,
   marginSyncedAt,
   scheduleEnvelope,
   data,
 }: ProjectTabsProps) {
-  const [tab, setTab] = useState(['overview', 'structure', 'schedule', 'ev', 'resources', 'risks', 'cos', 'variance', 'planning'].includes(initialTab ?? '') ? (initialTab as string) : 'overview');
+  const [tab, setTab] = useState(['overview', 'structure', 'schedule', 'ev', 'cost', 'commitment', 'resources', 'risks', 'cos', 'variance', 'planning'].includes(initialTab ?? '') ? (initialTab as string) : 'overview');
 
   const planningByAgent: Record<string, ArtefactRow[]> = {};
   for (const row of data.planning_outputs ?? []) {
@@ -147,6 +152,8 @@ export function ProjectTabs({
         <TabTrigger value="structure" label="Structure" count={workPackages.length} />
         <TabTrigger value="schedule" label="Schedule" count={tasks.length} />
         <TabTrigger value="ev" label="Earned value" highlight />
+        <TabTrigger value="cost" label="Cost" />
+        <TabTrigger value="commitment" label="Commitment" count={purchaseOrders.length} />
         <TabTrigger value="resources" label="Resources" count={resourceLoad.roles.length} />
         <span className="mx-2 self-center text-muted-foreground/40">|</span>
         <TabTrigger value="risks" label="Risks & issues" count={data.risks.length + data.issues.length} />
@@ -196,10 +203,18 @@ export function ProjectTabs({
         )}
       </Tabs.Content>
 
-      <Tabs.Content value="ev" className="pt-6">
+      <Tabs.Content value="ev" className="space-y-6 pt-6">
         <EarnedValueCard metrics={evMetrics} syncedAt={evSyncedAt} curve={evCurve} es={evSchedule} />
         <EvByWbs branches={evByWbs} />
-        <CostCommitmentCard metrics={evMetrics} commitment={commitment} elements={costElements} />
+      </Tabs.Content>
+
+      <Tabs.Content value="cost" className="space-y-6 pt-6">
+        <CostElementMix elements={costElements} commitment={commitment} />
+        <BillingCard billing={billing} />
+      </Tabs.Content>
+
+      <Tabs.Content value="commitment" className="space-y-6 pt-6">
+        <CommitmentPanel metrics={evMetrics} commitment={commitment} />
         <PoTable pos={purchaseOrders} workPackages={workPackages} />
       </Tabs.Content>
 
