@@ -1,23 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { riskDot } from '@/lib/badge-styles';
+import { fmtUsd } from '@/lib/risk-emv';
 
 /**
- * 3×3 Probability × Impact risk heat map.
- *
- *   Y-axis (rows, top → bottom): High → Medium → Low probability
- *   X-axis (cols, left → right): Low  → Medium → High   impact
- *
- * Each cell:
- *   - Background tinted by inherent score (P×I product mapped to colour)
- *   - Header showing P×I label + count
- *   - Small coloured dots, one per risk in that bucket, coloured by status
- *   - Hover any dot → tooltip with risk_id + first line of description
- *
- * Sits ABOVE the existing RisksTable on the project Risks tab; the table
- * stays for detail browsing.
+ * 3×3 Probability × Impact risk heat map with an Inherent / Residual toggle.
+ * Flip to Residual to see risks move down-left as mitigation buys down
+ * probability/impact. Each cell shows its risk count, status dots, and the
+ * total EMV sitting in that cell (inherent or residual to match the view).
  */
-
 interface Risk {
   risk_id: string;
   description: string;
@@ -25,9 +17,14 @@ interface Risk {
   impact: string;
   score: number;
   status: string;
+  residual_probability?: string | null;
+  residual_impact?: string | null;
+  emv_usd?: number | null;
+  residual_emv_usd?: number | null;
 }
 
 type Level = 'H' | 'M' | 'L';
+type View = 'inherent' | 'residual';
 
 const PROB_ROWS: Level[] = ['H', 'M', 'L'];
 const IMPACT_COLS: Level[] = ['L', 'M', 'H'];
@@ -40,27 +37,33 @@ function cellTint(p: Level, i: Level): string {
   if (product >= 2) return 'bg-emerald-50 border-emerald-200';
   return 'bg-emerald-50/60 border-emerald-200';
 }
+function levelToNum(l: Level): number { return l === 'H' ? 3 : l === 'M' ? 2 : 1; }
+function levelLabel(l: Level): string { return l === 'H' ? 'High' : l === 'M' ? 'Med' : 'Low'; }
+function isLevel(s: string): s is Level { return s === 'H' || s === 'M' || s === 'L'; }
 
-function levelToNum(l: Level): number {
-  return l === 'H' ? 3 : l === 'M' ? 2 : 1;
+function cellOf(r: Risk, view: View): string | null {
+  const p = ((view === 'residual' ? r.residual_probability : r.probability) ?? r.probability ?? '').toString().toUpperCase().charAt(0);
+  const i = ((view === 'residual' ? r.residual_impact : r.impact) ?? r.impact ?? '').toString().toUpperCase().charAt(0);
+  if (!isLevel(p) || !isLevel(i)) return null;
+  return `${p}-${i}`;
 }
-
-function levelLabel(l: Level): string {
-  return l === 'H' ? 'High' : l === 'M' ? 'Med' : 'Low';
+function emvOf(r: Risk, view: View): number {
+  const v = view === 'residual' ? r.residual_emv_usd ?? r.emv_usd : r.emv_usd;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
 }
-
 
 export function RiskHeatmap({ rows }: { rows: Array<Record<string, unknown>> }) {
   const risks = rows as unknown as Risk[];
-
+  const [view, setView] = useState<View>('inherent');
   if (risks.length === 0) return null;
+
+  const hasResidual = risks.some((r) => r.residual_probability);
 
   const buckets = new Map<string, Risk[]>();
   for (const r of risks) {
-    const p = (r.probability ?? '').toString().toUpperCase().charAt(0);
-    const i = (r.impact ?? '').toString().toUpperCase().charAt(0);
-    if (!isLevel(p) || !isLevel(i)) continue;
-    const key = `${p}-${i}`;
+    const key = cellOf(r, view);
+    if (!key) continue;
     if (!buckets.has(key)) buckets.set(key, []);
     buckets.get(key)!.push(r);
   }
@@ -80,83 +83,64 @@ export function RiskHeatmap({ rows }: { rows: Array<Record<string, unknown>> }) 
         <div>
           <h3 className="text-sm font-semibold">Risk heat map</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {risks.length} risk{risks.length === 1 ? '' : 's'} plotted by probability × impact. Cell tint = inherent score.
+            {risks.length} risk{risks.length === 1 ? '' : 's'} by probability × impact ·{' '}
+            {view === 'residual' ? 'post-mitigation (residual) position' : 'pre-mitigation (inherent) position'}. Cell shows count + EMV.
           </p>
         </div>
         <Legend counts={statusCounts} />
       </div>
 
+      {hasResidual && (
+        <div className="mb-3 inline-flex rounded-md border bg-muted/40 p-0.5 text-xs">
+          {(['inherent', 'residual'] as View[]).map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`rounded px-2.5 py-1 font-medium capitalize transition ${view === v ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {v === 'residual' ? 'Residual (post-mitigation)' : 'Inherent'}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex">
         <div className="flex w-6 items-center justify-center pb-6 pr-1">
-          <span className="rotate-180 text-[10px] font-medium uppercase tracking-wider text-muted-foreground [writing-mode:vertical-rl]">
-            Probability →
-          </span>
+          <span className="rotate-180 text-[10px] font-medium uppercase tracking-wider text-muted-foreground [writing-mode:vertical-rl]">Probability →</span>
         </div>
-
         <div className="flex-1">
           <div className="ml-12 mb-1 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-muted-foreground">
-            {IMPACT_COLS.map((c) => (
-              <div key={c}>Impact {levelLabel(c)}</div>
-            ))}
+            {IMPACT_COLS.map((c) => (<div key={c}>Impact {levelLabel(c)}</div>))}
           </div>
-
           {PROB_ROWS.map((p) => (
             <div key={p} className="mb-2 flex items-stretch gap-2">
-              <div className="flex w-10 items-center justify-end pr-1 text-[11px] font-medium text-muted-foreground">
-                {levelLabel(p)}
-              </div>
+              <div className="flex w-10 items-center justify-end pr-1 text-[11px] font-medium text-muted-foreground">{levelLabel(p)}</div>
               <div className="grid flex-1 grid-cols-3 gap-2">
-                {IMPACT_COLS.map((i) => {
-                  const key = `${p}-${i}`;
-                  const cellRisks = buckets.get(key) ?? [];
-                  return (
-                    <Cell
-                      key={key}
-                      probability={p}
-                      impact={i}
-                      risks={cellRisks}
-                    />
-                  );
-                })}
+                {IMPACT_COLS.map((i) => (
+                  <Cell key={`${p}-${i}`} probability={p} impact={i} risks={buckets.get(`${p}-${i}`) ?? []} view={view} />
+                ))}
               </div>
             </div>
           ))}
-
-          <div className="ml-12 mt-1 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Impact →
-          </div>
+          <div className="ml-12 mt-1 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Impact →</div>
         </div>
       </div>
     </div>
   );
 }
 
-function Cell({
-  probability,
-  impact,
-  risks,
-}: {
-  probability: Level;
-  impact: Level;
-  risks: Risk[];
-}) {
+function Cell({ probability, impact, risks, view }: { probability: Level; impact: Level; risks: Risk[]; view: View }) {
   const tint = cellTint(probability, impact);
+  const emvTotal = risks.reduce((a, r) => a + emvOf(r, view), 0);
   return (
     <div className={`relative flex h-32 flex-col rounded-md border ${tint} p-2`}>
-      {/* tiny corner label */}
-      <span className="absolute left-2 top-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
-        {probability}×{impact}
-      </span>
-
+      <span className="absolute left-2 top-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">{probability}×{impact}</span>
       {risks.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-base text-muted-foreground/40">—</div>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2">
-          {/* big centered count */}
-          <span className="text-3xl font-bold leading-none tabular-nums text-foreground">
-            {risks.length}
-          </span>
-          {/* centered dot cluster, one per risk, coloured by status */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
+          <span className="text-3xl font-bold leading-none tabular-nums text-foreground">{risks.length}</span>
+          {emvTotal > 0 && <span className="text-[11px] font-medium tabular-nums text-muted-foreground">{fmtUsd(emvTotal)} EMV</span>}
           <div className="flex max-w-[88%] flex-wrap items-center justify-center gap-1.5">
             {risks.map((r) => (
               <span
@@ -172,11 +156,7 @@ function Cell({
   );
 }
 
-function Legend({
-  counts,
-}: {
-  counts: { realised: number; open: number; mitigated: number; notMaterialised: number };
-}) {
+function Legend({ counts }: { counts: { realised: number; open: number; mitigated: number; notMaterialised: number } }) {
   return (
     <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
       <LegendDot className="bg-amber-500 ring-amber-600" label="Open" count={counts.open} />
@@ -186,7 +166,6 @@ function Legend({
     </div>
   );
 }
-
 function LegendDot({ className, label, count }: { className: string; label: string; count: number }) {
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -195,8 +174,4 @@ function LegendDot({ className, label, count }: { className: string; label: stri
       {count > 0 && <span className="tabular-nums">{count}</span>}
     </span>
   );
-}
-
-function isLevel(s: string): s is Level {
-  return s === 'H' || s === 'M' || s === 'L';
 }

@@ -12,6 +12,7 @@ import { Kpis, rowsFrom, tally, renameHML, cap } from '@/components/analytics-sh
 import { DonutPanel, RankedBarPanel, RiskMatrix } from '@/components/analytics-charts';
 import { PortfolioRisksTable, type PortfolioRiskRow } from '@/components/portfolio-tables';
 import { canonicalRiskStatus, CANONICAL_RISK_STATUSES } from '@/lib/risk-status';
+import { computeExposure, fmtUsd, type RiskRow } from '@/lib/risk-emv';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,10 +23,10 @@ export default async function RisksAnalyticsPage({ params }: { params: Promise<{
 
   const supabase = createSupabaseServiceClient();
   const [risksRes, projectsRes] = await Promise.all([
-    supabase.from('risks').select('risk_id, project_id, description, impact, probability, score, status, owner, cross_cutting_class').limit(10000),
+    supabase.from('risks').select('risk_id, project_id, description, impact, probability, score, status, owner, cross_cutting_class, emv_usd, residual_emv_usd, cost_impact_usd, risk_type').limit(10000),
     supabase.from('projects').select('id, code, name, segment, status').limit(10000),
   ]);
-  const risks = (risksRes.data ?? []) as Array<{ risk_id: string; project_id: string; description: string; impact: string; probability: string; score: number; status: string; owner: string | null; cross_cutting_class: string }>;
+  const risks = (risksRes.data ?? []) as Array<{ risk_id: string; project_id: string; description: string; impact: string; probability: string; score: number; status: string; owner: string | null; cross_cutting_class: string; emv_usd: number | null; residual_emv_usd: number | null; cost_impact_usd: number | null; risk_type: string | null }>;
   const projects = (projectsRes.data ?? []) as Array<{ id: string; code: string; name: string; segment: string; status: string }>;
   const segById = new Map(projects.map((p) => [p.id, p.segment]));
   const projById = new Map(projects.map((p) => [p.id, p]));
@@ -36,6 +37,7 @@ export default async function RisksAnalyticsPage({ params }: { params: Promise<{
   const active = canon.filter((c) => c === 'Active').length;
   const realised = canon.filter((c) => c === 'Realised').length;
   const mitigated = canon.filter((c) => c === 'Mitigated').length;
+  const exposure = computeExposure(risks as unknown as RiskRow[]);
 
   const byImpact = rowsFrom(renameHML(tally(risks, (r) => r.impact)), ['High', 'Medium', 'Low']);
   const byStatus = rowsFrom(tally(risks, (r) => canonicalRiskStatus(r.status)), CANONICAL_RISK_STATUSES);
@@ -82,6 +84,13 @@ export default async function RisksAnalyticsPage({ params }: { params: Promise<{
           { label: 'Mitigated', value: mitigated, tone: 'ok' },
         ]}
       />
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-lg border bg-card p-3"><div className="text-[11px] uppercase tracking-wide text-muted-foreground">Inherent EMV · live threats</div><div className="mt-0.5 font-mono text-lg font-semibold">{fmtUsd(exposure.inherentEmv)}</div></div>
+        <div className="rounded-lg border bg-card p-3"><div className="text-[11px] uppercase tracking-wide text-muted-foreground">Residual EMV</div><div className="mt-0.5 font-mono text-lg font-semibold text-emerald-600">{fmtUsd(exposure.residualEmv)}</div><div className="text-[11px] text-muted-foreground">{Math.round(exposure.reductionPct * 100)}% bought down</div></div>
+        <div className="rounded-lg border bg-card p-3"><div className="text-[11px] uppercase tracking-wide text-muted-foreground">Opportunity upside</div><div className="mt-0.5 font-mono text-lg font-semibold text-emerald-600">{fmtUsd(exposure.opportunityUpside)}</div></div>
+        <div className="rounded-lg border bg-card p-3"><div className="text-[11px] uppercase tracking-wide text-muted-foreground">Realised risk cost</div><div className="mt-0.5 font-mono text-lg font-semibold">{fmtUsd(exposure.realisedCost)}</div></div>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <RiskMatrix cells={risks.map((r) => ({ probability: r.probability, impact: r.impact }))} />
