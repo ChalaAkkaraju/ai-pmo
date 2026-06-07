@@ -132,7 +132,9 @@ export function computeEvByWbs(
 ): EvBranch[] {
   const pctByWbs = new Map<string, number>();
   for (const t of tasks) if (t.wbs_code) pctByWbs.set(t.wbs_code, Number(t.percent_complete) || 0);
-  const branchKey = (wbs: string) => wbs.split('.')[0];
+  // Group at WBS Level-2 (the phase, e.g. 1.3 Procurement). Leaves are 1.x.y
+  // under a single root, so the first segment alone would collapse to one row.
+  const branchKey = (wbs: string) => { const p = wbs.split('.'); return p.length >= 2 ? `${p[0]}.${p[1]}` : wbs; };
 
   const acc = new Map<string, { bac: number; pv: number; ev: number; ac: number }>();
   const bump = (branch: string) => acc.get(branch) ?? { bac: 0, pv: 0, ev: 0, ac: 0 };
