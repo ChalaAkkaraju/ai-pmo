@@ -15,7 +15,7 @@ import { SetupChecklist } from '@/components/setup-checklist';
 import { AssignTaskButton } from '@/components/assign-task-button';
 import type { WorkPackage } from '@/components/wbs-canonical-tree';
 import type { Task } from '@/components/schedule-view';
-import { computeEv, evCurve } from '@/lib/earned-value';
+import { computeEv, evCurve, computeEvByWbs, earnedSchedule } from '@/lib/earned-value';
 import { computeLoad, type ResAssignment, type LoadResult } from '@/lib/resource-load';
 import { computeMarginBridge } from '@/lib/margin';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
@@ -101,10 +101,10 @@ async function loadTasks(
 async function loadCostActuals(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   projectId: string,
-): Promise<Array<{ actual_cost: number | null; planned_value: number | null; synced_at: string | null }>> {
+): Promise<Array<{ wbs_code: string | null; actual_cost: number | null; planned_value: number | null; synced_at: string | null }>> {
   const res = await supabase
     .from('cost_actuals')
-    .select('actual_cost, planned_value, synced_at')
+    .select('wbs_code, actual_cost, planned_value, synced_at')
     .eq('project_id', projectId);
   if (res.error) return [];
   return res.data ?? [];
@@ -211,7 +211,10 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const scheduleEnvelope = await loadScheduleEnvelope(supabase, project.id);
   const evLeaves = workPackages.filter((w) => w.parent_wbs_code);
   const evMetrics = computeEv(evLeaves, tasks, costActuals);
-  const evC = evCurve(evLeaves, tasks, evMetrics.spi, evMetrics.cpi);
+  const evC = evCurve(evLeaves, tasks, evMetrics.spi, evMetrics.cpi, evMetrics.eac);
+  const wbsNames = new Map(workPackages.map((w) => [w.wbs_code, w.name]));
+  const evByWbs = computeEvByWbs(evLeaves, tasks, costActuals, wbsNames);
+  const evSchedule = evC ? earnedSchedule(evC, evMetrics.ev) : null;
   const marginBridge = computeMarginBridge({
     soldContract: Number(project.sold_contract_value) || 0,
     soldBudget: soldBudget ?? 0,
@@ -365,6 +368,8 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         evMetrics={evMetrics}
         evCurve={evC}
         evSyncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null}
+        evByWbs={evByWbs}
+        evSchedule={evSchedule}
         resourceLoad={resourceLoad}
         marginBridge={marginBridge}
         marginSyncedAt={project.baseline_captured_at ?? null}

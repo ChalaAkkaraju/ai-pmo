@@ -37,10 +37,11 @@ import { IssueByWbs } from './issue-by-wbs';
 import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
+import { EvByWbs } from './ev-by-wbs';
 import { ResourceLoadPanel } from './resource-load-view';
 import { MarginBridgeCard } from './margin-bridge';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
-import type { EvMetrics, EvCurve } from '@/lib/earned-value';
+import type { EvMetrics, EvCurve, EvBranch, EarnedScheduleMetrics } from '@/lib/earned-value';
 import type { LoadResult } from '@/lib/resource-load';
 import type { MarginBridge } from '@/lib/margin';
 import type { AgentType } from '@/lib/types';
@@ -75,6 +76,8 @@ interface ProjectTabsProps {
   evMetrics: EvMetrics;
   evCurve: EvCurve | null;
   evSyncedAt: string | null;
+  evByWbs: EvBranch[];
+  evSchedule: EarnedScheduleMetrics | null;
   resourceLoad: LoadResult;
   marginBridge: MarginBridge;
   marginSyncedAt: string | null;
@@ -106,6 +109,8 @@ export function ProjectTabs({
   evMetrics,
   evCurve,
   evSyncedAt,
+  evByWbs,
+  evSchedule,
   resourceLoad,
   marginBridge,
   marginSyncedAt,
@@ -180,7 +185,8 @@ export function ProjectTabs({
       </Tabs.Content>
 
       <Tabs.Content value="ev" className="pt-6">
-        <EarnedValueCard metrics={evMetrics} syncedAt={evSyncedAt} curve={evCurve} />
+        <EarnedValueCard metrics={evMetrics} syncedAt={evSyncedAt} curve={evCurve} es={evSchedule} />
+        <EvByWbs branches={evByWbs} />
       </Tabs.Content>
 
       <Tabs.Content value="resources" className="pt-6">
