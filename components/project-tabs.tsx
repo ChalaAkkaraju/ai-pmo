@@ -40,6 +40,7 @@ import { EarnedValueCard } from './earned-value-card';
 import { EvByWbs } from './ev-by-wbs';
 import { CommitmentPanel } from './commitment-panel';
 import { CostElementMix } from './cost-element-mix';
+import { CostByWbs } from './cost-by-wbs';
 import { BillingCard } from './billing-card';
 import { PoTable } from './po-table';
 import { LabourProductivityPanel } from './labour-productivity-panel';
@@ -210,6 +211,7 @@ export function ProjectTabs({
 
       <Tabs.Content value="cost" className="space-y-6 pt-6">
         <CostElementMix elements={costElements} commitment={commitment} />
+        <CostByWbs branches={evByWbs} commitment={commitment} billing={billing} />
         <BillingCard billing={billing} />
       </Tabs.Content>
 
