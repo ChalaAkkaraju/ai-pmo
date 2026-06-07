@@ -1,0 +1,139 @@
+{
+  "archetype_id": "onshore-wind-utility",
+  "segment": "renewables",
+  "subsegment": "Onshore wind farm — utility-scale (60-150 turbines, 200-500 MW)",
+  "description": "Greenfield utility-scale onshore wind project with turbine supply, BOP civil/electrical, collection system, and substation tie-in. Schedule and economics are dominated by PTC/ITC safe-harbor windows and OEM turbine delivery slots.",
+  "name_pattern": "{location} Wind Farm Phase {phase}",
+  "client_pattern": "{location} {client_suffix}",
+  "client_suffixes": [
+    "Wind Holdings LLC",
+    "Renewable Power Partners",
+    "Energy IPP Corp",
+    "Clean Generation LP",
+    "Wind Repower LLC"
+  ],
+  "contract_value_min_m": 180,
+  "contract_value_max_m": 550,
+  "contingency_pct_typical": 5,
+  "margin_pct_typical": 9,
+  "duration_weeks_min": 78,
+  "duration_weeks_max": 130,
+  "hard_deadline_themes": [
+    "IRA PTC safe-harbor placed-in-service deadline",
+    "ISO/RTO interconnection queue milestone",
+    "FAA obstruction lighting clearance prior to commissioning",
+    "PPA commercial operation date (COD) with LDs"
+  ],
+  "typical_risks": [
+    {
+      "category": "Turbine OEM delivery slot",
+      "description_template": "{turbine_oem} nacelle and blade deliveries are sequenced against a global order book; loss of slot pushes erection past the {month} weather window.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "PTC safe-harbor window",
+      "description_template": "Placed-in-service date must precede IRS continuity-of-construction expiry to preserve full PTC value at ${ptc_value}M.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Geotechnical variability at tower foundations",
+      "description_template": "Borings show variable competent rock depth across the {n_turbines}-turbine layout, risking rock excavation overruns at foundation pours.",
+      "cross_cutting_class": "Site-conditions variance",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Crane and ironworker availability",
+      "description_template": "Regional shortage of 750-ton class crawler cranes and certified turbine erection crews coincides with peer projects in the {region} ISO.",
+      "cross_cutting_class": "Resource / labour scarcity",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Winter erection halt",
+      "description_template": "Sustained winds above {wind_threshold} m/s and icing conditions historically suspend blade lifts for {n_days} days through Q1.",
+      "cross_cutting_class": "Weather / climate-sensitive construction",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Layout optimisation pressure",
+      "description_template": "Client requests post-NTP micrositing changes to chase {pct} MWh yield improvement, forcing re-permitting of access roads.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Avian/bat mitigation order",
+      "description_template": "USFWS post-construction mortality monitoring may impose curtailment regimes affecting PPA energy delivery.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "L",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Collector substation transformer lead time",
+      "description_template": "Main step-up transformer lead time of {weeks} weeks creates schedule float erosion if FAT slips.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    }
+  ],
+  "typical_issues": [
+    {
+      "category": "Blade transport permit delay",
+      "description_template": "State DOT superload permits for 70m+ blades delayed at county handoff.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Foundation rock encountered",
+      "description_template": "Rock pedestal excavation at turbines {ids} exceeded baseline cubic yards.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Crane wind standdown",
+      "description_template": "Sustained winds aloft halted nacelle lifts for {n_days} consecutive shifts.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Cable splice rework",
+      "description_template": "Medium-voltage collection cable splice QA failures required re-termination on {n_circuits} circuits.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Interconnection witness delay",
+      "description_template": "Utility witness test rescheduled, pushing back-feed energisation by {weeks} weeks.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "SCADA integration defects",
+      "description_template": "Turbine OEM SCADA points failing PPA real-time telemetry handshake with ISO.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Access road washout",
+      "description_template": "Heavy rain eroded {miles} miles of crane path requiring re-grading prior to walking the crane.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Tribal cultural resource find",
+      "description_template": "Inadvertent discovery during trenching triggered Section 106 stop-work.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Punch list at COD",
+      "description_template": "Open punch items on {n_turbines} units threaten substantial completion certificate.",
+      "typical_severity": "L"
+    }
+  ],
+  "typical_co_drivers": [
+    "Owner-directed micrositing changes after geotech reveal",
+    "Turbine model upgrade mid-execution to higher nameplate",
+    "Additional rock excavation beyond baseline at WTG foundations",
+    "Utility-requested upgrades to substation protection scheme",
+    "Curtailment-driven SCADA logic changes to satisfy avian mitigation"
+  ]
+}

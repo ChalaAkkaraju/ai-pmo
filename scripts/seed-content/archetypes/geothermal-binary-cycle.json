@@ -1,0 +1,141 @@
+{
+  "archetype_id": "geothermal-binary-cycle",
+  "segment": "renewables",
+  "subsegment": "Geothermal binary-cycle plant (20-60 MW)",
+  "description": "Binary-cycle (ORC) geothermal generation with production/injection wellfield tie-ins, gathering system, plant island, and gen-tie. Resource risk and ORC equipment lead times dominate execution planning.",
+  "name_pattern": "{location} Geothermal Phase {phase}",
+  "client_pattern": "{location} {client_suffix}",
+  "client_suffixes": [
+    "Geothermal Power LLC",
+    "Renewable Heat Partners",
+    "Earth Energy Corp",
+    "Geothermal IPP LP",
+    "Resource Generation Co"
+  ],
+  "contract_value_min_m": 140,
+  "contract_value_max_m": 380,
+  "contingency_pct_typical": 7,
+  "margin_pct_typical": 11,
+  "duration_weeks_min": 95,
+  "duration_weeks_max": 160,
+  "hard_deadline_themes": [
+    "IRA ITC/PTC placed-in-service window",
+    "BLM geothermal lease milestones",
+    "PPA COD with capacity-based LDs",
+    "UIC Class V injection permit conditions"
+  ],
+  "typical_risks": [
+    {
+      "category": "ORC heat exchanger / turbine OEM",
+      "description_template": "ORC island package from {oem} has {weeks}-week schedule float with limited domestic alternatives.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "BLM/NEPA EA timing",
+      "description_template": "Categorical exclusion or EA approval gating gathering-line construction may slip past mobilisation.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Resource temperature variance",
+      "description_template": "Production well wellhead temperatures running {delta}°F below resource report, reducing net output.",
+      "cross_cutting_class": "Site-conditions variance",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Specialty welder availability",
+      "description_template": "Coded welders for high-pressure two-phase piping are in short supply across {region}.",
+      "cross_cutting_class": "Resource / labour scarcity",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Winter access to wellpads",
+      "description_template": "Snow closure of access roads halts gathering pipework for {weeks} weeks of Q1.",
+      "cross_cutting_class": "Weather / climate-sensitive construction",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Client expansion to flash add-on",
+      "description_function": "owner",
+      "description_template": "Owner explores flash-cycle topping unit late in design, threatening plant layout freeze.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "likely_probability": "L",
+      "likely_impact": "M"
+    },
+    {
+      "category": "H2S abatement",
+      "description_template": "Non-condensable gas content exceeds design basis; H2S scrubbing scope may expand.",
+      "cross_cutting_class": "Project-specific",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Working-fluid customs/transport",
+      "description_template": "Isopentane shipment customs hold could delay plant fill and commissioning.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "L",
+      "likely_impact": "M"
+    }
+  ],
+  "typical_issues": [
+    {
+      "category": "Wellhead temperature shortfall",
+      "description_template": "Tested wellhead temperature below resource report by {delta}°F.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Gathering pipe weld rework",
+      "description_template": "Two-phase piping welds failing RT at {pct}% rate.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "ORC vacuum hold failure",
+      "description_template": "Plant failed vacuum tightness test on first attempt, requiring leak hunt.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Injection pump cavitation",
+      "description_template": "NPSH margin lower than designed; vendor redesign required.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Scaling/silica deposition",
+      "description_function": "ops",
+      "description_template": "Early operations show faster-than-expected silica scaling in heat exchangers.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Gen-tie line outage window",
+      "description_template": "Utility tie-in outage rescheduled, deferring back-feed.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "BLM stop-work order",
+      "description_template": "Stop-work issued for activity outside permitted disturbance area.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Cold weather pipe freeze",
+      "description_template": "Heat trace gap caused condensate freeze damage to instrument line.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Working-fluid leak",
+      "description_template": "Minor pentane leak required area evacuation and seal replacement.",
+      "typical_severity": "M"
+    }
+  ],
+  "typical_co_drivers": [
+    "Additional H2S abatement to meet emissions limits",
+    "Resource-driven downrating mitigation (added wells or HX surface)",
+    "Owner-directed plant layout change for future expansion",
+    "Winterisation upgrades after first-season operational learnings",
+    "Pipeline reroute to avoid sage-grouse habitat"
+  ]
+}

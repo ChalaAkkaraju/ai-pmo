@@ -1,0 +1,140 @@
+{
+  "archetype_id": "specialty-chemicals-plant",
+  "segment": "industrial",
+  "subsegment": "Specialty chemicals greenfield/expansion plant",
+  "description": "Greenfield or major-expansion specialty chemicals facility with reactor trains, separation, utilities, and tank farm. Process safety (PSM/RMP), licensor IP integration, and commissioning sequencing govern delivery.",
+  "name_pattern": "{location} Specialty Chemicals Phase {phase}",
+  "client_pattern": "{location} {client_suffix}",
+  "client_suffixes": [
+    "Chemical Holdings Corp",
+    "Specialty Materials LLC",
+    "Industrial Chemicals Inc",
+    "Performance Chemicals Co",
+    "Advanced Materials Partners"
+  ],
+  "contract_value_min_m": 180,
+  "contract_value_max_m": 650,
+  "contingency_pct_typical": 8,
+  "margin_pct_typical": 11,
+  "duration_weeks_min": 110,
+  "duration_weeks_max": 180,
+  "hard_deadline_themes": [
+    "EPA RMP / Title V approval",
+    "OSHA PSM PHA completion gates",
+    "Customer offtake agreement first-product date",
+    "State environmental construction permit milestones"
+  ],
+  "typical_risks": [
+    {
+      "category": "Licensor / proprietary package",
+      "description_template": "Process licensor controls reactor internals and catalyst loading procedures; schedule depends on their field reps.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Air permit / RMP approval",
+      "description_template": "State air construction permit and RMP review may not align with mechanical completion.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Subsurface contamination",
+      "description_template": "Brownfield site has historic contamination requiring management plan during excavation.",
+      "cross_cutting_class": "Site-conditions variance",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Pipe fitter / E&I shortage",
+      "description_template": "Coded pipe fitters and instrument techs constrained by Gulf Coast turnaround season.",
+      "cross_cutting_class": "Resource / labour scarcity",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Hurricane / severe weather",
+      "description_function": "weather",
+      "description_template": "Plant location in hurricane zone risks tank-farm and structural module stand-down during season.",
+      "cross_cutting_class": "Weather / climate-sensitive construction",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Owner-driven product slate change",
+      "description_template": "Owner pivots product mix mid-FEED, forcing reactor and feed-system redesign.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "PHA / MOC backlog",
+      "description_template": "Process Hazard Analysis closure items pile up at commissioning, blocking startup.",
+      "cross_cutting_class": "Project-specific",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Catalyst delivery",
+      "description_template": "Catalyst lot from {oem} requires specialised handling and arrives near loading window.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "L",
+      "likely_impact": "M"
+    }
+  ],
+  "typical_issues": [
+    {
+      "category": "Module fit-up issue",
+      "description_template": "Modular skid alignment discrepancies required field rework at tie-in.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Hydrotest failure on critical line",
+      "description_template": "Reactor feed line failed hydrotest, requiring weld repair and re-PWHT.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Hazmat in excavation",
+      "description_template": "Contaminated soil encountered required offsite disposal.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "PHA action item backlog",
+      "description_template": "PSI/PHA action item closures slipped, deferring readiness review.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Instrument loop checks failing",
+      "description_template": "Loop checks revealed wiring errors in {n_loops} loops.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Storm standdown",
+      "description_template": "Tropical storm forced site standdown and module securing.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Permit modification needed",
+      "description_template": "Late design change required Title V permit modification.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "First-product off-spec",
+      "description_template": "Initial product runs off-spec; tuning extended commissioning.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "OSHA PSM finding",
+      "description_template": "Pre-startup safety review identified gaps in MOC documentation.",
+      "typical_severity": "M"
+    }
+  ],
+  "typical_co_drivers": [
+    "Owner product slate / capacity change",
+    "Permit-driven equipment additions (flare, scrubber, RTO)",
+    "Differing brownfield subsurface conditions",
+    "Module rework following dimensional control issues",
+    "Acceleration to meet customer first-product commitment"
+  ]
+}

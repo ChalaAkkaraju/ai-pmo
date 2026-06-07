@@ -1,0 +1,141 @@
+{
+  "archetype_id": "steel-mill-modernisation",
+  "segment": "industrial",
+  "subsegment": "Steel mill modernisation — EAF/caster/rolling-line upgrade",
+  "description": "Brownfield modernisation of an integrated or mini-mill, typically EAF replacement, caster upgrade, or hot-strip line revamp. Executed within tight production outage windows with significant tie-in to live operations.",
+  "name_pattern": "{location} Steel Mill Modernisation Phase {phase}",
+  "client_pattern": "{location} {client_suffix}",
+  "client_suffixes": [
+    "Steel Holdings Corp",
+    "Metals Manufacturing LLC",
+    "Steel Works Inc",
+    "Specialty Metals Co",
+    "Iron & Steel Partners"
+  ],
+  "contract_value_min_m": 150,
+  "contract_value_max_m": 600,
+  "contingency_pct_typical": 7,
+  "margin_pct_typical": 10,
+  "duration_weeks_min": 80,
+  "duration_weeks_max": 145,
+  "hard_deadline_themes": [
+    "Planned outage / turnaround window",
+    "EPA Title V air permit modification deadlines",
+    "Tariff/IRA 45X advanced manufacturing credit alignment",
+    "Customer commitment / contract restart dates"
+  ],
+  "typical_risks": [
+    {
+      "category": "OEM mill technology supplier",
+      "description_template": "Process technology supplier ({oem}) provides proprietary equipment with no alternative; FAT slippage threatens outage.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Air permit modification",
+      "description_template": "EPA Title V permit modification for new EAF emissions point may slip past mechanical completion.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Existing-condition surprises",
+      "description_template": "As-found foundations, refractory chases, and embedded utilities differ from record drawings.",
+      "cross_cutting_class": "Site-conditions variance",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Boilermaker/millwright peak demand",
+      "description_template": "Outage window coincides with regional turnaround season, driving labour premiums.",
+      "cross_cutting_class": "Resource / labour scarcity",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Cold-weather outdoor lift",
+      "description_function": "weather",
+      "description_template": "Heavy lifts of EAF shell/caster modules wind-restricted during winter outage.",
+      "cross_cutting_class": "Weather / climate-sensitive construction",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Owner-driven scope creep in outage",
+      "description_template": "Owner adds scope into outage window late, compressing critical path.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "likely_probability": "H",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Production restart curve",
+      "description_template": "Ramp-up to nameplate may stretch beyond contract acceptance, triggering performance LDs.",
+      "cross_cutting_class": "Project-specific",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Refractory dryout schedule",
+      "description_template": "Refractory dryout sequence requires uninterrupted gas supply that conflicts with site outage planning.",
+      "cross_cutting_class": "Project-specific",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    }
+  ],
+  "typical_issues": [
+    {
+      "category": "Outage extension",
+      "description_template": "Owner-directed scope additions extended outage by {days} days.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Heavy lift weather hold",
+      "description_template": "Sustained winds delayed shell setting by {days} days.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Refractory dryout schedule slip",
+      "description_template": "Burner availability constraints delayed dryout completion.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Hidden foundation reinforcement",
+      "description_template": "As-found rebar congestion required redesign of new anchor pattern.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Hydraulic system contamination",
+      "description_template": "Particulate ingress during commissioning required system flush.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Crane congestion in mill bay",
+      "description_template": "Overhead crane outage conflicts created lift sequencing rework.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "I&C integration defects",
+      "description_template": "Legacy L2 system integration delays automated startup.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Performance test shortfall",
+      "description_function": "ramp",
+      "description_template": "Initial performance test below guarantee on throughput; tuning extended.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "OSHA recordable",
+      "description_template": "Hand injury during refractory work generated OSHA recordable.",
+      "typical_severity": "M"
+    }
+  ],
+  "typical_co_drivers": [
+    "Owner-added scope folded into outage window",
+    "Differing as-found conditions in foundations and utilities",
+    "Acceleration directives to recover outage schedule",
+    "Air permit-driven baghouse upsizing",
+    "Additional automation upgrades requested for production ramp"
+  ]
+}

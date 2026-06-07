@@ -1,0 +1,139 @@
+{
+  "archetype_id": "water-treatment-municipal",
+  "segment": "water",
+  "subsegment": "Municipal water/wastewater treatment plant upgrade (10-80 MGD)",
+  "description": "Brownfield modernisation or expansion of a municipal WTP/WWTP including biological treatment, filtration, disinfection, and SCADA. Delivered against consent decree or NPDES schedules with tight tie-in windows on a live plant.",
+  "name_pattern": "{location} WTP Phase {phase}",
+  "client_pattern": "{location} {client_suffix}",
+  "client_suffixes": [
+    "Municipal Water Authority",
+    "Water & Sewer District",
+    "Public Works Department",
+    "Regional Water Utility",
+    "Sanitation Commission"
+  ],
+  "contract_value_min_m": 60,
+  "contract_value_max_m": 280,
+  "contingency_pct_typical": 6,
+  "margin_pct_typical": 8,
+  "duration_weeks_min": 95,
+  "duration_weeks_max": 165,
+  "hard_deadline_themes": [
+    "NPDES permit / consent decree milestones",
+    "EPA LT2 or DBP rule compliance deadlines",
+    "PFAS/Lead & Copper Rule revisions",
+    "Bond issuance drawdown schedule"
+  ],
+  "typical_risks": [
+    {
+      "category": "Membrane/UV equipment OEM concentration",
+      "description_template": "{tech_pkg} package is sole-sourced via {oem} with {weeks}-week lead time and pre-purchase exposure.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Consent decree milestone",
+      "description_template": "EPA/state consent decree imposes hard placed-in-service date with stipulated penalties of ${k}k/day.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Existing buried utility conflicts",
+      "description_template": "Record drawings inaccurate for brownfield site; yard piping conflicts likely during excavation.",
+      "cross_cutting_class": "Site-conditions variance",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Skilled millwright/I&C scarcity",
+      "description_template": "Specialty process mechanical and instrument crews competing with peer water projects in {region}.",
+      "cross_cutting_class": "Resource / labour scarcity",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Live-plant tie-in window",
+      "description_template": "Tie-ins to active basins require coordinated bypass with peak-flow season constraint.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Wet-weather flow events",
+      "description_template": "Heavy rainfall events overwhelm temporary bypass capacity, suspending tie-in work.",
+      "cross_cutting_class": "Weather / climate-sensitive construction",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "PFAS regulatory expansion",
+      "description_template": "New EPA PFAS MCLs may require scope addition for GAC or IX polishing post-NTP.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Operator training/handover",
+      "description_template": "Client operations staff turnover risks delayed acceptance testing and beneficial use.",
+      "cross_cutting_class": "Project-specific",
+      "likely_probability": "M",
+      "likely_impact": "L"
+    }
+  ],
+  "typical_issues": [
+    {
+      "category": "Buried utility strike",
+      "description_template": "Excavation struck unmapped {utility_type} requiring emergency repair.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Bypass pump capacity exceeded",
+      "description_template": "Wet weather event exceeded temporary bypass capacity, triggering SSO notification.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Concrete leak test failure",
+      "description_template": "Basin leak test failed; epoxy injection repair required.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Equipment FAT slip",
+      "description_template": "Membrane skids failed initial FAT, requiring vendor rework before shipping.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "SCADA integration defects",
+      "description_template": "Legacy PLC integration revealed protocol mismatches delaying functional testing.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Hazmat encountered",
+      "description_template": "Asbestos pipe insulation discovered during demolition of original works.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Permit condition added",
+      "description_template": "State agency added supplemental sampling requirement mid-construction.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Disinfection startup hold",
+      "description_template": "Chlorine residual targets not met during startup; recirculation extended.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Power outage during tie-in",
+      "description_template": "Utility outage exceeded planned window, damaging in-service drives.",
+      "typical_severity": "H"
+    }
+  ],
+  "typical_co_drivers": [
+    "PFAS treatment addition per evolving regulation",
+    "Differing subsurface conditions / unmapped utilities",
+    "Owner-directed SCADA platform standardisation",
+    "Additional bypass pumping for wet-weather events",
+    "Hazmat abatement scope (asbestos / lead paint)"
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "archetype_id": "utility-scale-solar",
+  "segment": "renewables",
+  "subsegment": "Utility-scale PV solar — single-axis tracker (50-200 MW AC)",
+  "description": "Fixed-price EPC for single-axis tracker PV plants with central or string inverters, MV collection, and gen-tie to a POI substation. Margin is highly sensitive to module/tracker pricing, AD/CVD posture, and ITC milestones.",
+  "name_pattern": "{location} Solar Phase {phase}",
+  "client_pattern": "{location} {client_suffix}",
+  "client_suffixes": [
+    "Solar Holdings LLC",
+    "PV Energy Partners",
+    "Renewable IPP Co",
+    "Solar Yield LP",
+    "Sun Power Generation"
+  ],
+  "contract_value_min_m": 45,
+  "contract_value_max_m": 210,
+  "contingency_pct_typical": 4,
+  "margin_pct_typical": 8,
+  "duration_weeks_min": 52,
+  "duration_weeks_max": 95,
+  "hard_deadline_themes": [
+    "IRA ITC placed-in-service milestone",
+    "Module customs/UFLPA clearance dates",
+    "PPA COD with daily LDs",
+    "Interconnection facilities study completion"
+  ],
+  "typical_risks": [
+    {
+      "category": "Module customs hold (UFLPA)",
+      "description_template": "Bifacial modules held under UFLPA WRO at port {port}, risking {weeks}-week stacking delay.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "ITC safe-harbor lapse",
+      "description_template": "Slippage past placed-in-service trigger erodes ITC bonus adders worth ${itc_m}M.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Tracker pile refusal",
+      "description_template": "Caliche/rock layers at {pct}% of pile locations cause refusals requiring pre-drill program.",
+      "cross_cutting_class": "Site-conditions variance",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Electrician shortage",
+      "description_template": "Regional IBEW Local {local_n} hall is short {n_workers} journeymen during peak DC pull.",
+      "cross_cutting_class": "Resource / labour scarcity",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Heat-stress curtailment",
+      "description_template": "OSHA heat-illness standards force shortened shifts when wet-bulb exceeds threshold during {month}.",
+      "cross_cutting_class": "Weather / climate-sensitive construction",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Owner-directed module swap",
+      "description_template": "Client pivots from {original_module} to higher-wattage SKU mid-build, requiring stringing redesign.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Stormwater NPDES exceedance",
+      "description_template": "Sediment discharge from disturbed acreage risks NOV under construction general permit.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "L",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Inverter firmware ride-through",
+      "description_template": "ISO updates Order 2023A ride-through requirements after PO, requiring vendor firmware revision.",
+      "cross_cutting_class": "Project-specific",
+      "likely_probability": "M",
+      "likely_impact": "L"
+    }
+  ],
+  "typical_issues": [
+    {
+      "category": "Pile refusal cluster",
+      "description_template": "Block {block_id} pile refusals require predrill mobilisation.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Module damage in transit",
+      "description_template": "Container of modules arrived with {n_pallets} pallets damaged.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Tracker motor failures",
+      "description_template": "Early-batch tracker drive motors failing burn-in at {pct}% rate.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "DC combiner mis-wiring",
+      "description_template": "QA flagged combiner box polarity errors in {n_boxes} units.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Substation steel late",
+      "description_template": "Gen-tie substation structural steel delivery slipped {weeks} weeks.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Vegetation/erosion NOV",
+      "description_template": "State environmental agency issued notice of violation for sediment leaving site.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Trenching strike",
+      "description_template": "Underground utility strike during DC trenching at row {row_id}.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Commissioning string faults",
+      "description_template": "IV-curve testing identified {n_strings} underperforming strings requiring rework.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Heat day shutdown",
+      "description_template": "Site evacuated for portion of shift due to heat index above threshold.",
+      "typical_severity": "L"
+    }
+  ],
+  "typical_co_drivers": [
+    "Module wattage upgrade to capture higher-yield SKU",
+    "Predrill program added for refusal-prone blocks",
+    "Owner-directed addition of battery DC-coupling provisions",
+    "Substation scope expansion for second feeder",
+    "Revised stormwater controls to address NOV"
+  ]
+}
