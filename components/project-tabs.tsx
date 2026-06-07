@@ -23,6 +23,8 @@
 import { useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { IssuesTable } from './issues-table';
+import { IssueHealthPanel } from './issue-health-panel';
+import { IssueHeatmap } from './issue-heatmap';
 import { RisksTable } from './risks-table';
 import { RiskHeatmap } from './risk-heatmap';
 import { RiskExposurePanel } from './risk-exposure-panel';
@@ -192,7 +194,9 @@ export function ProjectTabs({
         <RiskExposurePanel risks={data.risks} contingency={contingencyTotal} consumed={contingencyConsumed} />
         <RiskHeatmap rows={data.risks} />
         <RisksTable rows={data.risks} actions={data.action_items ?? []} issues={data.issues} />
-        <IssuesTable rows={data.issues} />
+        <IssueHealthPanel issues={data.issues} currentWeek={projectCurrentWeek} />
+        <IssueHeatmap rows={data.issues} currentWeek={projectCurrentWeek} />
+        <IssuesTable rows={data.issues} currentWeek={projectCurrentWeek} />
       </Tabs.Content>
 
       <Tabs.Content value="cos" className="pt-6">
