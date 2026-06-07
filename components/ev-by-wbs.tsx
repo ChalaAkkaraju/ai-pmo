@@ -39,7 +39,7 @@ export function EvByWbs({ branches }: { branches: EvBranch[] }) {
       <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
         <div>
           <h3 className="text-sm font-semibold">Earned value by WBS branch</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">Cost and schedule performance per top-level branch — worst cost variance first.</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Cost and schedule performance per WBS phase (Level-2) — active branches first, worst cost variance leading.</p>
         </div>
         {flagged > 0 && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700">{flagged} branch{flagged === 1 ? '' : 'es'} off track</span>}
       </div>
