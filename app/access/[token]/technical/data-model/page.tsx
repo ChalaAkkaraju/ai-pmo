@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
+import { PrintButton } from '@/components/print-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +52,10 @@ export default async function DataModelPage({ params }: PageProps) {
         <span className="text-foreground">Data model</span>
       </nav>
 
-      <h1 className="text-2xl font-bold tracking-tight">Architecture &amp; data model</h1>
+            <div className="flex items-start justify-between gap-4">
+        <h1 className="text-2xl font-bold tracking-tight">Architecture &amp; data model</h1>
+        <PrintButton />
+      </div>
       <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
         The tables split into two layers. A <span className="font-medium text-foreground">consume layer</span> mirrors your
         systems of record — every row carries provenance (<code className="rounded bg-muted px-1 py-0.5 text-[12px]">source_system</code>,

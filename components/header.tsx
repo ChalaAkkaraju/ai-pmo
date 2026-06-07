@@ -21,11 +21,13 @@ import type { ResolvedRole } from '@/lib/role-context';
 const CREATE_ROLES = ['pm', 'engineering_manager'];
 
 const LEARN_LINKS: Array<{ path: string; label: string }> = [
+  { path: 'learn', label: 'Learn home' },
   { path: 'about', label: 'How it works' },
   { path: 'architecture', label: 'Architecture' },
   { path: 'framework', label: 'PMBOK coverage' },
   { path: 'agents', label: 'The 14 agents' },
   { path: 'concepts', label: 'AI concepts' },
+  { path: 'learn/training', label: 'Training' },
   { path: 'technical', label: 'Technical notes' },
 ];
 

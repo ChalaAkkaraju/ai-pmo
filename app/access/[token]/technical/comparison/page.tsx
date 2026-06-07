@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
+import { PrintButton } from '@/components/print-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +65,10 @@ export default async function ComparisonPage({ params }: PageProps) {
         <span className="text-foreground">vs SAP</span>
       </nav>
 
-      <h1 className="text-2xl font-bold tracking-tight">AI PMO vs SAP&apos;s AI agents</h1>
+            <div className="flex items-start justify-between gap-4">
+        <h1 className="text-2xl font-bold tracking-tight">AI PMO vs SAP&apos;s AI agents</h1>
+        <PrintButton />
+      </div>
       <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
         SAP is investing heavily in agentic AI — Joule Agents (30+ shipped, 200+ specialised planned), plus Joule Studio
         to build your own. Almost none overlap with AI PMO, because the two are built for opposite positions: SAP&apos;s

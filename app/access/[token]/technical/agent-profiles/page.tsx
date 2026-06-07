@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
+import { PrintButton } from '@/components/print-button';
 import { AgentProfilesRich } from '@/components/agent-profiles-rich';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +29,10 @@ export default async function AgentProfilesPage({ params }: PageProps) {
         <span className="text-foreground">Agent profiles</span>
       </nav>
 
-      <h1 className="text-2xl font-bold tracking-tight">Agent technical profiles</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-2xl font-bold tracking-tight">Agent technical profiles</h1>
+        <PrintButton />
+      </div>
       <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
         The 14 agents along the project lifecycle — for each: its PMBOK basis, what it reads and feeds, the inputs,
         where the app grounds it, the methodology rules, and what it refuses to do. Each profile{' '}
