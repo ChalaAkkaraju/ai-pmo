@@ -55,6 +55,8 @@ const VALID_AGENT_TYPES: AgentType[] = [
   'lessons_learned_synthesiser',
   'closeout_reporter',
   'portfolio_risk_reviewer',
+  'status_reporter',
+  'cost_controller',
 ];
 
 // 'auto' triggers the agent router (lib/agent-router.ts) which picks a

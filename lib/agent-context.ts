@@ -213,6 +213,64 @@ export async function loadProjectState(
 }
 
 /**
+ * Portfolio-level grounding for portfolio-scope agent calls (no single project).
+ * Without this, a portfolio question has no real data and the agent falls back
+ * to its (fictional) worked example. Bounded to ACTIVE projects. The project
+ * `code` is the project number colleagues ask for.
+ */
+export interface PortfolioState {
+  projectCount: number;
+  rollup: Array<{ code: string; name: string; segment: string; status: string; risks: number; issues: number; change_orders: number; co_value_m: number }>;
+  change_orders: Array<{ project_code: string; project_name: string; co_id: string; driver: string; scope: string; cost_impact_m: number; revenue_impact_m: number; margin_realized_pct: number | null; status: string }>;
+}
+
+export async function loadPortfolioState(supabase: SupabaseClient): Promise<PortfolioState | null> {
+  const { data: projects } = await supabase.from('projects').select('id, code, name, segment, status').limit(10000);
+  if (!projects || projects.length === 0) return null;
+  const active = (projects as Array<{ id: string; code: string; name: string; segment: string; status: string }>).filter((p) => p.status === 'Active');
+  if (active.length === 0) return null;
+  const ids = active.map((p) => p.id);
+  const byId = new Map(active.map((p) => [p.id, p]));
+
+  const [cosRes, risksRes, issuesRes] = await Promise.all([
+    supabase.from('change_orders').select('project_id, co_id, driver, scope_summary, cost_impact_m, revenue_impact_m, margin_realized_pct, status').in('project_id', ids),
+    supabase.from('risks').select('project_id').in('project_id', ids),
+    supabase.from('issues').select('project_id').in('project_id', ids),
+  ]);
+  const coRows = (cosRes.data ?? []) as Array<Record<string, unknown>>;
+  const tally = (rows: Array<Record<string, unknown>> | null) => {
+    const m = new Map<string, number>();
+    for (const r of rows ?? []) { const k = String(r.project_id); m.set(k, (m.get(k) ?? 0) + 1); }
+    return m;
+  };
+  const riskCount = tally(risksRes.data as Array<Record<string, unknown>> | null);
+  const issueCount = tally(issuesRes.data as Array<Record<string, unknown>> | null);
+  const coCount = new Map<string, number>(), coValue = new Map<string, number>();
+  for (const c of coRows) {
+    const k = String(c.project_id);
+    coCount.set(k, (coCount.get(k) ?? 0) + 1);
+    coValue.set(k, (coValue.get(k) ?? 0) + (Number(c.cost_impact_m) || 0));
+  }
+
+  const rollup = active.map((p) => ({
+    code: p.code, name: p.name, segment: p.segment, status: p.status,
+    risks: riskCount.get(p.id) ?? 0, issues: issueCount.get(p.id) ?? 0,
+    change_orders: coCount.get(p.id) ?? 0, co_value_m: Math.round((coValue.get(p.id) ?? 0) * 1000) / 1000,
+  }));
+  const change_orders = coRows.map((c) => {
+    const pr = byId.get(String(c.project_id));
+    return {
+      project_code: pr?.code ?? '', project_name: pr?.name ?? '', co_id: String(c.co_id),
+      driver: String(c.driver ?? ''), scope: String(c.scope_summary ?? '').slice(0, 140),
+      cost_impact_m: Number(c.cost_impact_m) || 0, revenue_impact_m: Number(c.revenue_impact_m) || 0,
+      margin_realized_pct: (c.margin_realized_pct as number | null) ?? null, status: String(c.status ?? ''),
+    };
+  }).sort((a, b) => a.project_code.localeCompare(b.project_code));
+
+  return { projectCount: active.length, rollup, change_orders };
+}
+
+/**
  * Assemble the structured user message for an agent invocation.
  *
  * Format follows the pattern used in Phase 1 (multiple labelled sections
@@ -223,6 +281,8 @@ export function assembleUserMessage(params: {
   userPrompt: string;
   workedExample: { artefact_name: string; past_project: string; content_md: string } | null;
   projectState: Awaited<ReturnType<typeof loadProjectState>>;
+  /** Portfolio grounding for portfolio-scope calls (no single project). */
+  portfolioState?: PortfolioState | null;
   /** When true, append a strict response-format constraint for chat-panel use. */
   concise?: boolean;
 }): string {
@@ -283,6 +343,24 @@ Rules for the vague-question shape:
   if (params.workedExample) {
     sections.push(
       `# Worked example — ${params.workedExample.artefact_name} from ${params.workedExample.past_project}\n\n${params.workedExample.content_md}`,
+    );
+  }
+
+  // Section 2b: Portfolio data — LIVE and authoritative, when no single project
+  // is in scope. Placed after the worked example so the agent answers factual
+  // portfolio questions from real data, not the (fictional) example.
+  if (!params.projectState.project && params.portfolioState) {
+    const ps = params.portfolioState;
+    sections.push(
+      `# Portfolio data — LIVE and AUTHORITATIVE\n\nThis is the real, current portfolio of ${ps.projectCount} active projects from the database. For ANY factual portfolio question — which projects have change orders, counts, totals, status, and especially **project numbers (the \`code\` field)** — answer ONLY from this data. Do NOT use the worked example above for facts; it is a style template with fictional project names.`,
+    );
+    sections.push(
+      `## Portfolio rollup — per active project (risks / issues / change-order count + cost-impact $M)\n\n${JSON.stringify(ps.rollup, null, 2)}`,
+    );
+    sections.push(
+      ps.change_orders.length > 0
+        ? `## Change orders across the portfolio (${ps.change_orders.length}) — project_code IS the project number\n\n${JSON.stringify(ps.change_orders, null, 2)}`
+        : `## Change orders across the portfolio\n\nNo change orders are recorded on active projects.`,
     );
   }
 

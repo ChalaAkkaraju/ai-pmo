@@ -17,6 +17,7 @@ import {
   assembleUserMessage,
   loadAgentPrompt,
   loadProjectState,
+  loadPortfolioState,
   loadWorkedExample,
 } from './agent-context';
 import { invokeModel } from './openrouter';
@@ -156,6 +157,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     change_orders: [] as Array<Record<string, unknown>>,
     variance_reports: [] as Array<Record<string, unknown>>,
   };
+  let portfolioState = null as Awaited<ReturnType<typeof loadPortfolioState>>;
   if (input.project_code) {
     projectState = await loadProjectState(supabase, input.project_code);
     if (!projectState.project) {
@@ -165,6 +167,9 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
         error: `Project with code "${input.project_code}" not found`,
       };
     }
+  } else {
+    // Portfolio-scope call — ground with real portfolio data.
+    portfolioState = await loadPortfolioState(supabase);
   }
 
   // ---- 7. Assemble user message ----
@@ -172,6 +177,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     userPrompt: input.user_prompt,
     workedExample,
     projectState,
+    portfolioState,
     concise: input.concise === true,
   });
 
