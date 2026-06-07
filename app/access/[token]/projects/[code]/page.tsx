@@ -16,6 +16,7 @@ import { AssignTaskButton } from '@/components/assign-task-button';
 import type { WorkPackage } from '@/components/wbs-canonical-tree';
 import type { Task } from '@/components/schedule-view';
 import { computeEv, evCurve, computeEvByWbs, earnedSchedule } from '@/lib/earned-value';
+import { computeCommitment, costByElement, computeLabourProductivity } from '@/lib/cost-commitment';
 import { computeLoad, type ResAssignment, type LoadResult } from '@/lib/resource-load';
 import { computeMarginBridge } from '@/lib/margin';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
@@ -101,11 +102,36 @@ async function loadTasks(
 async function loadCostActuals(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   projectId: string,
-): Promise<Array<{ wbs_code: string | null; actual_cost: number | null; planned_value: number | null; synced_at: string | null }>> {
+): Promise<Array<{ wbs_code: string | null; value_category: string | null; actual_cost: number | null; planned_value: number | null; synced_at: string | null }>> {
   const res = await supabase
     .from('cost_actuals')
-    .select('wbs_code, actual_cost, planned_value, synced_at')
+    .select('wbs_code, value_category, actual_cost, planned_value, synced_at')
     .eq('project_id', projectId);
+  if (res.error) return [];
+  return res.data ?? [];
+}
+
+async function loadPurchaseOrders(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<Array<{ wbs_code: string | null; vendor: string | null; po_number: string | null; value_category: string | null; po_value: number | null; received_value: number | null; status: string | null }>> {
+  const res = await supabase
+    .from('purchase_orders')
+    .select('wbs_code, vendor, po_number, value_category, po_value, received_value, status')
+    .eq('project_id', projectId);
+  if (res.error) return [];
+  return res.data ?? [];
+}
+
+async function loadLabourRows(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<Array<{ planned_work_hours: number | null; actual_work_hours: number | null; hourly_rate: number | null }>> {
+  const res = await supabase
+    .from('resource_assignments')
+    .select('planned_work_hours, actual_work_hours, hourly_rate')
+    .eq('project_id', projectId)
+    .limit(20000);
   if (res.error) return [];
   return res.data ?? [];
 }
@@ -215,6 +241,10 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const wbsNames = new Map(workPackages.map((w) => [w.wbs_code, w.name]));
   const evByWbs = computeEvByWbs(evLeaves, tasks, costActuals, wbsNames);
   const evSchedule = evC ? earnedSchedule(evC, evMetrics.ev) : null;
+  const purchaseOrders = await loadPurchaseOrders(supabase, project.id);
+  const commitment = computeCommitment(purchaseOrders);
+  const costElements = costByElement(costActuals);
+  const labourProductivity = computeLabourProductivity(await loadLabourRows(supabase, project.id));
   const marginBridge = computeMarginBridge({
     soldContract: Number(project.sold_contract_value) || 0,
     soldBudget: soldBudget ?? 0,
@@ -370,6 +400,10 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         evSyncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null}
         evByWbs={evByWbs}
         evSchedule={evSchedule}
+        commitment={commitment}
+        costElements={costElements}
+        labourProductivity={labourProductivity}
+        purchaseOrders={purchaseOrders}
         resourceLoad={resourceLoad}
         marginBridge={marginBridge}
         marginSyncedAt={project.baseline_captured_at ?? null}

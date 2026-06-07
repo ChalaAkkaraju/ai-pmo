@@ -38,10 +38,14 @@ import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
 import { EvByWbs } from './ev-by-wbs';
+import { CostCommitmentCard } from './cost-commitment-card';
+import { PoTable } from './po-table';
+import { LabourProductivityPanel } from './labour-productivity-panel';
 import { ResourceLoadPanel } from './resource-load-view';
 import { MarginBridgeCard } from './margin-bridge';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
 import type { EvMetrics, EvCurve, EvBranch, EarnedScheduleMetrics } from '@/lib/earned-value';
+import type { CommitmentSummary, PoRow, LabourProductivity } from '@/lib/cost-commitment';
 import type { LoadResult } from '@/lib/resource-load';
 import type { MarginBridge } from '@/lib/margin';
 import type { AgentType } from '@/lib/types';
@@ -78,6 +82,10 @@ interface ProjectTabsProps {
   evSyncedAt: string | null;
   evByWbs: EvBranch[];
   evSchedule: EarnedScheduleMetrics | null;
+  commitment: CommitmentSummary;
+  costElements: { category: string; actual: number; planned: number }[];
+  labourProductivity: LabourProductivity;
+  purchaseOrders: PoRow[];
   resourceLoad: LoadResult;
   marginBridge: MarginBridge;
   marginSyncedAt: string | null;
@@ -111,6 +119,10 @@ export function ProjectTabs({
   evSyncedAt,
   evByWbs,
   evSchedule,
+  commitment,
+  costElements,
+  labourProductivity,
+  purchaseOrders,
   resourceLoad,
   marginBridge,
   marginSyncedAt,
@@ -187,9 +199,12 @@ export function ProjectTabs({
       <Tabs.Content value="ev" className="pt-6">
         <EarnedValueCard metrics={evMetrics} syncedAt={evSyncedAt} curve={evCurve} es={evSchedule} />
         <EvByWbs branches={evByWbs} />
+        <CostCommitmentCard metrics={evMetrics} commitment={commitment} elements={costElements} />
+        <PoTable pos={purchaseOrders} workPackages={workPackages} />
       </Tabs.Content>
 
-      <Tabs.Content value="resources" className="pt-6">
+      <Tabs.Content value="resources" className="space-y-6 pt-6">
+        <LabourProductivityPanel p={labourProductivity} />
         <ResourceLoadPanel
           load={resourceLoad}
           mode="project"

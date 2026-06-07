@@ -50,6 +50,12 @@ function monthsBetween(start: Date, finish: Date): Array<{ key: string; frac: nu
   return out;
 }
 
+// Blended labour rate ($/hr) by discipline — actuals × rate ≈ the Labour
+// cost element. Actual hours track planned at a per-task productivity factor.
+const RATE_BY_ROLE: Record<string, number> = {
+  program_manager: 175, engineering_manager: 165, construction_manager: 145,
+  procurement: 135, project_controls: 140,
+};
 const ROLE_LABEL: Record<string, string> = {
   engineering_manager: 'Engineering', construction_manager: 'Construction', procurement: 'Procurement',
   pm: 'Project management', project_controls: 'Project controls', commercial: 'Commercial',
@@ -83,6 +89,9 @@ async function main() {
     const role = String(t.owner_role_type);
     const h = hash(String(t.id));
     const crew = 1 + (h % 4); // 1..4 people on the task
+    const prod = 0.90 + (hash(`${t.id}:prod`) % 21) / 100; // 0.90..1.10 labour productivity
+    const rate = (RATE_BY_ROLE[role] ?? 120) + (hash(`${t.id}:rate`) % 21) - 10; // ±10 jitter
+    const nowKey = new Date().toISOString().slice(0, 7);
     const months = monthsBetween(new Date(t.start_date), new Date(t.finish_date));
     for (const m of months) {
       const hours = r2(crew * 160 * m.frac);
@@ -93,6 +102,8 @@ async function main() {
         resource_role: role,
         period: m.key,
         planned_work_hours: hours,
+        actual_work_hours: m.key.slice(0, 7) <= nowKey ? r2(hours / prod) : null,
+        hourly_rate: rate,
         allocation_pct: Math.round(Math.min(1, m.frac) * 100),
         source_system: t.source_system === 'P6' ? 'P6' : 'MS_PROJECT',
         external_id: `${t.id}:${m.key}`,

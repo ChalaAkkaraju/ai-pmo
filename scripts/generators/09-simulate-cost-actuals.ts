@@ -34,6 +34,19 @@ function hash(code: string): number {
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
+type CostElem = 'Labour' | 'Materials/Equipment' | 'Subcontract' | 'Travel & expenses' | 'Other';
+// Cost-element (SAP value-category) mix per WBS Level-2 phase. Weights sum to 1;
+// actual cost and planned value are split across these so the cost view shows
+// where the money goes (and ties to the PO categories in generator 17).
+const COST_ELEMENTS: Record<string, [CostElem, number][]> = {
+  '1.1': [['Labour', 0.5], ['Other', 0.3], ['Travel & expenses', 0.15], ['Materials/Equipment', 0.05]],
+  '1.2': [['Labour', 0.8], ['Travel & expenses', 0.12], ['Subcontract', 0.05], ['Other', 0.03]],
+  '1.3': [['Materials/Equipment', 0.82], ['Subcontract', 0.1], ['Labour', 0.05], ['Travel & expenses', 0.03]],
+  '1.4': [['Subcontract', 0.45], ['Labour', 0.35], ['Materials/Equipment', 0.15], ['Travel & expenses', 0.05]],
+  '1.5': [['Labour', 0.45], ['Subcontract', 0.35], ['Materials/Equipment', 0.1], ['Travel & expenses', 0.07], ['Other', 0.03]],
+};
+const catTag = (c: CostElem) => c.replace(/[^A-Za-z]/g, '').slice(0, 4);
+
 async function main() {
   const force = process.argv.includes('--force');
   log.header('Simulate SAP PS cost actuals (earned value inputs)');
@@ -87,7 +100,7 @@ async function main() {
       return clamp(cpf * tilt, 0.70, 1.30);
     };
 
-    const rows = (leaves as Array<{ wbs_code: string; budget_bac: number | null }>).map((w) => {
+    const rows = (leaves as Array<{ wbs_code: string; budget_bac: number | null }>).flatMap((w) => {
       const bac = Number(w.budget_bac) || 0;
       const t = taskByWbs.get(w.wbs_code) as { percent_complete: number; start_date: string; finish_date: string } | undefined;
       const pct = t ? Number(t.percent_complete) || 0 : 0;
@@ -102,17 +115,23 @@ async function main() {
       const pv = plannedFrac * bac;
       const leafCpf = branchCpf(w.wbs_code);
       const ac = leafCpf > 0 ? ev / leafCpf : ev;
-      return {
+      // Split actual + planned across cost elements (value categories). EV is
+      // unchanged — the per-leaf totals just distribute into category rows.
+      // commitment now lives in purchase_orders (generator 17), so it is 0 here.
+      const branch = w.wbs_code.split('.').slice(0, 2).join('.');
+      const mix = COST_ELEMENTS[branch] ?? [['Labour', 0.6], ['Materials/Equipment', 0.4]] as [CostElem, number][];
+      return mix.filter(([, wt]) => wt > 0).map(([cat, wt]) => ({
         project_id: p.id,
         wbs_code: w.wbs_code,
         period: periodStr,
-        actual_cost: r2(ac),
-        commitment: r2(Math.max(0, bac - ac) * 0.15),
-        planned_value: r2(pv),
+        value_category: cat,
+        actual_cost: r2(ac * wt),
+        commitment: 0,
+        planned_value: r2(pv * wt),
         source_system: 'SAP_PS',
-        external_id: `${p.code}-AC-${w.wbs_code}`,
+        external_id: `${p.code}-AC-${w.wbs_code}-${catTag(cat)}`,
         synced_at: new Date().toISOString(),
-      };
+      }));
     });
 
     const { error: insErr } = await supabase.from('cost_actuals').insert(rows);
