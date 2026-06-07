@@ -13,6 +13,7 @@ const TABS: Array<{ slug: string; label: string }> = [
   { slug: 'actions', label: 'Cross-agent actions' },
   { slug: 'issues', label: 'Issues' },
   { slug: 'risks', label: 'Risks' },
+  { slug: 'earned-value', label: 'Earned value' },
   { slug: 'resources', label: 'Resources' },
 ];
 
