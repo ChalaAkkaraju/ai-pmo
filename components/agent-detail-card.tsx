@@ -26,7 +26,7 @@ function scopeStyle(scope: AgentScope): { label: string; chip: string; accent: s
   }
 }
 
-const AGENT_ICON: Record<AgentType, LucideIcon> = {
+export const AGENT_ICON: Record<AgentType, LucideIcon> = {
   charter_drafter: FileText, stakeholder_analyst: Users, wbs_builder: ListTree,
   schedule_reasoner: Calendar, budget_builder: DollarSign, communications_planner: MessageSquare,
   issue_logger: ClipboardList, variance_analyst: TrendingUp, change_order_reviewer: GitPullRequest,
