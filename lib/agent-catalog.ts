@@ -322,6 +322,27 @@ export const AGENT_CATALOG: AgentCatalogEntry[] = [
     methodology:
       'Follows PMBOK performance-reporting practice, using Northwood’s one-page status template, audience-adapted.',
   },
+  {
+    agent_type: 'cost_controller',
+    name: 'Cost Controller',
+    purpose: 'Controls commitment, cost-to-date, cost by element, labour productivity and billed-vs-earned revenue.',
+    plain:
+      'How much have you really spent, and how much have you locked in? This agent owns the SAP PS cost lifecycle — budget, then commitment (open purchase orders), then actual cost — and reports cost-to-date as actual plus open commitment, not actual alone. It breaks actual cost down by element (labour, materials, subcontract, travel), reads labour productivity from planned-vs-actual hours, and on the revenue side compares what you\'ve earned with what you\'ve billed to show net unbilled work-in-progress. It complements the Variance Analyst: where that agent measures CPI/SPI variance, this one controls commitment, cash and cost composition.',
+    scope: 'project',
+    does: [
+      'Reports cost-to-date = actual + open commitment, and a commitment-aware EAC',
+      'Breaks actual cost down by element with open commitment per category',
+      'Reads labour productivity (planned vs actual hours, rate, efficiency)',
+      'Compares earned vs billed revenue and flags net unbilled (WIP) or over-billing',
+    ],
+    doesNot: [
+      'Doesn\'t compute the EVM variance indices in depth (use Variance Analyst)',
+      'Doesn\'t raise or approve POs, invoices or change orders',
+    ],
+    samplePrompt: 'Give me the cost and commitment position with cost-to-date, open commitment by category, and net unbilled.',
+    methodology:
+      'Follows the SAP PS cost lifecycle (Budget → Commitment → Actual) and earned-vs-billed revenue (results-analysis / WIP), reconciled to the WBS.',
+  },
 ];
 
 /** Lookup helper. */

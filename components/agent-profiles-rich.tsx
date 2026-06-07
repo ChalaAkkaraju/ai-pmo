@@ -122,6 +122,12 @@ const PROFILES: Prof[] = [
     rules: 'Northwood cross-cutting taxonomy with a pattern-emergence threshold of 2+ projects; aggregate by class; recommend portfolio-level mitigation.',
     boundary: 'No single-project deep dives (that is the Risk Analyst); does not produce a project risk register.',
     reads: 'risks across active projects · patterns', feeds: 'portfolio-level mitigations' },
+  { at: 'cost_controller', phase: 'Monitoring', ka: 'SAP PS cost lifecycle (Budget → Commitment → Actual) + earned-vs-billed', ref: false,
+    inputs: 'Purchase-order commitments, cost actuals by element, labour hours, billing/invoices, and the cost baseline.',
+    grounding: 'The canonical cost tables — purchase_orders, cost_actuals (by value category), resource_assignments (hours + rate), billing_events — joined on the WBS code.',
+    rules: 'Reports cost-to-date = actual + open commitment; cost by element; labour productivity; commitment-aware EAC; earned vs billed revenue with net unbilled (WIP); everything reconciled to the WBS.',
+    boundary: 'Does not compute the EVM variance indices in depth (that is the Variance Analyst); does not raise or approve POs, invoices or change orders.',
+    reads: 'POs · cost actuals · hours · billing', feeds: 'Variance Analyst · Change Order Reviewer · Status Reporter' },
 ];
 
 export function AgentProfilesRich({ token }: { token: string }) {
@@ -132,9 +138,9 @@ export function AgentProfilesRich({ token }: { token: string }) {
   return (
     <div>
       <div className="mt-5 flex flex-wrap gap-2 text-xs">
-        <span className="rounded-full border bg-card px-2.5 py-1 font-medium">14 specialist agents</span>
+        <span className="rounded-full border bg-card px-2.5 py-1 font-medium">15 specialist agents</span>
         <span className="rounded-full border bg-card px-2.5 py-1 font-medium">{refCount} reference-grounded authoring</span>
-        <span className="rounded-full border bg-card px-2.5 py-1 font-medium">{14 - refCount} read-only synthesis</span>
+        <span className="rounded-full border bg-card px-2.5 py-1 font-medium">{15 - refCount} read-only synthesis</span>
         <span className="rounded-full border bg-card px-2.5 py-1 font-medium">All run on Claude Opus · a Haiku router triages</span>
       </div>
 

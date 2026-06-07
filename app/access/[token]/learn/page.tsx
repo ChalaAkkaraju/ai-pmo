@@ -37,7 +37,7 @@ const TIERS: Tier[] = [
     items: [
       { href: 'architecture', title: 'Architecture', blurb: 'The end-to-end swim lane and process flow, and where the dates live across SAP, the scheduler and AI PMO.', aud: ['PM', 'Technical'], kind: 'Diagram' },
       { href: 'framework', title: 'PMBOK coverage', blurb: 'The coverage matrix — which agent owns which knowledge area, and where humans and the engines stay in charge.', aud: ['PM'], kind: 'Matrix' },
-      { href: 'agents', title: 'The 14 agents', blurb: 'Every specialist, one per screen, with what it does, what it doesn’t, and a sample prompt.', aud: ['PM'], kind: 'Deck' },
+      { href: 'agents', title: 'The 15 agents', blurb: 'Every specialist, one per screen, with what it does, what it doesn’t, and a sample prompt.', aud: ['PM'], kind: 'Deck' },
       { href: 'concepts', title: 'AI concepts', blurb: 'LLM, agent, RAG, grounding and the guardrails — in plain, non-technical language.', aud: ['Exec', 'PM'], kind: 'Deck' },
     ],
   },

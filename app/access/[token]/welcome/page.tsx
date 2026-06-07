@@ -21,7 +21,7 @@ const display = Plus_Jakarta_Sans({ subsets: ['latin'], display: 'swap' });
 
 const HERO_CHIPS = [
   { label: 'Earned value built in', cls: 'bg-emerald-100 text-emerald-800', Icon: TrendingUp },
-  { label: '14 specialist agents', cls: 'bg-violet-100 text-violet-800', Icon: Bot },
+  { label: '15 specialist agents', cls: 'bg-violet-100 text-violet-800', Icon: Bot },
   { label: 'Human-in-the-loop', cls: 'bg-amber-100 text-amber-800', Icon: UserCheck },
   { label: 'Tool-agnostic', cls: 'bg-sky-100 text-sky-800', Icon: Plug },
 ];
@@ -63,7 +63,7 @@ export default async function WelcomePage({ params }: { params: Promise<{ token:
         </Link>
         <Link href={`/access/${token}/architecture`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">Architecture</Link>
         <Link href={`/access/${token}/framework`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">PMBOK coverage</Link>
-        <Link href={`/access/${token}/agents`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">The 14 agents</Link>
+        <Link href={`/access/${token}/agents`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">The 15 agents</Link>
         <Link href={`/access/${token}/concepts`} className="rounded-full border px-3.5 py-1.5 font-medium transition hover:bg-muted hover:border-foreground/20">AI concepts</Link>
       </div>
 

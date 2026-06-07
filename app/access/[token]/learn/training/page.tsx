@@ -137,7 +137,7 @@ export default async function TrainingPage({ params }: PageProps) {
       ))}
 
       <div className="mt-8 flex flex-wrap gap-3 print:hidden">
-        <Link href={`/access/${token}/agents`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">The 14 agents →</Link>
+        <Link href={`/access/${token}/agents`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">The 15 agents →</Link>
         <Link href={`/access/${token}/learn`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">← Learn</Link>
       </div>
     </div>

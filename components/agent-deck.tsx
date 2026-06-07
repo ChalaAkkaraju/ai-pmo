@@ -43,6 +43,7 @@ import {
   FileCheck,
   LayoutGrid,
   Newspaper,
+  Receipt,
   Check,
   X,
   MessageCircle,
@@ -88,6 +89,7 @@ const AGENT_ICON: Record<AgentType, LucideIcon> = {
   closeout_reporter: FileCheck,
   portfolio_risk_reviewer: LayoutGrid,
   status_reporter: Newspaper,
+  cost_controller: Receipt,
 };
 
 /** Project lifecycle phases (PMBOK process groups). */
@@ -113,6 +115,7 @@ const AGENT_PHASE: Record<AgentType, Phase | 'portfolio'> = {
   closeout_reporter: 'Closeout',
   portfolio_risk_reviewer: 'portfolio',
   status_reporter: 'Monitoring',
+  cost_controller: 'Monitoring',
 };
 
 /** Ordered lifecycle groups for the landing-slide map. */
@@ -265,7 +268,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
                 </span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                Fourteen specialists, one assistant
+                Fifteen specialists, one assistant
               </h1>
               <p className="mt-2 max-w-3xl text-base leading-relaxed text-foreground/80 text-justify">
                 Ask in plain English. The assistant routes you to the right specialist, which returns a

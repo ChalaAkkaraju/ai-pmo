@@ -13,7 +13,7 @@ import Link from 'next/link';
 import {
   FileText, Users, ListTree, Calendar, DollarSign, MessageSquare, ClipboardList,
   TrendingUp, GitPullRequest, ShieldAlert, Lightbulb, FileCheck, LayoutGrid,
-  Check, X, MessageCircle, Newspaper, type LucideIcon,
+  Check, X, MessageCircle, Newspaper, Receipt, type LucideIcon,
 } from 'lucide-react';
 import { AGENT_CATALOG, type AgentScope } from '@/lib/agent-catalog';
 import type { AgentType } from '@/lib/types';
@@ -33,6 +33,7 @@ export const AGENT_ICON: Record<AgentType, LucideIcon> = {
   risk_analyst: ShieldAlert, lessons_learned_synthesiser: Lightbulb, closeout_reporter: FileCheck,
   portfolio_risk_reviewer: LayoutGrid,
   status_reporter: Newspaper,
+  cost_controller: Receipt,
 };
 
 const PHASES = ['Initiation', 'Planning', 'Execution', 'Monitoring', 'Closeout'] as const;
@@ -45,6 +46,7 @@ const AGENT_PHASE: Record<AgentType, Phase | 'portfolio'> = {
   risk_analyst: 'Monitoring', lessons_learned_synthesiser: 'Closeout', closeout_reporter: 'Closeout',
   portfolio_risk_reviewer: 'portfolio',
   status_reporter: 'Monitoring',
+  cost_controller: 'Monitoring',
 };
 
 function LifecycleStepper({ phase }: { phase: Phase | 'portfolio' }) {
@@ -121,7 +123,7 @@ export function AgentDetailCard({ agentType, token }: { agentType: AgentType; to
       </p>
 
       <div className="mt-4 border-t pt-3 text-right">
-        <Link href={`/access/${token}/agents`} className="text-xs font-medium text-foreground hover:underline">See all 14 agents →</Link>
+        <Link href={`/access/${token}/agents`} className="text-xs font-medium text-foreground hover:underline">See all 15 agents →</Link>
       </div>
     </>
   );

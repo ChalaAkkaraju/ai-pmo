@@ -25,7 +25,7 @@ const LEARN_LINKS: Array<{ path: string; label: string }> = [
   { path: 'about', label: 'How it works' },
   { path: 'architecture', label: 'Architecture' },
   { path: 'framework', label: 'PMBOK coverage' },
-  { path: 'agents', label: 'The 14 agents' },
+  { path: 'agents', label: 'The 15 agents' },
   { path: 'concepts', label: 'AI concepts' },
   { path: 'learn/training', label: 'Training' },
   { path: 'technical', label: 'Technical notes' },

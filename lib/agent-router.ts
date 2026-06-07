@@ -49,6 +49,8 @@ const AGENT_DESCRIPTIONS: Record<AgentType, string> = {
     'Reviews portfolio-level risk pattern emergence across multiple projects, recommends portfolio-level mitigation strategies.',
   status_reporter:
     'Writes a one-page weekly status report (RAG status, progress, cost/schedule, risks, asks) tailored to the audience — internal team, sponsor, or client.',
+  cost_controller:
+    'Controls the SAP PS cost lifecycle: open PO commitment, cost-to-date, cost by element (labour/materials/subcontract/travel), labour productivity, and billed-vs-earned revenue with net unbilled (WIP).',
 };
 
 let cachedClient: OpenAI | null = null;

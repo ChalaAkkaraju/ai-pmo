@@ -36,7 +36,7 @@ const CONCEPTS: Concept[] = [
     means: ['Turns messy facts into clear, readable writing', 'Works from what it was trained on plus what you give it now', 'Fast and tireless at drafting and summarising'],
     notThis: ['Not a database or a search engine', "Not a calculator — it predicts words, it doesn't compute", "Not 'thinking' — it is very sophisticated autocomplete"],
     analogy: "An exceptionally well-read assistant who can draft anything you ask — but only knows what they have read and what is on the desk in front of them.",
-    inApp: "Every one of the 14 agents is this same model (Claude), pointed at a different job.",
+    inApp: "Every one of the 15 agents is this same model (Claude), pointed at a different job.",
     why: "Once you see it is a language engine, the rest — grounding, structured facts, guardrails — is about making it trustworthy.",
     linkPath: 'agents', linkLabel: 'See the agents',
   },
@@ -47,7 +47,7 @@ const CONCEPTS: Concept[] = [
     means: ['The system prompt sets the role and the rules', 'The user prompt is the day-to-day question', 'Most of what separates a useful agent from a generic chatbot lives here'],
     notThis: ['Not code — it is written instructions in plain language', 'Not one-off — the system prompt shapes every answer', 'Not magic — a vague prompt gives a vague answer'],
     analogy: "A job description plus today's task. The description says how to behave; the task is what to do right now.",
-    inApp: "The 14 agents are the same model with 14 carefully written job descriptions.",
+    inApp: "The 15 agents are the same model with 15 carefully written job descriptions.",
     why: "It is why new specialists are cheap to create — you write a brief, not new software.",
   },
   {
@@ -57,9 +57,9 @@ const CONCEPTS: Concept[] = [
     means: ['Owns one job and one scope (project, portfolio or single item)', 'Easier to keep accurate because the brief is narrow', 'You can see exactly which specialist answered'],
     notThis: ['Not a separate AI — same model, different brief', 'Not autonomous — it answers when asked and stays read-only', 'Not a replacement for the PM — it drafts, you decide'],
     analogy: "Hiring a quantity surveyor for cost and a planner for schedule, rather than asking one generalist to cover everything.",
-    inApp: "Charter Drafter, WBS Builder, Variance Analyst… 14 specialists, each with one job.",
+    inApp: "Charter Drafter, WBS Builder, Variance Analyst… 15 specialists, each with one job.",
     why: "The whole product is really just well-scoped agents sitting over trustworthy data.",
-    linkPath: 'agents', linkLabel: 'Meet the 14 agents',
+    linkPath: 'agents', linkLabel: 'Meet the 15 agents',
   },
   {
     term: 'Context & grounding', tagline: 'Giving it the file before it answers',
@@ -100,7 +100,7 @@ const CONCEPTS: Concept[] = [
     notThis: ['Not the big model — a small, cheap one does the triage', 'Not a black box — the choice is shown to you', 'Not locked in — override it anytime'],
     analogy: "A receptionist who listens to what you need and sends you to the right specialist.",
     inApp: "A Haiku classifier picks the agent for each question, with a manual override in the assistant.",
-    why: "It lets you ask in plain English without knowing which of the 14 to call.",
+    why: "It lets you ask in plain English without knowing which of the 15 to call.",
     linkPath: 'agents', linkLabel: 'See the agents',
   },
   {

@@ -19,7 +19,7 @@ const LAYER_OUTPUTS = ['earned value', 'risk & change synthesis', 'portfolio pat
 
 const STATS = [
   { n: '2', h: 'systems unified', s: 'ERP + scheduler, joined on the WBS code' },
-  { n: '14', h: 'specialist agents', s: 'PMBOK-aligned, behind one assistant' },
+  { n: '15', h: 'specialist agents', s: 'PMBOK-aligned, behind one assistant' },
 ];
 
 const LEAD = {
@@ -420,7 +420,7 @@ export function AboutDeck({ token }: { token: string }) {
               </div>
             ))}
           </div>
-          <Link href={`/access/${token}/agents`} className="mt-5 inline-flex rounded-full border px-4 py-1.5 text-sm font-medium transition hover:bg-muted hover:border-foreground/20">Meet the 14 agents →</Link>
+          <Link href={`/access/${token}/agents`} className="mt-5 inline-flex rounded-full border px-4 py-1.5 text-sm font-medium transition hover:bg-muted hover:border-foreground/20">Meet the 15 agents →</Link>
         </Slide>
 
         {/* 9 — vs SAP */}

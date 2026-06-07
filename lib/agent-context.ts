@@ -37,6 +37,7 @@ const AGENT_PROMPT_FILES: Record<AgentType, string> = {
   closeout_reporter: 'closeout_reporter.md',
   portfolio_risk_reviewer: 'portfolio_risk_reviewer.md',
   status_reporter: 'status_reporter.md',
+  cost_controller: 'cost_controller.md',
 };
 
 /**

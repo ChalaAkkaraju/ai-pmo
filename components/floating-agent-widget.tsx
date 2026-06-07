@@ -317,6 +317,7 @@ const AGENT_LABELS: Record<AgentType, string> = {
   closeout_reporter: 'Closeout Reporter',
   portfolio_risk_reviewer: 'Portfolio Risk Reviewer',
   status_reporter: 'Status Reporter',
+  cost_controller: 'Cost Controller',
 };
 
 export function FloatingAgentWidget({

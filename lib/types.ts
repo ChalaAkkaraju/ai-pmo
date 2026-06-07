@@ -155,7 +155,8 @@ export type AgentType =
   | 'lessons_learned_synthesiser'
   | 'closeout_reporter'
   | 'portfolio_risk_reviewer'
-  | 'status_reporter';
+  | 'status_reporter'
+  | 'cost_controller';
 
 export interface AgentOutput {
   id: string;

@@ -58,7 +58,7 @@ const CONCEPTS: Concept[] = [
     means: ['Fine-tuning changes weights; prompting/RAG change the input', 'RAG keeps knowledge current and auditable; fine-tuning fixes it in weights', 'Fine-tuning suits a fixed style/format; RAG suits changing facts', 'They combine — fine-tune for form, RAG for facts'],
     notThis: ['Not "fine-tuning teaches it your data" reliably — it shifts behaviour, not a fact store', 'Not free — fine-tuning needs data, compute, and a re-run on every change', 'Not always needed — most enterprise value is prompting + RAG'],
     analogy: "Fine-tuning is sending someone on a training course; RAG is handing them the right handbook for each task. For facts that change weekly, you update the handbook, not re-run the course.",
-    inApp: "AI PMO deliberately uses prompting + RAG, not fine-tuning: the 14 agents are system prompts over grounded data, so a rule change is a prompt edit (no retraining) and every figure stays traceable to the canonical model.",
+    inApp: "AI PMO deliberately uses prompting + RAG, not fine-tuning: the 15 agents are system prompts over grounded data, so a rule change is a prompt edit (no retraining) and every figure stays traceable to the canonical model.",
     why: "'Why didn't you fine-tune?' is the classic interview question — the answer is freshness, auditability, and iteration speed.",
     linkPath: 'agents', linkLabel: 'The agents are prompts',
   },

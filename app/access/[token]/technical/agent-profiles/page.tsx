@@ -1,5 +1,5 @@
 /**
- * Technical · 14 agent technical profiles. Reference page, grouped by project
+ * Technical · 15 agent technical profiles. Reference page, grouped by project
  * lifecycle phase. Each profile summarises the agent's prompt
  * (lib/agent-prompts/<agent>.md, authoritative) and links to the rich agent
  * card. Valid token only.
@@ -34,7 +34,7 @@ export default async function AgentProfilesPage({ params }: PageProps) {
         <PrintButton />
       </div>
       <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
-        The 14 agents along the project lifecycle — for each: its PMBOK basis, what it reads and feeds, the inputs,
+        The 15 agents along the project lifecycle — for each: its PMBOK basis, what it reads and feeds, the inputs,
         where the app grounds it, the methodology rules, and what it refuses to do. Each profile{' '}
         <span className="font-medium text-foreground">summarises the agent&apos;s prompt</span>{' '}
         (<code className="rounded bg-muted px-1 py-0.5 text-[12px]">lib/agent-prompts/&lt;agent&gt;.md</code>, the authoritative

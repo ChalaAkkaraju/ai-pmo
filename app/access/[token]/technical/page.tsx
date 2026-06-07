@@ -23,7 +23,7 @@ const SECTIONS: Section[] = [
     href: 'data-model', tag: 'Reference', accent: '#0ea5e9',
   },
   {
-    title: 'The 14 agent profiles',
+    title: 'The 15 agent profiles',
     blurb: 'Inputs, grounding sources, methodology rules and boundary for every specialist — each summarising its prompt as source of truth.',
     href: 'agent-profiles', tag: 'Reference', accent: '#10b981',
   },
@@ -85,7 +85,7 @@ export default async function TechnicalHubPage({ params }: PageProps) {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link href={`/access/${token}/agents`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">The 14 agents →</Link>
+        <Link href={`/access/${token}/agents`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">The 15 agents →</Link>
         <Link href={`/access/${token}`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">Back to portfolio</Link>
       </div>
     </div>

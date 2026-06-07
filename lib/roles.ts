@@ -34,7 +34,7 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
     type: 'pm',
     display_name: 'Senior PM (PMO Director)',
     description:
-      'Portfolio-level PM. Sees the full ~100-project portfolio across renewables, water, industrial, and power, plus every artefact category. Can invoke any of the 14 agents.',
+      'Portfolio-level PM. Sees the full ~100-project portfolio across renewables, water, industrial, and power, plus every artefact category. Can invoke any of the 15 agents.',
     allowed_agents: [
       'charter_drafter',
       'stakeholder_analyst',
@@ -50,6 +50,7 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
       'closeout_reporter',
       'portfolio_risk_reviewer',
       'status_reporter',
+      'cost_controller',
     ],
     dashboard_sections: [
       'projects_overview',
@@ -101,7 +102,7 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
     display_name: 'Commercial Manager',
     description:
       'Commercial-side slice. Owns four-frame commercial dynamics on change orders, contractual terms, margin protection.',
-    allowed_agents: ['change_order_reviewer', 'variance_analyst'],
+    allowed_agents: ['change_order_reviewer', 'variance_analyst', 'cost_controller'],
     dashboard_sections: ['projects_overview', 'change_orders', 'variance_reports'],
     can_write: true,
   },
@@ -110,7 +111,7 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
     display_name: 'Project Controls Manager',
     description:
       'Cost and schedule analytics across the portfolio. Owns earned-value health (CPI/SPI), schedule baseline reasoning, and budget structure for new work.',
-    allowed_agents: ['variance_analyst', 'schedule_reasoner', 'budget_builder'],
+    allowed_agents: ['variance_analyst', 'schedule_reasoner', 'budget_builder', 'cost_controller'],
     dashboard_sections: ['projects_overview', 'variance_reports'],
     can_write: true,
   },
@@ -131,6 +132,7 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
       'portfolio_risk_reviewer',
       'closeout_reporter',
       'status_reporter',
+      'cost_controller',
     ],
     dashboard_sections: [
       'projects_overview',
