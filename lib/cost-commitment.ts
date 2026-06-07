@@ -95,6 +95,7 @@ export function costByElement(rows: CostElementRow[]): { category: string; actua
 /* ------------------------------------------------------- Labour productivity */
 
 export interface LabourRow {
+  wbs_code?: string | null;
   planned_work_hours?: number | string | null;
   actual_work_hours?: number | string | null;
   hourly_rate?: number | string | null;
@@ -133,4 +134,41 @@ export function computeLabourProductivity(rows: LabourRow[]): LabourProductivity
     labourCostToDate: cost,
     ready: actualToDate > 0,
   };
+}
+
+export interface LabourByWbsRow {
+  phase: string;
+  plannedHours: number;      // full project planned
+  actualHours: number;       // to date
+  cost: number;              // labour cost to date (actual hours × rate)
+  productivity: number | null; // planned-to-date ÷ actual-to-date
+}
+
+/** Labour hours and cost rolled up to the WBS Level-2 phase (resource → task →
+ *  WBS). Actuals exist only for elapsed periods; productivity pairs planned and
+ *  actual over the same window. */
+export function computeLabourByWbs(rows: LabourRow[]): LabourByWbsRow[] {
+  const acc = new Map<string, { planned: number; plannedToDate: number; actual: number; cost: number }>();
+  for (const r of rows) {
+    const phase = branchOf(r.wbs_code);
+    if (!phase) continue;
+    const a = acc.get(phase) ?? { planned: 0, plannedToDate: 0, actual: 0, cost: 0 };
+    const planned = n(r.planned_work_hours);
+    a.planned += planned;
+    if (r.actual_work_hours != null) {
+      a.plannedToDate += planned;
+      a.actual += n(r.actual_work_hours);
+      a.cost += n(r.actual_work_hours) * n(r.hourly_rate);
+    }
+    acc.set(phase, a);
+  }
+  return [...acc.entries()]
+    .map(([phase, a]) => ({
+      phase,
+      plannedHours: a.planned,
+      actualHours: a.actual,
+      cost: a.cost,
+      productivity: a.actual > 0 ? a.plannedToDate / a.actual : null,
+    }))
+    .sort((x, y) => x.phase.localeCompare(y.phase));
 }

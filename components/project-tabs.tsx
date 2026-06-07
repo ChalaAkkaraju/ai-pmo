@@ -44,12 +44,14 @@ import { CostByWbs } from './cost-by-wbs';
 import { BillingCard } from './billing-card';
 import { PoTable } from './po-table';
 import { LabourProductivityPanel } from './labour-productivity-panel';
+import { LabourByWbs } from './labour-by-wbs';
 import { ResourceLoadPanel } from './resource-load-view';
 import { MarginBridgeCard } from './margin-bridge';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
 import type { EvMetrics, EvCurve, EvBranch, EarnedScheduleMetrics } from '@/lib/earned-value';
 import type { CommitmentSummary, PoRow, LabourProductivity } from '@/lib/cost-commitment';
 import type { BillingSummary } from '@/lib/billing';
+import type { LabourByWbsRow } from '@/lib/cost-commitment';
 import type { LoadResult } from '@/lib/resource-load';
 import type { MarginBridge } from '@/lib/margin';
 import type { AgentType } from '@/lib/types';
@@ -89,6 +91,7 @@ interface ProjectTabsProps {
   commitment: CommitmentSummary;
   costElements: { category: string; actual: number; planned: number }[];
   labourProductivity: LabourProductivity;
+  labourByWbs: LabourByWbsRow[];
   purchaseOrders: PoRow[];
   billing: BillingSummary;
   resourceLoad: LoadResult;
@@ -127,6 +130,7 @@ export function ProjectTabs({
   commitment,
   costElements,
   labourProductivity,
+  labourByWbs,
   purchaseOrders,
   billing,
   resourceLoad,
@@ -222,6 +226,7 @@ export function ProjectTabs({
 
       <Tabs.Content value="resources" className="space-y-6 pt-6">
         <LabourProductivityPanel p={labourProductivity} />
+        <LabourByWbs rows={labourByWbs} workPackages={workPackages} />
         <ResourceLoadPanel
           load={resourceLoad}
           mode="project"
