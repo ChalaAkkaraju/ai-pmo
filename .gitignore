@@ -47,3 +47,8 @@ consistency-test/
 
 # OS
 Thumbs.db
+
+# local-first artifacts (NEVER commit — keys or throwaway)
+.env.local.cloud-backup
+supabase-local.env
+data-export/
