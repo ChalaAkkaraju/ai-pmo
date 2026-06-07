@@ -35,7 +35,7 @@ const SECTIONS: Section[] = [
   {
     title: 'AI concepts at depth',
     blurb: 'Tokens & context windows, context engineering, fine-tuning vs prompting+RAG, reasoning models, MCP, mixture-of-experts.',
-    href: null, tag: 'Readout · planned', accent: '#d97706',
+    href: 'concepts-at-depth', tag: 'Readout', accent: '#d97706',
   },
 ];
 
