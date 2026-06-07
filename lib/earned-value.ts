@@ -173,7 +173,14 @@ export function computeEvByWbs(
             : watch ? 'watch' : 'ok';
     return { branch, name: names?.get(branch) ?? '', bac: a.bac, pv: a.pv, ev: a.ev, ac: a.ac, cpi, spi, cv, sv, cvPct, svPct, status };
   });
-  return branches.sort((x, y) => x.cv - y.cv); // worst cost variance first
+  // Active branches first (worst cost variance leads); not-yet-started
+  // branches (no EV, no AC) sink to the bottom.
+  return branches.sort((x, y) => {
+    const xz = x.ev === 0 && x.ac === 0 ? 1 : 0;
+    const yz = y.ev === 0 && y.ac === 0 ? 1 : 0;
+    if (xz !== yz) return xz - yz;
+    return x.cv - y.cv;
+  });
 }
 
 /* ------------------------------------------------------------ S-curve + EAC */

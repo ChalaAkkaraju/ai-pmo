@@ -20,7 +20,8 @@ export function IssueByWbs({
     const linked = Array.isArray(i.linked_wbs) ? (i.linked_wbs as unknown[]) : [];
     const wbs = linked.length ? String(linked[0]) : null;
     if (!wbs) continue;
-    const branch = wbs.split('.')[0];
+    const p = wbs.split('.');
+    const branch = p.length >= 2 ? `${p[0]}.${p[1]}` : wbs; // WBS Level-2 (phase)
     const b = branches.get(branch) ?? { count: 0, open: 0, cost: 0 };
     b.count++;
     if (isOpenIssue(i.status as string | null | undefined)) {

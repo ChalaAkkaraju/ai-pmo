@@ -77,7 +77,15 @@ async function main() {
       .eq('project_id', p.id);
     const taskByWbs = new Map((tasks ?? []).map((t) => [(t as { wbs_code: string }).wbs_code, t]));
 
-    const cpf = 0.85 + ((hash(p.code) >>> 7) % 28) / 100; // 0.85 .. 1.12 (CPI)
+    const cpf = 0.85 + ((hash(p.code) >>> 7) % 28) / 100; // 0.85 .. 1.12 (project base CPI)
+    // Per-branch tilt: each WBS Level-2 phase runs hotter or leaner than the
+    // project average, so branch-level CPI varies realistically (procurement
+    // over-runs while engineering holds, etc.). Deterministic by project+branch.
+    const branchCpf = (wbs: string) => {
+      const branch = wbs.split('.').slice(0, 2).join('.');
+      const tilt = 0.90 + ((hash(`${p.code}:${branch}`) >>> 5) % 21) / 100; // 0.90 .. 1.10
+      return clamp(cpf * tilt, 0.70, 1.30);
+    };
 
     const rows = (leaves as Array<{ wbs_code: string; budget_bac: number | null }>).map((w) => {
       const bac = Number(w.budget_bac) || 0;
@@ -92,7 +100,8 @@ async function main() {
         plannedFrac = f > s ? clamp((todayMs - s) / (f - s), 0, 1) : todayMs >= f ? 1 : 0;
       }
       const pv = plannedFrac * bac;
-      const ac = cpf > 0 ? ev / cpf : ev;
+      const leafCpf = branchCpf(w.wbs_code);
+      const ac = leafCpf > 0 ? ev / leafCpf : ev;
       return {
         project_id: p.id,
         wbs_code: w.wbs_code,

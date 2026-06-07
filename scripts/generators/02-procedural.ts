@@ -276,6 +276,11 @@ const ISSUE_OWNERS = [
   'QA/QC Lead',
 ];
 
+// Canonical WBS leaf codes — mirror the fixed template in generator 07
+// (wbsTemplate). Issues/risks link to a real leaf so the WBS-concentration
+// views resolve to actual phase names (1.3 → Procurement, etc.).
+const WBS_LEAVES = ['1.1.1', '1.1.2', '1.2.1', '1.3.1', '1.3.2', '1.4.1', '1.4.2', '1.5.1'];
+
 function generateRisks(
   archetype: ProjectArchetype,
   bucket: LifecycleBucket,
@@ -352,7 +357,7 @@ function generateIssues(
       severity: tmpl.typical_severity,
       owner: pick(ISSUE_OWNERS, r),
       status: isClosed ? 'Closed' : pick(['Open', 'In progress'], r),
-      linked_wbs: [`${intInRange(1, 7, r)}.${intInRange(1, 8, r)}`],
+      linked_wbs: [pick(WBS_LEAVES, r)],
       linked_risk: r() < 0.3 ? `R-${String(intInRange(1, 5, r)).padStart(3, '0')}` : null,
       opened_week,
       closed_week,

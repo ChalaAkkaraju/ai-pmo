@@ -17,7 +17,8 @@ export function RiskByWbs({
   for (const r of risks) {
     const wbs = r.wbs_code ? String(r.wbs_code) : null;
     if (!wbs) continue;
-    const branch = wbs.split('.')[0];
+    const p = wbs.split('.');
+    const branch = p.length >= 2 ? `${p[0]}.${p[1]}` : wbs; // WBS Level-2 (phase)
     const b = branches.get(branch) ?? { count: 0, emv: 0 };
     b.count++;
     b.emv += Number(r.emv_usd) || 0;
