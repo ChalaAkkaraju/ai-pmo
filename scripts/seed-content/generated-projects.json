@@ -31,7 +31,7 @@
       {
         "risk_id": "R-002",
         "category": "Collector substation transformer lead time",
-        "description": "Main step-up transformer lead time of weeks weeks creates schedule float erosion if FAT slips.",
+        "description": "Main step-up transformer lead time of several weeks creates schedule float erosion if FAT slips.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -89,7 +89,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Open punch items on n turbines units threaten substantial completion certificate.",
+        "description": "Open punch items on several units threaten substantial completion certificate.",
         "category": "Punch list at COD",
         "severity": "L",
         "owner": "Procurement Lead",
@@ -221,7 +221,7 @@
       {
         "risk_id": "R-003",
         "category": "Collector substation transformer lead time",
-        "description": "Main step-up transformer lead time of weeks weeks creates schedule float erosion if FAT slips.",
+        "description": "Main step-up transformer lead time of several weeks creates schedule float erosion if FAT slips.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -265,7 +265,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Open punch items on n turbines units threaten substantial completion certificate.",
+        "description": "Open punch items on several units threaten substantial completion certificate.",
         "category": "Punch list at COD",
         "severity": "L",
         "owner": "Procurement Lead",
@@ -310,7 +310,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Sustained winds aloft halted nacelle lifts for n days consecutive shifts.",
+        "description": "Sustained winds aloft halted nacelle lifts for several consecutive shifts.",
         "category": "Crane wind standdown",
         "severity": "M",
         "owner": "Site Engineer",
@@ -385,7 +385,7 @@
       {
         "risk_id": "R-003",
         "category": "Winter erection halt",
-        "description": "Sustained winds above wind threshold m/s and icing conditions historically suspend blade lifts for n days days through Q1.",
+        "description": "Sustained winds above 40 m/s and icing conditions historically suspend blade lifts for several days through Q1.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -444,7 +444,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Utility witness test rescheduled, pushing back-feed energisation by weeks weeks.",
+        "description": "Utility witness test rescheduled, pushing back-feed energisation by several weeks.",
         "category": "Interconnection witness delay",
         "severity": "H",
         "owner": "QA/QC Lead",
@@ -558,7 +558,7 @@
       {
         "risk_id": "R-002",
         "category": "Winter erection halt",
-        "description": "Sustained winds above wind threshold m/s and icing conditions historically suspend blade lifts for n days days through Q1.",
+        "description": "Sustained winds above 40 m/s and icing conditions historically suspend blade lifts for several days through Q1.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -572,7 +572,7 @@
       {
         "risk_id": "R-003",
         "category": "Collector substation transformer lead time",
-        "description": "Main step-up transformer lead time of weeks weeks creates schedule float erosion if FAT slips.",
+        "description": "Main step-up transformer lead time of several weeks creates schedule float erosion if FAT slips.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -586,7 +586,7 @@
       {
         "risk_id": "R-004",
         "category": "Geotechnical variability at tower foundations",
-        "description": "Borings show variable competent rock depth across the n turbines-turbine layout, risking rock excavation overruns at foundation pours.",
+        "description": "Borings show variable competent rock depth across the several-turbine layout, risking rock excavation overruns at foundation pours.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -631,7 +631,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Medium-voltage collection cable splice QA failures required re-termination on n circuits circuits.",
+        "description": "Medium-voltage collection cable splice QA failures required re-termination on several circuits.",
         "category": "Cable splice rework",
         "severity": "L",
         "owner": "Construction Manager",
@@ -646,7 +646,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Utility witness test rescheduled, pushing back-feed energisation by weeks weeks.",
+        "description": "Utility witness test rescheduled, pushing back-feed energisation by several weeks.",
         "category": "Interconnection witness delay",
         "severity": "H",
         "owner": "Site Engineer",
@@ -661,7 +661,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Open punch items on n turbines units threaten substantial completion certificate.",
+        "description": "Open punch items on several units threaten substantial completion certificate.",
         "category": "Punch list at COD",
         "severity": "L",
         "owner": "QA/QC Lead",
@@ -750,7 +750,7 @@
       {
         "risk_id": "R-004",
         "category": "Geotechnical variability at tower foundations",
-        "description": "Borings show variable competent rock depth across the n turbines-turbine layout, risking rock excavation overruns at foundation pours.",
+        "description": "Borings show variable competent rock depth across the several-turbine layout, risking rock excavation overruns at foundation pours.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -810,7 +810,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Open punch items on n turbines units threaten substantial completion certificate.",
+        "description": "Open punch items on several units threaten substantial completion certificate.",
         "category": "Punch list at COD",
         "severity": "L",
         "owner": "QA/QC Lead",
@@ -825,7 +825,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Sustained winds aloft halted nacelle lifts for n days consecutive shifts.",
+        "description": "Sustained winds aloft halted nacelle lifts for several consecutive shifts.",
         "category": "Crane wind standdown",
         "severity": "M",
         "owner": "QA/QC Lead",
@@ -886,7 +886,7 @@
       {
         "risk_id": "R-002",
         "category": "Winter erection halt",
-        "description": "Sustained winds above wind threshold m/s and icing conditions historically suspend blade lifts for n days days through Q1.",
+        "description": "Sustained winds above 40 m/s and icing conditions historically suspend blade lifts for several days through Q1.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -914,7 +914,7 @@
       {
         "risk_id": "R-004",
         "category": "Geotechnical variability at tower foundations",
-        "description": "Borings show variable competent rock depth across the n turbines-turbine layout, risking rock excavation overruns at foundation pours.",
+        "description": "Borings show variable competent rock depth across the several-turbine layout, risking rock excavation overruns at foundation pours.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -929,7 +929,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Sustained winds aloft halted nacelle lifts for n days consecutive shifts.",
+        "description": "Sustained winds aloft halted nacelle lifts for several consecutive shifts.",
         "category": "Crane wind standdown",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -959,7 +959,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Medium-voltage collection cable splice QA failures required re-termination on n circuits circuits.",
+        "description": "Medium-voltage collection cable splice QA failures required re-termination on several circuits.",
         "category": "Cable splice rework",
         "severity": "L",
         "owner": "Construction Manager",
@@ -974,7 +974,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Utility witness test rescheduled, pushing back-feed energisation by weeks weeks.",
+        "description": "Utility witness test rescheduled, pushing back-feed energisation by several weeks.",
         "category": "Interconnection witness delay",
         "severity": "H",
         "owner": "Site Engineer",
@@ -1050,7 +1050,7 @@
       {
         "risk_id": "R-002",
         "category": "Collector substation transformer lead time",
-        "description": "Main step-up transformer lead time of weeks weeks creates schedule float erosion if FAT slips.",
+        "description": "Main step-up transformer lead time of several weeks creates schedule float erosion if FAT slips.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -1064,7 +1064,7 @@
       {
         "risk_id": "R-003",
         "category": "Geotechnical variability at tower foundations",
-        "description": "Borings show variable competent rock depth across the n turbines-turbine layout, risking rock excavation overruns at foundation pours.",
+        "description": "Borings show variable competent rock depth across the several-turbine layout, risking rock excavation overruns at foundation pours.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -1108,7 +1108,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Sustained winds aloft halted nacelle lifts for n days consecutive shifts.",
+        "description": "Sustained winds aloft halted nacelle lifts for several consecutive shifts.",
         "category": "Crane wind standdown",
         "severity": "M",
         "owner": "Site Engineer",
@@ -1123,7 +1123,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Utility witness test rescheduled, pushing back-feed energisation by weeks weeks.",
+        "description": "Utility witness test rescheduled, pushing back-feed energisation by several weeks.",
         "category": "Interconnection witness delay",
         "severity": "H",
         "owner": "QA/QC Lead",
@@ -1153,7 +1153,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Medium-voltage collection cable splice QA failures required re-termination on n circuits circuits.",
+        "description": "Medium-voltage collection cable splice QA failures required re-termination on several circuits.",
         "category": "Cable splice rework",
         "severity": "L",
         "owner": "Site Engineer",
@@ -1225,7 +1225,7 @@
       {
         "risk_id": "R-002",
         "category": "Winter erection halt",
-        "description": "Sustained winds above wind threshold m/s and icing conditions historically suspend blade lifts for n days days through Q1.",
+        "description": "Sustained winds above 40 m/s and icing conditions historically suspend blade lifts for several days through Q1.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -1268,7 +1268,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Medium-voltage collection cable splice QA failures required re-termination on n circuits circuits.",
+        "description": "Medium-voltage collection cable splice QA failures required re-termination on several circuits.",
         "category": "Cable splice rework",
         "severity": "L",
         "owner": "Procurement Lead",
@@ -1283,7 +1283,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Sustained winds aloft halted nacelle lifts for n days consecutive shifts.",
+        "description": "Sustained winds aloft halted nacelle lifts for several consecutive shifts.",
         "category": "Crane wind standdown",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -1298,7 +1298,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Utility witness test rescheduled, pushing back-feed energisation by weeks weeks.",
+        "description": "Utility witness test rescheduled, pushing back-feed energisation by several weeks.",
         "category": "Interconnection witness delay",
         "severity": "H",
         "owner": "Construction Manager",
@@ -1375,7 +1375,7 @@
       {
         "risk_id": "R-001",
         "category": "Winter erection halt",
-        "description": "Sustained winds above wind threshold m/s and icing conditions historically suspend blade lifts for n days days through Q1.",
+        "description": "Sustained winds above 40 m/s and icing conditions historically suspend blade lifts for several days through Q1.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -1389,7 +1389,7 @@
       {
         "risk_id": "R-002",
         "category": "Geotechnical variability at tower foundations",
-        "description": "Borings show variable competent rock depth across the n turbines-turbine layout, risking rock excavation overruns at foundation pours.",
+        "description": "Borings show variable competent rock depth across the several-turbine layout, risking rock excavation overruns at foundation pours.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -1462,7 +1462,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Open punch items on n turbines units threaten substantial completion certificate.",
+        "description": "Open punch items on several units threaten substantial completion certificate.",
         "category": "Punch list at COD",
         "severity": "L",
         "owner": "PM",
@@ -1477,7 +1477,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Medium-voltage collection cable splice QA failures required re-termination on n circuits circuits.",
+        "description": "Medium-voltage collection cable splice QA failures required re-termination on several circuits.",
         "category": "Cable splice rework",
         "severity": "L",
         "owner": "Procurement Lead",
@@ -1562,7 +1562,7 @@
       {
         "risk_id": "R-001",
         "category": "Module customs hold (UFLPA)",
-        "description": "Bifacial modules held under UFLPA WRO at port port, risking weeks-week stacking delay.",
+        "description": "Bifacial modules held under UFLPA WRO at port port, risking multi-week stacking delay.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -1604,7 +1604,7 @@
       {
         "risk_id": "R-004",
         "category": "Electrician shortage",
-        "description": "Regional IBEW Local local n hall is short n workers journeymen during peak DC pull.",
+        "description": "Regional IBEW Local local hall is short several journeymen during peak DC pull.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -1619,7 +1619,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Container of modules arrived with n pallets pallets damaged.",
+        "description": "Container of modules arrived with several pallets damaged.",
         "category": "Module damage in transit",
         "severity": "L",
         "owner": "Construction Manager",
@@ -1634,7 +1634,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Gen-tie substation structural steel delivery slipped weeks weeks.",
+        "description": "Gen-tie substation structural steel delivery slipped several weeks.",
         "category": "Substation steel late",
         "severity": "H",
         "owner": "PM",
@@ -1664,7 +1664,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Underground utility strike during DC trenching at row row id.",
+        "description": "Underground utility strike during DC trenching at row the row.",
         "category": "Trenching strike",
         "severity": "M",
         "owner": "PM",
@@ -1754,7 +1754,7 @@
       {
         "risk_id": "R-003",
         "category": "Electrician shortage",
-        "description": "Regional IBEW Local local n hall is short n workers journeymen during peak DC pull.",
+        "description": "Regional IBEW Local local hall is short several journeymen during peak DC pull.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -1783,7 +1783,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Container of modules arrived with n pallets pallets damaged.",
+        "description": "Container of modules arrived with several pallets damaged.",
         "category": "Module damage in transit",
         "severity": "L",
         "owner": "PM",
@@ -1828,7 +1828,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "QA flagged combiner box polarity errors in n boxes units.",
+        "description": "QA flagged combiner box polarity errors in several units.",
         "category": "DC combiner mis-wiring",
         "severity": "L",
         "owner": "Construction Manager",
@@ -1918,7 +1918,7 @@
       {
         "risk_id": "R-003",
         "category": "Electrician shortage",
-        "description": "Regional IBEW Local local n hall is short n workers journeymen during peak DC pull.",
+        "description": "Regional IBEW Local local hall is short several journeymen during peak DC pull.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -1992,7 +1992,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "QA flagged combiner box polarity errors in n boxes units.",
+        "description": "QA flagged combiner box polarity errors in several units.",
         "category": "DC combiner mis-wiring",
         "severity": "L",
         "owner": "PM",
@@ -2007,7 +2007,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Container of modules arrived with n pallets pallets damaged.",
+        "description": "Container of modules arrived with several pallets damaged.",
         "category": "Module damage in transit",
         "severity": "L",
         "owner": "Procurement Lead",
@@ -2054,7 +2054,7 @@
       {
         "risk_id": "R-001",
         "category": "Module customs hold (UFLPA)",
-        "description": "Bifacial modules held under UFLPA WRO at port port, risking weeks-week stacking delay.",
+        "description": "Bifacial modules held under UFLPA WRO at port port, risking multi-week stacking delay.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -2096,7 +2096,7 @@
       {
         "risk_id": "R-004",
         "category": "Electrician shortage",
-        "description": "Regional IBEW Local local n hall is short n workers journeymen during peak DC pull.",
+        "description": "Regional IBEW Local local hall is short several journeymen during peak DC pull.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -2111,7 +2111,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Gen-tie substation structural steel delivery slipped weeks weeks.",
+        "description": "Gen-tie substation structural steel delivery slipped several weeks.",
         "category": "Substation steel late",
         "severity": "H",
         "owner": "PM",
@@ -2141,7 +2141,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "IV-curve testing identified n strings underperforming strings requiring rework.",
+        "description": "IV-curve testing identified several underperforming strings requiring rework.",
         "category": "Commissioning string faults",
         "severity": "L",
         "owner": "Site Engineer",
@@ -2156,7 +2156,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Container of modules arrived with n pallets pallets damaged.",
+        "description": "Container of modules arrived with several pallets damaged.",
         "category": "Module damage in transit",
         "severity": "L",
         "owner": "Construction Manager",
@@ -2171,7 +2171,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "QA flagged combiner box polarity errors in n boxes units.",
+        "description": "QA flagged combiner box polarity errors in several units.",
         "category": "DC combiner mis-wiring",
         "severity": "L",
         "owner": "Site Engineer",
@@ -2272,7 +2272,7 @@
       {
         "risk_id": "R-004",
         "category": "Electrician shortage",
-        "description": "Regional IBEW Local local n hall is short n workers journeymen during peak DC pull.",
+        "description": "Regional IBEW Local local hall is short several journeymen during peak DC pull.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -2317,7 +2317,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Gen-tie substation structural steel delivery slipped weeks weeks.",
+        "description": "Gen-tie substation structural steel delivery slipped several weeks.",
         "category": "Substation steel late",
         "severity": "H",
         "owner": "Construction Manager",
@@ -2332,7 +2332,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Block block id pile refusals require predrill mobilisation.",
+        "description": "Block the block pile refusals require predrill mobilisation.",
         "category": "Pile refusal cluster",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -2347,7 +2347,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "IV-curve testing identified n strings underperforming strings requiring rework.",
+        "description": "IV-curve testing identified several underperforming strings requiring rework.",
         "category": "Commissioning string faults",
         "severity": "L",
         "owner": "Site Engineer",
@@ -2459,7 +2459,7 @@
       {
         "risk_id": "R-004",
         "category": "Module customs hold (UFLPA)",
-        "description": "Bifacial modules held under UFLPA WRO at port port, risking weeks-week stacking delay.",
+        "description": "Bifacial modules held under UFLPA WRO at port port, risking multi-week stacking delay.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -2474,7 +2474,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Block block id pile refusals require predrill mobilisation.",
+        "description": "Block the block pile refusals require predrill mobilisation.",
         "category": "Pile refusal cluster",
         "severity": "M",
         "owner": "Site Engineer",
@@ -2519,7 +2519,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Gen-tie substation structural steel delivery slipped weeks weeks.",
+        "description": "Gen-tie substation structural steel delivery slipped several weeks.",
         "category": "Substation steel late",
         "severity": "H",
         "owner": "PM",
@@ -2534,7 +2534,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "QA flagged combiner box polarity errors in n boxes units.",
+        "description": "QA flagged combiner box polarity errors in several units.",
         "category": "DC combiner mis-wiring",
         "severity": "L",
         "owner": "Construction Manager",
@@ -2623,7 +2623,7 @@
       {
         "risk_id": "R-004",
         "category": "Electrician shortage",
-        "description": "Regional IBEW Local local n hall is short n workers journeymen during peak DC pull.",
+        "description": "Regional IBEW Local local hall is short several journeymen during peak DC pull.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -2638,7 +2638,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Gen-tie substation structural steel delivery slipped weeks weeks.",
+        "description": "Gen-tie substation structural steel delivery slipped several weeks.",
         "category": "Substation steel late",
         "severity": "H",
         "owner": "Construction Manager",
@@ -2668,7 +2668,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "QA flagged combiner box polarity errors in n boxes units.",
+        "description": "QA flagged combiner box polarity errors in several units.",
         "category": "DC combiner mis-wiring",
         "severity": "L",
         "owner": "QA/QC Lead",
@@ -2683,7 +2683,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Underground utility strike during DC trenching at row row id.",
+        "description": "Underground utility strike during DC trenching at row the row.",
         "category": "Trenching strike",
         "severity": "M",
         "owner": "Construction Manager",
@@ -2698,7 +2698,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Container of modules arrived with n pallets pallets damaged.",
+        "description": "Container of modules arrived with several pallets damaged.",
         "category": "Module damage in transit",
         "severity": "L",
         "owner": "Site Engineer",
@@ -2802,7 +2802,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "QA flagged combiner box polarity errors in n boxes units.",
+        "description": "QA flagged combiner box polarity errors in several units.",
         "category": "DC combiner mis-wiring",
         "severity": "L",
         "owner": "Procurement Lead",
@@ -2847,7 +2847,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Container of modules arrived with n pallets pallets damaged.",
+        "description": "Container of modules arrived with several pallets damaged.",
         "category": "Module damage in transit",
         "severity": "L",
         "owner": "QA/QC Lead",
@@ -2862,7 +2862,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "IV-curve testing identified n strings underperforming strings requiring rework.",
+        "description": "IV-curve testing identified several underperforming strings requiring rework.",
         "category": "Commissioning string faults",
         "severity": "L",
         "owner": "Construction Manager",
@@ -2923,7 +2923,7 @@
       {
         "risk_id": "R-002",
         "category": "Module customs hold (UFLPA)",
-        "description": "Bifacial modules held under UFLPA WRO at port port, risking weeks-week stacking delay.",
+        "description": "Bifacial modules held under UFLPA WRO at port port, risking multi-week stacking delay.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -2966,7 +2966,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Block block id pile refusals require predrill mobilisation.",
+        "description": "Block the block pile refusals require predrill mobilisation.",
         "category": "Pile refusal cluster",
         "severity": "M",
         "owner": "Construction Manager",
@@ -3011,7 +3011,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "IV-curve testing identified n strings underperforming strings requiring rework.",
+        "description": "IV-curve testing identified several underperforming strings requiring rework.",
         "category": "Commissioning string faults",
         "severity": "L",
         "owner": "Site Engineer",
@@ -3026,7 +3026,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Underground utility strike during DC trenching at row row id.",
+        "description": "Underground utility strike during DC trenching at row the row.",
         "category": "Trenching strike",
         "severity": "M",
         "owner": "Construction Manager",
@@ -3085,7 +3085,7 @@
       {
         "risk_id": "R-001",
         "category": "Turbine-generator unit OEM",
-        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has weeks-week lead time with limited expediting leverage.",
+        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has multi-week lead time with limited expediting leverage.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3113,7 +3113,7 @@
       {
         "risk_id": "R-003",
         "category": "Spring freshet flooding",
-        "description": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for weeks weeks.",
+        "description": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for several weeks.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3291,7 +3291,7 @@
       {
         "risk_id": "R-004",
         "category": "Turbine-generator unit OEM",
-        "description": "Sole-source Francis/Kaplan unit from the OEM has weeks-week lead time with limited expediting leverage.",
+        "description": "Sole-source Francis/Kaplan unit from the OEM has multi-week lead time with limited expediting leverage.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3306,7 +3306,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "n anchors rock anchors failed proof load and require redrill.",
+        "description": "several rock anchors failed proof load and require redrill.",
         "category": "Rock anchor pull-test failures",
         "severity": "M",
         "owner": "Site Engineer",
@@ -3425,7 +3425,7 @@
       {
         "risk_id": "R-001",
         "category": "Turbine-generator unit OEM",
-        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has weeks-week lead time with limited expediting leverage.",
+        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has multi-week lead time with limited expediting leverage.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3439,7 +3439,7 @@
       {
         "risk_id": "R-002",
         "category": "Spring freshet flooding",
-        "description": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for weeks weeks.",
+        "description": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for several weeks.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3603,7 +3603,7 @@
       {
         "risk_id": "R-002",
         "category": "Turbine-generator unit OEM",
-        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has weeks-week lead time with limited expediting leverage.",
+        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has multi-week lead time with limited expediting leverage.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3691,7 +3691,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "n anchors rock anchors failed proof load and require redrill.",
+        "description": "several rock anchors failed proof load and require redrill.",
         "category": "Rock anchor pull-test failures",
         "severity": "M",
         "owner": "Construction Manager",
@@ -3779,7 +3779,7 @@
       {
         "risk_id": "R-002",
         "category": "Spring freshet flooding",
-        "description": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for weeks weeks.",
+        "description": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for several weeks.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3807,7 +3807,7 @@
       {
         "risk_id": "R-004",
         "category": "Turbine-generator unit OEM",
-        "description": "Sole-source Francis/Kaplan unit from the OEM has weeks-week lead time with limited expediting leverage.",
+        "description": "Sole-source Francis/Kaplan unit from the OEM has multi-week lead time with limited expediting leverage.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3882,7 +3882,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "n anchors rock anchors failed proof load and require redrill.",
+        "description": "several rock anchors failed proof load and require redrill.",
         "category": "Rock anchor pull-test failures",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -3929,7 +3929,7 @@
       {
         "risk_id": "R-001",
         "category": "Turbine-generator unit OEM",
-        "description": "Sole-source Francis/Kaplan unit from the OEM has weeks-week lead time with limited expediting leverage.",
+        "description": "Sole-source Francis/Kaplan unit from the OEM has multi-week lead time with limited expediting leverage.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -3971,7 +3971,7 @@
       {
         "risk_id": "R-004",
         "category": "Spring freshet flooding",
-        "description": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for weeks weeks.",
+        "description": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for several weeks.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -4147,7 +4147,7 @@
       {
         "risk_id": "R-004",
         "category": "Turbine-generator unit OEM",
-        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has weeks-week lead time with limited expediting leverage.",
+        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has multi-week lead time with limited expediting leverage.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -4323,7 +4323,7 @@
       {
         "risk_id": "R-004",
         "category": "Turbine-generator unit OEM",
-        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has weeks-week lead time with limited expediting leverage.",
+        "description": "Sole-source Francis/Kaplan unit from the equipment supplier has multi-week lead time with limited expediting leverage.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -4459,7 +4459,7 @@
       {
         "risk_id": "R-002",
         "category": "Winter access to wellpads",
-        "description": "Snow closure of access roads halts gathering pipework for weeks weeks of Q1.",
+        "description": "Snow closure of access roads halts gathering pipework for several weeks of Q1.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -4662,7 +4662,7 @@
       {
         "risk_id": "R-004",
         "category": "Winter access to wellpads",
-        "description": "Snow closure of access roads halts gathering pipework for weeks weeks of Q1.",
+        "description": "Snow closure of access roads halts gathering pipework for several weeks of Q1.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -4796,7 +4796,7 @@
       {
         "risk_id": "R-001",
         "category": "ORC heat exchanger / turbine OEM",
-        "description": "ORC island package from the equipment supplier has weeks-week schedule float with limited domestic alternatives.",
+        "description": "ORC island package from the equipment supplier has multi-week schedule float with limited domestic alternatives.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -4838,7 +4838,7 @@
       {
         "risk_id": "R-004",
         "category": "Winter access to wellpads",
-        "description": "Snow closure of access roads halts gathering pipework for weeks weeks of Q1.",
+        "description": "Snow closure of access roads halts gathering pipework for several weeks of Q1.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -4997,7 +4997,7 @@
       {
         "risk_id": "R-002",
         "category": "ORC heat exchanger / turbine OEM",
-        "description": "ORC island package from the OEM has weeks-week schedule float with limited domestic alternatives.",
+        "description": "ORC island package from the OEM has multi-week schedule float with limited domestic alternatives.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -5184,7 +5184,7 @@
       {
         "risk_id": "R-002",
         "category": "Winter access to wellpads",
-        "description": "Snow closure of access roads halts gathering pipework for weeks weeks of Q1.",
+        "description": "Snow closure of access roads halts gathering pipework for several weeks of Q1.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -5212,7 +5212,7 @@
       {
         "risk_id": "R-004",
         "category": "ORC heat exchanger / turbine OEM",
-        "description": "ORC island package from the OEM has weeks-week schedule float with limited domestic alternatives.",
+        "description": "ORC island package from the OEM has multi-week schedule float with limited domestic alternatives.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -5346,7 +5346,7 @@
       {
         "risk_id": "R-001",
         "category": "Winter access to wellpads",
-        "description": "Snow closure of access roads halts gathering pipework for weeks weeks of Q1.",
+        "description": "Snow closure of access roads halts gathering pipework for several weeks of Q1.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -5563,7 +5563,7 @@
       {
         "risk_id": "R-004",
         "category": "ORC heat exchanger / turbine OEM",
-        "description": "ORC island package from the equipment supplier has weeks-week schedule float with limited domestic alternatives.",
+        "description": "ORC island package from the equipment supplier has multi-week schedule float with limited domestic alternatives.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -5685,7 +5685,7 @@
       {
         "risk_id": "R-001",
         "category": "Membrane/UV equipment OEM concentration",
-        "description": "tech pkg package is sole-sourced via the OEM with weeks-week lead time and pre-purchase exposure.",
+        "description": "the technology package package is sole-sourced via the OEM with multi-week lead time and pre-purchase exposure.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -6105,7 +6105,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Excavation struck unmapped utility type requiring emergency repair.",
+        "description": "Excavation struck unmapped the interconnecting utility requiring emergency repair.",
         "category": "Buried utility strike",
         "severity": "M",
         "owner": "Construction Manager",
@@ -6266,7 +6266,7 @@
       {
         "risk_id": "R-004",
         "category": "Membrane/UV equipment OEM concentration",
-        "description": "tech pkg package is sole-sourced via the equipment supplier with weeks-week lead time and pre-purchase exposure.",
+        "description": "the technology package package is sole-sourced via the equipment supplier with multi-week lead time and pre-purchase exposure.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -6341,7 +6341,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Excavation struck unmapped utility type requiring emergency repair.",
+        "description": "Excavation struck unmapped the interconnecting utility requiring emergency repair.",
         "category": "Buried utility strike",
         "severity": "M",
         "owner": "PM",
@@ -6402,7 +6402,7 @@
       {
         "risk_id": "R-002",
         "category": "Membrane/UV equipment OEM concentration",
-        "description": "tech pkg package is sole-sourced via the equipment supplier with weeks-week lead time and pre-purchase exposure.",
+        "description": "the technology package package is sole-sourced via the equipment supplier with multi-week lead time and pre-purchase exposure.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -7118,7 +7118,7 @@
       {
         "risk_id": "R-003",
         "category": "Membrane/UV equipment OEM concentration",
-        "description": "tech pkg package is sole-sourced via the equipment supplier with weeks-week lead time and pre-purchase exposure.",
+        "description": "the technology package package is sole-sourced via the equipment supplier with multi-week lead time and pre-purchase exposure.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -7147,7 +7147,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Excavation struck unmapped utility type requiring emergency repair.",
+        "description": "Excavation struck unmapped the interconnecting utility requiring emergency repair.",
         "category": "Buried utility strike",
         "severity": "M",
         "owner": "PM",
@@ -7505,7 +7505,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Sea-state exceeded vessel limits for n days days.",
+        "description": "Sea-state exceeded vessel limits for several days.",
         "category": "Marine weather standdown",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -7669,7 +7669,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Sea-state exceeded vessel limits for n days days.",
+        "description": "Sea-state exceeded vessel limits for several days.",
         "category": "Marine weather standdown",
         "severity": "M",
         "owner": "QA/QC Lead",
@@ -7848,7 +7848,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Sea-state exceeded vessel limits for n days days.",
+        "description": "Sea-state exceeded vessel limits for several days.",
         "category": "Marine weather standdown",
         "severity": "M",
         "owner": "Site Engineer",
@@ -8504,7 +8504,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Sea-state exceeded vessel limits for n days days.",
+        "description": "Sea-state exceeded vessel limits for several days.",
         "category": "Marine weather standdown",
         "severity": "M",
         "owner": "PM",
@@ -8608,7 +8608,7 @@
       {
         "risk_id": "R-004",
         "category": "Wet season trenching halt",
-        "description": "Saturated soils suspend open-cut for weeks weeks; trench dewatering scope grows.",
+        "description": "Saturated soils suspend open-cut for several weeks; trench dewatering scope grows.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -8741,7 +8741,7 @@
       {
         "risk_id": "R-001",
         "category": "Crossings permits",
-        "description": "DOT/railroad crossing permits with n crossings agencies in series may slip critical path.",
+        "description": "DOT/railroad crossing permits with several agencies in series may slip critical path.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -8858,7 +8858,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Coating damage from handling required field repair on n joints joints.",
+        "description": "Coating damage from handling required field repair on several joints.",
         "category": "Pipe coating damage",
         "severity": "L",
         "owner": "PM",
@@ -9097,7 +9097,7 @@
       {
         "risk_id": "R-003",
         "category": "Wet season trenching halt",
-        "description": "Saturated soils suspend open-cut for weeks weeks; trench dewatering scope grows.",
+        "description": "Saturated soils suspend open-cut for several weeks; trench dewatering scope grows.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -9111,7 +9111,7 @@
       {
         "risk_id": "R-004",
         "category": "Crossings permits",
-        "description": "DOT/railroad crossing permits with n crossings agencies in series may slip critical path.",
+        "description": "DOT/railroad crossing permits with several agencies in series may slip critical path.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -9126,7 +9126,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Coating damage from handling required field repair on n joints joints.",
+        "description": "Coating damage from handling required field repair on several joints.",
         "category": "Pipe coating damage",
         "severity": "L",
         "owner": "Site Engineer",
@@ -9256,7 +9256,7 @@
       {
         "risk_id": "R-001",
         "category": "Wet season trenching halt",
-        "description": "Saturated soils suspend open-cut for weeks weeks; trench dewatering scope grows.",
+        "description": "Saturated soils suspend open-cut for several weeks; trench dewatering scope grows.",
         "probability": "M",
         "impact": "M",
         "score": 4,
@@ -9284,7 +9284,7 @@
       {
         "risk_id": "R-003",
         "category": "Crossings permits",
-        "description": "DOT/railroad crossing permits with n crossings agencies in series may slip critical path.",
+        "description": "DOT/railroad crossing permits with several agencies in series may slip critical path.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -9373,7 +9373,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Coating damage from handling required field repair on n joints joints.",
+        "description": "Coating damage from handling required field repair on several joints.",
         "category": "Pipe coating damage",
         "severity": "L",
         "owner": "Construction Manager",
@@ -9420,7 +9420,7 @@
       {
         "risk_id": "R-001",
         "category": "Crossings permits",
-        "description": "DOT/railroad crossing permits with n crossings agencies in series may slip critical path.",
+        "description": "DOT/railroad crossing permits with several agencies in series may slip critical path.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -9507,7 +9507,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Coating damage from handling required field repair on n joints joints.",
+        "description": "Coating damage from handling required field repair on several joints.",
         "category": "Pipe coating damage",
         "severity": "L",
         "owner": "Construction Manager",
@@ -9612,7 +9612,7 @@
       {
         "risk_id": "R-003",
         "category": "Crossings permits",
-        "description": "DOT/railroad crossing permits with n crossings agencies in series may slip critical path.",
+        "description": "DOT/railroad crossing permits with several agencies in series may slip critical path.",
         "probability": "H",
         "impact": "M",
         "score": 6,
@@ -10007,7 +10007,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Owner-directed scope additions extended outage by days days.",
+        "description": "Owner-directed scope additions extended outage by several days.",
         "category": "Outage extension",
         "severity": "H",
         "owner": "QA/QC Lead",
@@ -10022,7 +10022,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Sustained winds delayed shell setting by days days.",
+        "description": "Sustained winds delayed shell setting by several days.",
         "category": "Heavy lift weather hold",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -10183,7 +10183,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Sustained winds delayed shell setting by days days.",
+        "description": "Sustained winds delayed shell setting by several days.",
         "category": "Heavy lift weather hold",
         "severity": "M",
         "owner": "QA/QC Lead",
@@ -10198,7 +10198,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Owner-directed scope additions extended outage by days days.",
+        "description": "Owner-directed scope additions extended outage by several days.",
         "category": "Outage extension",
         "severity": "H",
         "owner": "Construction Manager",
@@ -10332,7 +10332,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Owner-directed scope additions extended outage by days days.",
+        "description": "Owner-directed scope additions extended outage by several days.",
         "category": "Outage extension",
         "severity": "H",
         "owner": "QA/QC Lead",
@@ -10347,7 +10347,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Sustained winds delayed shell setting by days days.",
+        "description": "Sustained winds delayed shell setting by several days.",
         "category": "Heavy lift weather hold",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -10508,7 +10508,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Owner-directed scope additions extended outage by days days.",
+        "description": "Owner-directed scope additions extended outage by several days.",
         "category": "Outage extension",
         "severity": "H",
         "owner": "Construction Manager",
@@ -10523,7 +10523,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Sustained winds delayed shell setting by days days.",
+        "description": "Sustained winds delayed shell setting by several days.",
         "category": "Heavy lift weather hold",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -10699,7 +10699,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Sustained winds delayed shell setting by days days.",
+        "description": "Sustained winds delayed shell setting by several days.",
         "category": "Heavy lift weather hold",
         "severity": "M",
         "owner": "QA/QC Lead",
@@ -10729,7 +10729,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Owner-directed scope additions extended outage by days days.",
+        "description": "Owner-directed scope additions extended outage by several days.",
         "category": "Outage extension",
         "severity": "H",
         "owner": "PM",
@@ -10863,7 +10863,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Owner-directed scope additions extended outage by days days.",
+        "description": "Owner-directed scope additions extended outage by several days.",
         "category": "Outage extension",
         "severity": "H",
         "owner": "QA/QC Lead",
@@ -11057,7 +11057,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Owner-directed scope additions extended outage by days days.",
+        "description": "Owner-directed scope additions extended outage by several days.",
         "category": "Outage extension",
         "severity": "H",
         "owner": "Procurement Lead",
@@ -11202,7 +11202,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Sustained winds delayed shell setting by days days.",
+        "description": "Sustained winds delayed shell setting by several days.",
         "category": "Heavy lift weather hold",
         "severity": "M",
         "owner": "Construction Manager",
@@ -11434,7 +11434,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Sustained winds delayed shell setting by days days.",
+        "description": "Sustained winds delayed shell setting by several days.",
         "category": "Heavy lift weather hold",
         "severity": "M",
         "owner": "PM",
@@ -11576,7 +11576,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Sustained winds delayed shell setting by days days.",
+        "description": "Sustained winds delayed shell setting by several days.",
         "category": "Heavy lift weather hold",
         "severity": "M",
         "owner": "Construction Manager",
@@ -11796,7 +11796,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Owner-directed scope additions extended outage by days days.",
+        "description": "Owner-directed scope additions extended outage by several days.",
         "category": "Outage extension",
         "severity": "H",
         "owner": "Site Engineer",
@@ -12311,7 +12311,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Loop checks revealed wiring errors in n loops loops.",
+        "description": "Loop checks revealed wiring errors in several loops.",
         "category": "Instrument loop checks failing",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -12651,7 +12651,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "Loop checks revealed wiring errors in n loops loops.",
+        "description": "Loop checks revealed wiring errors in several loops.",
         "category": "Instrument loop checks failing",
         "severity": "M",
         "owner": "Construction Manager",
@@ -13121,7 +13121,7 @@
       },
       {
         "issue_id": "I-002",
-        "description": "Loop checks revealed wiring errors in n loops loops.",
+        "description": "Loop checks revealed wiring errors in several loops.",
         "category": "Instrument loop checks failing",
         "severity": "M",
         "owner": "Site Engineer",
@@ -13312,7 +13312,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Loop checks revealed wiring errors in n loops loops.",
+        "description": "Loop checks revealed wiring errors in several loops.",
         "category": "Instrument loop checks failing",
         "severity": "M",
         "owner": "PM",
@@ -13514,7 +13514,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Loop checks revealed wiring errors in n loops loops.",
+        "description": "Loop checks revealed wiring errors in several loops.",
         "category": "Instrument loop checks failing",
         "severity": "M",
         "owner": "Construction Manager",
@@ -13645,7 +13645,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Loop checks revealed wiring errors in n loops loops.",
+        "description": "Loop checks revealed wiring errors in several loops.",
         "category": "Instrument loop checks failing",
         "severity": "M",
         "owner": "PM",
@@ -13854,7 +13854,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Loop checks revealed wiring errors in n loops loops.",
+        "description": "Loop checks revealed wiring errors in several loops.",
         "category": "Instrument loop checks failing",
         "severity": "M",
         "owner": "PM",
@@ -13953,7 +13953,7 @@
       {
         "risk_id": "R-002",
         "category": "Gas turbine OEM slot",
-        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by months months.",
+        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by several months.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -14160,7 +14160,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "Construction Manager",
@@ -14354,7 +14354,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Procurement Lead",
@@ -14369,7 +14369,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "Site Engineer",
@@ -14500,7 +14500,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "PM",
@@ -14676,7 +14676,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "Site Engineer",
@@ -14706,7 +14706,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "PM",
@@ -14870,7 +14870,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Site Engineer",
@@ -15049,7 +15049,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Procurement Lead",
@@ -15179,7 +15179,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "QA/QC Lead",
@@ -15209,7 +15209,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Construction Manager",
@@ -15298,7 +15298,7 @@
       {
         "risk_id": "R-001",
         "category": "Gas turbine OEM slot",
-        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by months months.",
+        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by several months.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -15355,7 +15355,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "PM",
@@ -15415,7 +15415,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Site Engineer",
@@ -15462,7 +15462,7 @@
       {
         "risk_id": "R-001",
         "category": "Gas turbine OEM slot",
-        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by months months.",
+        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by several months.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -15564,7 +15564,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Procurement Lead",
@@ -15728,7 +15728,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "QA/QC Lead",
@@ -15743,7 +15743,7 @@
       },
       {
         "issue_id": "I-005",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Procurement Lead",
@@ -15790,7 +15790,7 @@
       {
         "risk_id": "R-001",
         "category": "Gas turbine OEM slot",
-        "description": "GT/ST trains from the OEM are slotted globally; loss of slot extends in-service date by months months.",
+        "description": "GT/ST trains from the OEM are slotted globally; loss of slot extends in-service date by several months.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -15847,7 +15847,7 @@
     "issues": [
       {
         "issue_id": "I-001",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "PM",
@@ -15892,7 +15892,7 @@
       },
       {
         "issue_id": "I-004",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Construction Manager",
@@ -15966,7 +15966,7 @@
       {
         "risk_id": "R-001",
         "category": "Gas turbine OEM slot",
-        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by months months.",
+        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by several months.",
         "probability": "M",
         "impact": "H",
         "score": 6,
@@ -16053,7 +16053,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "Sustained cold halted concrete and outdoor lifts for days days.",
+        "description": "Sustained cold halted concrete and outdoor lifts for several days.",
         "category": "Cold-weather construction halt",
         "severity": "M",
         "owner": "Procurement Lead",
@@ -16228,7 +16228,7 @@
       },
       {
         "issue_id": "I-003",
-        "description": "GSU transformer failed factory test, deferring delivery weeks weeks.",
+        "description": "GSU transformer failed factory test, deferring delivery several weeks.",
         "category": "Transformer FAT failure",
         "severity": "H",
         "owner": "Site Engineer",
@@ -16333,7 +16333,7 @@
       {
         "risk_id": "R-003",
         "category": "Gas turbine OEM slot",
-        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by months months.",
+        "description": "GT/ST trains from the equipment supplier are slotted globally; loss of slot extends in-service date by several months.",
         "probability": "M",
         "impact": "H",
         "score": 6,
