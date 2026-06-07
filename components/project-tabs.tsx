@@ -33,6 +33,7 @@ import { VarianceSummary } from './variance-summary';
 import { VarianceTrendChart } from './variance-trend-chart';
 import { WbsCanonicalTree, type WorkPackage } from './wbs-canonical-tree';
 import { RiskByWbs } from './risk-by-wbs';
+import { IssueByWbs } from './issue-by-wbs';
 import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
@@ -157,6 +158,7 @@ export function ProjectTabs({
           <>
             <WbsCanonicalTree workPackages={activeWps} />
             <RiskByWbs risks={data.risks} workPackages={activeWps} />
+            <IssueByWbs issues={data.issues} workPackages={activeWps} />
           </>
         ) : proposedWps.length > 0 ? (
           <>
