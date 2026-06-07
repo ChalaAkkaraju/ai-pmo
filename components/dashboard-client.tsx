@@ -74,11 +74,11 @@ export interface SegmentSummary {
   margin_pct: number | null;
 }
 
-export interface DrillIssue { code: string; project: string; severity: string; status: string; owner: string; description: string; }
-export interface DrillRisk { code: string; project: string; klass: string; impact: string; status: string; owner: string; description: string; }
+export interface DrillIssue { code: string; project: string; severity: string; status: string; owner: string; description: string; [key: string]: unknown; }
+export interface DrillRisk { code: string; project: string; klass: string; impact: string; status: string; owner: string; description: string; [key: string]: unknown; }
 export interface DrillContingency { code: string; name: string; segment: string; pct: number; consumedM: number; budgetM: number; band: string; }
 export interface ProjectRow { code: string; name: string; segment: string; cpi: number; spi: number; }
-export interface PatternRow { klass: string; status: string; supporting: number; threshold: number; }
+export interface PatternRow { klass: string; status: string; supporting: number; threshold: number; [key: string]: unknown; }
 export interface PortfolioInsights {
   risk_class_counts: Record<string, number>;
   issue_severity_counts: Record<string, number>;

@@ -92,13 +92,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Surface any browser-side errors in the server log so we can debug
     // (Puppeteer's headless Chrome console is otherwise invisible).
     page.on('console', (msg) => {
-      const type = msg.type();
+      const type = msg.type() as string;
       if (type === 'error' || type === 'warning') {
         console.log(`[report-pdf:browser:${type}]`, msg.text());
       }
     });
     page.on('pageerror', (err) => {
-      console.log('[report-pdf:browser:pageerror]', err.message);
+      console.log('[report-pdf:browser:pageerror]', (err as Error).message);
     });
 
     console.log(`[report-pdf] navigating to ${reportUrl}`);

@@ -25,6 +25,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { IssuesTable } from './issues-table';
 import { RisksTable } from './risks-table';
 import { RiskHeatmap } from './risk-heatmap';
+import { RiskExposurePanel } from './risk-exposure-panel';
 import { ChangeOrdersTable } from './change-orders-table';
 import { VarianceSummary } from './variance-summary';
 import { VarianceTrendChart } from './variance-trend-chart';
@@ -57,6 +58,7 @@ interface ProjectTabsProps {
   allowedAgents: AgentType[];
   canWrite: boolean;
   contingencyTotal: number;
+  contingencyConsumed: number;
   projectCurrentWeek: number;
   projectStatus: string;
   projectHardDeadline: string | null;
@@ -90,6 +92,7 @@ export function ProjectTabs({
   allowedAgents,
   canWrite,
   contingencyTotal,
+  contingencyConsumed,
   projectCurrentWeek,
   projectStatus,
   projectHardDeadline,
@@ -182,6 +185,7 @@ export function ProjectTabs({
       </Tabs.Content>
 
       <Tabs.Content value="risks" className="space-y-6 pt-6">
+        <RiskExposurePanel risks={data.risks} contingency={contingencyTotal} consumed={contingencyConsumed} />
         <RiskHeatmap rows={data.risks} />
         <RisksTable rows={data.risks} actions={data.action_items ?? []} />
         <IssuesTable rows={data.issues} />

@@ -77,9 +77,9 @@ async function loadWorkPackages(
     .eq('project_id', projectId);
   if (res.error) {
     // Pre-0018 (no status column) — fall back; treat all rows as active.
-    res = (await supabase.from('work_packages').select(cols).eq('project_id', projectId)) as typeof res;
-    if (res.error) return [];
-    return (res.data ?? []).map((w) => ({ ...(w as WorkPackage), status: 'active' }));
+    const fb = await supabase.from('work_packages').select(cols).eq('project_id', projectId);
+    if (fb.error) return [];
+    return ((fb.data ?? []) as WorkPackage[]).map((w) => ({ ...w, status: 'active' as const }));
   }
   return (res.data ?? []) as WorkPackage[];
 }
@@ -355,6 +355,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         allowedAgents={resolved.definition.allowed_agents}
         canWrite={resolved.definition.can_write}
         contingencyTotal={contingencyTotal}
+        contingencyConsumed={contingencyConsumed}
         projectCurrentWeek={Number(project.current_week)}
         projectStatus={String(project.status)}
         projectHardDeadline={project.hard_deadline_description ?? null}

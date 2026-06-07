@@ -52,3 +52,5 @@ Thumbs.db
 .env.local.cloud-backup
 supabase-local.env
 data-export/
+data-export-cloud/
+cloud-watch.log
