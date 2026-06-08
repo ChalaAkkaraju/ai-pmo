@@ -18,14 +18,10 @@ export interface BillingRow {
 
 export interface BillingSummary {
   contractValue: number;
-  earnedRevenue: number;     // completeFraction × contract
   billed: number;            // Σ invoiced + paid
   invoiced: number;          // not yet paid
   paid: number;
-  netUnbilled: number;       // earnedRevenue − billed (>0 = WIP, <0 = over-billed)
   billedPct: number | null;  // billed ÷ contract
-  earnedPct: number;         // earnedRevenue ÷ contract
-  overBilled: boolean;
   byType: { type: string; amount: number }[];
   byPhase: { phase: string; amount: number }[];
   count: number;
@@ -37,8 +33,9 @@ const branchOf = (wbs: string | null | undefined) => {
   return p.length >= 2 ? `${p[0]}.${p[1]}` : String(wbs ?? '');
 };
 
-/** completeFraction = EV ÷ BAC (revenue is earned in step with cost progress). */
-export function computeBilling(rows: BillingRow[], contractValue: number, completeFraction: number): BillingSummary {
+/** Billed-only — invoices raised. Recognised revenue lives in Results Analysis
+ *  (lib/results-analysis), kept independent of earned value. */
+export function computeBilling(rows: BillingRow[], contractValue: number): BillingSummary {
   let invoiced = 0, paid = 0;
   const byType = new Map<string, number>();
   const byPhase = new Map<string, number>();
@@ -51,18 +48,12 @@ export function computeBilling(rows: BillingRow[], contractValue: number, comple
     if (ph) byPhase.set(ph, (byPhase.get(ph) ?? 0) + amt);
   }
   const billed = invoiced + paid;
-  const earnedRevenue = Math.max(0, completeFraction) * contractValue;
-  const netUnbilled = earnedRevenue - billed;
   return {
     contractValue,
-    earnedRevenue,
     billed,
     invoiced,
     paid,
-    netUnbilled,
     billedPct: contractValue > 0 ? billed / contractValue : null,
-    earnedPct: contractValue > 0 ? earnedRevenue / contractValue : 0,
-    overBilled: netUnbilled < 0,
     byType: [...byType.entries()].map(([type, amount]) => ({ type, amount })).sort((a, b) => b.amount - a.amount),
     byPhase: [...byPhase.entries()].map(([phase, amount]) => ({ phase, amount })).sort((a, b) => a.phase.localeCompare(b.phase)),
     count: rows.length,

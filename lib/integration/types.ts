@@ -32,6 +32,42 @@ export interface SapCostActualDTO {
   PlannedAmount: number | null;        // -> planned_value
 }
 
+/** Purchase order — the commitment source (ME2J / Purchasing Document API). */
+export interface SapPurchaseOrderDTO {
+  PurchaseOrder: string;               // -> po_number
+  WBSElementExternalID: string;        // join to wbs_code
+  Supplier: string;                    // -> vendor
+  ValueCategory: string;               // -> value_category
+  NetOrderValue: number;               // -> po_value
+  DeliveredValue: number;              // -> received_value (goods receipt)
+  PurchaseOrderStatus: string;         // -> status
+  CreatedPeriodWeek: number | null;    // -> raised_week
+}
+
+/** Billing document — invoices / billing plan (Billing Document API). */
+export interface SapBillingDTO {
+  BillingDocument: string;             // -> invoice_number
+  WBSElementExternalID: string | null; // join to wbs_code (phase)
+  BillingCategory: string;             // -> billing_type
+  NetAmount: number;                   // -> amount
+  BilledPeriodWeek: number | null;     // -> billed_week
+  BillingStatus: string;               // -> status
+}
+
+/** Results Analysis output — recognised revenue (CJ/KKA RA run, posted to CO). */
+export interface SapResultsAnalysisDTO {
+  WBSElementExternalID: string | null; // join to wbs_code (phase)
+  FiscalPeriod: string;                // YYYY-MM-01
+  RAMethod: string;                    // -> ra_method
+  PercentageOfCompletion: number;      // -> poc_pct
+  PlannedCost: number;
+  PlannedRevenue: number;
+  CostOfSales: number;
+  CalculatedRevenue: number;           // recognised revenue
+  RecognizedMargin: number;
+  Reserve: number;
+}
+
 /* ---- Canonical rows (what we upsert) ---- */
 
 export interface WorkPackageRow {
@@ -57,6 +93,51 @@ export interface CostActualRow {
   actual_cost: number;
   commitment: number;
   planned_value: number | null;
+  source_system: SourceSystem;
+  external_id: string | null;
+  synced_at: string;
+}
+
+export interface PurchaseOrderRow {
+  project_id: string;
+  wbs_code: string;
+  po_number: string;
+  vendor: string;
+  value_category: string;
+  po_value: number;
+  received_value: number;
+  status: string;
+  raised_week: number | null;
+  source_system: SourceSystem;
+  external_id: string | null;
+  synced_at: string;
+}
+
+export interface BillingEventRow {
+  project_id: string;
+  wbs_code: string | null;
+  invoice_number: string;
+  billing_type: string;
+  amount: number;
+  billed_week: number | null;
+  status: string;
+  source_system: SourceSystem;
+  external_id: string | null;
+  synced_at: string;
+}
+
+export interface ResultsAnalysisRow {
+  project_id: string;
+  wbs_code: string | null;
+  period: string;
+  ra_method: string;
+  poc_pct: number;
+  planned_cost: number;
+  planned_revenue: number;
+  cost_of_sales: number;
+  calculated_revenue: number;
+  recognized_margin: number;
+  reserve: number;
   source_system: SourceSystem;
   external_id: string | null;
   synced_at: string;
@@ -90,6 +171,9 @@ export interface SapConnector {
   testConnection(): Promise<ConnectionStatus>;
   fetchWbs(projectExternalId: string): Promise<SapWbsElementDTO[]>;
   fetchCostActuals(projectExternalId: string): Promise<SapCostActualDTO[]>;
+  fetchPurchaseOrders(projectExternalId: string): Promise<SapPurchaseOrderDTO[]>;
+  fetchBilling(projectExternalId: string): Promise<SapBillingDTO[]>;
+  fetchResultsAnalysis(projectExternalId: string): Promise<SapResultsAnalysisDTO[]>;
 }
 
 export interface SyncResult {

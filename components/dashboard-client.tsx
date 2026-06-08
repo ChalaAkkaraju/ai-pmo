@@ -80,6 +80,7 @@ export interface DrillContingency { code: string; name: string; segment: string;
 export interface ProjectRow { code: string; name: string; segment: string; cpi: number; spi: number; }
 export interface PatternRow { klass: string; status: string; supporting: number; threshold: number; [key: string]: unknown; }
 export interface PortfolioInsights {
+  risk_exposure_m: number;
   risk_class_counts: Record<string, number>;
   issue_severity_counts: Record<string, number>;
   contingency_buckets: Record<string, number>;
@@ -110,6 +111,17 @@ export interface HotItem {
   open_h_issues: number;
   realised_risks: number;
   score: number;
+}
+
+export interface FinancialKpis {
+  open_commitment: number;
+  recognised_revenue: number;
+  recognised_margin: number;
+  recognised_margin_pct: number;
+  net_unbilled: number;
+  billed: number;
+  co_value: number;
+  co_in_flight: number;
 }
 
 export interface OperationalKpis {
@@ -159,6 +171,7 @@ interface Props {
   roleId: string;
   workspaceActivity: WorkspaceActivity;
   operational: OperationalKpis;
+  financial: FinancialKpis | null;
   roleKpis: RoleKpiStrip | null;
   insights: PortfolioInsights;
   evProjectRows: Array<{ code: string; name: string; segment: string; cpi: number | null; spi: number | null }>;
@@ -176,6 +189,10 @@ function fmtMoneyM(n: number): string {
 
 function fmtBillions(b: number): string {
   return `$${b.toFixed(2)}B`;
+}
+
+function fmtFin(n: number): string {
+  return Math.abs(n) >= 1_000_000_000 ? `$${(n / 1_000_000_000).toFixed(2)}B` : `$${(n / 1_000_000).toFixed(1)}M`;
 }
 
 function agentAccent(agentType: string): { bar: string; chip: string } {
@@ -558,7 +575,7 @@ function PortfolioEvBand({ ev, onBehindClick, onOverClick }: { ev: PortfolioEv; 
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
         <Cell label="Budget (BAC)" value={money(ev.bac)} />
         <Cell label="Planned (PV)" value={money(ev.pv)} accent={CHART.planned} />
         <Cell label="Earned (EV)" value={money(ev.ev)} accent={CHART.earned} />
@@ -566,6 +583,7 @@ function PortfolioEvBand({ ev, onBehindClick, onOverClick }: { ev: PortfolioEv; 
         <Cell label="CPI · cost" value={ev.cpi == null ? '\u2014' : ev.cpi.toFixed(2)} cls={ratioTone(ev.cpi)} />
         <Cell label="SPI · sched" value={ev.spi == null ? '\u2014' : ev.spi.toFixed(2)} cls={ratioTone(ev.spi)} />
         <Cell label="Forecast (EAC)" value={money(ev.eac)} />
+        <Cell label="Variance (VAC)" value={money(ev.vac)} cls={ev.vac != null && ev.vac < 0 ? 'text-red-600' : 'text-emerald-700'} />
       </div>
     </section>
   );
@@ -590,6 +608,7 @@ export function DashboardClient({
   roleId,
   workspaceActivity,
   operational,
+  financial,
   roleKpis,
   insights,
   evProjectRows,
@@ -818,6 +837,11 @@ export function DashboardClient({
   const totalActive = segmentSummaries.reduce((s, x) => s + x.active_count, 0);
   const totalSc = segmentSummaries.reduce((s, x) => s + x.sc_count, 0);
   const totalClosed = segmentSummaries.reduce((s, x) => s + x.closed_count, 0);
+  // Health pulse uses the canonical earned value (same basis as the EV band)
+  // so the two headline CPI/SPI figures always agree; falls back to the
+  // reported average only when canonical EV isn't computable.
+  const pulseCpi = portfolioEv?.ready && portfolioEv.cpi != null ? portfolioEv.cpi : kpis.avg_cpi;
+  const pulseSpi = portfolioEv?.ready && portfolioEv.spi != null ? portfolioEv.spi : kpis.avg_spi;
 
 
   // Insights chart data
@@ -1000,19 +1024,19 @@ export function DashboardClient({
             <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Portfolio health pulse</p>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-semibold tabular-nums">{kpis.avg_cpi.toFixed(2)}</span>
+                <span className="text-3xl font-semibold tabular-nums">{pulseCpi.toFixed(2)}</span>
                 <span className="text-xs text-muted-foreground">CPI</span>
                 <span className="mx-1 text-muted-foreground/50">·</span>
-                <span className="text-3xl font-semibold tabular-nums">{kpis.avg_spi.toFixed(2)}</span>
+                <span className="text-3xl font-semibold tabular-nums">{pulseSpi.toFixed(2)}</span>
                 <span className="text-xs text-muted-foreground">SPI</span>
               </div>
               <div className="mt-2 flex items-center gap-2">
                 {(() => {
-                  const healthy = kpis.avg_cpi >= 1 && kpis.avg_spi >= 1;
-                  const warning = kpis.avg_cpi < 0.95 || kpis.avg_spi < 0.95;
+                  const healthy = pulseCpi >= 1 && pulseSpi >= 1;
+                  const warning = pulseCpi < 0.95 || pulseSpi < 0.95;
                   const dotCls = warning ? 'bg-amber-500' : healthy ? 'bg-emerald-500' : 'bg-blue-500';
                   const label = warning ? 'Below tolerance — needs attention' : healthy ? 'On or ahead of plan' : 'Within tolerance';
-                  return (<><span className={`h-2 w-2 rounded-full ${dotCls}`} /><p className="text-xs text-muted-foreground">{label}</p></>);
+                  return (<><span className={`h-2 w-2 rounded-full ${dotCls}`} /><p className="text-xs text-muted-foreground">{label}{portfolioEv?.ready ? ' · earned-value basis' : ''}</p></>);
                 })()}
               </div>
             </div>
@@ -1039,6 +1063,66 @@ export function DashboardClient({
       {portfolioEv && portfolioEv.ready && (
         <PortfolioEvBand ev={portfolioEv} onBehindClick={openBehindDrill} onOverClick={openOverDrill} />
       )}
+
+      {/* Ribbon 1b — portfolio financial position (cost-to-cash rollup: commitment,
+          recognised revenue from RA, billing — net-new vs the EV pulse). */}
+      {financial && (
+        <section>
+          <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio financial position</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">Cost-to-cash across active projects · commitment, recognised revenue (Results Analysis) and billing — independent of the managerial EV pulse above.</p>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <KpiCard label="Open commitment" value={fmtFin(financial.open_commitment)} sub="open POs · forward cost" tone="neutral" />
+            <KpiCard label="Recognised revenue" value={fmtFin(financial.recognised_revenue)} sub="Results Analysis · POC" tone="info" />
+            <KpiCard label="Recognised margin" value={`${financial.recognised_margin_pct.toFixed(1)}%`} sub={`${fmtFin(financial.recognised_margin)} to date`} tone={financial.recognised_margin_pct < 8 ? 'warn' : 'ok'} />
+            <KpiCard label={financial.net_unbilled >= 0 ? 'Net unbilled (WIP)' : 'Deferred / over-billed'} value={fmtFin(Math.abs(financial.net_unbilled))} sub={financial.net_unbilled >= 0 ? 'earned, not yet billed' : 'billed ahead of revenue'} tone={financial.net_unbilled >= 0 ? 'neutral' : 'warn'} />
+            <KpiCard label="Billed to date" value={fmtFin(financial.billed)} sub="invoices raised" tone="neutral" />
+            <KpiCard label="Change orders" value={fmtFin(financial.co_value)} sub={`${financial.co_in_flight} in flight · revenue impact`} tone={financial.co_in_flight > 0 ? 'info' : 'neutral'} />
+          </div>
+        </section>
+      )}
+
+      {/* Ribbon 2 — Segment cards (click to drill in) */}
+      <section>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Segments</h2>
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {segmentSummaries.map((s) => {
+            const ss = segmentStyle(s.segment);
+            return (
+              <button
+                key={s.segment}
+                onClick={() => openSegmentDrill(s.segment)}
+                className="relative overflow-hidden rounded-lg border bg-card p-4 text-left transition hover:border-foreground/30 hover:shadow-sm"
+              >
+                <span className={`absolute left-0 top-0 h-full w-1.5 ${ss.accentBar}`} />
+                <div className="pl-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">{ss.label}</span>
+                    <span className="text-base text-muted-foreground/50">▸</span>
+                  </div>
+                  <p className="mt-2 text-4xl font-semibold tabular-nums">{s.project_count}</p>
+                  <p className="text-sm text-muted-foreground">projects · {fmtBillions(s.contract_value_b)}</p>
+                  {/* Lifecycle mini-bar */}
+                  <div className="mt-4">
+                    <LifecycleBar active={s.active_count} sc={s.sc_count} closed={s.closed_count} showLegend={false} inlineCounts />
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.Active.dot}`} />Active</span>
+                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.SC.dot}`} />Subst. complete</span>
+                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.Closed.dot}`} />Closed</span>
+                    </div>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-1 text-xs">
+                    <div><dt className="text-muted-foreground">Avg CPI</dt><dd className="font-medium tabular-nums">{s.avg_cpi !== null ? s.avg_cpi.toFixed(2) : '—'}</dd></div>
+                    <div><dt className="text-muted-foreground">Avg SPI</dt><dd className="font-medium tabular-nums">{s.avg_spi !== null ? s.avg_spi.toFixed(2) : '—'}</dd></div>
+                    <div><dt className="text-muted-foreground">Margin</dt><dd className="font-medium tabular-nums">{s.margin_pct !== null ? `${s.margin_pct.toFixed(1)}%` : '—'}</dd></div>
+                  </dl>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Role-specific KPI strip — shown only for roles with a tailored set.
           Each tile is net-new vs the hero and the operational ribbon below. */}
@@ -1067,7 +1151,7 @@ export function DashboardClient({
           <div className="flex flex-col rounded-lg border bg-card p-4">
             <div className="mb-3 flex items-baseline justify-between">
               <h3 className="text-base font-semibold">Risks by category</h3>
-              <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total</span>
+              <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total · {`$${insights.risk_exposure_m.toFixed(0)}M`} EMV</span>
             </div>
             <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels fill onItemClick={openRisksDrill} />
           </div>
@@ -1101,6 +1185,20 @@ export function DashboardClient({
       )}
 
       {/* HOT 5 — projects needing attention */}
+      {/* Ribbon 1 — operational portfolio signals (net-new vs the hero, which
+          already shows value, budget, margin, lifecycle mix and the CPI/SPI pulse) */}
+      <section>
+        <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio watchlist</h2>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <KpiCard label="Open H issues" value={String(operational.open_h_issues)} sub="needs attention" tone={operational.open_h_issues > 0 ? 'warn' : 'ok'} onClick={openOpenHIssues} />
+          <KpiCard label="Realised risks" value={String(operational.realised_risks)} sub="pattern signal" tone="info" onClick={openRealisedRisks} />
+          <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} onClick={openCostOffTrack} />
+          <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} onClick={openSchedOffTrack} />
+          <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" onClick={openContingencyDrawn} />
+          <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" onClick={openPatterns} />
+        </div>
+      </section>
+
       {hotItems.length > 0 && (
         <section>
           <div className="flex items-baseline justify-between">
@@ -1203,62 +1301,7 @@ export function DashboardClient({
         </section>
       )}
 
-      {/* Ribbon 1 — operational portfolio signals (net-new vs the hero, which
-          already shows value, budget, margin, lifecycle mix and the CPI/SPI pulse) */}
-      <section>
-        <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio watchlist</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <KpiCard label="Open H issues" value={String(operational.open_h_issues)} sub="needs attention" tone={operational.open_h_issues > 0 ? 'warn' : 'ok'} onClick={openOpenHIssues} />
-          <KpiCard label="Realised risks" value={String(operational.realised_risks)} sub="pattern signal" tone="info" onClick={openRealisedRisks} />
-          <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} onClick={openCostOffTrack} />
-          <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} onClick={openSchedOffTrack} />
-          <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" onClick={openContingencyDrawn} />
-          <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" onClick={openPatterns} />
-        </div>
-      </section>
 
-      {/* Ribbon 2 — Segment cards (click to drill in) */}
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Segments</h2>
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {segmentSummaries.map((s) => {
-            const ss = segmentStyle(s.segment);
-            return (
-              <button
-                key={s.segment}
-                onClick={() => openSegmentDrill(s.segment)}
-                className="relative overflow-hidden rounded-lg border bg-card p-4 text-left transition hover:border-foreground/30 hover:shadow-sm"
-              >
-                <span className={`absolute left-0 top-0 h-full w-1.5 ${ss.accentBar}`} />
-                <div className="pl-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">{ss.label}</span>
-                    <span className="text-base text-muted-foreground/50">▸</span>
-                  </div>
-                  <p className="mt-2 text-4xl font-semibold tabular-nums">{s.project_count}</p>
-                  <p className="text-sm text-muted-foreground">projects · {fmtBillions(s.contract_value_b)}</p>
-                  {/* Lifecycle mini-bar */}
-                  <div className="mt-4">
-                    <LifecycleBar active={s.active_count} sc={s.sc_count} closed={s.closed_count} showLegend={false} inlineCounts />
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.Active.dot}`} />Active</span>
-                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.SC.dot}`} />Subst. complete</span>
-                      <span className="inline-flex items-center gap-1"><span className={`h-1.5 w-1.5 rounded-full ${LIFECYCLE.Closed.dot}`} />Closed</span>
-                    </div>
-                  </div>
-                  <dl className="mt-3 grid grid-cols-3 gap-x-3 gap-y-1 text-xs">
-                    <div><dt className="text-muted-foreground">Avg CPI</dt><dd className="font-medium tabular-nums">{s.avg_cpi !== null ? s.avg_cpi.toFixed(2) : '—'}</dd></div>
-                    <div><dt className="text-muted-foreground">Avg SPI</dt><dd className="font-medium tabular-nums">{s.avg_spi !== null ? s.avg_spi.toFixed(2) : '—'}</dd></div>
-                    <div><dt className="text-muted-foreground">Margin</dt><dd className="font-medium tabular-nums">{s.margin_pct !== null ? `${s.margin_pct.toFixed(1)}%` : '—'}</dd></div>
-                  </dl>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </section>
 
       {/* Recent activity — live via Supabase Realtime */}
       <section>

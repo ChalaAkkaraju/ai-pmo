@@ -8,7 +8,7 @@
  * code) so the ingestion exception queue can be demonstrated end-to-end.
  */
 
-import type { SapConnector, SapWbsElementDTO, SapCostActualDTO, ConnectionStatus } from '../types';
+import type { SapConnector, SapWbsElementDTO, SapCostActualDTO, SapPurchaseOrderDTO, SapBillingDTO, SapResultsAnalysisDTO, ConnectionStatus } from '../types';
 
 function hash(s: string): number {
   let h = 2166136261;
@@ -16,6 +16,8 @@ function hash(s: string): number {
   return h >>> 0;
 }
 const r2 = (n: number) => Math.round(n * 100) / 100;
+const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+const PHASES: Array<[string, number]> = [['1', 0.10], ['2', 0.15], ['3', 0.42], ['4', 0.23], ['5', 0.05]];
 
 export class SapPsMockAdapter implements SapConnector {
   readonly source = 'SAP_PS' as const;
@@ -84,5 +86,59 @@ export class SapPsMockAdapter implements SapConnector {
       });
     }
     return out;
+  }
+
+  async fetchPurchaseOrders(projectExternalId: string): Promise<SapPurchaseOrderDTO[]> {
+    await new Promise((r) => setTimeout(r, 350));
+    const bac = 40_000_000 + (hash(projectExternalId) % 60) * 1_000_000;
+    const vendors = ['Siemens Energy', 'GE Vernova', 'Hitachi Energy', 'Bechtel', 'ABB', 'Voith Hydro'];
+    const defs: Array<[string, number, string]> = [
+      ['3.1', 0.32, 'Materials/Equipment'], ['3.2', 0.10, 'Materials/Equipment'],
+      ['4.1', 0.10, 'Subcontract'], ['4.2', 0.13, 'Subcontract'],
+    ];
+    const out: SapPurchaseOrderDTO[] = defs.map(([code, w, cat], i) => {
+      const value = r2(w * bac * 0.7);
+      return {
+        PurchaseOrder: `45${(hash(projectExternalId + code) % 100000).toString().padStart(5, '0')}`,
+        WBSElementExternalID: code, Supplier: vendors[(hash(code) + i) % vendors.length],
+        ValueCategory: cat, NetOrderValue: value, DeliveredValue: r2(value * 0.4),
+        PurchaseOrderStatus: 'Partially received', CreatedPeriodWeek: 8 + i * 3,
+      };
+    });
+    // Malformed PO — no document number → exception queue.
+    out.push({ PurchaseOrder: '', WBSElementExternalID: '3.1', Supplier: 'Unknown', ValueCategory: 'Other', NetOrderValue: 50000, DeliveredValue: 0, PurchaseOrderStatus: 'Open', CreatedPeriodWeek: null });
+    return out;
+  }
+
+  async fetchBilling(projectExternalId: string): Promise<SapBillingDTO[]> {
+    await new Promise((r) => setTimeout(r, 300));
+    const contract = (40_000_000 + (hash(projectExternalId) % 60) * 1_000_000) * 1.10;
+    const out: SapBillingDTO[] = [];
+    PHASES.forEach(([code, w], i) => {
+      const amount = r2(w * contract * 0.85);
+      if (amount < 10000) return;
+      out.push({
+        BillingDocument: `90${(hash(projectExternalId + 'bill' + code) % 100000).toString().padStart(5, '0')}`,
+        WBSElementExternalID: code, BillingCategory: i === 0 ? 'Advance' : (i % 2 ? 'Progress' : 'Milestone'),
+        NetAmount: amount, BilledPeriodWeek: 6 + i * 4, BillingStatus: i < 2 ? 'Paid' : 'Invoiced',
+      });
+    });
+    return out;
+  }
+
+  async fetchResultsAnalysis(projectExternalId: string): Promise<SapResultsAnalysisDTO[]> {
+    await new Promise((r) => setTimeout(r, 300));
+    const bac = 40_000_000 + (hash(projectExternalId) % 60) * 1_000_000;
+    const contract = bac * 1.10;
+    return PHASES.map(([code, w]) => {
+      const plannedCost = r2(w * bac), plannedRev = r2(w * contract);
+      const poc = clamp(0.40 + (hash(projectExternalId + code) % 50) / 100, 0, 1);
+      const recognised = r2(poc * plannedRev), cos = r2(poc * plannedCost);
+      return {
+        WBSElementExternalID: code, FiscalPeriod: '2026-05-01', RAMethod: 'Cost-based POC',
+        PercentageOfCompletion: r2(poc * 100), PlannedCost: plannedCost, PlannedRevenue: plannedRev,
+        CostOfSales: cos, CalculatedRevenue: recognised, RecognizedMargin: r2(recognised - cos), Reserve: 0,
+      };
+    });
   }
 }

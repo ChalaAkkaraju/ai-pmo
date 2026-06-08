@@ -22,6 +22,7 @@ import {
   type PortfolioInsights,
   type HotItem,
   type OperationalKpis,
+  type FinancialKpis,
   type RoleKpiStrip,
   type RecentlyAddedProject,
 } from '@/components/dashboard-client';
@@ -53,7 +54,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
         .from('projects')
         .select('id, code, name, client, segment, status, current_week, contract_value_current, approved_budget_current, contingency, hard_deadline_description, created_via, created_at')
         .order('code', { ascending: true }),
-      supabase.from('risks').select('project_id, status, impact, cross_cutting_class, owner, description'),
+      supabase.from('risks').select('project_id, status, impact, cross_cutting_class, owner, description, emv_usd, residual_emv_usd'),
       supabase.from('issues').select('project_id, severity, status, category, owner, description'),
       supabase.from('variance_reports').select('project_id, report_week, cpi, spi, contingency_consumed_m'),
       supabase.from('change_orders').select('project_id, status, revenue_impact_m, margin_realized_pct'),
@@ -87,7 +88,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
     created_via: string | null;
     created_at: string;
   }>;
-  const risks = (risksRes.data ?? []) as Array<{ project_id: string; status: string; impact: string; cross_cutting_class: string; owner: string | null; description: string }>;
+  const risks = (risksRes.data ?? []) as Array<{ project_id: string; status: string; impact: string; cross_cutting_class: string; owner: string | null; description: string; emv_usd: number | string | null; residual_emv_usd: number | string | null }>;
   const issues = (issuesRes.data ?? []) as Array<{ project_id: string; severity: string; status: string; category: string; owner: string | null; description: string }>;
   const variance = (varianceRes.data ?? []) as Array<{ project_id: string; report_week: number; cpi: number | string; spi: number | string; contingency_consumed_m: number | string | null }>;
   const changeOrders = (changeOrdersRes.data ?? []) as Array<{ project_id: string; status: string; revenue_impact_m: number | string | null; margin_realized_pct: number | string | null }>;
@@ -177,6 +178,48 @@ export default async function RoleLandingPage({ params }: PageProps) {
     contingency_drawn_m: contingencyDrawnM,
     patterns_at_emergence: patternsAtEmergence,
   };
+
+  // -------- Portfolio financial position (cost-to-cash rollup across active projects) --------
+  let financial: FinancialKpis | null = null;
+  try {
+    const activeIds = new Set(projects.filter((p) => p.status === 'Active').map((p) => p.id));
+    const [poRes, raRes, billRes] = await Promise.all([
+      supabase.from('purchase_orders').select('project_id, po_value, received_value, status').limit(100000),
+      supabase.from('results_analysis').select('project_id, calculated_revenue, recognized_margin').limit(100000),
+      supabase.from('billing_events').select('project_id, amount, status').limit(100000),
+    ]);
+    let openCommit = 0, recRev = 0, recMargin = 0, billed = 0;
+    let coValue = 0, coInFlight = 0;
+    for (const c of changeOrders) {
+      coValue += (Number(c.revenue_impact_m) || 0) * 1_000_000;
+      if (c.status === 'Anticipated' || c.status === 'Under analysis' || c.status === 'Priced') coInFlight++;
+    }
+    for (const po of (poRes.data ?? []) as Array<{ project_id: string; po_value: number | string; received_value: number | string; status: string }>) {
+      if (!activeIds.has(po.project_id) || po.status === 'Closed') continue;
+      openCommit += Math.max(0, (Number(po.po_value) || 0) - (Number(po.received_value) || 0));
+    }
+    for (const r of (raRes.data ?? []) as Array<{ project_id: string; calculated_revenue: number | string | null; recognized_margin: number | string | null }>) {
+      if (!activeIds.has(r.project_id)) continue;
+      recRev += Number(r.calculated_revenue) || 0;
+      recMargin += Number(r.recognized_margin) || 0;
+    }
+    for (const b of (billRes.data ?? []) as Array<{ project_id: string; amount: number | string | null; status: string }>) {
+      if (!activeIds.has(b.project_id) || !(b.status === 'Invoiced' || b.status === 'Paid')) continue;
+      billed += Number(b.amount) || 0;
+    }
+    financial = {
+      open_commitment: openCommit,
+      recognised_revenue: recRev,
+      recognised_margin: recMargin,
+      recognised_margin_pct: recRev > 0 ? (recMargin / recRev) * 100 : 0,
+      net_unbilled: recRev - billed,
+      billed,
+      co_value: coValue,
+      co_in_flight: coInFlight,
+    };
+  } catch {
+    financial = null;
+  }
 
   // -------- Role-specific KPI strip (pilot: commercial, risk, hse) --------
   // Each tile is chosen to be net-new vs the hero AND the operational ribbon,
@@ -366,7 +409,15 @@ export default async function RoleLandingPage({ params }: PageProps) {
     threshold: pt.threshold_projects ?? 0,
   }));
 
+  let riskExposure = 0;
+  for (const r of risks) {
+    const st = String(r.status).toLowerCase();
+    if (st.startsWith('realis') || st.includes('not materialis')) continue; // no residual exposure
+    riskExposure += Number(r.residual_emv_usd) || Number(r.emv_usd) || 0;
+  }
+
   const insights: PortfolioInsights = {
+    risk_exposure_m: riskExposure / 1_000_000,
     risk_class_counts: riskClassCounts,
     issue_severity_counts: issueSeverityCounts,
     contingency_buckets: buckets,
@@ -621,6 +672,22 @@ export default async function RoleLandingPage({ params }: PageProps) {
     portfolioEv = null;
   }
 
+  // Reconcile segment CPI/SPI to the canonical earned value (same basis as the
+  // pulse + EV band) so every CPI/SPI on the page agrees; leaves the reported
+  // average where a segment has no canonical EV.
+  {
+    const segEv = new Map<string, { c: number; s: number; n: number }>();
+    for (const r of evProjectRows) {
+      if (r.cpi == null || r.spi == null) continue;
+      const e = segEv.get(r.segment) ?? { c: 0, s: 0, n: 0 };
+      e.c += r.cpi; e.s += r.spi; e.n++; segEv.set(r.segment, e);
+    }
+    for (const ss of segmentSummaries) {
+      const e = segEv.get(ss.segment);
+      if (e && e.n > 0) { ss.avg_cpi = e.c / e.n; ss.avg_spi = e.s / e.n; }
+    }
+  }
+
   return (
     <>
       <WelcomeGate token={token} />
@@ -644,6 +711,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
       roleId={resolved.role.id}
       workspaceActivity={workspaceActivity}
       operational={operational}
+      financial={financial}
       roleKpis={roleKpis}
       insights={insights}
       hotItems={hotItems}

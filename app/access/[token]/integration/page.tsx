@@ -38,17 +38,18 @@ export default async function IntegrationPage({ params }: PageProps) {
   let exceptions: SyncExceptionRow[] = [];
   try {
     const [runsRes, exRes] = await Promise.all([
-      supabase.from('sync_runs').select('id, source_system, channel, status, started_at, finished_at, rows_inserted, rows_updated, exceptions, message, projects:project_id(code)').order('started_at', { ascending: false }).limit(20),
-      supabase.from('sync_exceptions').select('id, source_system, kind, external_id, reason, created_at, projects:project_id(code)').eq('status', 'open').order('created_at', { ascending: false }).limit(50),
+      supabase.from('sync_runs').select('id, source_system, channel, entity, api_endpoint, status, started_at, finished_at, rows_inserted, rows_updated, exceptions, message, projects:project_id(code)').order('started_at', { ascending: false }).limit(60),
+      supabase.from('sync_exceptions').select('id, source_system, entity, kind, external_id, reason, created_at, projects:project_id(code)').eq('status', 'open').order('created_at', { ascending: false }).limit(50),
     ]);
     runs = ((runsRes.data ?? []) as Array<Record<string, unknown>>).map((r) => ({
       id: String(r.id), source_system: String(r.source_system), channel: String(r.channel), status: String(r.status),
+      entity: (r.entity as string) ?? null, api_endpoint: (r.api_endpoint as string) ?? null,
       started_at: String(r.started_at), finished_at: (r.finished_at as string) ?? null,
       rows_inserted: Number(r.rows_inserted), rows_updated: Number(r.rows_updated), exceptions: Number(r.exceptions),
       message: (r.message as string) ?? null, project_code: projCode(r.projects as JoinedProj),
     }));
     exceptions = ((exRes.data ?? []) as Array<Record<string, unknown>>).map((e) => ({
-      id: String(e.id), source_system: String(e.source_system), kind: String(e.kind),
+      id: String(e.id), source_system: String(e.source_system), entity: (e.entity as string) ?? null, kind: String(e.kind),
       external_id: (e.external_id as string) ?? null, reason: String(e.reason), created_at: String(e.created_at),
       project_code: projCode(e.projects as JoinedProj),
     }));
@@ -76,8 +77,8 @@ export default async function IntegrationPage({ params }: PageProps) {
 
       <h1 className="text-2xl font-bold tracking-tight">Data integration</h1>
       <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-        The consume side: structure and cost are mirrored from the systems of record into the canonical model, joined by
-        WBS code. SAP PS is live (mock adapter through the real pipeline); the scheduler connectors follow the same
+        The consume side: structure, cost, commitment, billing and revenue recognition are mirrored from the systems of
+        record into the canonical model, joined by WBS code. SAP PS is live (mock adapter through the real pipeline); the scheduler connectors follow the same
         contract. Records that can&apos;t map are queued below, never dropped.
       </p>
 

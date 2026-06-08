@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { resolveRoleFromToken } from '@/lib/role-context';
-import { parseWbsCsv, parseCostCsv, parseTaskCsv, parseResourceCsv } from '@/lib/integration/csv';
+import { parseWbsCsv, parseCostCsv, parseTaskCsv, parseResourceCsv, parseCommitmentCsv, parseBillingCsv, parseRaCsv } from '@/lib/integration/csv';
 import { FileSapAdapter } from '@/lib/integration/adapters/file-sap';
 import { FileSchedulerAdapter } from '@/lib/integration/adapters/file-scheduler';
 import { ingestSapProject, ingestSchedulerProject } from '@/lib/integration/ingestion-service';
@@ -18,7 +18,7 @@ const bodySchema = z.object({
   token: z.string().min(8),
   projectCode: z.string().min(1),
   csv: z.string().min(1),
-  type: z.enum(['wbs', 'cost', 'tasks', 'resources']).optional().default('wbs'),
+  type: z.enum(['wbs', 'cost', 'tasks', 'resources', 'commitment', 'billing', 'results_analysis']).optional().default('wbs'),
   channel: z.enum(['manual', 'file']).optional().default('manual'),
 });
 
@@ -36,26 +36,44 @@ export async function POST(request: NextRequest) {
   if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
   const proj = project as { id: string; code: string };
 
+  if (body.type === 'commitment') {
+    const { rows, error } = parseCommitmentCsv(body.csv);
+    if (error) return NextResponse.json({ error }, { status: 400 });
+    const result = await ingestSapProject(supabase, proj, new FileSapAdapter([], [], rows), body.channel, 'commitment');
+    return NextResponse.json(result, { status: result.ok ? 200 : 500 });
+  }
+  if (body.type === 'billing') {
+    const { rows, error } = parseBillingCsv(body.csv);
+    if (error) return NextResponse.json({ error }, { status: 400 });
+    const result = await ingestSapProject(supabase, proj, new FileSapAdapter([], [], [], rows), body.channel, 'billing');
+    return NextResponse.json(result, { status: result.ok ? 200 : 500 });
+  }
+  if (body.type === 'results_analysis') {
+    const { rows, error } = parseRaCsv(body.csv);
+    if (error) return NextResponse.json({ error }, { status: 400 });
+    const result = await ingestSapProject(supabase, proj, new FileSapAdapter([], [], [], [], rows), body.channel, 'results_analysis');
+    return NextResponse.json(result, { status: result.ok ? 200 : 500 });
+  }
   if (body.type === 'wbs') {
     const { rows, error } = parseWbsCsv(body.csv);
     if (error) return NextResponse.json({ error }, { status: 400 });
-    const result = await ingestSapProject(supabase, proj, new FileSapAdapter(rows, []), body.channel);
+    const result = await ingestSapProject(supabase, proj, new FileSapAdapter(rows, []), body.channel, 'wbs');
     return NextResponse.json(result, { status: result.ok ? 200 : 500 });
   }
   if (body.type === 'cost') {
     const { rows, error } = parseCostCsv(body.csv);
     if (error) return NextResponse.json({ error }, { status: 400 });
-    const result = await ingestSapProject(supabase, proj, new FileSapAdapter([], rows), body.channel);
+    const result = await ingestSapProject(supabase, proj, new FileSapAdapter([], rows), body.channel, 'cost');
     return NextResponse.json(result, { status: result.ok ? 200 : 500 });
   }
   if (body.type === 'tasks') {
     const { rows, error } = parseTaskCsv(body.csv);
     if (error) return NextResponse.json({ error }, { status: 400 });
-    const result = await ingestSchedulerProject(supabase, proj, new FileSchedulerAdapter(rows, []), body.channel);
+    const result = await ingestSchedulerProject(supabase, proj, new FileSchedulerAdapter(rows, []), body.channel, 'tasks');
     return NextResponse.json(result, { status: result.ok ? 200 : 500 });
   }
   const { rows, error } = parseResourceCsv(body.csv);
   if (error) return NextResponse.json({ error }, { status: 400 });
-  const result = await ingestSchedulerProject(supabase, proj, new FileSchedulerAdapter([], rows), body.channel);
+  const result = await ingestSchedulerProject(supabase, proj, new FileSchedulerAdapter([], rows), body.channel, 'resources');
   return NextResponse.json(result, { status: result.ok ? 200 : 500 });
 }

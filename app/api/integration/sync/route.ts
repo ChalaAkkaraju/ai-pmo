@@ -23,6 +23,7 @@ const bodySchema = z.object({
   projectCode: z.string().min(1),
   source: z.enum(['SAP_PS', 'MS_PROJECT', 'P6']).optional().default('SAP_PS'),
   channel: z.enum(['api', 'file', 'manual']).optional().default('api'),
+  entity: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
   const proj = project as { id: string; code: string };
 
   const result = body.source === 'MS_PROJECT'
-    ? await ingestSchedulerProject(supabase, proj, new MsProjectMockAdapter(), body.channel)
-    : await ingestSapProject(supabase, proj, new SapPsMockAdapter(), body.channel);
+    ? await ingestSchedulerProject(supabase, proj, new MsProjectMockAdapter(), body.channel, body.entity)
+    : await ingestSapProject(supabase, proj, new SapPsMockAdapter(), body.channel, body.entity);
   return NextResponse.json(result, { status: result.ok ? 200 : 500 });
 }

@@ -1,189 +1,189 @@
 /**
  * Ingestion service — the source-agnostic core (Phase 6).
  *
- * fetch (via a connector) → map (DTO → canonical) → idempotent upsert
- * (work_packages by project+wbs; cost_actuals replace-by-source) → stamp
- * provenance on the project → queue exceptions → write a sync-run log.
- *
- * Re-running a sync with unchanged source data produces the same canonical
- * rows (idempotent). The connector is injected, so the live BTP adapter and
- * the mock adapter run through exactly this path.
+ * fetch (via a connector) → map (DTO → canonical) → idempotent upsert → stamp
+ * provenance → queue exceptions → write a sync-run log. PER OBJECT: each
+ * canonical entity comes from its own SAP OData service / scheduler API, so we
+ * open one sync_run per entity (tagged with the endpoint) even though a single
+ * "Sync now" triggers them together. That mirrors reality — feeds drift out of
+ * step — and lets the UI show per-feed freshness.
  */
 
 import type { createSupabaseServiceClient } from '@/lib/supabase';
-import { mapSapWbs, mapSapCost } from './mappers/sap-ps';
+import { mapSapWbs, mapSapCost, mapSapPurchaseOrders, mapSapBilling, mapSapResultsAnalysis } from './mappers/sap-ps';
 import { mapSchedulerTasks, mapSchedulerResources } from './mappers/scheduler';
-import type { SapConnector, SchedulerConnector, SyncResult, IngestChannel, SourceSystem } from './types';
+import type { SapConnector, SchedulerConnector, SyncResult, IngestChannel, SourceSystem, MappedException } from './types';
 
 type Supabase = ReturnType<typeof createSupabaseServiceClient>;
+
+interface ObjectOutcome {
+  inserted: number;
+  updated: number;
+  exceptions: MappedException[];
+  count: number;
+  label: string;
+}
+
+/** Open a per-entity sync_run, run the work, log rows/exceptions, close it. */
+async function runObject(
+  supabase: Supabase,
+  project: { id: string },
+  source: SourceSystem,
+  channel: IngestChannel,
+  entity: string,
+  endpoint: string,
+  totals: { inserted: number; updated: number; exceptions: number; messages: string[] },
+  work: () => Promise<ObjectOutcome>,
+): Promise<void> {
+  const { data: run } = await supabase
+    .from('sync_runs')
+    .insert({ project_id: project.id, source_system: source, channel, entity, api_endpoint: endpoint, status: 'success' })
+    .select('id').single();
+  const runId = (run as { id: string } | null)?.id ?? null;
+  try {
+    const r = await work();
+    // This object's exceptions reflect the current source state — clear just
+    // this (source, entity) and requeue what's still failing.
+    await supabase.from('sync_exceptions').delete().eq('project_id', project.id).eq('source_system', source).eq('entity', entity).eq('status', 'open');
+    if (r.exceptions.length > 0 && runId) {
+      await supabase.from('sync_exceptions').insert(r.exceptions.map((e) => ({
+        sync_run_id: runId, project_id: project.id, source_system: source, entity,
+        kind: e.kind, external_id: e.external_id, reason: e.reason, payload: e.payload as object,
+      })));
+    }
+    totals.inserted += r.inserted; totals.updated += r.updated; totals.exceptions += r.exceptions.length;
+    totals.messages.push(`${r.label} ${r.count}`);
+    if (runId) {
+      await supabase.from('sync_runs').update({
+        finished_at: new Date().toISOString(), rows_inserted: r.inserted, rows_updated: r.updated, rows_skipped: 0,
+        exceptions: r.exceptions.length, status: r.exceptions.length > 0 ? 'partial' : 'success',
+        message: `${r.label} ${r.count}, exceptions ${r.exceptions.length}`,
+      }).eq('id', runId);
+    }
+  } catch (e) {
+    if (runId) await supabase.from('sync_runs').update({ finished_at: new Date().toISOString(), status: 'failed', message: String(e) }).eq('id', runId);
+    throw e;
+  }
+}
 
 export async function ingestSapProject(
   supabase: Supabase,
   project: { id: string; code: string },
   connector: SapConnector,
   channel: IngestChannel = 'api',
+  only?: string,
 ): Promise<SyncResult> {
-  const fail = (run_id: string | null, message: string): SyncResult => ({
-    ok: false, run_id, source_system: 'SAP_PS', rows_inserted: 0, rows_updated: 0, rows_skipped: 0, exceptions: 0, message,
-  });
-
-  const { data: run, error: runErr } = await supabase
-    .from('sync_runs')
-    .insert({ project_id: project.id, source_system: 'SAP_PS', channel, status: 'success' })
-    .select('id')
-    .single();
-  if (runErr || !run) return fail(null, `Could not open sync run: ${runErr?.message ?? 'unknown'}`);
-  const runId = (run as { id: string }).id;
+  const syncedAt = new Date().toISOString();
+  const totals = { inserted: 0, updated: 0, exceptions: 0, messages: [] as string[] };
 
   try {
-    const syncedAt = new Date().toISOString();
-    const wbsDtos = await connector.fetchWbs(project.code);
-    const costDtos = await connector.fetchCostActuals(project.code);
+    // WBS structure — Enterprise Project OData (upsert by project+wbs).
+    if (!only || only === 'wbs') await runObject(supabase, project, 'SAP_PS', channel, 'wbs', 'API_ENTERPRISE_PROJECT_SRV', totals, async () => {
+      const m = mapSapWbs(await connector.fetchWbs(project.code), project.id, syncedAt);
+      const { data: existing } = await supabase.from('work_packages').select('wbs_code').eq('project_id', project.id);
+      const set = new Set((existing ?? []).map((r) => (r as { wbs_code: string }).wbs_code));
+      let ins = 0, upd = 0;
+      for (const row of m.rows) { if (set.has(row.wbs_code)) upd++; else ins++; }
+      if (m.rows.length > 0) {
+        const { error } = await supabase.from('work_packages').upsert(m.rows, { onConflict: 'project_id,wbs_code' });
+        if (error) throw new Error(`work_packages: ${error.message}`);
+      }
+      return { inserted: ins, updated: upd, exceptions: m.exceptions, count: m.rows.length, label: 'WBS' };
+    });
 
-    const wbs = mapSapWbs(wbsDtos, project.id, syncedAt);
-    const cost = mapSapCost(costDtos, project.id, syncedAt);
-    const allExceptions = [...wbs.exceptions, ...cost.exceptions];
+    // Replace-by-source objects, each from its own API.
+    const replace = async (table: string, rows: Record<string, unknown>[], any: boolean) => {
+      if (!any) return;
+      await supabase.from(table).delete().eq('project_id', project.id).eq('source_system', 'SAP_PS');
+      if (rows.length > 0) { const { error } = await supabase.from(table).insert(rows); if (error) throw new Error(`${table}: ${error.message}`); }
+    };
 
-    // Insert vs update accounting against existing WBS codes.
-    const { data: existing } = await supabase.from('work_packages').select('wbs_code').eq('project_id', project.id);
-    const existingSet = new Set((existing ?? []).map((r) => (r as { wbs_code: string }).wbs_code));
-    let inserted = 0, updated = 0;
-    for (const row of wbs.rows) { if (existingSet.has(row.wbs_code)) updated++; else inserted++; }
+    if (!only || only === 'cost') await runObject(supabase, project, 'SAP_PS', channel, 'cost', 'API_JOURNALENTRYITEMBASIC_SRV', totals, async () => {
+      const dtos = await connector.fetchCostActuals(project.code);
+      const m = mapSapCost(dtos, project.id, syncedAt);
+      await replace('cost_actuals', m.rows as unknown as Record<string, unknown>[], dtos.length > 0);
+      return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'Cost' };
+    });
 
-    if (wbs.rows.length > 0) {
-      const { error } = await supabase.from('work_packages').upsert(wbs.rows, { onConflict: 'project_id,wbs_code' });
-      if (error) throw new Error(`work_packages upsert: ${error.message}`);
-    }
+    if (!only || only === 'commitment') await runObject(supabase, project, 'SAP_PS', channel, 'commitment', 'API_PURCHASEORDER_PROCESS_SRV', totals, async () => {
+      const dtos = await connector.fetchPurchaseOrders(project.code);
+      const m = mapSapPurchaseOrders(dtos, project.id, syncedAt);
+      await replace('purchase_orders', m.rows as unknown as Record<string, unknown>[], dtos.length > 0);
+      return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'POs' };
+    });
 
-    // cost_actuals replace-by-source — only when the source actually returned
-    // cost (so a WBS-only file upload doesn't wipe cost from a prior API sync).
-    if (cost.rows.length > 0) {
-      await supabase.from('cost_actuals').delete().eq('project_id', project.id).eq('source_system', 'SAP_PS');
-      const { error } = await supabase.from('cost_actuals').insert(cost.rows);
-      if (error) throw new Error(`cost_actuals insert: ${error.message}`);
-    }
+    if (!only || only === 'billing') await runObject(supabase, project, 'SAP_PS', channel, 'billing', 'API_BILLING_DOCUMENT_SRV', totals, async () => {
+      const dtos = await connector.fetchBilling(project.code);
+      const m = mapSapBilling(dtos, project.id, syncedAt);
+      await replace('billing_events', m.rows as unknown as Record<string, unknown>[], dtos.length > 0);
+      return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'Billing' };
+    });
 
-    // Provenance: the project is now SAP-sourced.
+    if (!only || only === 'results_analysis') await runObject(supabase, project, 'SAP_PS', channel, 'results_analysis', 'C_ProjResultsAnalysis (CDS)', totals, async () => {
+      const dtos = await connector.fetchResultsAnalysis(project.code);
+      const m = mapSapResultsAnalysis(dtos, project.id, syncedAt);
+      await replace('results_analysis', m.rows as unknown as Record<string, unknown>[], dtos.length > 0);
+      return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'RA' };
+    });
+
     await supabase.from('projects').update({ source_system: 'SAP_PS', external_id: project.code, last_synced_at: syncedAt }).eq('id', project.id);
 
-    // Open exceptions reflect the CURRENT source state: clear this source's open
-    // ones, then re-insert what's still failing — so re-syncing the same data
-    // shows one row per real problem, not one per run. Resolved/ignored are kept.
-    await supabase.from('sync_exceptions').delete().eq('project_id', project.id).eq('source_system', 'SAP_PS').eq('status', 'open');
-    if (allExceptions.length > 0) {
-      const exRows = allExceptions.map((e) => ({
-        sync_run_id: runId, project_id: project.id, source_system: 'SAP_PS',
-        kind: e.kind, external_id: e.external_id, reason: e.reason, payload: e.payload as object,
-      }));
-      await supabase.from('sync_exceptions').insert(exRows);
-    }
-
-    const status = allExceptions.length > 0 ? 'partial' : 'success';
-    await supabase.from('sync_runs').update({
-      finished_at: new Date().toISOString(),
-      rows_inserted: inserted, rows_updated: updated, rows_skipped: 0,
-      exceptions: allExceptions.length, status,
-      message: `WBS ${wbs.rows.length} (${inserted} new / ${updated} updated), cost ${cost.rows.length}, exceptions ${allExceptions.length}`,
-    }).eq('id', runId);
-
     return {
-      ok: true, run_id: runId, source_system: 'SAP_PS',
-      rows_inserted: inserted, rows_updated: updated, rows_skipped: 0,
-      exceptions: allExceptions.length,
-      message: `Synced from SAP PS (mock): ${wbs.rows.length} WBS, ${cost.rows.length} cost rows, ${allExceptions.length} exception(s).`,
+      ok: true, run_id: null, source_system: 'SAP_PS',
+      rows_inserted: totals.inserted, rows_updated: totals.updated, rows_skipped: 0, exceptions: totals.exceptions,
+      message: `Synced from SAP PS (mock): ${totals.messages.join(', ')}, ${totals.exceptions} exception(s).`,
     };
   } catch (e) {
-    await supabase.from('sync_runs').update({ finished_at: new Date().toISOString(), status: 'failed', message: String(e) }).eq('id', runId);
-    return fail(runId, String(e));
+    return { ok: false, run_id: null, source_system: 'SAP_PS', rows_inserted: totals.inserted, rows_updated: totals.updated, rows_skipped: 0, exceptions: totals.exceptions, message: String(e) };
   }
 }
-
 
 export async function ingestSchedulerProject(
   supabase: Supabase,
   project: { id: string; code: string },
   connector: SchedulerConnector,
   channel: IngestChannel = 'api',
+  only?: string,
 ): Promise<SyncResult> {
   const source: SourceSystem = connector.source;
-  const fail = (run_id: string | null, message: string): SyncResult => ({
-    ok: false, run_id, source_system: source, rows_inserted: 0, rows_updated: 0, rows_skipped: 0, exceptions: 0, message,
-  });
+  const taskEndpoint = source === 'P6' ? 'P6 EPPM · /activities' : 'Dataverse · msdyn_projecttask';
+  const resEndpoint = source === 'P6' ? 'P6 EPPM · /resourceassignments' : 'Dataverse · msdyn_resourceassignment';
+  const syncedAt = new Date().toISOString();
+  const totals = { inserted: 0, updated: 0, exceptions: 0, messages: [] as string[] };
 
-  const { data: run, error: runErr } = await supabase
-    .from('sync_runs')
-    .insert({ project_id: project.id, source_system: source, channel, status: 'success' })
-    .select('id')
-    .single();
-  if (runErr || !run) return fail(null, `Could not open sync run: ${runErr?.message ?? 'unknown'}`);
-  const runId = (run as { id: string }).id;
+  // WBS join target — codes that came from SAP for this project.
+  const { data: wps } = await supabase.from('work_packages').select('wbs_code').eq('project_id', project.id);
+  const validWbs = new Set((wps ?? []).map((w) => (w as { wbs_code: string }).wbs_code));
 
   try {
-    const syncedAt = new Date().toISOString();
-
-    // The WBS join target — codes that came from SAP for this project.
-    const { data: wps } = await supabase.from('work_packages').select('wbs_code').eq('project_id', project.id);
-    const validWbs = new Set((wps ?? []).map((w) => (w as { wbs_code: string }).wbs_code));
-
-    const taskDtos = await connector.fetchTasks(project.code);
-    const resDtos = await connector.fetchResourceAssignments(project.code);
-
-    const tasks = mapSchedulerTasks(taskDtos, project.id, validWbs, source, syncedAt);
-    const res = mapSchedulerResources(resDtos, project.id, validWbs, source, syncedAt);
-    const allExceptions = [...tasks.exceptions, ...res.exceptions];
-
-    // tasks + resource_assignments are replace-by-source, but only for the data
-    // types this sync actually carries (so a tasks-only file upload doesn't wipe
-    // resources, and vice-versa).
-    let priorTasks = 0;
-    if (taskDtos.length > 0) {
-      const { count } = await supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('project_id', project.id).eq('source_system', source);
-      priorTasks = count ?? 0;
-      await supabase.from('tasks').delete().eq('project_id', project.id).eq('source_system', source);
-      if (tasks.rows.length > 0) {
-        const { error } = await supabase.from('tasks').insert(tasks.rows);
-        if (error) throw new Error(`tasks insert: ${error.message}`);
+    if (!only || only === 'tasks') await runObject(supabase, project, source, channel, 'tasks', taskEndpoint, totals, async () => {
+      const dtos = await connector.fetchTasks(project.code);
+      const m = mapSchedulerTasks(dtos, project.id, validWbs, source, syncedAt);
+      if (dtos.length > 0) {
+        await supabase.from('tasks').delete().eq('project_id', project.id).eq('source_system', source);
+        if (m.rows.length > 0) { const { error } = await supabase.from('tasks').insert(m.rows); if (error) throw new Error(`tasks: ${error.message}`); }
       }
-    }
-    if (resDtos.length > 0) {
-      await supabase.from('resource_assignments').delete().eq('project_id', project.id).eq('source_system', source);
-      if (res.rows.length > 0) {
-        const { error } = await supabase.from('resource_assignments').insert(res.rows);
-        if (error) throw new Error(`resource_assignments insert: ${error.message}`);
+      return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'Tasks' };
+    });
+
+    if (!only || only === 'resources') await runObject(supabase, project, source, channel, 'resources', resEndpoint, totals, async () => {
+      const dtos = await connector.fetchResourceAssignments(project.code);
+      const m = mapSchedulerResources(dtos, project.id, validWbs, source, syncedAt);
+      if (dtos.length > 0) {
+        await supabase.from('resource_assignments').delete().eq('project_id', project.id).eq('source_system', source);
+        if (m.rows.length > 0) { const { error } = await supabase.from('resource_assignments').insert(m.rows); if (error) throw new Error(`resource_assignments: ${error.message}`); }
       }
-    }
+      return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'Resources' };
+    });
 
     await supabase.from('projects').update({ last_synced_at: syncedAt }).eq('id', project.id);
 
-    // dedupe: open exceptions reflect current source state
-    await supabase.from('sync_exceptions').delete().eq('project_id', project.id).eq('source_system', source).eq('status', 'open');
-    if (allExceptions.length > 0) {
-      const exRows = allExceptions.map((e) => ({
-        sync_run_id: runId, project_id: project.id, source_system: source,
-        kind: e.kind, external_id: e.external_id, reason: e.reason, payload: e.payload as object,
-      }));
-      await supabase.from('sync_exceptions').insert(exRows);
-    }
-
-    const firstLoad = priorTasks === 0;
-    const inserted = firstLoad ? tasks.rows.length : 0;
-    const updated = firstLoad ? 0 : tasks.rows.length;
-    const status = allExceptions.length > 0 ? 'partial' : 'success';
-    await supabase.from('sync_runs').update({
-      finished_at: new Date().toISOString(),
-      rows_inserted: inserted, rows_updated: updated, rows_skipped: 0,
-      exceptions: allExceptions.length, status,
-      message: `Tasks ${tasks.rows.length}, resources ${res.rows.length}, exceptions ${allExceptions.length}`,
-    }).eq('id', runId);
-
     return {
-      ok: true, run_id: runId, source_system: source,
-      rows_inserted: inserted, rows_updated: updated, rows_skipped: 0,
-      exceptions: allExceptions.length,
-      message: `Synced from ${source} (mock): ${tasks.rows.length} tasks, ${res.rows.length} resource rows, ${allExceptions.length} exception(s).`,
+      ok: true, run_id: null, source_system: source,
+      rows_inserted: totals.inserted, rows_updated: totals.updated, rows_skipped: 0, exceptions: totals.exceptions,
+      message: `Synced from ${source} (mock): ${totals.messages.join(', ')}, ${totals.exceptions} exception(s).`,
     };
   } catch (e) {
-    await supabase.from('sync_runs').update({ finished_at: new Date().toISOString(), status: 'failed', message: String(e) }).eq('id', runId);
-    return fail(runId, String(e));
+    return { ok: false, run_id: null, source_system: source, rows_inserted: totals.inserted, rows_updated: totals.updated, rows_skipped: 0, exceptions: totals.exceptions, message: String(e) };
   }
 }

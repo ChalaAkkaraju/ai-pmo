@@ -15,6 +15,8 @@ export interface SyncRunRow {
   id: string;
   source_system: string;
   channel: string;
+  entity: string | null;
+  api_endpoint: string | null;
   status: string;
   started_at: string;
   finished_at: string | null;
@@ -27,6 +29,7 @@ export interface SyncRunRow {
 export interface SyncExceptionRow {
   id: string;
   source_system: string;
+  entity: string | null;
   kind: string;
   external_id: string | null;
   reason: string;
@@ -39,13 +42,36 @@ export interface ProjectOption {
   source_system: string | null;
 }
 
+const ENTITY_LABEL: Record<string, string> = {
+  wbs: 'WBS structure', cost: 'Cost actuals', commitment: 'Commitment (POs)', billing: 'Billing',
+  results_analysis: 'Results Analysis', tasks: 'Schedule (tasks)', resources: 'Resource assignments',
+};
+const ENTITY_ORDER = ['wbs', 'cost', 'commitment', 'billing', 'results_analysis', 'tasks', 'resources'];
+const SAP_OBJECTS: Array<[string, string, string]> = [
+  ['all', 'All objects', 'API_ENTERPRISE_PROJECT_SRV + cost / PO / billing / RA'],
+  ['wbs', 'WBS structure', 'API_ENTERPRISE_PROJECT_SRV'],
+  ['cost', 'Cost actuals', 'API_JOURNALENTRYITEMBASIC_SRV'],
+  ['commitment', 'Commitment (POs)', 'API_PURCHASEORDER_PROCESS_SRV'],
+  ['billing', 'Billing', 'API_BILLING_DOCUMENT_SRV'],
+  ['results_analysis', 'Results Analysis', 'C_ProjResultsAnalysis (CDS)'],
+];
+const SCHED_OBJECTS: Array<[string, string, string]> = [
+  ['all', 'All objects', 'msdyn_projecttask + msdyn_resourceassignment'],
+  ['tasks', 'Schedule (tasks)', 'Dataverse · msdyn_projecttask'],
+  ['resources', 'Resource assignments', 'Dataverse · msdyn_resourceassignment'],
+];
+
 function fmtTime(s: string | null): string {
   return s ? new Date(s).toLocaleString() : '—';
 }
 
-const FILE_OBJECTS: Array<{ type: 'wbs' | 'cost' | 'tasks' | 'resources'; label: string; source: string }> = [
+type FileType = 'wbs' | 'cost' | 'commitment' | 'billing' | 'results_analysis' | 'tasks' | 'resources';
+const FILE_OBJECTS: Array<{ type: FileType; label: string; source: string }> = [
   { type: 'wbs', label: 'WBS structure', source: 'SAP PS · AI PMO' },
   { type: 'cost', label: 'Cost actuals', source: 'SAP PS' },
+  { type: 'commitment', label: 'Commitment (POs)', source: 'SAP PS' },
+  { type: 'billing', label: 'Billing', source: 'SAP PS' },
+  { type: 'results_analysis', label: 'Results Analysis', source: 'SAP PS' },
   { type: 'tasks', label: 'Schedule (tasks)', source: 'Scheduler' },
   { type: 'resources', label: 'Resource assignments', source: 'Scheduler' },
 ];
@@ -68,6 +94,7 @@ export function IntegrationClient({
   const router = useRouter();
   const [projectCode, setProjectCode] = useState(projects[0]?.code ?? '');
   const [source, setSource] = useState<'SAP_PS' | 'MS_PROJECT'>('SAP_PS');
+  const [object, setObject] = useState('all');
   const [uploadProject, setUploadProject] = useState(projects[0]?.code ?? '');
   const [uploadingType, setUploadingType] = useState<string | null>(null);
   const [uploadMsg, setUploadMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
@@ -93,7 +120,7 @@ export function IntegrationClient({
     try {
       const res = await fetch('/api/integration/sync', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, projectCode, source }),
+        body: JSON.stringify({ token, projectCode, source, entity: object === 'all' ? undefined : object }),
       });
       const j = await res.json();
       if (!res.ok || !j.ok) setMsg({ tone: 'err', text: j.error ?? j.message ?? 'Sync failed' });
@@ -114,7 +141,7 @@ export function IntegrationClient({
     setBusy(null);
   }
 
-  async function handleUpload(e: ChangeEvent<HTMLInputElement>, type: 'wbs' | 'cost' | 'tasks' | 'resources') {
+  async function handleUpload(e: ChangeEvent<HTMLInputElement>, type: FileType) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -150,12 +177,17 @@ export function IntegrationClient({
             </div>
             <p className="mt-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Source &amp; endpoint</p>
             {canWrite ? (
-              <select value={source} onChange={(e) => setSource(e.target.value as 'SAP_PS' | 'MS_PROJECT')} className="mb-1.5 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
-                <option value="SAP_PS">SAP PS — WBS &amp; cost</option>
+              <select value={source} onChange={(e) => { setSource(e.target.value as 'SAP_PS' | 'MS_PROJECT'); setObject('all'); }} className="mb-1.5 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
+                <option value="SAP_PS">SAP PS — WBS, cost, commitment, billing &amp; RA</option>
                 <option value="MS_PROJECT">Microsoft Project — tasks &amp; resources</option>
               </select>
             ) : null}
-            <p className="rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[11px]">{source === 'MS_PROJECT' ? 'Microsoft Project · msdyn_projecttask (Web API, mock)' : 'SAP S/4HANA · API_ENTERPRISE_PROJECT_SRV (BTP, mock)'}</p>
+            {canWrite ? (
+              <select value={object} onChange={(e) => setObject(e.target.value)} className="mb-1.5 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
+                {(source === 'MS_PROJECT' ? SCHED_OBJECTS : SAP_OBJECTS).map(([v, label]) => (<option key={v} value={v}>{label}</option>))}
+              </select>
+            ) : null}
+            <p className="rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[11px]">{((source === 'MS_PROJECT' ? SCHED_OBJECTS : SAP_OBJECTS).find((o) => o[0] === object)?.[2] ?? '')} (mock)</p>
             <p className="mt-2 text-[11px] text-muted-foreground">Last sync: <span className="font-medium">{fmtTime(lastSyncBySource[source] ?? null)}</span></p>
             {canWrite && (
               <div className="mt-3 space-y-2">
@@ -184,7 +216,7 @@ export function IntegrationClient({
               <p className="text-sm font-semibold">SFTP / file drop</p>
               <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">configured</span>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Scheduled flat-file (CSV) extracts — common for SAP cost drops. Same mapper &amp; exception pipeline as the API channel.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Scheduled flat-file (CSV) extracts — common for SAP cost, commitment, billing &amp; RA drops when the API isn&apos;t available. Same mapper &amp; exception pipeline as the API channel; API is preferred, this is the fallback.</p>
             <p className="mt-2 text-[11px] text-muted-foreground">Schedule: <span className="font-medium">Daily 02:00</span> · Path: <span className="font-mono">/data/imports</span></p>
           </div>
 
@@ -194,7 +226,7 @@ export function IntegrationClient({
       {/* Templates & data files — object x action matrix */}
       <section>
         <h2 className="text-base font-semibold">Templates &amp; data files</h2>
-        <p className="mt-1 max-w-3xl text-xs text-muted-foreground">Download a blank template, fill it in, and upload — per object, through the same mapper &amp; exception pipeline as the live connectors. Only WBS can be downloaded with data (the SAP-load file). Templates need no project.</p>
+        <p className="mt-1 max-w-3xl text-xs text-muted-foreground">Download a blank template, fill it in, and upload — per object, through the same mapper &amp; exception pipeline as the live connectors. Every object can be downloaded as CSV (round-trip: download → edit → re-upload); WBS also has an SAP-load file. Templates need no project.</p>
         {canWrite && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="font-medium text-muted-foreground">Project for upload / download:</span>
@@ -204,14 +236,15 @@ export function IntegrationClient({
           </div>
         )}
         <div className="mt-3 overflow-x-auto rounded-xl border">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[860px] table-fixed text-left text-sm">
             <thead className="text-[11px] uppercase tracking-wider">
               <tr>
-                <th className="bg-slate-100 px-3 py-2 font-semibold text-slate-700">Object</th>
-                <th className="bg-slate-100 px-3 py-2 font-semibold text-slate-700">Source</th>
-                <th className="bg-sky-100 px-3 py-2 font-semibold text-sky-800">Template</th>
-                <th className="bg-violet-100 px-3 py-2 font-semibold text-violet-800">Upload data</th>
-                <th className="bg-emerald-100 px-3 py-2 font-semibold text-emerald-800">Download data</th>
+                <th className="w-[200px] bg-slate-100 px-3 py-2 font-semibold text-slate-700">Object</th>
+                <th className="w-[150px] bg-slate-100 px-3 py-2 font-semibold text-slate-700">Source</th>
+                <th className="w-[140px] bg-sky-100 px-3 py-2 font-semibold text-sky-800 text-center">Template</th>
+                <th className="w-[140px] bg-emerald-100 px-3 py-2 font-semibold text-emerald-800 text-center">Download data</th>
+                <th className="w-[140px] bg-violet-100 px-3 py-2 font-semibold text-violet-800 text-center">Upload data</th>
+                <th className="w-[140px] bg-amber-100 px-3 py-2 font-semibold text-amber-800 text-center">SAP feed</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -219,10 +252,15 @@ export function IntegrationClient({
                 <tr key={o.type}>
                   <td className="px-3 py-2.5 font-medium">{o.label}</td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground">{o.source}</td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-2.5 text-center">
                     <a href={`/api/integration/template?type=${o.type}`} className="inline-flex items-center gap-1 rounded-md border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800 transition hover:bg-sky-100">↓ Template</a>
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-2.5 text-center">
+                    {canWrite ? (
+                      <a href={`/api/integration/export?type=${o.type}&projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100">↓ Data</a>
+                    ) : (<span className="text-muted-foreground">—</span>)}
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
                     {canWrite ? (
                       <label className={`inline-flex cursor-pointer items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-800 transition hover:bg-violet-100 ${uploadingType === o.type ? 'opacity-50' : ''}`}>
                         {uploadingType === o.type ? 'Uploading…' : '↑ Upload'}
@@ -230,9 +268,9 @@ export function IntegrationClient({
                       </label>
                     ) : (<span className="text-muted-foreground">—</span>)}
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td className="px-3 py-2.5 text-center">
                     {o.type === 'wbs' && canWrite ? (
-                      <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100">↓ For SAP</a>
+                      <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 transition hover:bg-amber-100">↓ For SAP</a>
                     ) : (<span className="text-muted-foreground">—</span>)}
                   </td>
                 </tr>
@@ -241,6 +279,45 @@ export function IntegrationClient({
           </table>
         </div>
         {uploadMsg && <p className={`mt-2 text-[11px] ${uploadMsg.tone === 'ok' ? 'text-emerald-700' : 'text-red-600'}`}>{uploadMsg.text}</p>}
+      </section>
+
+      {/* Per-object data freshness — each canonical object comes from its own
+          SAP / scheduler API, so each has its own last-sync + status. */}
+      <section>
+        <h2 className="text-base font-semibold">Data freshness · by object / API</h2>
+        <p className="mt-1 text-xs text-muted-foreground">In SAP each object is a different OData service run on its own schedule — these drift out of step. Latest sync per feed.</p>
+        {(() => {
+          const latest = new Map<string, SyncRunRow>();
+          for (const r of runs) { if (r.entity && !latest.has(r.entity)) latest.set(r.entity, r); }
+          const rows = ENTITY_ORDER.map((e) => latest.get(e)).filter((r): r is SyncRunRow => !!r);
+          if (rows.length === 0) return <p className="mt-3 text-xs text-muted-foreground">No object-level syncs yet — run a Sync now.</p>;
+          return (
+            <div className="mt-3 overflow-x-auto rounded-xl border">
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Object</th>
+                    <th className="px-3 py-2 font-medium">Source API</th>
+                    <th className="px-3 py-2 font-medium">Last sync</th>
+                    <th className="px-3 py-2 text-right font-medium">Rows</th>
+                    <th className="px-3 py-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {rows.map((r) => (
+                    <tr key={r.entity}>
+                      <td className="px-3 py-2 font-medium">{ENTITY_LABEL[r.entity as string] ?? r.entity}</td>
+                      <td className="px-3 py-2 font-mono text-[11px] text-muted-foreground">{r.source_system} · {r.api_endpoint ?? '\u2014'}</td>
+                      <td className="px-3 py-2 text-xs text-muted-foreground">{fmtTime(r.started_at)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{r.rows_inserted + r.rows_updated}</td>
+                      <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${syncBadge(r.status)}`}>{r.status}{r.exceptions > 0 ? ` · ${r.exceptions} exc` : ''}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
       </section>
 
       {/* Sync history */}
@@ -252,6 +329,7 @@ export function IntegrationClient({
               <tr>
                 <th className="px-3 py-2 font-medium">When</th>
                 <th className="px-3 py-2 font-medium">Source</th>
+                <th className="px-3 py-2 font-medium">Object</th>
                 <th className="px-3 py-2 font-medium">Project</th>
                 <th className="px-3 py-2 font-medium">Status</th>
                 <th className="px-3 py-2 text-right font-medium">New</th>
@@ -262,11 +340,12 @@ export function IntegrationClient({
             </thead>
             <tbody className="divide-y">
               {runs.length === 0 ? (
-                <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">No syncs yet.</td></tr>
+                <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">No syncs yet.</td></tr>
               ) : runs.map((r) => (
                 <tr key={r.id}>
                   <td className="px-3 py-2 text-xs text-muted-foreground">{fmtTime(r.started_at)}</td>
                   <td className="px-3 py-2 text-xs">{r.source_system} · {r.channel}</td>
+                  <td className="px-3 py-2 text-xs">{r.entity ? (ENTITY_LABEL[r.entity] ?? r.entity) : 'all'}</td>
                   <td className="px-3 py-2 text-xs font-mono">{r.project_code ?? '—'}</td>
                   <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${syncBadge(r.status)}`}>{r.status}</span></td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.rows_inserted}</td>
@@ -293,6 +372,7 @@ export function IntegrationClient({
               <tr>
                 <th className="px-3 py-2 font-medium">When</th>
                 <th className="px-3 py-2 font-medium">Project</th>
+                <th className="px-3 py-2 font-medium">Object</th>
                 <th className="px-3 py-2 font-medium">Kind</th>
                 <th className="px-3 py-2 font-medium">External ID</th>
                 <th className="px-3 py-2 font-medium">Reason</th>
@@ -301,11 +381,12 @@ export function IntegrationClient({
             </thead>
             <tbody className="divide-y">
               {exceptions.length === 0 ? (
-                <tr><td colSpan={canWrite ? 6 : 5} className="px-3 py-6 text-center text-emerald-700">No open exceptions — all clean.</td></tr>
+                <tr><td colSpan={canWrite ? 7 : 6} className="px-3 py-6 text-center text-emerald-700">No open exceptions — all clean.</td></tr>
               ) : exceptions.map((e) => (
                 <tr key={e.id}>
                   <td className="px-3 py-2 text-xs text-muted-foreground">{fmtTime(e.created_at)}</td>
                   <td className="px-3 py-2 text-xs font-mono">{e.project_code ?? '—'}</td>
+                  <td className="px-3 py-2 text-xs">{e.entity ? (ENTITY_LABEL[e.entity] ?? e.entity) : '—'}</td>
                   <td className="px-3 py-2"><span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">{e.kind}</span></td>
                   <td className="px-3 py-2 text-xs font-mono">{e.external_id ?? '—'}</td>
                   <td className="px-3 py-2 text-xs">{e.reason}</td>

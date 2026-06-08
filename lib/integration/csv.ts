@@ -88,7 +88,7 @@ export function parseWbsCsv(text: string): { rows: SapWbsElementDTO[]; error: st
 
 /* ===================== Cost / Tasks / Resources templates ===================== */
 
-import type { SapCostActualDTO, SchedulerTaskDTO, SchedulerResourceDTO } from './types';
+import type { SapCostActualDTO, SchedulerTaskDTO, SchedulerResourceDTO, SapPurchaseOrderDTO, SapBillingDTO, SapResultsAnalysisDTO } from './types';
 
 function toNum(v: string | undefined): number | null {
   if (v == null || v.trim() === '') return null;
@@ -100,7 +100,7 @@ function field(header: string[], v: string[], col: string): string {
   return i >= 0 ? (v[i] ?? '') : '';
 }
 
-export type TemplateType = 'wbs' | 'cost' | 'tasks' | 'resources';
+export type TemplateType = 'wbs' | 'cost' | 'tasks' | 'resources' | 'commitment' | 'billing' | 'results_analysis';
 
 /* ---- Cost ---- */
 export const COST_TEMPLATE_COLUMNS = ['wbs_code', 'period', 'actual_cost', 'commitment', 'planned_value'] as const;
@@ -191,12 +191,111 @@ export function parseResourceCsv(text: string): { rows: SchedulerResourceDTO[]; 
   return { rows, error: null };
 }
 
+/* ---- Commitment (purchase orders) ---- */
+export const COMMITMENT_TEMPLATE_COLUMNS = ['wbs_code', 'po_number', 'vendor', 'value_category', 'po_value', 'received_value', 'status', 'raised_week'] as const;
+export function buildCommitmentTemplate(): string {
+  return [
+    COMMITMENT_TEMPLATE_COLUMNS.join(','),
+    '3.1,4500012345,Siemens Energy,Materials/Equipment,9000000,3600000,Partially received,8',
+    '4.1,4500012346,Bechtel,Subcontract,2800000,900000,Partially received,14',
+  ].join('\n') + '\n';
+}
+export function parseCommitmentCsv(text: string): { rows: SapPurchaseOrderDTO[]; error: string | null } {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return { rows: [], error: 'File is empty' };
+  const header = splitCsvLine(lines[0]);
+  const missing = ['wbs_code', 'po_number'].filter((c) => !header.includes(c));
+  if (missing.length) return { rows: [], error: `Missing required columns: ${missing.join(', ')}` };
+  const rows: SapPurchaseOrderDTO[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const v = splitCsvLine(lines[i]);
+    rows.push({
+      PurchaseOrder: field(header, v, 'po_number'),
+      WBSElementExternalID: field(header, v, 'wbs_code'),
+      Supplier: field(header, v, 'vendor'),
+      ValueCategory: field(header, v, 'value_category') || 'Other',
+      NetOrderValue: toNum(field(header, v, 'po_value')) ?? 0,
+      DeliveredValue: toNum(field(header, v, 'received_value')) ?? 0,
+      PurchaseOrderStatus: field(header, v, 'status') || 'Open',
+      CreatedPeriodWeek: toNum(field(header, v, 'raised_week')),
+    });
+  }
+  return { rows, error: null };
+}
+
+/* ---- Billing ---- */
+export const BILLING_TEMPLATE_COLUMNS = ['wbs_code', 'invoice_number', 'billing_type', 'amount', 'billed_week', 'status'] as const;
+export function buildBillingTemplate(): string {
+  return [
+    BILLING_TEMPLATE_COLUMNS.join(','),
+    '1,9000045001,Advance,4000000,6,Paid',
+    '3,9000045002,Milestone,18000000,18,Invoiced',
+  ].join('\n') + '\n';
+}
+export function parseBillingCsv(text: string): { rows: SapBillingDTO[]; error: string | null } {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return { rows: [], error: 'File is empty' };
+  const header = splitCsvLine(lines[0]);
+  const missing = ['invoice_number'].filter((c) => !header.includes(c));
+  if (missing.length) return { rows: [], error: `Missing required columns: ${missing.join(', ')}` };
+  const rows: SapBillingDTO[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const v = splitCsvLine(lines[i]);
+    rows.push({
+      BillingDocument: field(header, v, 'invoice_number'),
+      WBSElementExternalID: field(header, v, 'wbs_code') || null,
+      BillingCategory: field(header, v, 'billing_type') || 'Progress',
+      NetAmount: toNum(field(header, v, 'amount')) ?? 0,
+      BilledPeriodWeek: toNum(field(header, v, 'billed_week')),
+      BillingStatus: field(header, v, 'status') || 'Invoiced',
+    });
+  }
+  return { rows, error: null };
+}
+
+/* ---- Results Analysis ---- */
+export const RA_TEMPLATE_COLUMNS = ['wbs_code', 'period', 'ra_method', 'poc_pct', 'planned_cost', 'planned_revenue', 'cost_of_sales', 'calculated_revenue', 'recognized_margin', 'reserve'] as const;
+export function buildRaTemplate(): string {
+  return [
+    RA_TEMPLATE_COLUMNS.join(','),
+    '3,2026-05-01,Cost-based POC,71,42000000,46200000,29820000,32802000,2982000,0',
+    '4,2026-05-01,Cost-based POC,22,23000000,25300000,5060000,5566000,506000,0',
+  ].join('\n') + '\n';
+}
+export function parseRaCsv(text: string): { rows: SapResultsAnalysisDTO[]; error: string | null } {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return { rows: [], error: 'File is empty' };
+  const header = splitCsvLine(lines[0]);
+  const missing = ['period'].filter((c) => !header.includes(c));
+  if (missing.length) return { rows: [], error: `Missing required columns: ${missing.join(', ')}` };
+  const rows: SapResultsAnalysisDTO[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const v = splitCsvLine(lines[i]);
+    rows.push({
+      WBSElementExternalID: field(header, v, 'wbs_code') || null,
+      FiscalPeriod: field(header, v, 'period'),
+      RAMethod: field(header, v, 'ra_method') || 'Cost-based POC',
+      PercentageOfCompletion: toNum(field(header, v, 'poc_pct')) ?? 0,
+      PlannedCost: toNum(field(header, v, 'planned_cost')) ?? 0,
+      PlannedRevenue: toNum(field(header, v, 'planned_revenue')) ?? 0,
+      CostOfSales: toNum(field(header, v, 'cost_of_sales')) ?? 0,
+      CalculatedRevenue: toNum(field(header, v, 'calculated_revenue')) ?? 0,
+      RecognizedMargin: toNum(field(header, v, 'recognized_margin')) ?? 0,
+      Reserve: toNum(field(header, v, 'reserve')) ?? 0,
+    });
+  }
+  return { rows, error: null };
+}
+
 /* ---- Dispatch ---- */
 export const TEMPLATE_META: Record<TemplateType, { label: string; filename: string; build: () => string }> = {
   wbs: { label: 'WBS (structure)', filename: 'wbs-import-template.csv', build: buildWbsTemplate },
   cost: { label: 'Cost actuals', filename: 'cost-import-template.csv', build: buildCostTemplate },
   tasks: { label: 'Schedule (tasks)', filename: 'tasks-import-template.csv', build: buildTaskTemplate },
   resources: { label: 'Resource assignments', filename: 'resources-import-template.csv', build: buildResourceTemplate },
+  commitment: { label: 'Commitment (POs)', filename: 'commitment-import-template.csv', build: buildCommitmentTemplate },
+  billing: { label: 'Billing', filename: 'billing-import-template.csv', build: buildBillingTemplate },
+  results_analysis: { label: 'Results Analysis', filename: 'results-analysis-import-template.csv', build: buildRaTemplate },
 };
 
 /* ===================== Exporters (current data → CSV) =====================
@@ -242,6 +341,26 @@ export function exportTaskCsv(rows: Array<Record<string, unknown>>): string {
 export function exportResourceCsv(rows: Array<Record<string, unknown>>): string {
   return toCsv(RESOURCE_TEMPLATE_COLUMNS, rows.map((r) => ({
     wbs_code: '', external_id: r.external_id, resource_name: r.resource_name, resource_role: r.resource_role, period: r.period, hours: r.planned_work_hours,
+  })));
+}
+
+export function exportCommitmentCsv(rows: Array<Record<string, unknown>>): string {
+  return toCsv(COMMITMENT_TEMPLATE_COLUMNS, rows.map((r) => ({
+    wbs_code: r.wbs_code, po_number: r.po_number, vendor: r.vendor, value_category: r.value_category,
+    po_value: r.po_value, received_value: r.received_value, status: r.status, raised_week: r.raised_week,
+  })));
+}
+export function exportBillingCsv(rows: Array<Record<string, unknown>>): string {
+  return toCsv(BILLING_TEMPLATE_COLUMNS, rows.map((r) => ({
+    wbs_code: r.wbs_code, invoice_number: r.invoice_number, billing_type: r.billing_type,
+    amount: r.amount, billed_week: r.billed_week, status: r.status,
+  })));
+}
+export function exportRaCsv(rows: Array<Record<string, unknown>>): string {
+  return toCsv(RA_TEMPLATE_COLUMNS, rows.map((r) => ({
+    wbs_code: r.wbs_code, period: r.period, ra_method: r.ra_method, poc_pct: r.poc_pct,
+    planned_cost: r.planned_cost, planned_revenue: r.planned_revenue, cost_of_sales: r.cost_of_sales,
+    calculated_revenue: r.calculated_revenue, recognized_margin: r.recognized_margin, reserve: r.reserve,
   })));
 }
 

@@ -22,13 +22,16 @@ function getClient(): OpenAI {
   if (!apiKey || apiKey === 'your-openrouter-key') {
     throw new Error(
       'OPENROUTER_API_KEY is missing or still the placeholder. ' +
-        'Set it in .env.local with your real OpenRouter key (https://openrouter.ai/keys).',
+        'Set it in .env.local with your real OpenRouter key (https://openrouter.ai/keys), ' +
+        'or set OPENROUTER_BASE_URL to a local OpenAI-compatible endpoint (e.g. Ollama) and use any non-empty key.',
     );
   }
 
+  // OPENROUTER_BASE_URL lets us point at a local OpenAI-compatible server such
+  // as Ollama (http://localhost:11434/v1) to generate offline, for free.
   cachedClient = new OpenAI({
     apiKey,
-    baseURL: 'https://openrouter.ai/api/v1',
+    baseURL: process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1',
     defaultHeaders: {
       // OpenRouter recommends sending Referer + X-Title for attribution.
       'HTTP-Referer': process.env.OPENROUTER_REFERRER ?? 'http://localhost:3000',

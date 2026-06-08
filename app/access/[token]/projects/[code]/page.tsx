@@ -18,6 +18,7 @@ import type { Task } from '@/components/schedule-view';
 import { computeEv, evCurve, computeEvByWbs, earnedSchedule } from '@/lib/earned-value';
 import { computeCommitment, costByElement, computeLabourProductivity, computeLabourByWbs } from '@/lib/cost-commitment';
 import { computeBilling } from '@/lib/billing';
+import { computeResultsAnalysis } from '@/lib/results-analysis';
 import { computeLoad, type ResAssignment, type LoadResult } from '@/lib/resource-load';
 import { computeMarginBridge } from '@/lib/margin';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
@@ -158,6 +159,18 @@ async function loadBilling(
   return res.data ?? [];
 }
 
+async function loadResultsAnalysis(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<Array<{ wbs_code: string | null; ra_method: string | null; poc_pct: number | null; planned_cost: number | null; planned_revenue: number | null; cost_of_sales: number | null; calculated_revenue: number | null; recognized_margin: number | null; reserve: number | null }>> {
+  const res = await supabase
+    .from('results_analysis')
+    .select('wbs_code, ra_method, poc_pct, planned_cost, planned_revenue, cost_of_sales, calculated_revenue, recognized_margin, reserve')
+    .eq('project_id', projectId);
+  if (res.error) return [];
+  return res.data ?? [];
+}
+
 async function loadScheduleEnvelope(
   supabase: ReturnType<typeof createSupabaseServiceClient>,
   projectId: string,
@@ -270,7 +283,8 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const labourProductivity = computeLabourProductivity(labourRows);
   const labourByWbs = computeLabourByWbs(labourRows);
   const contractValue = Number(project.contract_value_current) || Number(project.sold_contract_value) || 0;
-  const billing = computeBilling(await loadBilling(supabase, project.id), contractValue, evMetrics.complete_pct / 100);
+  const billing = computeBilling(await loadBilling(supabase, project.id), contractValue);
+  const resultsAnalysis = computeResultsAnalysis(await loadResultsAnalysis(supabase, project.id), billing.byPhase);
   const marginBridge = computeMarginBridge({
     soldContract: Number(project.sold_contract_value) || 0,
     soldBudget: soldBudget ?? 0,
@@ -432,6 +446,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         labourByWbs={labourByWbs}
         purchaseOrders={purchaseOrders}
         billing={billing}
+        resultsAnalysis={resultsAnalysis}
         resourceLoad={resourceLoad}
         marginBridge={marginBridge}
         marginSyncedAt={project.baseline_captured_at ?? null}

@@ -9,8 +9,14 @@
 import type {
   SapWbsElementDTO,
   SapCostActualDTO,
+  SapPurchaseOrderDTO,
+  SapBillingDTO,
+  SapResultsAnalysisDTO,
   WorkPackageRow,
   CostActualRow,
+  PurchaseOrderRow,
+  BillingEventRow,
+  ResultsAnalysisRow,
   MapResult,
 } from '../types';
 
@@ -100,6 +106,97 @@ export function mapSapCost(dtos: SapCostActualDTO[], projectId: string, syncedAt
       planned_value: d.PlannedAmount ?? null,
       source_system: 'SAP_PS',
       external_id: `${code}:${d.FiscalPeriod}`,
+      synced_at: syncedAt,
+    });
+  }
+  return { rows, exceptions };
+}
+
+
+const PO_CATEGORIES = new Set(['Materials/Equipment', 'Subcontract', 'Travel & expenses', 'Other']);
+const PO_STATUSES = new Set(['Open', 'Partially received', 'Closed']);
+
+export function mapSapPurchaseOrders(dtos: SapPurchaseOrderDTO[], projectId: string, syncedAt: string): MapResult<PurchaseOrderRow> {
+  const rows: PurchaseOrderRow[] = [];
+  const exceptions: MapResult<PurchaseOrderRow>['exceptions'] = [];
+  for (const d of dtos) {
+    const code = d.WBSElementExternalID ? normalizeWbs(d.WBSElementExternalID) : '';
+    if (!d.PurchaseOrder || !d.PurchaseOrder.trim()) {
+      exceptions.push({ kind: 'validation', external_id: code || null, reason: 'Purchase order has no document number', payload: d });
+      continue;
+    }
+    if (!code) {
+      exceptions.push({ kind: 'unmapped_wbs', external_id: d.PurchaseOrder, reason: `PO ${d.PurchaseOrder} has no WBS account assignment`, payload: d });
+      continue;
+    }
+    rows.push({
+      project_id: projectId,
+      wbs_code: code,
+      po_number: d.PurchaseOrder.trim(),
+      vendor: d.Supplier ?? '',
+      value_category: PO_CATEGORIES.has(d.ValueCategory) ? d.ValueCategory : 'Other',
+      po_value: Number(d.NetOrderValue) || 0,
+      received_value: Number(d.DeliveredValue) || 0,
+      status: PO_STATUSES.has(d.PurchaseOrderStatus) ? d.PurchaseOrderStatus : 'Open',
+      raised_week: d.CreatedPeriodWeek ?? null,
+      source_system: 'SAP_PS',
+      external_id: d.PurchaseOrder,
+      synced_at: syncedAt,
+    });
+  }
+  return { rows, exceptions };
+}
+
+const BILLING_TYPES = new Set(['Milestone', 'Progress', 'Advance', 'Retention release']);
+const BILLING_STATUSES = new Set(['Planned', 'Invoiced', 'Paid']);
+
+export function mapSapBilling(dtos: SapBillingDTO[], projectId: string, syncedAt: string): MapResult<BillingEventRow> {
+  const rows: BillingEventRow[] = [];
+  const exceptions: MapResult<BillingEventRow>['exceptions'] = [];
+  for (const d of dtos) {
+    if (!d.BillingDocument || !d.BillingDocument.trim()) {
+      exceptions.push({ kind: 'validation', external_id: null, reason: 'Billing document has no number', payload: d });
+      continue;
+    }
+    rows.push({
+      project_id: projectId,
+      wbs_code: d.WBSElementExternalID ? normalizeWbs(d.WBSElementExternalID) : null,
+      invoice_number: d.BillingDocument.trim(),
+      billing_type: BILLING_TYPES.has(d.BillingCategory) ? d.BillingCategory : 'Progress',
+      amount: Number(d.NetAmount) || 0,
+      billed_week: d.BilledPeriodWeek ?? null,
+      status: BILLING_STATUSES.has(d.BillingStatus) ? d.BillingStatus : 'Invoiced',
+      source_system: 'SAP_PS',
+      external_id: d.BillingDocument,
+      synced_at: syncedAt,
+    });
+  }
+  return { rows, exceptions };
+}
+
+export function mapSapResultsAnalysis(dtos: SapResultsAnalysisDTO[], projectId: string, syncedAt: string): MapResult<ResultsAnalysisRow> {
+  const rows: ResultsAnalysisRow[] = [];
+  const exceptions: MapResult<ResultsAnalysisRow>['exceptions'] = [];
+  for (const d of dtos) {
+    if (!d.FiscalPeriod) {
+      exceptions.push({ kind: 'validation', external_id: d.WBSElementExternalID ?? null, reason: 'RA row missing fiscal period', payload: d });
+      continue;
+    }
+    const code = d.WBSElementExternalID ? normalizeWbs(d.WBSElementExternalID) : null;
+    rows.push({
+      project_id: projectId,
+      wbs_code: code,
+      period: d.FiscalPeriod,
+      ra_method: d.RAMethod ?? 'Cost-based POC',
+      poc_pct: Number(d.PercentageOfCompletion) || 0,
+      planned_cost: Number(d.PlannedCost) || 0,
+      planned_revenue: Number(d.PlannedRevenue) || 0,
+      cost_of_sales: Number(d.CostOfSales) || 0,
+      calculated_revenue: Number(d.CalculatedRevenue) || 0,
+      recognized_margin: Number(d.RecognizedMargin) || 0,
+      reserve: Number(d.Reserve) || 0,
+      source_system: 'SAP_PS',
+      external_id: `${code ?? 'PROJ'}:${d.FiscalPeriod}`,
       synced_at: syncedAt,
     });
   }
