@@ -8,7 +8,7 @@
  * Swap for a live Microsoft Project Web API adapter behind the same interface.
  */
 
-import type { SchedulerConnector, SchedulerTaskDTO, SchedulerResourceDTO, ConnectionStatus } from '../types';
+import type { SchedulerConnector, SchedulerTaskDTO, SchedulerResourceDTO, SchedulerMilestoneDTO, ConnectionStatus } from '../types';
 
 function hash(s: string): number {
   let h = 2166136261;
@@ -56,14 +56,33 @@ export class MsProjectMockAdapter implements SchedulerConnector {
   async fetchResourceAssignments(projectExternalId: string): Promise<SchedulerResourceDTO[]> {
     await new Promise((r) => setTimeout(r, 400));
     const start = new Date(2025, (hash(projectExternalId) % 6), 1);
-    const a = (id: string, wbs: string, role: string, name: string, m: number, hours: number): SchedulerResourceDTO => ({
-      external_id: `${projectExternalId}-RA-${id}`, wbs_code: wbs, resource_role: role, resource_name: name, period: addMonths(start, m), hours,
+    // hours = planned; actual = timesheet to date; rate = blended discipline rate.
+    const a = (id: string, wbs: string, role: string, name: string, m: number, hours: number, actual: number, rate: number): SchedulerResourceDTO => ({
+      external_id: `${projectExternalId}-RA-${id}`, wbs_code: wbs, resource_role: role, resource_name: name, period: addMonths(start, m), hours, actual_hours: actual, hourly_rate: rate,
     });
     return [
-      a('01', '2.1', 'engineering_manager', 'Engineering pool', 3, 320),
-      a('02', '3.1', 'procurement', 'Procurement pool', 6, 480),
-      a('03', '4.1', 'construction_manager', 'Construction pool', 11, 640),
-      a('04', '4.2', 'construction_manager', 'Construction pool', 16, 520),
+      a('01', '2.1', 'engineering_manager', 'Engineering pool', 3, 320, 290, 145),
+      a('02', '3.1', 'procurement', 'Procurement pool', 6, 480, 410, 120),
+      a('03', '4.1', 'construction_manager', 'Construction pool', 11, 640, 700, 110),
+      a('04', '4.2', 'construction_manager', 'Construction pool', 16, 520, 480, 110),
+    ];
+  }
+
+  async fetchMilestones(projectExternalId: string): Promise<SchedulerMilestoneDTO[]> {
+    await new Promise((r) => setTimeout(r, 300));
+    const start = new Date(2025, (hash(projectExternalId) % 6), 1);
+    const m = (id: string, name: string, wbs: string | null, month: number, contractual: boolean, achieved: boolean): SchedulerMilestoneDTO => ({
+      external_id: `${projectExternalId}-MS-${id}`, name, wbs_code: wbs,
+      due_date: addMonths(start, month), is_contractual: contractual, achieved,
+      achieved_date: achieved ? addMonths(start, month) : null,
+    });
+    return [
+      m('01', 'Notice to proceed (NTP)', null, 0, true, true),
+      m('02', 'Detailed design complete', '2.1', 8, false, true),
+      m('03', 'Major equipment delivered', '3.1', 14, true, false),
+      m('04', 'Commercial operation (COD)', null, 25, true, false),
+      // Milestone tagged to a WBS code not in the SAP WBS -> unmapped_wbs exception.
+      m('99', 'Owner acceptance (untagged scope)', '9.9', 15, false, false),
     ];
   }
 }

@@ -11,6 +11,7 @@ import type {
   SapPurchaseOrderDTO,
   SapBillingDTO,
   SapResultsAnalysisDTO,
+  SapChangeOrderDTO,
   ConnectionStatus,
 } from '../types';
 
@@ -22,6 +23,7 @@ export class FileSapAdapter implements SapConnector {
     private readonly pos: SapPurchaseOrderDTO[] = [],
     private readonly billing: SapBillingDTO[] = [],
     private readonly ra: SapResultsAnalysisDTO[] = [],
+    private readonly cos: SapChangeOrderDTO[] = [],
   ) {}
   async testConnection(): Promise<ConnectionStatus> {
     return { ok: true, message: `Parsed ${this.wbs.length} WBS / ${this.cost.length} cost rows from file` };
@@ -31,4 +33,5 @@ export class FileSapAdapter implements SapConnector {
   async fetchPurchaseOrders(): Promise<SapPurchaseOrderDTO[]> { return this.pos; }
   async fetchBilling(): Promise<SapBillingDTO[]> { return this.billing; }
   async fetchResultsAnalysis(): Promise<SapResultsAnalysisDTO[]> { return this.ra; }
+  async fetchChangeOrders(): Promise<SapChangeOrderDTO[]> { return this.cos; }
 }

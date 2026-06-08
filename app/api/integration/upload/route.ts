@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { resolveRoleFromToken } from '@/lib/role-context';
-import { parseWbsCsv, parseCostCsv, parseTaskCsv, parseResourceCsv, parseCommitmentCsv, parseBillingCsv, parseRaCsv } from '@/lib/integration/csv';
+import { parseWbsCsv, parseCostCsv, parseTaskCsv, parseResourceCsv, parseCommitmentCsv, parseBillingCsv, parseRaCsv, parseChangeOrderCsv, parseMilestoneCsv } from '@/lib/integration/csv';
 import { FileSapAdapter } from '@/lib/integration/adapters/file-sap';
 import { FileSchedulerAdapter } from '@/lib/integration/adapters/file-scheduler';
 import { ingestSapProject, ingestSchedulerProject } from '@/lib/integration/ingestion-service';
@@ -18,7 +18,7 @@ const bodySchema = z.object({
   token: z.string().min(8),
   projectCode: z.string().min(1),
   csv: z.string().min(1),
-  type: z.enum(['wbs', 'cost', 'tasks', 'resources', 'commitment', 'billing', 'results_analysis']).optional().default('wbs'),
+  type: z.enum(['wbs', 'cost', 'tasks', 'resources', 'commitment', 'billing', 'results_analysis', 'change_orders', 'milestones']).optional().default('wbs'),
   channel: z.enum(['manual', 'file']).optional().default('manual'),
 });
 
@@ -52,6 +52,18 @@ export async function POST(request: NextRequest) {
     const { rows, error } = parseRaCsv(body.csv);
     if (error) return NextResponse.json({ error }, { status: 400 });
     const result = await ingestSapProject(supabase, proj, new FileSapAdapter([], [], [], [], rows), body.channel, 'results_analysis');
+    return NextResponse.json(result, { status: result.ok ? 200 : 500 });
+  }
+  if (body.type === 'change_orders') {
+    const { rows, error } = parseChangeOrderCsv(body.csv);
+    if (error) return NextResponse.json({ error }, { status: 400 });
+    const result = await ingestSapProject(supabase, proj, new FileSapAdapter([], [], [], [], [], rows), body.channel, 'change_orders');
+    return NextResponse.json(result, { status: result.ok ? 200 : 500 });
+  }
+  if (body.type === 'milestones') {
+    const { rows, error } = parseMilestoneCsv(body.csv);
+    if (error) return NextResponse.json({ error }, { status: 400 });
+    const result = await ingestSchedulerProject(supabase, proj, new FileSchedulerAdapter([], [], rows), body.channel, 'milestones');
     return NextResponse.json(result, { status: result.ok ? 200 : 500 });
   }
   if (body.type === 'wbs') {

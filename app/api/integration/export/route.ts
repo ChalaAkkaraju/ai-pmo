@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { resolveRoleFromToken } from '@/lib/role-context';
-import { exportWbsCsv, exportCostCsv, exportCommitmentCsv, exportBillingCsv, exportRaCsv, exportTaskCsv, exportResourceCsv } from '@/lib/integration/csv';
+import { exportWbsCsv, exportCostCsv, exportCommitmentCsv, exportBillingCsv, exportRaCsv, exportTaskCsv, exportResourceCsv, exportChangeOrderCsv, exportMilestoneCsv } from '@/lib/integration/csv';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +20,8 @@ const EXPORTERS: Record<string, { table: string; fn: (rows: Rows) => string }> =
   results_analysis: { table: 'results_analysis', fn: exportRaCsv },
   tasks: { table: 'tasks', fn: exportTaskCsv },
   resources: { table: 'resource_assignments', fn: exportResourceCsv },
+  change_orders: { table: 'change_orders', fn: exportChangeOrderCsv },
+  milestones: { table: 'milestones', fn: exportMilestoneCsv },
 };
 
 export async function GET(request: NextRequest) {

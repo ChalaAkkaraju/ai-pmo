@@ -9,8 +9,10 @@
 import type {
   SchedulerTaskDTO,
   SchedulerResourceDTO,
+  SchedulerMilestoneDTO,
   TaskRow,
   ResourceRow,
+  MilestoneRow,
   MapResult,
   SourceSystem,
 } from '../types';
@@ -80,6 +82,46 @@ export function mapSchedulerResources(
       resource_role: d.resource_role && ROLE_SET.has(d.resource_role) ? d.resource_role : null,
       period: d.period,
       planned_work_hours: d.hours ?? null,
+      actual_work_hours: d.actual_hours ?? null,
+      hourly_rate: d.hourly_rate ?? null,
+      source_system: source,
+      external_id: d.external_id,
+      synced_at: syncedAt,
+    });
+  }
+  return { rows, exceptions };
+}
+
+export function mapSchedulerMilestones(
+  dtos: SchedulerMilestoneDTO[],
+  projectId: string,
+  wpIdByCode: Map<string, string>,
+  source: SourceSystem,
+  syncedAt: string,
+): MapResult<MilestoneRow> {
+  const rows: MilestoneRow[] = [];
+  const exceptions: MapResult<MilestoneRow>['exceptions'] = [];
+
+  for (const d of dtos) {
+    if (!d.name || !d.name.trim()) {
+      exceptions.push({ kind: 'validation', external_id: d.external_id ?? null, reason: 'Milestone has no name', payload: d });
+      continue;
+    }
+    const code = d.wbs_code ? normalizeWbs(d.wbs_code) : '';
+    // A WBS-tagged milestone whose code is unknown is a join exception; an
+    // untagged one is a legitimate project-level milestone (NTP, COD).
+    if (code && !wpIdByCode.has(code)) {
+      exceptions.push({ kind: 'unmapped_wbs', external_id: d.external_id, reason: `Milestone "${d.name}" references WBS ${code}, not in the SAP WBS`, payload: d });
+      continue;
+    }
+    rows.push({
+      project_id: projectId,
+      work_package_id: code ? (wpIdByCode.get(code) ?? null) : null,
+      name: d.name.trim(),
+      due_date: d.due_date ?? null,
+      is_contractual: d.is_contractual === true,
+      achieved: d.achieved === true,
+      achieved_date: d.achieved_date ?? null,
       source_system: source,
       external_id: d.external_id,
       synced_at: syncedAt,

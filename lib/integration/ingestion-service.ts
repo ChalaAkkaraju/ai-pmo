@@ -10,8 +10,8 @@
  */
 
 import type { createSupabaseServiceClient } from '@/lib/supabase';
-import { mapSapWbs, mapSapCost, mapSapPurchaseOrders, mapSapBilling, mapSapResultsAnalysis } from './mappers/sap-ps';
-import { mapSchedulerTasks, mapSchedulerResources } from './mappers/scheduler';
+import { mapSapWbs, mapSapCost, mapSapPurchaseOrders, mapSapBilling, mapSapResultsAnalysis, mapSapChangeOrders } from './mappers/sap-ps';
+import { mapSchedulerTasks, mapSchedulerResources, mapSchedulerMilestones } from './mappers/scheduler';
 import type { SapConnector, SchedulerConnector, SyncResult, IngestChannel, SourceSystem, MappedException } from './types';
 
 type Supabase = ReturnType<typeof createSupabaseServiceClient>;
@@ -126,6 +126,13 @@ export async function ingestSapProject(
       return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'RA' };
     });
 
+    if (!only || only === 'change_orders') await runObject(supabase, project, 'SAP_PS', channel, 'change_orders', 'Z_PS_CHANGE_ORDER_SRV', totals, async () => {
+      const dtos = await connector.fetchChangeOrders(project.code);
+      const m = mapSapChangeOrders(dtos, project.id, syncedAt);
+      await replace('change_orders', m.rows as unknown as Record<string, unknown>[], dtos.length > 0);
+      return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'Change orders' };
+    });
+
     await supabase.from('projects').update({ source_system: 'SAP_PS', external_id: project.code, last_synced_at: syncedAt }).eq('id', project.id);
 
     return {
@@ -151,9 +158,12 @@ export async function ingestSchedulerProject(
   const syncedAt = new Date().toISOString();
   const totals = { inserted: 0, updated: 0, exceptions: 0, messages: [] as string[] };
 
-  // WBS join target — codes that came from SAP for this project.
-  const { data: wps } = await supabase.from('work_packages').select('wbs_code').eq('project_id', project.id);
+  // WBS join target — codes that came from SAP for this project. Milestones
+  // resolve to the work_package_id, so keep the code -> id map too.
+  const { data: wps } = await supabase.from('work_packages').select('id, wbs_code').eq('project_id', project.id);
   const validWbs = new Set((wps ?? []).map((w) => (w as { wbs_code: string }).wbs_code));
+  const wpIdByCode = new Map((wps ?? []).map((w) => [(w as { wbs_code: string }).wbs_code, (w as { id: string }).id]));
+  const milestonesEndpoint = source === 'P6' ? 'P6 EPPM · /milestones' : 'Dataverse · msdyn_projecttask (milestones)';
 
   try {
     if (!only || only === 'tasks') await runObject(supabase, project, source, channel, 'tasks', taskEndpoint, totals, async () => {
@@ -174,6 +184,16 @@ export async function ingestSchedulerProject(
         if (m.rows.length > 0) { const { error } = await supabase.from('resource_assignments').insert(m.rows); if (error) throw new Error(`resource_assignments: ${error.message}`); }
       }
       return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'Resources' };
+    });
+
+    if (!only || only === 'milestones') await runObject(supabase, project, source, channel, 'milestones', milestonesEndpoint, totals, async () => {
+      const dtos = await connector.fetchMilestones(project.code);
+      const m = mapSchedulerMilestones(dtos, project.id, wpIdByCode, source, syncedAt);
+      if (dtos.length > 0) {
+        await supabase.from('milestones').delete().eq('project_id', project.id).eq('source_system', source);
+        if (m.rows.length > 0) { const { error } = await supabase.from('milestones').insert(m.rows); if (error) throw new Error(`milestones: ${error.message}`); }
+      }
+      return { inserted: m.rows.length, updated: 0, exceptions: m.exceptions, count: m.rows.length, label: 'Milestones' };
     });
 
     await supabase.from('projects').update({ last_synced_at: syncedAt }).eq('id', project.id);

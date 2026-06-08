@@ -8,7 +8,7 @@
  * code) so the ingestion exception queue can be demonstrated end-to-end.
  */
 
-import type { SapConnector, SapWbsElementDTO, SapCostActualDTO, SapPurchaseOrderDTO, SapBillingDTO, SapResultsAnalysisDTO, ConnectionStatus } from '../types';
+import type { SapConnector, SapWbsElementDTO, SapCostActualDTO, SapPurchaseOrderDTO, SapBillingDTO, SapResultsAnalysisDTO, SapChangeOrderDTO, ConnectionStatus } from '../types';
 
 function hash(s: string): number {
   let h = 2166136261;
@@ -73,17 +73,26 @@ export class SapPsMockAdapter implements SapConnector {
       ['1.1', 0.05], ['1.2', 0.05], ['2.1', 0.15], ['3.1', 0.32], ['3.2', 0.10],
       ['4.1', 0.10], ['4.2', 0.13], ['5.1', 0.05],
     ];
+    // Cost-element (value-category) mix per leaf — development/design/commissioning
+    // are labour-heavy, procurement materials-heavy, construction subcontract-heavy.
+    const mixFor = (code: string): Array<[string, number]> => {
+      if (code.startsWith('3')) return [['Materials/Equipment', 0.80], ['Labour', 0.12], ['Travel & expenses', 0.08]];
+      if (code.startsWith('4')) return [['Subcontract', 0.65], ['Labour', 0.25], ['Materials/Equipment', 0.10]];
+      return [['Labour', 0.70], ['Materials/Equipment', 0.10], ['Travel & expenses', 0.20]];
+    };
     const out: SapCostActualDTO[] = [];
     for (const [code, w] of leaves) {
       const leafBac = w * bac;
-      // one cumulative period row per leaf (kept simple for the mock)
-      out.push({
-        WBSElementExternalID: code,
-        FiscalPeriod: '2026-05-01',
-        ActualAmount: r2(leafBac * 0.55),
-        CommitmentAmount: r2(leafBac * 0.15),
-        PlannedAmount: r2(leafBac * 0.60),
-      });
+      for (const [cat, share] of mixFor(code)) {
+        out.push({
+          WBSElementExternalID: code,
+          FiscalPeriod: '2026-05-01',
+          ActualAmount: r2(leafBac * 0.55 * share),
+          CommitmentAmount: r2(leafBac * 0.15 * share),
+          PlannedAmount: r2(leafBac * 0.60 * share),
+          ValueCategory: cat,
+        });
+      }
     }
     return out;
   }
@@ -140,5 +149,24 @@ export class SapPsMockAdapter implements SapConnector {
         CostOfSales: cos, CalculatedRevenue: recognised, RecognizedMargin: r2(recognised - cos), Reserve: 0,
       };
     });
+  }
+
+  async fetchChangeOrders(projectExternalId: string): Promise<SapChangeOrderDTO[]> {
+    await new Promise((r) => setTimeout(r, 300));
+    const bac = 40_000_000 + (hash(projectExternalId) % 60) * 1_000_000;
+    const baseM = bac / 1_000_000;
+    const n = hash(projectExternalId + 'co') % 9000 + 1000;
+    const co = (i: number, driver: string, scope: string, costM: number, revM: number, days: number, status: string, routing: string, margin: number | null, wk: number | null): SapChangeOrderDTO => ({
+      ChangeOrderID: `CO-${n + i}`, ChangeDriver: driver, ScopeDescription: scope,
+      CostImpactM: r2(costM), RevenueImpactM: r2(revM), ScheduleImpactDays: days,
+      MarginRealizedPct: margin, COStatus: status, ApprovalRouting: routing, ExecutedPeriodWeek: wk,
+    });
+    return [
+      co(1, 'Owner-requested scope', 'Additional grid connection bay + protection upgrade', baseM * 0.025, baseM * 0.031, 21, 'Executed', 'Steering committee', 19, 41),
+      co(2, 'Site condition', 'Unforeseen ground conditions — extra piling to civil works', baseM * 0.018, baseM * 0.012, 35, 'Priced', 'Project board', null, null),
+      co(3, 'Regulatory', 'Revised environmental permit — added monitoring scope', baseM * 0.006, baseM * 0.007, 0, 'Under analysis', 'Commercial review', null, null),
+      // Malformed CO — no document ID -> exception queue.
+      { ChangeOrderID: '', ChangeDriver: 'Owner change', ScopeDescription: 'Draft variation pending pricing', CostImpactM: 0.4, RevenueImpactM: 0.5, ScheduleImpactDays: 0, MarginRealizedPct: null, COStatus: 'Anticipated', ApprovalRouting: null, ExecutedPeriodWeek: null },
+    ];
   }
 }

@@ -30,6 +30,7 @@ export interface SapCostActualDTO {
   ActualAmount: number;                // -> actual_cost
   CommitmentAmount: number;            // -> commitment
   PlannedAmount: number | null;        // -> planned_value
+  ValueCategory: string | null;        // -> value_category (Labour / Materials / Subcontract / Travel / Other)
 }
 
 /** Purchase order — the commitment source (ME2J / Purchasing Document API). */
@@ -68,6 +69,20 @@ export interface SapResultsAnalysisDTO {
   Reserve: number;
 }
 
+/** Change order / variation — claim or owner change (PS variation Z-service). */
+export interface SapChangeOrderDTO {
+  ChangeOrderID: string;              // -> co_id
+  ChangeDriver: string;              // -> driver
+  ScopeDescription: string;          // -> scope_summary
+  CostImpactM: number;               // -> cost_impact_m (millions)
+  RevenueImpactM: number;            // -> revenue_impact_m (millions)
+  ScheduleImpactDays: number;        // -> schedule_impact_days
+  MarginRealizedPct: number | null;  // -> margin_realized_pct
+  COStatus: string;                  // -> status
+  ApprovalRouting: string | null;    // -> approval_routing
+  ExecutedPeriodWeek: number | null; // -> executed_week
+}
+
 /* ---- Canonical rows (what we upsert) ---- */
 
 export interface WorkPackageRow {
@@ -93,6 +108,7 @@ export interface CostActualRow {
   actual_cost: number;
   commitment: number;
   planned_value: number | null;
+  value_category: string | null;
   source_system: SourceSystem;
   external_id: string | null;
   synced_at: string;
@@ -143,6 +159,23 @@ export interface ResultsAnalysisRow {
   synced_at: string;
 }
 
+export interface ChangeOrderRow {
+  project_id: string;
+  co_id: string;
+  driver: string;
+  scope_summary: string;
+  cost_impact_m: number;
+  revenue_impact_m: number;
+  schedule_impact_days: number;
+  margin_realized_pct: number | null;
+  status: string;
+  approval_routing: string | null;
+  executed_week: number | null;
+  source_system: SourceSystem;
+  external_id: string | null;
+  synced_at: string;
+}
+
 /* ---- Exceptions (queued, never dropped) ---- */
 
 export type ExceptionKind = 'unmapped_wbs' | 'validation' | 'conflict' | 'orphaned_wbs';
@@ -174,6 +207,7 @@ export interface SapConnector {
   fetchPurchaseOrders(projectExternalId: string): Promise<SapPurchaseOrderDTO[]>;
   fetchBilling(projectExternalId: string): Promise<SapBillingDTO[]>;
   fetchResultsAnalysis(projectExternalId: string): Promise<SapResultsAnalysisDTO[]>;
+  fetchChangeOrders(projectExternalId: string): Promise<SapChangeOrderDTO[]>;
 }
 
 export interface SyncResult {
@@ -207,7 +241,20 @@ export interface SchedulerResourceDTO {
   resource_name: string;        // discipline pool / named resource
   resource_role: string | null; // discipline (role type)
   period: string;               // YYYY-MM-01
-  hours: number | null;
+  hours: number | null;         // planned hours
+  actual_hours: number | null;  // labour actuals (timesheet)
+  hourly_rate: number | null;   // blended rate for the discipline
+}
+
+/** Schedule milestone — a zero-duration task / flag from the scheduler. */
+export interface SchedulerMilestoneDTO {
+  external_id: string;          // milestone task id / P6 milestone ObjectId
+  name: string;
+  wbs_code: string | null;      // optional WBS tie (project-level if null)
+  due_date: string | null;      // YYYY-MM-DD (baseline finish)
+  is_contractual: boolean;      // contractual / LD-bearing milestone
+  achieved: boolean;
+  achieved_date: string | null;
 }
 
 export interface TaskRow {
@@ -230,6 +277,21 @@ export interface ResourceRow {
   resource_role: string | null;
   period: string;
   planned_work_hours: number | null;
+  actual_work_hours: number | null;
+  hourly_rate: number | null;
+  source_system: SourceSystem;
+  external_id: string | null;
+  synced_at: string;
+}
+
+export interface MilestoneRow {
+  project_id: string;
+  work_package_id: string | null;
+  name: string;
+  due_date: string | null;
+  is_contractual: boolean;
+  achieved: boolean;
+  achieved_date: string | null;
   source_system: SourceSystem;
   external_id: string | null;
   synced_at: string;
@@ -240,4 +302,5 @@ export interface SchedulerConnector {
   testConnection(): Promise<ConnectionStatus>;
   fetchTasks(projectExternalId: string): Promise<SchedulerTaskDTO[]>;
   fetchResourceAssignments(projectExternalId: string): Promise<SchedulerResourceDTO[]>;
+  fetchMilestones(projectExternalId: string): Promise<SchedulerMilestoneDTO[]>;
 }

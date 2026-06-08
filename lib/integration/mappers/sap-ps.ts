@@ -12,11 +12,13 @@ import type {
   SapPurchaseOrderDTO,
   SapBillingDTO,
   SapResultsAnalysisDTO,
+  SapChangeOrderDTO,
   WorkPackageRow,
   CostActualRow,
   PurchaseOrderRow,
   BillingEventRow,
   ResultsAnalysisRow,
+  ChangeOrderRow,
   MapResult,
 } from '../types';
 
@@ -37,6 +39,9 @@ function mapRole(person: string | null): string | null {
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** SAP cost elements / value categories carried on a cost actual row. */
+const COST_ELEMENTS = new Set(['Labour', 'Materials/Equipment', 'Subcontract', 'Travel & expenses', 'Other']);
 
 /** Normalise a WBS code so equivalent codes join (trim, collapse separators). */
 export function normalizeWbs(code: string): string {
@@ -97,6 +102,7 @@ export function mapSapCost(dtos: SapCostActualDTO[], projectId: string, syncedAt
       exceptions.push({ kind: 'validation', external_id: code || null, reason: 'Cost row missing WBS code or period', payload: d });
       continue;
     }
+    const cat = d.ValueCategory && COST_ELEMENTS.has(d.ValueCategory) ? d.ValueCategory : null;
     rows.push({
       project_id: projectId,
       wbs_code: code,
@@ -104,8 +110,9 @@ export function mapSapCost(dtos: SapCostActualDTO[], projectId: string, syncedAt
       actual_cost: Number(d.ActualAmount) || 0,
       commitment: Number(d.CommitmentAmount) || 0,
       planned_value: d.PlannedAmount ?? null,
+      value_category: cat,
       source_system: 'SAP_PS',
-      external_id: `${code}:${d.FiscalPeriod}`,
+      external_id: `${code}:${d.FiscalPeriod}:${cat ?? 'all'}`,
       synced_at: syncedAt,
     });
   }
@@ -197,6 +204,42 @@ export function mapSapResultsAnalysis(dtos: SapResultsAnalysisDTO[], projectId: 
       reserve: Number(d.Reserve) || 0,
       source_system: 'SAP_PS',
       external_id: `${code ?? 'PROJ'}:${d.FiscalPeriod}`,
+      synced_at: syncedAt,
+    });
+  }
+  return { rows, exceptions };
+}
+
+const CO_STATUSES = new Set(['Anticipated', 'Under analysis', 'Priced', 'Executed', 'Complete', 'Rejected']);
+
+/** Change orders / variations — project-level (no WBS join). Validate ID + scope. */
+export function mapSapChangeOrders(dtos: SapChangeOrderDTO[], projectId: string, syncedAt: string): MapResult<ChangeOrderRow> {
+  const rows: ChangeOrderRow[] = [];
+  const exceptions: MapResult<ChangeOrderRow>['exceptions'] = [];
+  for (const d of dtos) {
+    const id = d.ChangeOrderID ? d.ChangeOrderID.trim() : '';
+    if (!id) {
+      exceptions.push({ kind: 'validation', external_id: null, reason: 'Change order has no document ID', payload: d });
+      continue;
+    }
+    if (!d.ScopeDescription || !d.ScopeDescription.trim()) {
+      exceptions.push({ kind: 'validation', external_id: id, reason: `Change order ${id} has no scope description`, payload: d });
+      continue;
+    }
+    rows.push({
+      project_id: projectId,
+      co_id: id,
+      driver: d.ChangeDriver && d.ChangeDriver.trim() ? d.ChangeDriver.trim() : 'Unspecified',
+      scope_summary: d.ScopeDescription.trim(),
+      cost_impact_m: Number(d.CostImpactM) || 0,
+      revenue_impact_m: Number(d.RevenueImpactM) || 0,
+      schedule_impact_days: Math.round(Number(d.ScheduleImpactDays) || 0),
+      margin_realized_pct: d.MarginRealizedPct ?? null,
+      status: CO_STATUSES.has(d.COStatus) ? d.COStatus : 'Under analysis',
+      approval_routing: d.ApprovalRouting ?? null,
+      executed_week: d.ExecutedPeriodWeek ?? null,
+      source_system: 'SAP_PS',
+      external_id: id,
       synced_at: syncedAt,
     });
   }

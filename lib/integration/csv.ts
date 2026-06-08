@@ -88,7 +88,7 @@ export function parseWbsCsv(text: string): { rows: SapWbsElementDTO[]; error: st
 
 /* ===================== Cost / Tasks / Resources templates ===================== */
 
-import type { SapCostActualDTO, SchedulerTaskDTO, SchedulerResourceDTO, SapPurchaseOrderDTO, SapBillingDTO, SapResultsAnalysisDTO } from './types';
+import type { SapCostActualDTO, SchedulerTaskDTO, SchedulerResourceDTO, SapPurchaseOrderDTO, SapBillingDTO, SapResultsAnalysisDTO, SapChangeOrderDTO, SchedulerMilestoneDTO } from './types';
 
 function toNum(v: string | undefined): number | null {
   if (v == null || v.trim() === '') return null;
@@ -100,15 +100,16 @@ function field(header: string[], v: string[], col: string): string {
   return i >= 0 ? (v[i] ?? '') : '';
 }
 
-export type TemplateType = 'wbs' | 'cost' | 'tasks' | 'resources' | 'commitment' | 'billing' | 'results_analysis';
+export type TemplateType = 'wbs' | 'cost' | 'tasks' | 'resources' | 'commitment' | 'billing' | 'results_analysis' | 'change_orders' | 'milestones';
 
 /* ---- Cost ---- */
-export const COST_TEMPLATE_COLUMNS = ['wbs_code', 'period', 'actual_cost', 'commitment', 'planned_value'] as const;
+export const COST_TEMPLATE_COLUMNS = ['wbs_code', 'period', 'actual_cost', 'commitment', 'planned_value', 'value_category'] as const;
 export function buildCostTemplate(): string {
   return [
     COST_TEMPLATE_COLUMNS.join(','),
-    '1.1,2026-05-01,1100000,300000,1200000',
-    '3.1,2026-05-01,7040000,1920000,7680000',
+    '1.1,2026-05-01,770000,210000,840000,Labour',
+    '3.1,2026-05-01,5632000,1536000,6144000,Materials/Equipment',
+    '4.1,2026-05-01,1430000,390000,1560000,Subcontract',
   ].join('\n') + '\n';
 }
 export function parseCostCsv(text: string): { rows: SapCostActualDTO[]; error: string | null } {
@@ -126,6 +127,7 @@ export function parseCostCsv(text: string): { rows: SapCostActualDTO[]; error: s
       ActualAmount: toNum(field(header, v, 'actual_cost')) ?? 0,
       CommitmentAmount: toNum(field(header, v, 'commitment')) ?? 0,
       PlannedAmount: toNum(field(header, v, 'planned_value')),
+      ValueCategory: field(header, v, 'value_category') || null,
     });
   }
   return { rows, error: null };
@@ -162,12 +164,12 @@ export function parseTaskCsv(text: string): { rows: SchedulerTaskDTO[]; error: s
 }
 
 /* ---- Resources ---- */
-export const RESOURCE_TEMPLATE_COLUMNS = ['wbs_code', 'external_id', 'resource_name', 'resource_role', 'period', 'hours'] as const;
+export const RESOURCE_TEMPLATE_COLUMNS = ['wbs_code', 'external_id', 'resource_name', 'resource_role', 'period', 'hours', 'actual_hours', 'hourly_rate'] as const;
 export function buildResourceTemplate(): string {
   return [
     RESOURCE_TEMPLATE_COLUMNS.join(','),
-    '2.1,RA-01,Engineering pool,engineering_manager,2025-04-01,320',
-    '4.1,RA-03,Construction pool,construction_manager,2025-12-01,640',
+    '2.1,RA-01,Engineering pool,engineering_manager,2025-04-01,320,290,145',
+    '4.1,RA-03,Construction pool,construction_manager,2025-12-01,640,700,110',
   ].join('\n') + '\n';
 }
 export function parseResourceCsv(text: string): { rows: SchedulerResourceDTO[]; error: string | null } {
@@ -186,6 +188,8 @@ export function parseResourceCsv(text: string): { rows: SchedulerResourceDTO[]; 
       resource_role: field(header, v, 'resource_role') || null,
       period: field(header, v, 'period'),
       hours: toNum(field(header, v, 'hours')),
+      actual_hours: toNum(field(header, v, 'actual_hours')),
+      hourly_rate: toNum(field(header, v, 'hourly_rate')),
     });
   }
   return { rows, error: null };
@@ -287,6 +291,71 @@ export function parseRaCsv(text: string): { rows: SapResultsAnalysisDTO[]; error
   return { rows, error: null };
 }
 
+/* ---- Change orders (variations) ---- */
+export const CHANGE_ORDER_TEMPLATE_COLUMNS = ['co_id', 'driver', 'scope_summary', 'cost_impact_m', 'revenue_impact_m', 'schedule_impact_days', 'margin_realized_pct', 'status', 'approval_routing', 'executed_week'] as const;
+export function buildChangeOrderTemplate(): string {
+  return [
+    CHANGE_ORDER_TEMPLATE_COLUMNS.join(','),
+    'CO-1001,Owner-requested scope,Additional grid connection bay,1.25,1.55,21,19,Executed,Steering committee,41',
+    'CO-1002,Site condition,Unforeseen ground conditions — extra piling,0.90,0.60,35,,Priced,Project board,',
+  ].join('\n') + '\n';
+}
+export function parseChangeOrderCsv(text: string): { rows: SapChangeOrderDTO[]; error: string | null } {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return { rows: [], error: 'File is empty' };
+  const header = splitCsvLine(lines[0]);
+  const missing = ['co_id', 'scope_summary'].filter((c) => !header.includes(c));
+  if (missing.length) return { rows: [], error: `Missing required columns: ${missing.join(', ')}` };
+  const rows: SapChangeOrderDTO[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const v = splitCsvLine(lines[i]);
+    rows.push({
+      ChangeOrderID: field(header, v, 'co_id'),
+      ChangeDriver: field(header, v, 'driver'),
+      ScopeDescription: field(header, v, 'scope_summary'),
+      CostImpactM: toNum(field(header, v, 'cost_impact_m')) ?? 0,
+      RevenueImpactM: toNum(field(header, v, 'revenue_impact_m')) ?? 0,
+      ScheduleImpactDays: toNum(field(header, v, 'schedule_impact_days')) ?? 0,
+      MarginRealizedPct: toNum(field(header, v, 'margin_realized_pct')),
+      COStatus: field(header, v, 'status') || 'Under analysis',
+      ApprovalRouting: field(header, v, 'approval_routing') || null,
+      ExecutedPeriodWeek: toNum(field(header, v, 'executed_week')),
+    });
+  }
+  return { rows, error: null };
+}
+
+/* ---- Milestones (schedule) ---- */
+export const MILESTONE_TEMPLATE_COLUMNS = ['wbs_code', 'external_id', 'name', 'due_date', 'is_contractual', 'achieved', 'achieved_date'] as const;
+export function buildMilestoneTemplate(): string {
+  return [
+    MILESTONE_TEMPLATE_COLUMNS.join(','),
+    ',MS-01,Notice to proceed (NTP),2025-02-15,true,true,2025-02-15',
+    '3.1,MS-03,Major equipment delivered,2026-04-15,true,false,',
+  ].join('\n') + '\n';
+}
+export function parseMilestoneCsv(text: string): { rows: SchedulerMilestoneDTO[]; error: string | null } {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return { rows: [], error: 'File is empty' };
+  const header = splitCsvLine(lines[0]);
+  const missing = ['name'].filter((c) => !header.includes(c));
+  if (missing.length) return { rows: [], error: `Missing required columns: ${missing.join(', ')}` };
+  const rows: SchedulerMilestoneDTO[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const v = splitCsvLine(lines[i]);
+    rows.push({
+      external_id: field(header, v, 'external_id') || `file-ms-${i}`,
+      name: field(header, v, 'name'),
+      wbs_code: field(header, v, 'wbs_code') || null,
+      due_date: field(header, v, 'due_date') || null,
+      is_contractual: field(header, v, 'is_contractual').toLowerCase() === 'true',
+      achieved: field(header, v, 'achieved').toLowerCase() === 'true',
+      achieved_date: field(header, v, 'achieved_date') || null,
+    });
+  }
+  return { rows, error: null };
+}
+
 /* ---- Dispatch ---- */
 export const TEMPLATE_META: Record<TemplateType, { label: string; filename: string; build: () => string }> = {
   wbs: { label: 'WBS (structure)', filename: 'wbs-import-template.csv', build: buildWbsTemplate },
@@ -296,6 +365,8 @@ export const TEMPLATE_META: Record<TemplateType, { label: string; filename: stri
   commitment: { label: 'Commitment (POs)', filename: 'commitment-import-template.csv', build: buildCommitmentTemplate },
   billing: { label: 'Billing', filename: 'billing-import-template.csv', build: buildBillingTemplate },
   results_analysis: { label: 'Results Analysis', filename: 'results-analysis-import-template.csv', build: buildRaTemplate },
+  change_orders: { label: 'Change orders', filename: 'change-orders-import-template.csv', build: buildChangeOrderTemplate },
+  milestones: { label: 'Milestones', filename: 'milestones-import-template.csv', build: buildMilestoneTemplate },
 };
 
 /* ===================== Exporters (current data → CSV) =====================
@@ -330,7 +401,7 @@ export function exportWbsCsv(wps: WP[]): string {
 }
 export function exportCostCsv(rows: Array<Record<string, unknown>>): string {
   return toCsv(COST_TEMPLATE_COLUMNS, rows.map((r) => ({
-    wbs_code: r.wbs_code, period: r.period, actual_cost: r.actual_cost, commitment: r.commitment, planned_value: r.planned_value,
+    wbs_code: r.wbs_code, period: r.period, actual_cost: r.actual_cost, commitment: r.commitment, planned_value: r.planned_value, value_category: r.value_category ?? '',
   })));
 }
 export function exportTaskCsv(rows: Array<Record<string, unknown>>): string {
@@ -340,7 +411,7 @@ export function exportTaskCsv(rows: Array<Record<string, unknown>>): string {
 }
 export function exportResourceCsv(rows: Array<Record<string, unknown>>): string {
   return toCsv(RESOURCE_TEMPLATE_COLUMNS, rows.map((r) => ({
-    wbs_code: '', external_id: r.external_id, resource_name: r.resource_name, resource_role: r.resource_role, period: r.period, hours: r.planned_work_hours,
+    wbs_code: '', external_id: r.external_id, resource_name: r.resource_name, resource_role: r.resource_role, period: r.period, hours: r.planned_work_hours, actual_hours: r.actual_work_hours ?? '', hourly_rate: r.hourly_rate ?? '',
   })));
 }
 
@@ -361,6 +432,19 @@ export function exportRaCsv(rows: Array<Record<string, unknown>>): string {
     wbs_code: r.wbs_code, period: r.period, ra_method: r.ra_method, poc_pct: r.poc_pct,
     planned_cost: r.planned_cost, planned_revenue: r.planned_revenue, cost_of_sales: r.cost_of_sales,
     calculated_revenue: r.calculated_revenue, recognized_margin: r.recognized_margin, reserve: r.reserve,
+  })));
+}
+export function exportChangeOrderCsv(rows: Array<Record<string, unknown>>): string {
+  return toCsv(CHANGE_ORDER_TEMPLATE_COLUMNS, rows.map((r) => ({
+    co_id: r.co_id, driver: r.driver, scope_summary: r.scope_summary, cost_impact_m: r.cost_impact_m,
+    revenue_impact_m: r.revenue_impact_m, schedule_impact_days: r.schedule_impact_days, margin_realized_pct: r.margin_realized_pct ?? '',
+    status: r.status, approval_routing: r.approval_routing ?? '', executed_week: r.executed_week ?? '',
+  })));
+}
+export function exportMilestoneCsv(rows: Array<Record<string, unknown>>): string {
+  return toCsv(MILESTONE_TEMPLATE_COLUMNS, rows.map((r) => ({
+    wbs_code: '', external_id: r.external_id, name: r.name, due_date: r.due_date ?? '',
+    is_contractual: r.is_contractual ? 'true' : 'false', achieved: r.achieved ? 'true' : 'false', achieved_date: r.achieved_date ?? '',
   })));
 }
 

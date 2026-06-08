@@ -44,36 +44,41 @@ export interface ProjectOption {
 
 const ENTITY_LABEL: Record<string, string> = {
   wbs: 'WBS structure', cost: 'Cost actuals', commitment: 'Commitment (POs)', billing: 'Billing',
-  results_analysis: 'Results Analysis', tasks: 'Schedule (tasks)', resources: 'Resource assignments',
+  results_analysis: 'Results Analysis', change_orders: 'Change orders', tasks: 'Schedule (tasks)',
+  resources: 'Resource assignments', milestones: 'Milestones',
 };
-const ENTITY_ORDER = ['wbs', 'cost', 'commitment', 'billing', 'results_analysis', 'tasks', 'resources'];
+const ENTITY_ORDER = ['wbs', 'cost', 'commitment', 'billing', 'results_analysis', 'change_orders', 'tasks', 'resources', 'milestones'];
 const SAP_OBJECTS: Array<[string, string, string]> = [
-  ['all', 'All objects', 'API_ENTERPRISE_PROJECT_SRV + cost / PO / billing / RA'],
+  ['all', 'All objects', 'API_ENTERPRISE_PROJECT_SRV + cost / PO / billing / RA / change orders'],
   ['wbs', 'WBS structure', 'API_ENTERPRISE_PROJECT_SRV'],
-  ['cost', 'Cost actuals', 'API_JOURNALENTRYITEMBASIC_SRV'],
+  ['cost', 'Cost actuals (by element)', 'API_JOURNALENTRYITEMBASIC_SRV'],
   ['commitment', 'Commitment (POs)', 'API_PURCHASEORDER_PROCESS_SRV'],
   ['billing', 'Billing', 'API_BILLING_DOCUMENT_SRV'],
   ['results_analysis', 'Results Analysis', 'C_ProjResultsAnalysis (CDS)'],
+  ['change_orders', 'Change orders', 'Z_PS_CHANGE_ORDER_SRV'],
 ];
 const SCHED_OBJECTS: Array<[string, string, string]> = [
-  ['all', 'All objects', 'msdyn_projecttask + msdyn_resourceassignment'],
+  ['all', 'All objects', 'msdyn_projecttask + msdyn_resourceassignment + milestones'],
   ['tasks', 'Schedule (tasks)', 'Dataverse · msdyn_projecttask'],
-  ['resources', 'Resource assignments', 'Dataverse · msdyn_resourceassignment'],
+  ['resources', 'Resource assignments (+ actuals)', 'Dataverse · msdyn_resourceassignment'],
+  ['milestones', 'Milestones', 'Dataverse · msdyn_projecttask (milestones)'],
 ];
 
 function fmtTime(s: string | null): string {
   return s ? new Date(s).toLocaleString() : '—';
 }
 
-type FileType = 'wbs' | 'cost' | 'commitment' | 'billing' | 'results_analysis' | 'tasks' | 'resources';
+type FileType = 'wbs' | 'cost' | 'commitment' | 'billing' | 'results_analysis' | 'change_orders' | 'tasks' | 'resources' | 'milestones';
 const FILE_OBJECTS: Array<{ type: FileType; label: string; source: string }> = [
   { type: 'wbs', label: 'WBS structure', source: 'SAP PS · AI PMO' },
   { type: 'cost', label: 'Cost actuals', source: 'SAP PS' },
   { type: 'commitment', label: 'Commitment (POs)', source: 'SAP PS' },
   { type: 'billing', label: 'Billing', source: 'SAP PS' },
   { type: 'results_analysis', label: 'Results Analysis', source: 'SAP PS' },
+  { type: 'change_orders', label: 'Change orders', source: 'SAP PS' },
   { type: 'tasks', label: 'Schedule (tasks)', source: 'Scheduler' },
   { type: 'resources', label: 'Resource assignments', source: 'Scheduler' },
+  { type: 'milestones', label: 'Milestones', source: 'Scheduler' },
 ];
 
 export function IntegrationClient({
@@ -178,8 +183,8 @@ export function IntegrationClient({
             <p className="mt-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Source &amp; endpoint</p>
             {canWrite ? (
               <select value={source} onChange={(e) => { setSource(e.target.value as 'SAP_PS' | 'MS_PROJECT'); setObject('all'); }} className="mb-1.5 w-full rounded-md border bg-background px-2 py-1.5 text-xs">
-                <option value="SAP_PS">SAP PS — WBS, cost, commitment, billing &amp; RA</option>
-                <option value="MS_PROJECT">Microsoft Project — tasks &amp; resources</option>
+                <option value="SAP_PS">SAP PS — WBS, cost, commitment, billing, RA &amp; change orders</option>
+                <option value="MS_PROJECT">Microsoft Project — tasks, resources &amp; milestones</option>
               </select>
             ) : null}
             {canWrite ? (
