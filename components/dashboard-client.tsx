@@ -1143,6 +1143,20 @@ export function DashboardClient({
         </section>
       )}
 
+      {/* Ribbon 1 — operational portfolio signals (net-new vs the hero, which
+          already shows value, budget, margin, lifecycle mix and the CPI/SPI pulse) */}
+      <section>
+        <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio watchlist</h2>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <KpiCard label="Open H issues" value={String(operational.open_h_issues)} sub="needs attention" tone={operational.open_h_issues > 0 ? 'warn' : 'ok'} onClick={openOpenHIssues} />
+          <KpiCard label="Realised risks" value={String(operational.realised_risks)} sub="pattern signal" tone="info" onClick={openRealisedRisks} />
+          <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} onClick={openCostOffTrack} />
+          <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} onClick={openSchedOffTrack} />
+          <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" onClick={openContingencyDrawn} />
+          <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" onClick={openPatterns} />
+        </div>
+      </section>
+
       {/* INSIGHTS — 3 mini charts */}
       <section>
         <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio insights</h2>
@@ -1185,20 +1199,6 @@ export function DashboardClient({
       )}
 
       {/* HOT 5 — projects needing attention */}
-      {/* Ribbon 1 — operational portfolio signals (net-new vs the hero, which
-          already shows value, budget, margin, lifecycle mix and the CPI/SPI pulse) */}
-      <section>
-        <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio watchlist</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <KpiCard label="Open H issues" value={String(operational.open_h_issues)} sub="needs attention" tone={operational.open_h_issues > 0 ? 'warn' : 'ok'} onClick={openOpenHIssues} />
-          <KpiCard label="Realised risks" value={String(operational.realised_risks)} sub="pattern signal" tone="info" onClick={openRealisedRisks} />
-          <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} onClick={openCostOffTrack} />
-          <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} onClick={openSchedOffTrack} />
-          <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" onClick={openContingencyDrawn} />
-          <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" onClick={openPatterns} />
-        </div>
-      </section>
-
       {hotItems.length > 0 && (
         <section>
           <div className="flex items-baseline justify-between">

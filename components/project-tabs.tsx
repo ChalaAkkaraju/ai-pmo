@@ -29,6 +29,7 @@ import { RisksTable } from './risks-table';
 import { RiskHeatmap } from './risk-heatmap';
 import { RiskExposurePanel } from './risk-exposure-panel';
 import { ChangeOrdersTable } from './change-orders-table';
+import { ChangeOrdersPanel } from './change-orders-panel';
 import { VarianceSummary } from './variance-summary';
 import { VarianceTrendChart } from './variance-trend-chart';
 import { WbsCanonicalTree, type WorkPackage } from './wbs-canonical-tree';
@@ -248,6 +249,7 @@ export function ProjectTabs({
       </Tabs.Content>
 
       <Tabs.Content value="cos" className="pt-6">
+        <ChangeOrdersPanel rows={data.change_orders} soldContract={marginBridge.soldContract} baseMarginPct={marginBridge.soldMarginPct} />
         <ChangeOrdersTable rows={data.change_orders} />
       </Tabs.Content>
 

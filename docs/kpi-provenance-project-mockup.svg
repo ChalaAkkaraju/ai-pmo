@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 336" font-family="Helvetica, Arial, sans-serif">
+<rect width="1000" height="336" fill="#F6F5F0"/>
+<circle cx="29" cy="30" r="5" fill="#97C459"/>
+<text x="41" y="35" font-size="14" fill="#2C2C2A" font-weight="500">Overview</text>
+<rect x="24" y="46" width="73.8" height="2.5" fill="#2C2C2A"/>
+<circle cx="124.8" cy="30" r="5" fill="#378ADD"/>
+<text x="136.8" y="35" font-size="14" fill="#5F5E5A" font-weight="400">Structure</text>
+<circle cx="227.7" cy="30" r="5" fill="#EF9F27"/>
+<text x="239.7" y="35" font-size="14" fill="#5F5E5A" font-weight="400">Schedule</text>
+<circle cx="323.5" cy="30" r="5" fill="#97C459"/>
+<text x="335.5" y="35" font-size="14" fill="#5F5E5A" font-weight="400">Earned value</text>
+<circle cx="447.7" cy="30" r="5" fill="#378ADD"/>
+<text x="459.7" y="35" font-size="14" fill="#5F5E5A" font-weight="400">Cost</text>
+<circle cx="515.1" cy="30" r="5" fill="#97C459"/>
+<text x="527.1" y="35" font-size="14" fill="#5F5E5A" font-weight="400">Risks</text>
+<circle cx="589.6" cy="30" r="5" fill="#378ADD"/>
+<text x="601.6" y="35" font-size="14" fill="#5F5E5A" font-weight="400">Changes</text>
+<line x1="24" y1="49" x2="976" y2="49" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="24" y="70" width="179" height="118" rx="12" fill="#fff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="24" y="73" width="4" height="112" fill="#639922"/>
+<text x="42" y="100" font-size="13" fill="#5F5E5A">CPI</text>
+<text x="42" y="140" font-size="27" font-weight="600" fill="#854F0B">0.91</text>
+<circle cx="47" cy="166" r="4.2" fill="#97C459"/>
+<text x="57" y="170" font-size="12.5" fill="#3B6D11">AI PMO</text>
+<rect x="217" y="70" width="179" height="118" rx="12" fill="#fff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="217" y="73" width="4" height="112" fill="#639922"/>
+<text x="235" y="100" font-size="13" fill="#5F5E5A">SPI</text>
+<text x="235" y="140" font-size="27" font-weight="600" fill="#2C2C2A">0.96</text>
+<circle cx="240" cy="166" r="4.2" fill="#97C459"/>
+<text x="250" y="170" font-size="12.5" fill="#3B6D11">AI PMO</text>
+<rect x="410" y="70" width="179" height="118" rx="12" fill="#fff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="410" y="73" width="4" height="112" fill="#185FA5"/>
+<text x="428" y="100" font-size="13" fill="#5F5E5A">Budget (BAC)</text>
+<text x="428" y="140" font-size="27" font-weight="600" fill="#2C2C2A">$58.0M</text>
+<circle cx="433" cy="166" r="4.2" fill="#378ADD"/>
+<text x="443" y="170" font-size="12.5" fill="#185FA5">SAP PS</text>
+<rect x="603" y="70" width="179" height="118" rx="12" fill="#fff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="603" y="73" width="4" height="112" fill="#BA7517"/>
+<text x="621" y="100" font-size="13" fill="#5F5E5A">% complete</text>
+<text x="621" y="140" font-size="27" font-weight="600" fill="#2C2C2A">62%</text>
+<circle cx="626" cy="166" r="4.2" fill="#EF9F27"/>
+<text x="636" y="170" font-size="12.5" fill="#854F0B">Scheduler</text>
+<rect x="796" y="70" width="179" height="118" rx="12" fill="#fff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="796" y="73" width="4" height="112" fill="#185FA5"/>
+<text x="814" y="100" font-size="13" fill="#5F5E5A">Recognised rev.</text>
+<text x="814" y="140" font-size="27" font-weight="600" fill="#2C2C2A">$34.2M</text>
+<circle cx="819" cy="166" r="4.2" fill="#378ADD"/>
+<text x="829" y="170" font-size="12.5" fill="#185FA5">SAP PS</text>
+<rect x="60" y="232" width="320" height="66" rx="10" fill="#fff" stroke="#639922" stroke-width="1.6" stroke-dasharray="5 4"/>
+<circle cx="82" cy="256" r="5" fill="#97C459"/>
+<text x="96" y="260" font-size="14" font-weight="600" fill="#2C2C2A">WBS 1.3 · Procurement</text>
+<text x="96" y="281" font-size="12.5" fill="#3B6D11">AI PMO · authored, proposed</text>
+<text x="500" y="254" font-size="12.5" fill="#5F5E5A" text-anchor="middle">Book to SAP PS</text>
+<line x1="400" y1="265" x2="598" y2="265" stroke="#888780" stroke-width="1.6"/>
+<path d="M598,265 l-10,-5 l0,10 z" fill="#888780"/>
+<rect x="618" y="232" width="320" height="66" rx="10" fill="#E6F1FB" stroke="#185FA5" stroke-width="1.4"/>
+<circle cx="640" cy="256" r="5" fill="#378ADD"/>
+<text x="654" y="260" font-size="14" font-weight="600" fill="#042C53">WBS 1.3 · Procurement</text>
+<text x="654" y="281" font-size="12.5" fill="#185FA5">SAP PS · system of record</text>
+<text x="60" y="324" font-size="12.5" fill="#5F5E5A">Structure tab — scope authored by AI PMO (dashed green) becomes the SAP system of record (solid blue) once booked.</text>
+</svg>

@@ -13,6 +13,8 @@ import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { Kpis } from '@/components/analytics-shared';
 import { computeEv, rollUpEv, type EvMetrics } from '@/lib/earned-value';
+import { selectAll } from '@/lib/select-all';
+import { PortfolioEvTable } from '@/components/portfolio-tables';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,9 +31,6 @@ function signed(n: number | null): string {
 function idx(n: number | null): string {
   return n == null ? '—' : n.toFixed(2);
 }
-function tone(n: number | null): string {
-  return n == null ? 'text-foreground' : n < 0.95 ? 'text-red-600' : n >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
-}
 
 interface ProjEv extends EvMetrics {
   code: string;
@@ -45,17 +44,12 @@ export default async function EarnedValueAnalyticsPage({ params }: { params: Pro
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
-  const [wpRes, taskRes, costRes, projRes] = await Promise.all([
-    supabase.from('work_packages').select('project_id, wbs_code, parent_wbs_code, budget_bac').limit(100000),
-    supabase.from('tasks').select('project_id, wbs_code, percent_complete').limit(100000),
-    supabase.from('cost_actuals').select('project_id, actual_cost, planned_value').limit(100000),
-    supabase.from('projects').select('id, code, name, segment, status').limit(10000),
+  const [wps, tks, cst, projects] = await Promise.all([
+    selectAll<{ project_id: string; wbs_code: string; parent_wbs_code: string | null; budget_bac: number | null }>(supabase, 'work_packages', 'project_id, wbs_code, parent_wbs_code, budget_bac'),
+    selectAll<{ project_id: string; wbs_code: string | null; percent_complete: number | null }>(supabase, 'tasks', 'project_id, wbs_code, percent_complete'),
+    selectAll<{ project_id: string; actual_cost: number | null; planned_value: number | null }>(supabase, 'cost_actuals', 'project_id, actual_cost, planned_value'),
+    selectAll<{ id: string; code: string; name: string; segment: string; status: string }>(supabase, 'projects', 'id, code, name, segment, status'),
   ]);
-
-  const wps = (wpRes.data ?? []) as Array<{ project_id: string; wbs_code: string; parent_wbs_code: string | null; budget_bac: number | null }>;
-  const tks = (taskRes.data ?? []) as Array<{ project_id: string; wbs_code: string | null; percent_complete: number | null }>;
-  const cst = (costRes.data ?? []) as Array<{ project_id: string; actual_cost: number | null; planned_value: number | null }>;
-  const projects = (projRes.data ?? []) as Array<{ id: string; code: string; name: string; segment: string; status: string }>;
   const metaById = new Map(projects.map((p) => [p.id, p]));
 
   const byProj = <T extends { project_id: string }>(rows: T[]) => {
@@ -80,7 +74,7 @@ export default async function EarnedValueAnalyticsPage({ params }: { params: Pro
 
   const overCost = rows.filter((r) => r.cpi != null && r.cpi < 0.97).length;
   const behind = rows.filter((r) => r.spi != null && r.spi < 0.97).length;
-  const worst = [...rows].sort((a, b) => a.cv - b.cv).slice(0, 12);
+  const evRows = rows.map((r) => ({ code: r.code, name: r.name, segment: r.segment, cpi: r.cpi, spi: r.spi, cv: r.cv, vac: r.vac, bac: r.bac }));
 
   // CPI × SPI quadrant geometry. Window 0.8–1.2, clamp outliers to the edge.
   const W = 480, H = 360, M = 44;
@@ -114,9 +108,18 @@ export default async function EarnedValueAnalyticsPage({ params }: { params: Pro
         ]}
       />
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <div className="rounded-lg border bg-card p-4">
-          <h2 className="text-sm font-semibold">Cost vs schedule performance</h2>
+      <section className="rounded-lg border bg-card p-4">
+        <h2 className="text-sm font-semibold">Portfolio forecast</h2>
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-md bg-muted/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Budget (BAC)</p><p className="text-base font-semibold tabular-nums">{money(portfolio.bac)}</p></div>
+          <div className="rounded-md bg-muted/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Earned (EV)</p><p className="text-base font-semibold tabular-nums">{money(portfolio.ev)}</p></div>
+          <div className="rounded-md bg-muted/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Forecast (EAC)</p><p className="text-base font-semibold tabular-nums">{money(portfolio.eac)}</p></div>
+          <div className="rounded-md bg-muted/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Projects in EV</p><p className="text-base font-semibold tabular-nums">{portfolio.projects_in}</p></div>
+        </div>
+      </section>
+
+      <div className="rounded-lg border bg-card p-4">
+        <h2 className="text-sm font-semibold">Cost vs schedule performance</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {rows.length} active projects · bubble size = budget (BAC). Top-right is on or under budget and on or ahead of schedule; bottom-left is both over and behind.
           </p>
@@ -148,49 +151,12 @@ export default async function EarnedValueAnalyticsPage({ params }: { params: Pro
           </svg>
         </div>
 
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Worst cost performers</h2>
-            <span className="text-xs text-muted-foreground">{overCost} over cost · {behind} behind</span>
-          </div>
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="px-2 py-1.5 text-left">Project</th>
-                  <th className="px-2 py-1.5 text-center">CPI</th>
-                  <th className="px-2 py-1.5 text-center">SPI</th>
-                  <th className="px-2 py-1.5 text-right">CV</th>
-                  <th className="px-2 py-1.5 text-right">VAC</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {worst.map((r) => (
-                  <tr key={r.code} className="hover:bg-muted/30">
-                    <td className="px-2 py-1.5">
-                      <Link href={`/access/${token}/projects/${r.code}`} className="font-medium hover:underline">{r.code}</Link>
-                      <span className="ml-1 text-xs text-muted-foreground">{r.segment}</span>
-                    </td>
-                    <td className={`px-2 py-1.5 text-center font-mono text-xs ${tone(r.cpi)}`}>{idx(r.cpi)}</td>
-                    <td className={`px-2 py-1.5 text-center font-mono text-xs ${tone(r.spi)}`}>{idx(r.spi)}</td>
-                    <td className={`px-2 py-1.5 text-right font-mono text-xs ${r.cv < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{signed(r.cv)}</td>
-                    <td className={`px-2 py-1.5 text-right font-mono text-xs ${r.vac != null && r.vac < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{signed(r.vac)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <section className="space-y-2 pt-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold">Active projects · earned value ({rows.length})</h2>
+          <span className="text-xs text-muted-foreground">{overCost} over cost · {behind} behind</span>
         </div>
-      </div>
-
-      <section className="rounded-lg border bg-card p-4">
-        <h2 className="text-sm font-semibold">Portfolio forecast</h2>
-        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-md bg-muted/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Budget (BAC)</p><p className="text-base font-semibold tabular-nums">{money(portfolio.bac)}</p></div>
-          <div className="rounded-md bg-muted/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Earned (EV)</p><p className="text-base font-semibold tabular-nums">{money(portfolio.ev)}</p></div>
-          <div className="rounded-md bg-muted/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Forecast (EAC)</p><p className="text-base font-semibold tabular-nums">{money(portfolio.eac)}</p></div>
-          <div className="rounded-md bg-muted/40 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Projects in EV</p><p className="text-base font-semibold tabular-nums">{portfolio.projects_in}</p></div>
-        </div>
+        <PortfolioEvTable token={token} rows={evRows} />
       </section>
     </div>
   );

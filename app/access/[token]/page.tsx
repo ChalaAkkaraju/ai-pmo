@@ -13,6 +13,7 @@ import { matchRoleFromText } from '@/lib/role-match';
 import { WelcomeGate } from '@/components/welcome-gate';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { computeEv, rollUpEv, type PortfolioEv } from '@/lib/earned-value';
+import { selectAll } from '@/lib/select-all';
 import {
   DashboardClient,
   type DashboardProject,
@@ -183,10 +184,10 @@ export default async function RoleLandingPage({ params }: PageProps) {
   let financial: FinancialKpis | null = null;
   try {
     const activeIds = new Set(projects.filter((p) => p.status === 'Active').map((p) => p.id));
-    const [poRes, raRes, billRes] = await Promise.all([
-      supabase.from('purchase_orders').select('project_id, po_value, received_value, status').limit(100000),
-      supabase.from('results_analysis').select('project_id, calculated_revenue, recognized_margin').limit(100000),
-      supabase.from('billing_events').select('project_id, amount, status').limit(100000),
+    const [pos, ras, bills] = await Promise.all([
+      selectAll<{ project_id: string; po_value: number | string; received_value: number | string; status: string }>(supabase, 'purchase_orders', 'project_id, po_value, received_value, status'),
+      selectAll<{ project_id: string; calculated_revenue: number | string | null; recognized_margin: number | string | null }>(supabase, 'results_analysis', 'project_id, calculated_revenue, recognized_margin'),
+      selectAll<{ project_id: string; amount: number | string | null; status: string }>(supabase, 'billing_events', 'project_id, amount, status'),
     ]);
     let openCommit = 0, recRev = 0, recMargin = 0, billed = 0;
     let coValue = 0, coInFlight = 0;
@@ -194,16 +195,16 @@ export default async function RoleLandingPage({ params }: PageProps) {
       coValue += (Number(c.revenue_impact_m) || 0) * 1_000_000;
       if (c.status === 'Anticipated' || c.status === 'Under analysis' || c.status === 'Priced') coInFlight++;
     }
-    for (const po of (poRes.data ?? []) as Array<{ project_id: string; po_value: number | string; received_value: number | string; status: string }>) {
+    for (const po of pos) {
       if (!activeIds.has(po.project_id) || po.status === 'Closed') continue;
       openCommit += Math.max(0, (Number(po.po_value) || 0) - (Number(po.received_value) || 0));
     }
-    for (const r of (raRes.data ?? []) as Array<{ project_id: string; calculated_revenue: number | string | null; recognized_margin: number | string | null }>) {
+    for (const r of ras) {
       if (!activeIds.has(r.project_id)) continue;
       recRev += Number(r.calculated_revenue) || 0;
       recMargin += Number(r.recognized_margin) || 0;
     }
-    for (const b of (billRes.data ?? []) as Array<{ project_id: string; amount: number | string | null; status: string }>) {
+    for (const b of bills) {
       if (!activeIds.has(b.project_id) || !(b.status === 'Invoiced' || b.status === 'Paid')) continue;
       billed += Number(b.amount) || 0;
     }
@@ -634,14 +635,11 @@ export default async function RoleLandingPage({ params }: PageProps) {
   const evProjectRows: Array<{ code: string; name: string; segment: string; cpi: number | null; spi: number | null }> = [];
   let portfolioEv: PortfolioEv | null = null;
   try {
-    const [wpRes, taskRes, costRes] = await Promise.all([
-      supabase.from('work_packages').select('project_id, wbs_code, parent_wbs_code, budget_bac'),
-      supabase.from('tasks').select('project_id, wbs_code, percent_complete'),
-      supabase.from('cost_actuals').select('project_id, actual_cost, planned_value'),
+    const [wps, tks, cst] = await Promise.all([
+      selectAll<{ project_id: string; wbs_code: string; parent_wbs_code: string | null; budget_bac: number | null }>(supabase, 'work_packages', 'project_id, wbs_code, parent_wbs_code, budget_bac'),
+      selectAll<{ project_id: string; wbs_code: string | null; percent_complete: number | null }>(supabase, 'tasks', 'project_id, wbs_code, percent_complete'),
+      selectAll<{ project_id: string; actual_cost: number | null; planned_value: number | null }>(supabase, 'cost_actuals', 'project_id, actual_cost, planned_value'),
     ]);
-    const wps = (wpRes.data ?? []) as Array<{ project_id: string; wbs_code: string; parent_wbs_code: string | null; budget_bac: number | null }>;
-    const tks = (taskRes.data ?? []) as Array<{ project_id: string; wbs_code: string | null; percent_complete: number | null }>;
-    const cst = (costRes.data ?? []) as Array<{ project_id: string; actual_cost: number | null; planned_value: number | null }>;
     if (wps.length > 0) {
       const byProj = <T extends { project_id: string }>(rows: T[]) => {
         const m = new Map<string, T[]>();

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 392" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="1000" height="392" fill="#F6F5F0"/>
+<rect x="24" y="22" width="36" height="20" rx="10" fill="#639922"/>
+<circle cx="50" cy="32" r="8" fill="#ffffff"/>
+<text x="70" y="37" font-size="14" fill="#5F5E5A">Show data sources</text>
+<circle cx="30" cy="62" r="6" fill="#378ADD"/>
+<text x="44" y="67" font-size="13" fill="#5F5E5A">SAP PS · system of record</text>
+<circle cx="306" cy="62" r="6" fill="#EF9F27"/>
+<text x="320" y="67" font-size="13" fill="#5F5E5A">Scheduler · system of record</text>
+<circle cx="596" cy="62" r="6" fill="#97C459"/>
+<text x="610" y="67" font-size="13" fill="#5F5E5A">AI PMO · reads + synthesises</text>
+<rect x="24" y="86" width="226" height="130" rx="12" fill="#ffffff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="24" y="89" width="4" height="124" fill="#185FA5"/>
+<text x="44" y="120" font-size="14" fill="#5F5E5A">Approved budget</text>
+<text x="44" y="162" font-size="30" font-weight="600" fill="#2C2C2A">$29.3B</text>
+<circle cx="48" cy="190" r="4.5" fill="#378ADD"/>
+<text x="58" y="194" font-size="13" fill="#185FA5">SAP PS</text>
+<rect x="266" y="86" width="226" height="130" rx="12" fill="#ffffff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="266" y="89" width="4" height="124" fill="#185FA5"/>
+<text x="286" y="120" font-size="14" fill="#5F5E5A">Recognised revenue</text>
+<text x="286" y="162" font-size="30" font-weight="600" fill="#2C2C2A">$8.7B</text>
+<circle cx="290" cy="190" r="4.5" fill="#378ADD"/>
+<text x="300" y="194" font-size="13" fill="#185FA5">SAP PS</text>
+<rect x="508" y="86" width="226" height="130" rx="12" fill="#ffffff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="508" y="89" width="4" height="124" fill="#185FA5"/>
+<text x="528" y="120" font-size="14" fill="#5F5E5A">Billed</text>
+<text x="528" y="162" font-size="30" font-weight="600" fill="#2C2C2A">$6.2B</text>
+<circle cx="532" cy="190" r="4.5" fill="#378ADD"/>
+<text x="542" y="194" font-size="13" fill="#185FA5">SAP PS</text>
+<rect x="750" y="86" width="226" height="130" rx="12" fill="#ffffff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="750" y="89" width="4" height="124" fill="#BA7517"/>
+<text x="770" y="120" font-size="14" fill="#5F5E5A">Schedule variance</text>
+<text x="770" y="162" font-size="30" font-weight="600" fill="#A32D2D">−$1.15B</text>
+<circle cx="774" cy="190" r="4.5" fill="#EF9F27"/>
+<text x="784" y="194" font-size="13" fill="#854F0B">Scheduler</text>
+<rect x="24" y="232" width="226" height="130" rx="12" fill="#ffffff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="24" y="235" width="4" height="124" fill="#639922"/>
+<text x="44" y="266" font-size="14" fill="#5F5E5A">Portfolio CPI</text>
+<text x="44" y="308" font-size="30" font-weight="600" fill="#854F0B">0.97</text>
+<circle cx="48" cy="336" r="4.5" fill="#97C459"/>
+<text x="58" y="340" font-size="13" fill="#3B6D11">AI PMO</text>
+<rect x="266" y="232" width="226" height="130" rx="12" fill="#ffffff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="266" y="235" width="4" height="124" fill="#639922"/>
+<text x="286" y="266" font-size="14" fill="#5F5E5A">Portfolio SPI</text>
+<text x="286" y="308" font-size="30" font-weight="600" fill="#A32D2D">0.95</text>
+<circle cx="290" cy="336" r="4.5" fill="#97C459"/>
+<text x="300" y="340" font-size="13" fill="#3B6D11">AI PMO</text>
+<rect x="508" y="232" width="226" height="130" rx="12" fill="#ffffff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="508" y="235" width="4" height="124" fill="#639922"/>
+<text x="528" y="266" font-size="14" fill="#5F5E5A">Forecast (EAC)</text>
+<text x="528" y="308" font-size="30" font-weight="600" fill="#2C2C2A">$30.1B</text>
+<circle cx="532" cy="336" r="4.5" fill="#97C459"/>
+<text x="542" y="340" font-size="13" fill="#3B6D11">AI PMO</text>
+<rect x="750" y="232" width="226" height="130" rx="12" fill="#ffffff" stroke="#DCDAD2" stroke-width="1"/>
+<rect x="750" y="235" width="4" height="124" fill="#639922"/>
+<text x="770" y="266" font-size="14" fill="#5F5E5A">Forecast variance</text>
+<text x="770" y="308" font-size="30" font-weight="600" fill="#A32D2D">−$765M</text>
+<circle cx="774" cy="336" r="4.5" fill="#97C459"/>
+<text x="784" y="340" font-size="13" fill="#3B6D11">AI PMO</text>
+</svg>

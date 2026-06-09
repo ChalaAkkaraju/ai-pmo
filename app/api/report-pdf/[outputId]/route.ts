@@ -19,7 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
+import type { Browser } from 'puppeteer-core';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 
@@ -37,6 +37,34 @@ export const dynamic = 'force-dynamic';
 
 interface RouteParams {
   params: Promise<{ outputId: string }>;
+}
+
+/**
+ * Launch a headless browser. On Vercel/serverless the full puppeteer's bundled
+ * Chromium (~300MB) blows the function-size limit and isn't present, so we use
+ * the slim @sparticuz/chromium + puppeteer-core. Locally we keep full puppeteer
+ * so dev and local demos work with zero extra setup (behaviour unchanged).
+ * puppeteer is loaded via a non-literal specifier so the Vercel bundler never
+ * traces it (it's a devDependency in production).
+ */
+async function launchBrowser(): Promise<Browser> {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    const chromium = (await import('@sparticuz/chromium')).default;
+    const puppeteerCore = (await import('puppeteer-core')).default;
+    return puppeteerCore.launch({
+      args: [...chromium.args, '--disable-dev-shm-usage'],
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
+  }
+  const localPkg = 'puppeteer';
+  const puppeteer = (await import(localPkg)).default;
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  });
+  return browser as Browser;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
@@ -76,12 +104,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const reportUrl = `${baseUrl}/access/${token}/report/${outputId}`;
 
   // 4. Launch Puppeteer, render the page, capture as PDF.
-  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
+  let browser: Browser | null = null;
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    });
+    browser = await launchBrowser();
 
     const page = await browser.newPage();
 
@@ -91,13 +116,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Surface any browser-side errors in the server log so we can debug
     // (Puppeteer's headless Chrome console is otherwise invisible).
-    page.on('console', (msg) => {
+    page.on('console', (msg: { type(): string; text(): string }) => {
       const type = msg.type() as string;
       if (type === 'error' || type === 'warning') {
         console.log(`[report-pdf:browser:${type}]`, msg.text());
       }
     });
-    page.on('pageerror', (err) => {
+    page.on('pageerror', (err: Error) => {
       console.log('[report-pdf:browser:pageerror]', (err as Error).message);
     });
 

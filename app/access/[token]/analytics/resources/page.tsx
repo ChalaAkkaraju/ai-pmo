@@ -10,6 +10,7 @@
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
+import { selectAll } from '@/lib/select-all';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { ResourceAnalyticsClient, type ResourceView } from '@/components/resource-analytics-client';
 import { computeLoad, type ResAssignment } from '@/lib/resource-load';
@@ -30,12 +31,12 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
   let rows: Row[] = [];
   const segById = new Map<string, string>();
   try {
-    const [{ data: ra }, { data: projs }] = await Promise.all([
-      supabase.from('resource_assignments').select('project_id, resource_role, period, planned_work_hours').limit(100000),
-      supabase.from('projects').select('id, segment').limit(100000),
+    const [ra, projs] = await Promise.all([
+      selectAll<Row>(supabase, 'resource_assignments', 'project_id, resource_role, period, planned_work_hours'),
+      selectAll<{ id: string; segment: string | null }>(supabase, 'projects', 'id, segment'),
     ]);
-    rows = (ra ?? []) as Row[];
-    for (const p of (projs ?? []) as Array<{ id: string; segment: string | null }>) {
+    rows = ra;
+    for (const p of projs) {
       segById.set(p.id, p.segment ?? 'other');
     }
   } catch {

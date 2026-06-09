@@ -14,6 +14,7 @@ interface ChangeOrder {
   status: string;
   approval_routing: string;
   executed_week: number | null;
+  recovery_confidence: number | null;
   four_frame_analysis: {
     vendor_leverage: string;
     client_leverage: string;
@@ -85,6 +86,15 @@ export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown
                       {sched > 0 ? `+${sched} days` : sched < 0 ? `${sched} days` : 'no impact'}
                     </span>
                   </span>
+                  {co.status === 'Absorbed' && (
+                    <span className="font-medium text-orange-700">Unfunded · absorbed</span>
+                  )}
+                  {co.recovery_confidence != null && ['Anticipated', 'Under analysis', 'Priced'].includes(co.status) && (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="text-muted-foreground/70">Recovery:</span>
+                      <span className="font-medium text-foreground/80">{co.recovery_confidence}%</span>
+                    </span>
+                  )}
                 </div>
               </div>
 

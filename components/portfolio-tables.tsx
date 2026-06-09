@@ -10,7 +10,7 @@
  * fields; column headers sort; the project cell links to the project page.
  */
 
-import { issueBadge, riskBadge, actionBadge } from '@/lib/badge-styles';
+import { issueBadge, riskBadge, actionBadge, changeOrderBadge } from '@/lib/badge-styles';
 import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { segmentStyle } from '@/lib/segment-style';
@@ -65,6 +65,7 @@ function DataTable<R>({
   filters,
   searchText,
   initialSortKey,
+  initialSortDir = 'desc',
   emptyLabel,
 }: {
   rows: R[];
@@ -72,12 +73,13 @@ function DataTable<R>({
   filters: FilterDef<R>[];
   searchText: (r: R) => string;
   initialSortKey: string;
+  initialSortDir?: 'asc' | 'desc';
   emptyLabel: string;
 }) {
   const [q, setQ] = useState('');
   const [fv, setFv] = useState<Record<string, string>>({});
   const [sortKey, setSortKey] = useState(initialSortKey);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(initialSortDir);
 
   const colByKey = useMemo(() => Object.fromEntries(columns.map((c) => [c.key, c])), [columns]);
 
@@ -304,6 +306,112 @@ export function PortfolioActionsTable({ token, rows }: { token: string; rows: Po
       searchText={(r) => `${r.description} ${r.project_code ?? ''} ${roleLabel(r.assigned_to_role as RoleType)} ${r.raised_by_role ? roleLabel(r.raised_by_role as RoleType) : ''}`}
       initialSortKey="urgency"
       emptyLabel="No actions match your filters."
+    />
+  );
+}
+
+export interface PortfolioEvRow {
+  code: string;
+  name: string;
+  segment: string;
+  cpi: number | null;
+  spi: number | null;
+  cv: number;
+  vac: number | null;
+  bac: number;
+}
+
+function evMoney(n: number | null): string {
+  if (n == null) return '\u2014';
+  const m = n / 1_000_000;
+  return `${n < 0 ? '\u2212' : ''}$${Math.abs(m).toFixed(1)}M`;
+}
+function evTone(n: number | null): string {
+  return n == null ? 'text-foreground' : n < 0.95 ? 'text-red-600' : n >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
+}
+
+export function PortfolioEvTable({ token, rows }: { token: string; rows: PortfolioEvRow[] }) {
+  const columns: Col<PortfolioEvRow>[] = [
+    { key: 'code', label: 'Project', sortKey: (r) => r.code, render: (r) => <ProjectCell token={token} code={r.code} name={r.name} segment={r.segment} /> },
+    { key: 'cpi', label: 'CPI', align: 'center', mono: true, sortKey: (r) => r.cpi ?? 99, render: (r) => <span className={evTone(r.cpi)}>{r.cpi == null ? '\u2014' : r.cpi.toFixed(2)}</span> },
+    { key: 'spi', label: 'SPI', align: 'center', mono: true, sortKey: (r) => r.spi ?? 99, render: (r) => <span className={evTone(r.spi)}>{r.spi == null ? '\u2014' : r.spi.toFixed(2)}</span> },
+    { key: 'cv', label: 'CV', align: 'right', mono: true, sortKey: (r) => r.cv, render: (r) => <span className={r.cv < 0 ? 'text-red-600' : 'text-emerald-700'}>{evMoney(r.cv)}</span> },
+    { key: 'vac', label: 'VAC', align: 'right', mono: true, sortKey: (r) => r.vac ?? 0, render: (r) => <span className={r.vac != null && r.vac < 0 ? 'text-red-600' : 'text-emerald-700'}>{evMoney(r.vac)}</span> },
+    { key: 'bac', label: 'BAC', align: 'right', mono: true, sortKey: (r) => r.bac, render: (r) => <span className="text-muted-foreground">{evMoney(r.bac)}</span> },
+  ];
+  const filters: FilterDef<PortfolioEvRow>[] = [
+    { key: 'segment', label: 'Segment', options: SEGMENT_OPTS, match: (r, v) => r.segment === v },
+    {
+      key: 'perf', label: 'Performance',
+      options: [
+        { value: 'over', label: 'Over cost' },
+        { value: 'behind', label: 'Behind schedule' },
+        { value: 'ontrack', label: 'On track' },
+      ],
+      match: (r, v) => {
+        const over = r.cpi != null && r.cpi < 0.97;
+        const behind = r.spi != null && r.spi < 0.97;
+        if (v === 'over') return over;
+        if (v === 'behind') return behind;
+        return !over && !behind;
+      },
+    },
+  ];
+  return (
+    <DataTable
+      rows={rows}
+      columns={columns}
+      filters={filters}
+      searchText={(r) => `${r.code} ${r.name} ${r.segment}`}
+      initialSortKey="cv"
+      initialSortDir="asc"
+      emptyLabel="No projects match your filters."
+    />
+  );
+}
+
+export interface PortfolioChangeOrderRow {
+  co_id: string;
+  project_code: string;
+  project_name: string;
+  segment: string;
+  driver: string;
+  scope: string;
+  status: string;
+  cost_impact_m: number;
+  revenue_impact_m: number;
+  margin_pct: number | null;
+  schedule_days: number;
+}
+
+const CO_DRIVER_OPTS = ['Client-directed scope', 'Site conditions', 'Design development', 'Regulatory & permits', 'Supply & escalation', 'Other'].map((d) => ({ value: d, label: d }));
+function coM(v: number): string { return `${v < 0 ? '\u2212' : ''}$${Math.abs(v).toFixed(1)}M`; }
+
+export function PortfolioChangeOrdersTable({ token, rows }: { token: string; rows: PortfolioChangeOrderRow[] }) {
+  const columns: Col<PortfolioChangeOrderRow>[] = [
+    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code, render: (r) => <ProjectCell token={token} code={r.project_code} name={r.project_name} segment={r.segment} /> },
+    { key: 'co_id', label: 'CO', mono: true, sortKey: (r) => r.co_id },
+    { key: 'scope', label: 'Scope', render: (r) => <span className="block max-w-md">{r.scope}</span> },
+    { key: 'driver', label: 'Driver', render: (r) => <span className="text-xs text-muted-foreground">{r.driver}</span> },
+    { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${changeOrderBadge(r.status)}`}>{r.status}</span> },
+    { key: 'cost_impact_m', label: 'Cost', align: 'right', mono: true, sortKey: (r) => r.cost_impact_m, render: (r) => coM(r.cost_impact_m) },
+    { key: 'revenue_impact_m', label: 'Revenue', align: 'right', mono: true, sortKey: (r) => r.revenue_impact_m, render: (r) => <span className="text-emerald-700">{coM(r.revenue_impact_m)}</span> },
+    { key: 'margin_pct', label: 'Margin', align: 'center', mono: true, sortKey: (r) => r.margin_pct ?? -999, render: (r) => <span className={r.margin_pct == null ? '' : r.margin_pct <= 0 ? 'text-red-600' : r.margin_pct < 8 ? 'text-amber-600' : 'text-emerald-700'}>{r.margin_pct == null ? '\u2014' : `${r.margin_pct.toFixed(0)}%`}</span> },
+    { key: 'schedule_days', label: 'Schedule', align: 'center', mono: true, sortKey: (r) => r.schedule_days, render: (r) => <span className={r.schedule_days > 0 ? 'text-amber-600' : 'text-muted-foreground'}>{r.schedule_days > 0 ? `+${r.schedule_days}d` : '\u2014'}</span> },
+  ];
+  const filters: FilterDef<PortfolioChangeOrderRow>[] = [
+    { key: 'segment', label: 'Segment', options: SEGMENT_OPTS, match: (r, v) => r.segment === v },
+    { key: 'status', label: 'Status', options: ['Anticipated', 'Under analysis', 'Priced', 'Executed', 'Complete', 'Rejected'].map((x) => ({ value: x, label: x })), match: (r, v) => r.status === v },
+    { key: 'driver', label: 'Driver', options: CO_DRIVER_OPTS, match: (r, v) => r.driver === v },
+  ];
+  return (
+    <DataTable
+      rows={rows}
+      columns={columns}
+      filters={filters}
+      searchText={(r) => `${r.co_id} ${r.scope} ${r.project_code} ${r.project_name} ${r.driver}`}
+      initialSortKey="revenue_impact_m"
+      emptyLabel="No change orders match your filters."
     />
   );
 }
