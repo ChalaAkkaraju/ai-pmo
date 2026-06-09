@@ -39,6 +39,7 @@ import { WbsAuthoring } from './wbs-authoring';
 import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
 import { EvByWbs } from './ev-by-wbs';
+import { ForecastTrend } from './forecast-trend';
 import { CommitmentPanel } from './commitment-panel';
 import { CostElementMix } from './cost-element-mix';
 import { CostByWbs } from './cost-by-wbs';
@@ -50,6 +51,7 @@ import { ResourceLoadPanel } from './resource-load-view';
 import { MarginBridgeCard } from './margin-bridge';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
 import type { EvMetrics, EvCurve, EvBranch, EarnedScheduleMetrics } from '@/lib/earned-value';
+import type { ForecastPoint } from '@/lib/forecast';
 import type { CommitmentSummary, PoRow, LabourProductivity } from '@/lib/cost-commitment';
 import type { BillingSummary } from '@/lib/billing';
 import type { RaSummary } from '@/lib/results-analysis';
@@ -90,6 +92,7 @@ interface ProjectTabsProps {
   evSyncedAt: string | null;
   evByWbs: EvBranch[];
   evSchedule: EarnedScheduleMetrics | null;
+  forecastPoints: ForecastPoint[];
   commitment: CommitmentSummary;
   costElements: { category: string; actual: number; planned: number }[];
   labourProductivity: LabourProductivity;
@@ -130,6 +133,7 @@ export function ProjectTabs({
   evSyncedAt,
   evByWbs,
   evSchedule,
+  forecastPoints,
   commitment,
   costElements,
   labourProductivity,
@@ -215,6 +219,7 @@ export function ProjectTabs({
       <Tabs.Content value="ev" className="space-y-6 pt-6">
         <EarnedValueCard metrics={evMetrics} syncedAt={evSyncedAt} curve={evCurve} es={evSchedule} />
         <EvByWbs branches={evByWbs} />
+        <ForecastTrend points={forecastPoints} />
       </Tabs.Content>
 
       <Tabs.Content value="cost" className="space-y-6 pt-6">

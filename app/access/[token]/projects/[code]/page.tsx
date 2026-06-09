@@ -16,6 +16,7 @@ import { AssignTaskButton } from '@/components/assign-task-button';
 import type { WorkPackage } from '@/components/wbs-canonical-tree';
 import type { Task } from '@/components/schedule-view';
 import { computeEv, evCurve, computeEvByWbs, earnedSchedule } from '@/lib/earned-value';
+import { parseForecast } from '@/lib/forecast';
 import { computeCommitment, costByElement, computeLabourProductivity, computeLabourByWbs } from '@/lib/cost-commitment';
 import { computeBilling } from '@/lib/billing';
 import { computeResultsAnalysis } from '@/lib/results-analysis';
@@ -239,7 +240,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
 
   if (!project) notFound();
 
-  const [issuesRes, risksRes, cosRes, varianceRes, planningRows, actionItemsRes] = await Promise.all([
+  const [issuesRes, risksRes, cosRes, varianceRes, planningRows, actionItemsRes, forecastRes] = await Promise.all([
     supabase.from('issues').select('*').eq('project_id', project.id).order('opened_week', { ascending: true }),
     supabase.from('risks').select('*').eq('project_id', project.id).order('risk_id', { ascending: true }),
     supabase.from('change_orders').select('*').eq('project_id', project.id).order('co_id', { ascending: true }),
@@ -252,6 +253,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
       .select('*')
       .eq('project_id', project.id)
       .order('created_at', { ascending: false }),
+    supabase.from('forecast_snapshots').select('*').eq('project_id', project.id).order('period', { ascending: true }),
   ]);
 
   const issues = issuesRes.data ?? [];
@@ -260,6 +262,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const variance_reports = varianceRes.data ?? [];
   const planning_outputs = planningRows;
   const action_items = actionItemsRes.data ?? [];
+  const forecastPoints = parseForecast(forecastRes.data ?? []);
 
   // Which planning artefacts already exist — drives the guided setup checklist.
   const doneAgents = Array.from(new Set(planning_outputs.map((o) => String(o.agent_type))));
@@ -439,6 +442,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         evCurve={evC}
         evSyncedAt={costActuals.find((c) => c.synced_at)?.synced_at ?? null}
         evByWbs={evByWbs}
+        forecastPoints={forecastPoints}
         evSchedule={evSchedule}
         commitment={commitment}
         costElements={costElements}
