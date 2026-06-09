@@ -108,58 +108,86 @@ Copy-Item .env.local.local-backup .env.local -Force
 
 ---
 
-## Part C — Deploy the app to Vercel
+## Part C — Deploy the app to Railway
 
-### C1. Push the code to GitHub
+> Railway hosts the **Next.js app**; Supabase (Part B) still hosts the **database**.
+> Railway runs a persistent Node server, so the PDF route and long agent calls
+> have no serverless timeout / bundle limits — and no cold starts.
 
-You're ~15+ commits ahead of `origin/main`. Vercel builds from GitHub:
+### C1. Push the code to GitHub (done)
+
+Railway builds from GitHub on every push:
 
 ```powershell
 git push origin main
 ```
 
-### C2. Connect the repo + set environment variables
+### C2. One-time PDF-route prep for Railway
 
-In Vercel: **New Project -> import `ChalaAkkaraju/ai-pmo`**. Add these 4
-environment variables, all pointing at the **cloud** (from `.env.local.cloud-backup`):
+On a persistent server the simplest, most reliable PDF path is **full puppeteer**
+with its bundled Chromium — and the `report-pdf` route already uses full puppeteer
+whenever it is NOT on Vercel. Just make sure it's installed in production: move
+`puppeteer` from `devDependencies` to `dependencies` in `package.json`, then:
+
+```powershell
+pnpm install
+git commit -am "PDF: full puppeteer for the Railway persistent-server deploy"
+git push origin main
+```
+
+(No `@sparticuz/chromium` gymnastics needed on Railway — that was only for Vercel's
+serverless bundle limit. Leave those packages in; they're simply unused there.)
+
+### C3. Create the Railway service + env vars
+
+In Railway: **New Project -> Deploy from GitHub repo -> `ChalaAkkaraju/ai-pmo`**.
+Railway auto-detects Next.js (Nixpacks) and runs `next build` then `next start`.
+Add these 4 variables (service -> **Variables**), all pointing at the **cloud**
+Supabase (from `.env.local.cloud-backup`):
 
 | Variable | Value |
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | the cloud URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | cloud anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | cloud service-role key |
-| `OPENROUTER_API_KEY` | your OpenRouter key (cloud uses OpenRouter, not local Qwen) |
+| `OPENROUTER_API_KEY` | your OpenRouter key |
 
-### C3. Deploy
+Railway injects a `PORT`; `next start` respects it. If the app doesn't bind, set
+the start command to `next start -p $PORT`. Then **Settings -> Networking ->
+Generate Domain** for a public URL.
 
-Click **Deploy**. First build takes a few minutes. The PDF route's 150s
-`maxDuration` needs **Vercel Pro** for full-length reports (Hobby caps at 60s);
-quick-mode reports finish well under 60s, so Hobby is fine for a first demo.
+### C4. Deploy
+
+Railway builds and starts automatically on push (first build takes a few minutes).
+Being a persistent server, there are **no function timeouts and no cold starts** —
+the long agent calls and the Chromium PDF route run without serverless constraints.
 
 ---
 
 ## Part D — Post-deploy smoke test
 
-On the deployed URL, run the key parts of `docs/pre-deploy-checklist.md`, and
-especially **validate the PDF fix** (this is the part that only proves out on
-Vercel):
+On the Railway URL, run the key parts of `docs/pre-deploy-checklist.md`, especially:
 
 - Open a report -> **Download PDF** -> confirm a real, selectable-text PDF downloads.
-- If the PDF route errors, check the version pairing of `puppeteer-core` <-> `@sparticuz/chromium` (they must match a common Chrome version) and the Vercel function logs.
+  Full puppeteer on a persistent server should be reliable; if it errors on a
+  missing system library, add it via Nixpacks (a `NIXPACKS_PKGS` variable for the
+  font/nss libs) — rare with full puppeteer.
+- Invoke a couple of agents including a full-mode report — confirm no timeout.
 
 ---
 
-## Part E — Between demos (save compute)
+## Part E — Between demos (save usage)
 
-When you're done showing it: Supabase dashboard -> project -> **Pause**. Paused =
-~$0 compute. Un-pause a few minutes before the next demo. Keep building on local
-the whole time.
+Railway Hobby includes **$5 of usage**; a low-traffic demo stays well under it. To
+trim usage between demos you can remove the service (redeploy from GitHub when
+needed) or just leave it running. **Pause the Supabase project separately** to keep
+DB compute at ~$0. Keep building on local the whole time.
 
 ---
 
 ## Quick reference — the per-demo loop (after one-time prep)
 
-1. Un-pause the cloud project (or confirm Active).
-2. `git push origin main` (if code changed) -> Vercel auto-redeploys.
-3. Share the demo links (the real tokens from B4).
-4. After: pause the cloud project.
+1. Confirm the Supabase project is Active (un-pause if needed).
+2. `git push origin main` -> Railway auto-rebuilds and redeploys.
+3. Share the demo links (the real tokens from B4) on the Railway domain.
+4. After: pause the Supabase project (and optionally remove the Railway service).

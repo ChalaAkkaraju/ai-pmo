@@ -40,6 +40,13 @@ import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
 import { EvByWbs } from './ev-by-wbs';
 import { ForecastTrend } from './forecast-trend';
+import { CashFlow } from './cash-flow';
+import { CostTab } from './cost-tab';
+import type { LucideIcon } from 'lucide-react';
+import {
+  LayoutDashboard, ListTree, CalendarDays, LineChart, Receipt,
+  FileSignature, Users, ShieldAlert, Replace, Activity, ClipboardList,
+} from 'lucide-react';
 import { CommitmentPanel } from './commitment-panel';
 import { CostElementMix } from './cost-element-mix';
 import { CostByWbs } from './cost-by-wbs';
@@ -147,7 +154,7 @@ export function ProjectTabs({
   scheduleEnvelope,
   data,
 }: ProjectTabsProps) {
-  const [tab, setTab] = useState(['overview', 'structure', 'schedule', 'ev', 'cost', 'commitment', 'resources', 'risks', 'cos', 'variance', 'planning'].includes(initialTab ?? '') ? (initialTab as string) : 'overview');
+  const [tab, setTab] = useState(['overview', 'structure', 'schedule', 'ev', 'cost', 'resources', 'risks', 'cos', 'variance', 'planning'].includes(initialTab ?? '') ? (initialTab as string) : 'overview');
 
   const planningByAgent: Record<string, ArtefactRow[]> = {};
   for (const row of data.planning_outputs ?? []) {
@@ -166,7 +173,6 @@ export function ProjectTabs({
         <TabTrigger value="schedule" label="Schedule" count={tasks.length} />
         <TabTrigger value="ev" label="Earned value" highlight />
         <TabTrigger value="cost" label="Cost" />
-        <TabTrigger value="commitment" label="Commitment" count={purchaseOrders.length} />
         <TabTrigger value="resources" label="Resources" count={resourceLoad.roles.length} />
         <span className="mx-2 self-center text-muted-foreground/40">|</span>
         <TabTrigger value="risks" label="Risks & issues" count={data.risks.length + data.issues.length} />
@@ -222,15 +228,23 @@ export function ProjectTabs({
         <ForecastTrend points={forecastPoints} />
       </Tabs.Content>
 
-      <Tabs.Content value="cost" className="space-y-6 pt-6">
-        <CostElementMix elements={costElements} commitment={commitment} />
-        <CostByWbs branches={evByWbs} commitment={commitment} billing={billing} />
-        <RevenueRecognitionPanel ra={resultsAnalysis} billing={billing} workPackages={workPackages} />
-      </Tabs.Content>
-
-      <Tabs.Content value="commitment" className="space-y-6 pt-6">
-        <CommitmentPanel metrics={evMetrics} commitment={commitment} />
-        <PoTable pos={purchaseOrders} workPackages={workPackages} />
+      <Tabs.Content value="cost" className="pt-6">
+        <CostTab
+          costToDate={
+            <>
+              <CostElementMix elements={costElements} commitment={commitment} />
+              <CostByWbs branches={evByWbs} commitment={commitment} billing={billing} />
+            </>
+          }
+          commitment={
+            <>
+              <CommitmentPanel metrics={evMetrics} commitment={commitment} />
+              <PoTable pos={purchaseOrders} workPackages={workPackages} />
+            </>
+          }
+          revenue={<RevenueRecognitionPanel ra={resultsAnalysis} billing={billing} workPackages={workPackages} />}
+          cashFlow={<CashFlow points={forecastPoints} finishIso={scheduleEnvelope.forecastFinish ?? scheduleEnvelope.targetFinish} />}
+        />
       </Tabs.Content>
 
       <Tabs.Content value="resources" className="space-y-6 pt-6">
@@ -464,6 +478,21 @@ function PlanningPanel({ byAgent, token, canEdit }: { byAgent: Record<string, Ar
 
 /* ----------------------------------------------------------------- Trigger */
 
+/** Per-tab icon + accent colour. Active tab reveals its colour on icon + underline. */
+const TAB_ACCENT: Record<string, { Icon: LucideIcon; idle: string; active: string; bar: string }> = {
+  overview: { Icon: LayoutDashboard, idle: 'text-slate-500', active: 'group-data-[state=active]:text-slate-700', bar: 'bg-slate-500' },
+  structure: { Icon: ListTree, idle: 'text-indigo-500', active: 'group-data-[state=active]:text-indigo-700', bar: 'bg-indigo-500' },
+  schedule: { Icon: CalendarDays, idle: 'text-violet-500', active: 'group-data-[state=active]:text-violet-700', bar: 'bg-violet-500' },
+  ev: { Icon: LineChart, idle: 'text-emerald-500', active: 'group-data-[state=active]:text-emerald-700', bar: 'bg-emerald-500' },
+  cost: { Icon: Receipt, idle: 'text-amber-500', active: 'group-data-[state=active]:text-amber-700', bar: 'bg-amber-500' },
+  commitment: { Icon: FileSignature, idle: 'text-orange-500', active: 'group-data-[state=active]:text-orange-700', bar: 'bg-orange-500' },
+  resources: { Icon: Users, idle: 'text-cyan-500', active: 'group-data-[state=active]:text-cyan-700', bar: 'bg-cyan-500' },
+  risks: { Icon: ShieldAlert, idle: 'text-red-500', active: 'group-data-[state=active]:text-red-700', bar: 'bg-red-500' },
+  cos: { Icon: Replace, idle: 'text-fuchsia-500', active: 'group-data-[state=active]:text-fuchsia-700', bar: 'bg-fuchsia-500' },
+  variance: { Icon: Activity, idle: 'text-rose-500', active: 'group-data-[state=active]:text-rose-700', bar: 'bg-rose-500' },
+  planning: { Icon: ClipboardList, idle: 'text-blue-500', active: 'group-data-[state=active]:text-blue-700', bar: 'bg-blue-500' },
+};
+
 function TabTrigger({
   value,
   label,
@@ -478,18 +507,23 @@ function TabTrigger({
   dimWhenEmpty?: boolean;
 }) {
   const isEmpty = dimWhenEmpty && (count === undefined || count === 0);
+  const accent = TAB_ACCENT[value];
+  const Icon = accent?.Icon;
   return (
     <Tabs.Trigger
       value={value}
-      className={`relative px-3 py-2.5 text-sm font-medium transition data-[state=active]:text-foreground hover:text-foreground ${
-        highlight ? 'text-foreground' : isEmpty ? 'text-muted-foreground/50' : 'text-muted-foreground'
+      className={`group relative flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition data-[state=active]:text-foreground hover:text-foreground ${
+        highlight ? 'text-foreground' : isEmpty ? 'text-muted-foreground/50' : 'text-foreground/75'
       }`}
     >
+      {Icon && (
+        <Icon className={`h-4 w-4 shrink-0 transition ${isEmpty ? 'text-muted-foreground/40' : accent.idle} ${accent.active}`} />
+      )}
       <span>{label}</span>
       {typeof count === 'number' && count > 0 && (
-        <span className="ml-2 rounded-full bg-muted px-1.5 py-0.5 text-xs">{count}</span>
+        <span className="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-xs">{count}</span>
       )}
-      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground opacity-0 data-[state=active]:opacity-100 transition" />
+      <span className={`absolute bottom-0 left-0 right-0 h-0.5 opacity-0 transition data-[state=active]:opacity-100 ${accent?.bar ?? 'bg-foreground'}`} />
     </Tabs.Trigger>
   );
 }
