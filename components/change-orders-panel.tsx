@@ -104,7 +104,7 @@ export function ChangeOrdersPanel({ rows, soldContract, baseMarginPct }: { rows:
               <p className="text-[11px] text-muted-foreground">{mi.dilutive.length} CO{mi.dilutive.length > 1 ? 's' : ''} below base margin:</p>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {mi.dilutive.slice(0, 6).map((d) => (
-                  <span key={d.co_id} className="rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[11px] text-amber-900">{d.co_id} · {d.marginPct.toFixed(0)}%</span>
+                  <span key={d.co_id} className="rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[11px] text-amber-900">{d.co_id} · {(d.marginPct ?? 0).toFixed(0)}%</span>
                 ))}
               </div>
             </div>

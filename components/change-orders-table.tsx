@@ -7,10 +7,10 @@ interface ChangeOrder {
   co_id: string;
   driver: string;
   scope_summary: string;
-  cost_impact_m: number;
-  revenue_impact_m: number;
+  cost_impact_m: number | null;
+  revenue_impact_m: number | null;
   schedule_impact_days: number;
-  margin_realized_pct: number;
+  margin_realized_pct: number | null;
   status: string;
   approval_routing: string;
   executed_week: number | null;
@@ -24,7 +24,8 @@ interface ChangeOrder {
 }
 
 
-function marginTone(pct: number): string {
+function marginTone(pct: number | null): string {
+  if (pct == null) return 'text-muted-foreground';
   if (pct <= 0) return 'text-red-600';
   if (pct < 8) return 'text-amber-600';
   return 'text-emerald-700';
@@ -102,16 +103,16 @@ export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown
               <dl className="flex shrink-0 items-stretch divide-x divide-border rounded-md border bg-muted/30">
                 <div className="px-4 py-2 text-center">
                   <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Revenue</dt>
-                  <dd className="mt-0.5 font-mono text-sm font-semibold text-emerald-700">+${co.revenue_impact_m.toFixed(2)}M</dd>
+                  <dd className="mt-0.5 font-mono text-sm font-semibold text-emerald-700">+${(co.revenue_impact_m ?? 0).toFixed(2)}M</dd>
                 </div>
                 <div className="px-4 py-2 text-center">
                   <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Cost</dt>
-                  <dd className="mt-0.5 font-mono text-sm font-semibold text-foreground">+${co.cost_impact_m.toFixed(2)}M</dd>
+                  <dd className="mt-0.5 font-mono text-sm font-semibold text-foreground">+${(co.cost_impact_m ?? 0).toFixed(2)}M</dd>
                 </div>
                 <div className="px-4 py-2 text-center">
                   <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Margin</dt>
                   <dd className={`mt-0.5 font-mono text-sm font-semibold ${marginTone(co.margin_realized_pct)}`}>
-                    {co.margin_realized_pct.toFixed(1)}%
+                    {co.margin_realized_pct == null ? '—' : `${co.margin_realized_pct.toFixed(1)}%`}
                   </dd>
                 </div>
               </dl>
