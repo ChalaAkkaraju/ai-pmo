@@ -79,6 +79,7 @@ export interface DrillRisk { code: string; project: string; klass: string; impac
 export interface DrillContingency { code: string; name: string; segment: string; pct: number; consumedM: number; budgetM: number; band: string; }
 export interface ProjectRow { code: string; name: string; segment: string; cpi: number; spi: number; }
 export interface PatternRow { klass: string; status: string; supporting: number; threshold: number; [key: string]: unknown; }
+export interface DrillChangeOrder { code: string; project: string; co_id: string; scope: string; status: string; recovery: number; at_risk_m: number; absorbed_m: number; kind: 'open' | 'absorbed'; segment: string; driver: string; [key: string]: unknown; }
 export interface PortfolioInsights {
   risk_exposure_m: number;
   risk_class_counts: Record<string, number>;
@@ -89,6 +90,7 @@ export interface PortfolioInsights {
   contingency_rows: DrillContingency[];
   project_rows: ProjectRow[];
   pattern_rows: PatternRow[];
+  co_rows: DrillChangeOrder[];
 }
 
 type DrillColumn = { key: string; label: string; numeric?: boolean; render?: (v: unknown, row: Record<string, unknown>) => ReactNode };
@@ -122,6 +124,7 @@ export interface FinancialKpis {
   billed: number;
   co_value: number;
   co_in_flight: number;
+  co_absorbed: number;
 }
 
 export interface OperationalKpis {
@@ -131,6 +134,7 @@ export interface OperationalKpis {
   sched_off_track: number;
   contingency_drawn_m: number;
   patterns_at_emergence: number;
+  revenue_at_risk_m: number;
 }
 
 export interface RoleKpiTile {
@@ -429,7 +433,7 @@ function MiniBarChart({ items, maxLabelWidth = 'flex-1', wrapLabels = false, fil
 
 /** Stacked proportion ribbon — one bar split by share of total, with a legend below.
  *  Items should be ordered good -> bad (left -> right) for a consistent health read. */
-function StackedRibbon({ items, onSegmentClick }: { items: BarItem[]; onSegmentClick?: (label: string) => void }) {
+function StackedRibbon({ items, onSegmentClick, format = (v: number) => String(v) }: { items: BarItem[]; onSegmentClick?: (label: string) => void; format?: (v: number) => string }) {
   const total = items.reduce((a, i) => a + i.value, 0) || 1;
   return (
     <div>
@@ -443,9 +447,9 @@ function StackedRibbon({ items, onSegmentClick }: { items: BarItem[]; onSegmentC
               onClick={onSegmentClick ? () => onSegmentClick(item.label) : undefined}
               className={`flex items-center justify-center text-[11px] font-semibold tabular-nums ${onSegmentClick ? 'cursor-pointer' : ''}`}
               style={{ width: `${pct}%`, backgroundColor: item.color, color: 'rgba(0,0,0,0.7)' }}
-              title={onSegmentClick ? `View ${item.label} (${item.value})` : `${item.label}: ${item.value}`}
+              title={onSegmentClick ? `View ${item.label} (${format(item.value)})` : `${item.label}: ${format(item.value)}`}
             >
-              {pct >= 14 ? item.value : ''}
+              {pct >= 14 ? format(item.value) : ''}
             </div>
           );
         })}
@@ -454,7 +458,7 @@ function StackedRibbon({ items, onSegmentClick }: { items: BarItem[]; onSegmentC
         {items.map((item) => (
           <span key={item.label} onClick={onSegmentClick ? () => onSegmentClick(item.label) : undefined} className={`inline-flex items-center gap-1.5 text-[11px] text-muted-foreground ${onSegmentClick ? 'cursor-pointer hover:text-foreground' : ''}`}>
             <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
-            {item.label} <span className="font-medium tabular-nums text-foreground">{item.value}</span>
+            {item.label} <span className="font-medium tabular-nums text-foreground">{format(item.value)}</span>
           </span>
         ))}
       </div>
@@ -676,6 +680,22 @@ export function DashboardClient({
     const data = insights.pattern_rows.filter((r) => r.supporting >= r.threshold).sort((a, b) => b.supporting - a.supporting);
     setDrill({ title: `${data.length} pattern${data.length === 1 ? '' : 's'} at emergence`, columns: [{ key: 'klass', label: 'Class' }, { key: 'status', label: 'Status' }, { key: 'supporting', label: 'Projects', numeric: true }, { key: 'threshold', label: 'Threshold', numeric: true }], data });
   }
+  function openChangeByDriver(label: string) {
+    const data = insights.co_rows.filter((r) => r.driver === label).map((r) => ({ ...r, project: `${r.project} (${r.code})`, type: r.kind === 'open' ? 'Open trend' : 'Absorbed', exposure: `$${(r.at_risk_m + r.absorbed_m).toFixed(2)}M` })).sort((a, b) => (b.at_risk_m + b.absorbed_m) - (a.at_risk_m + a.absorbed_m));
+    setDrill({ title: `${label} \u2014 ${data.length} exposed change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'type', label: 'Type' }, { key: 'exposure', label: 'Exposure', numeric: true }], data, seeAllHref: `/access/${token}/analytics/changes`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=cos` });
+  }
+  function openChangeExposureBySegment(label: string) {
+    const data = insights.co_rows.filter((r) => segmentStyle(r.segment).label === label).map((r) => ({ ...r, project: `${r.project} (${r.code})`, type: r.kind === 'open' ? 'Open trend' : 'Absorbed', exposure: `$${(r.at_risk_m + r.absorbed_m).toFixed(2)}M` })).sort((a, b) => (b.at_risk_m + b.absorbed_m) - (a.at_risk_m + a.absorbed_m));
+    setDrill({ title: `${label} \u2014 ${data.length} exposed change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'type', label: 'Type' }, { key: 'exposure', label: 'Exposure', numeric: true }], data, seeAllHref: `/access/${token}/analytics/changes`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=cos` });
+  }
+  function openRevenueAtRisk() {
+    const data = insights.co_rows.filter((r) => r.kind === 'open').map((r) => ({ ...r, project: `${r.project} (${r.code})`, at_risk: `$${r.at_risk_m.toFixed(2)}M` })).sort((a, b) => b.at_risk_m - a.at_risk_m);
+    setDrill({ title: `${data.length} open trend${data.length === 1 ? '' : 's'} \u00b7 revenue at risk`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'recovery', label: 'Recovery %', numeric: true, render: (v) => `${v}%` }, { key: 'at_risk', label: 'At risk', numeric: true }], data, seeAllHref: `/access/${token}/analytics/changes`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=cos` });
+  }
+  function openAbsorbed() {
+    const data = insights.co_rows.filter((r) => r.kind === 'absorbed').map((r) => ({ ...r, project: `${r.project} (${r.code})`, absorbed: `$${r.absorbed_m.toFixed(2)}M` })).sort((a, b) => b.absorbed_m - a.absorbed_m);
+    setDrill({ title: `${data.length} absorbed \u00b7 unfunded change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'absorbed', label: 'Absorbed cost', numeric: true }], data, seeAllHref: `/access/${token}/analytics/changes`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=cos` });
+  }
   function openStatusDrill(status: 'Active' | 'SC' | 'Closed') {
     const data = projects.filter((p) => p.status === status).map((p) => ({ ...p, project: `${p.name} (${p.code})` }));
     const labelMap: Record<string, string> = { Active: 'active', SC: 'in substantial completion', Closed: 'closed' };
@@ -854,6 +874,30 @@ export function DashboardClient({
     'Weather / climate-sensitive construction': '#ec4899',
     'Project-specific': '#64748b',
   };
+  const _segExposure = new Map<string, number>();
+  for (const r of insights.co_rows) _segExposure.set(r.segment, (_segExposure.get(r.segment) ?? 0) + r.at_risk_m + r.absorbed_m);
+  const changeExposureBars: BarItem[] = [...(_segExposure.entries())]
+    .filter(([seg]) => seg)
+    .map(([seg, v]) => ({ label: segmentStyle(seg).label, value: Math.round(v * 10) / 10, color: segmentStyle(seg).hex }))
+    .filter((b) => b.value > 0)
+    .sort((a, b) => b.value - a.value);
+  const DRIVER_COLORS: Record<string, string> = {
+    'Client-directed scope': '#8b5cf6',
+    'Site conditions': '#84cc16',
+    'Design development': '#0ea5e9',
+    'Regulatory & permits': '#eab308',
+    'Supply & escalation': '#f97316',
+    'Estimating & productivity': '#f43f5e',
+    'Other': '#64748b',
+  };
+  const _drvExposure = new Map<string, number>();
+  for (const r of insights.co_rows) _drvExposure.set(r.driver, (_drvExposure.get(r.driver) ?? 0) + r.at_risk_m + r.absorbed_m);
+  const changeDriverBars: BarItem[] = [...(_drvExposure.entries())]
+    .filter(([d]) => d)
+    .map(([d, v]) => ({ label: d, value: Math.round(v * 10) / 10, color: DRIVER_COLORS[d] ?? '#64748b' }))
+    .filter((b) => b.value > 0)
+    .sort((a, b) => b.value - a.value);
+
   const riskBars: BarItem[] = Object.entries(insights.risk_class_counts)
     .sort((a, b) => b[1] - a[1])
     .map(([cls, count]) => ({
@@ -1070,13 +1114,14 @@ export function DashboardClient({
         <section>
           <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio financial position</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">Cost-to-cash across active projects · commitment, recognised revenue (Results Analysis) and billing — independent of the managerial EV pulse above.</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
             <KpiCard label="Open commitment" value={fmtFin(financial.open_commitment)} sub="open POs · forward cost" tone="neutral" />
             <KpiCard label="Recognised revenue" value={fmtFin(financial.recognised_revenue)} sub="Results Analysis · POC" tone="info" />
             <KpiCard label="Recognised margin" value={`${financial.recognised_margin_pct.toFixed(1)}%`} sub={`${fmtFin(financial.recognised_margin)} to date`} tone={financial.recognised_margin_pct < 8 ? 'warn' : 'ok'} />
             <KpiCard label={financial.net_unbilled >= 0 ? 'Net unbilled (WIP)' : 'Deferred / over-billed'} value={fmtFin(Math.abs(financial.net_unbilled))} sub={financial.net_unbilled >= 0 ? 'earned, not yet billed' : 'billed ahead of revenue'} tone={financial.net_unbilled >= 0 ? 'neutral' : 'warn'} />
             <KpiCard label="Billed to date" value={fmtFin(financial.billed)} sub="invoices raised" tone="neutral" />
             <KpiCard label="Change orders" value={fmtFin(financial.co_value)} sub={`${financial.co_in_flight} in flight · revenue impact`} tone={financial.co_in_flight > 0 ? 'info' : 'neutral'} />
+            <KpiCard label="Absorbed · unfunded" value={fmtFin(financial.co_absorbed)} sub="cost eaten on unrecovered changes" tone={financial.co_absorbed > 0 ? 'warn' : 'neutral'} onClick={openAbsorbed} />
           </div>
         </section>
       )}
@@ -1147,49 +1192,60 @@ export function DashboardClient({
           already shows value, budget, margin, lifecycle mix and the CPI/SPI pulse) */}
       <section>
         <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio watchlist</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
           <KpiCard label="Open H issues" value={String(operational.open_h_issues)} sub="needs attention" tone={operational.open_h_issues > 0 ? 'warn' : 'ok'} onClick={openOpenHIssues} />
           <KpiCard label="Realised risks" value={String(operational.realised_risks)} sub="pattern signal" tone="info" onClick={openRealisedRisks} />
           <KpiCard label="Cost off-track" value={String(operational.cost_off_track)} sub="projects CPI < 0.95" tone={operational.cost_off_track > 0 ? 'warn' : 'ok'} onClick={openCostOffTrack} />
           <KpiCard label="Schedule off-track" value={String(operational.sched_off_track)} sub="projects SPI < 0.95" tone={operational.sched_off_track > 0 ? 'warn' : 'ok'} onClick={openSchedOffTrack} />
           <KpiCard label="Contingency drawn" value={`$${operational.contingency_drawn_m.toFixed(1)}M`} sub="across portfolio" tone="neutral" onClick={openContingencyDrawn} />
           <KpiCard label="Patterns at emergence" value={String(operational.patterns_at_emergence)} sub="cross-project" tone="info" onClick={openPatterns} />
+          <KpiCard label="Revenue at risk" value={`$${operational.revenue_at_risk_m.toFixed(1)}M`} sub="open trends · unlikely recovery" tone={operational.revenue_at_risk_m > 0 ? 'warn' : 'ok'} onClick={openRevenueAtRisk} />
         </div>
       </section>
 
-      {/* INSIGHTS — 3 mini charts */}
+      {/* INSIGHTS — mini charts */}
       <section>
         <h2 className="text-base font-medium uppercase tracking-wider text-muted-foreground">Portfolio insights</h2>
         <p className="mt-1 text-xs text-muted-foreground">Click any bar, band, or legend item to see the underlying records.</p>
         <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="flex flex-col rounded-lg border bg-card p-4">
-            <div className="mb-3 flex items-baseline justify-between">
-              <h3 className="text-base font-semibold">Risks by category</h3>
-              <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total · {`$${insights.risk_exposure_m.toFixed(0)}M`} EMV</span>
+          <div className="flex flex-col gap-4">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h3 className="text-base font-semibold">Risks by category</h3>
+                <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.risk_class_counts).reduce((a, b) => a + b, 0)} total · {`$${insights.risk_exposure_m.toFixed(0)}M`} EMV</span>
+              </div>
+              <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels onItemClick={openRisksDrill} />
             </div>
-            <MiniBarChart items={riskBars} maxLabelWidth="w-52" wrapLabels fill onItemClick={openRisksDrill} />
+            <div className="flex flex-1 flex-col rounded-lg border bg-card p-4">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h3 className="text-base font-semibold">Change exposure by segment</h3>
+                <span className="text-xs text-muted-foreground">open-trend revenue-at-risk + absorbed cost</span>
+              </div>
+              <StackedRibbon items={changeExposureBars} onSegmentClick={openChangeExposureBySegment} format={(v) => `$${v}M`} />
+            </div>
           </div>
           <div className="flex flex-col gap-4">
-          <div className="rounded-lg border bg-card p-4">
-            <div className="mb-3 flex items-baseline justify-between">
-              <h3 className="text-base font-semibold">Issues by severity</h3>
-              <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.issue_severity_counts).reduce((a, b) => a + b, 0)} total</span>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h3 className="text-base font-semibold">Issues by severity</h3>
+                <span className="text-xs text-muted-foreground tabular-nums">{Object.values(insights.issue_severity_counts).reduce((a, b) => a + b, 0)} total · {insights.issue_severity_counts.H ?? 0} high-severity in flight</span>
+              </div>
+              <StackedRibbon items={issueBars} onSegmentClick={openIssuesDrill} />
             </div>
-            <StackedRibbon items={issueBars} onSegmentClick={openIssuesDrill} />
-            <p className="mt-3 text-xs text-muted-foreground">
-              {insights.issue_severity_counts.H ?? 0} high-severity items currently in flight.
-            </p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <div className="mb-3 flex items-baseline justify-between">
-              <h3 className="text-base font-semibold">Contingency consumption</h3>
-              <span className="text-xs text-muted-foreground">projects by % of contingency used</span>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h3 className="text-base font-semibold">Contingency consumption</h3>
+                <span className="text-xs text-muted-foreground">projects by share of contingency budget used</span>
+              </div>
+              <StackedRibbon items={contingencyBars} onSegmentClick={openContingencyDrill} />
             </div>
-            <StackedRibbon items={contingencyBars} onSegmentClick={openContingencyDrill} />
-            <p className="mt-3 text-xs text-muted-foreground">
-              Each band is a project&rsquo;s contingency drawn as a share of its contingency budget.
-            </p>
-          </div>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h3 className="text-base font-semibold">Change exposure by driver</h3>
+                <span className="text-xs text-muted-foreground">what&rsquo;s driving the exposure</span>
+              </div>
+              <StackedRibbon items={changeDriverBars} onSegmentClick={openChangeByDriver} format={(v) => `$${v}M`} />
+            </div>
           </div>
         </div>
       </section>

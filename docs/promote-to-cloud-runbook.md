@@ -93,8 +93,8 @@ The seeded tokens are `demo-...-token-replace-me`. Before sharing publicly,
 replace them with unguessable values (Supabase Studio -> SQL editor), e.g.:
 
 ```sql
-update roles set access_token = 'demo-pm-' || gen_random_uuid()
-where access_token = 'demo-pm-token-replace-me';
+update roles set token = 'demo-pm-' || gen_random_uuid()
+where token = 'demo-pm-token-replace-me';
 -- repeat per role
 ```
 
@@ -158,36 +158,4 @@ Generate Domain** for a public URL.
 
 ### C4. Deploy
 
-Railway builds and starts automatically on push (first build takes a few minutes).
-Being a persistent server, there are **no function timeouts and no cold starts** —
-the long agent calls and the Chromium PDF route run without serverless constraints.
-
----
-
-## Part D — Post-deploy smoke test
-
-On the Railway URL, run the key parts of `docs/pre-deploy-checklist.md`, especially:
-
-- Open a report -> **Download PDF** -> confirm a real, selectable-text PDF downloads.
-  Full puppeteer on a persistent server should be reliable; if it errors on a
-  missing system library, add it via Nixpacks (a `NIXPACKS_PKGS` variable for the
-  font/nss libs) — rare with full puppeteer.
-- Invoke a couple of agents including a full-mode report — confirm no timeout.
-
----
-
-## Part E — Between demos (save usage)
-
-Railway Hobby includes **$5 of usage**; a low-traffic demo stays well under it. To
-trim usage between demos you can remove the service (redeploy from GitHub when
-needed) or just leave it running. **Pause the Supabase project separately** to keep
-DB compute at ~$0. Keep building on local the whole time.
-
----
-
-## Quick reference — the per-demo loop (after one-time prep)
-
-1. Confirm the Supabase project is Active (un-pause if needed).
-2. `git push origin main` -> Railway auto-rebuilds and redeploys.
-3. Share the demo links (the real tokens from B4) on the Railway domain.
-4. After: pause the Supabase project (and optionally remove the Railway service).
+Railway builds and starts automatically on pus

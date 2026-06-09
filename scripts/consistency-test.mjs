@@ -15,7 +15,7 @@
  *   node scripts/consistency-test.mjs
  *
  * Optional environment-variable overrides:
- *   AGENT_TOKEN=demo-pm-token-replace-me
+ *   AGENT_TOKEN=demo-pm
  *   PROJECT_CODE=NW-PWR-2686
  *   RUNS=5
  *   CONCISE=true
@@ -27,7 +27,7 @@ import { join } from 'node:path';
 
 // ---- Configuration (override via env vars if you like) ----
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
-const TOKEN = process.env.AGENT_TOKEN ?? 'demo-pm-token-replace-me';
+const TOKEN = process.env.AGENT_TOKEN ?? 'demo-pm';
 const PROJECT_CODE = process.env.PROJECT_CODE ?? 'NW-PWR-2686';
 const AGENT_TYPE = process.env.AGENT_TYPE ?? 'risk_analyst';
 const CONCISE = (process.env.CONCISE ?? 'true').toLowerCase() === 'true';

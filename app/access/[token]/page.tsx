@@ -14,6 +14,7 @@ import { WelcomeGate } from '@/components/welcome-gate';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { computeEv, rollUpEv, type PortfolioEv } from '@/lib/earned-value';
 import { selectAll } from '@/lib/select-all';
+import { categorizeDriver } from '@/lib/change-orders';
 import {
   DashboardClient,
   type DashboardProject,
@@ -58,7 +59,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
       supabase.from('risks').select('project_id, status, impact, cross_cutting_class, owner, description, emv_usd, residual_emv_usd'),
       supabase.from('issues').select('project_id, severity, status, category, owner, description'),
       supabase.from('variance_reports').select('project_id, report_week, cpi, spi, contingency_consumed_m'),
-      supabase.from('change_orders').select('project_id, status, revenue_impact_m, margin_realized_pct'),
+      supabase.from('change_orders').select('project_id, status, revenue_impact_m, margin_realized_pct, cost_impact_m, recovery_confidence, co_id, scope_summary, driver'),
       supabase.from('portfolio_patterns').select('status, threshold_projects, supporting_projects, cross_cutting_class'),
       supabase
         .from('agent_outputs')
@@ -92,7 +93,20 @@ export default async function RoleLandingPage({ params }: PageProps) {
   const risks = (risksRes.data ?? []) as Array<{ project_id: string; status: string; impact: string; cross_cutting_class: string; owner: string | null; description: string; emv_usd: number | string | null; residual_emv_usd: number | string | null }>;
   const issues = (issuesRes.data ?? []) as Array<{ project_id: string; severity: string; status: string; category: string; owner: string | null; description: string }>;
   const variance = (varianceRes.data ?? []) as Array<{ project_id: string; report_week: number; cpi: number | string; spi: number | string; contingency_consumed_m: number | string | null }>;
-  const changeOrders = (changeOrdersRes.data ?? []) as Array<{ project_id: string; status: string; revenue_impact_m: number | string | null; margin_realized_pct: number | string | null }>;
+  const changeOrders = (changeOrdersRes.data ?? []) as Array<{ project_id: string; status: string; revenue_impact_m: number | string | null; margin_realized_pct: number | string | null; cost_impact_m: number | string | null; recovery_confidence: number | string | null; co_id: string | null; scope_summary: string | null; driver: string | null }>;
+
+  // Change exposure: absorbed (unfunded cost eaten) + revenue-at-risk (open trends unlikely to recover)
+  const OPEN_CO_STATUS = ['Anticipated', 'Under analysis', 'Priced'];
+  let coAbsorbedM = 0, openTrendRevM = 0, expectedRecoveryM = 0;
+  for (const c of changeOrders) {
+    if (c.status === 'Absorbed') coAbsorbedM += Number(c.cost_impact_m) || 0;
+    if (OPEN_CO_STATUS.includes(c.status)) {
+      const rev = Number(c.revenue_impact_m) || 0;
+      openTrendRevM += rev;
+      expectedRecoveryM += rev * ((Number(c.recovery_confidence) || 0) / 100);
+    }
+  }
+  const revenueAtRiskM = openTrendRevM - expectedRecoveryM;
   const patterns = (patternsRes.data ?? []) as Array<{ status: string; threshold_projects: number; supporting_projects: string[] | null; cross_cutting_class: string }>;
 
   const projIdToContract = new Map<string, number>();
@@ -178,6 +192,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
     sched_off_track: schedOffTrack,
     contingency_drawn_m: contingencyDrawnM,
     patterns_at_emergence: patternsAtEmergence,
+    revenue_at_risk_m: revenueAtRiskM,
   };
 
   // -------- Portfolio financial position (cost-to-cash rollup across active projects) --------
@@ -217,6 +232,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
       billed,
       co_value: coValue,
       co_in_flight: coInFlight,
+      co_absorbed: coAbsorbedM * 1_000_000,
     };
   } catch {
     financial = null;
@@ -417,6 +433,18 @@ export default async function RoleLandingPage({ params }: PageProps) {
     riskExposure += Number(r.residual_emv_usd) || Number(r.emv_usd) || 0;
   }
 
+  const co_rows: PortfolioInsights['co_rows'] = [];
+  for (const c of changeOrders) {
+    const m = projMetaById.get(c.project_id);
+    const rev = Number(c.revenue_impact_m) || 0;
+    const conf = Number(c.recovery_confidence) || 0;
+    if (OPEN_CO_STATUS.includes(c.status)) {
+      co_rows.push({ code: m?.code ?? '\u2014', project: m?.name ?? '\u2014', co_id: c.co_id ?? '\u2014', scope: c.scope_summary ?? '\u2014', status: c.status, recovery: conf, at_risk_m: rev * (1 - conf / 100), absorbed_m: 0, kind: 'open', segment: m?.segment ?? '', driver: categorizeDriver(c.driver ?? '') });
+    } else if (c.status === 'Absorbed') {
+      co_rows.push({ code: m?.code ?? '\u2014', project: m?.name ?? '\u2014', co_id: c.co_id ?? '\u2014', scope: c.scope_summary ?? '\u2014', status: c.status, recovery: conf, at_risk_m: 0, absorbed_m: Number(c.cost_impact_m) || 0, kind: 'absorbed', segment: m?.segment ?? '', driver: categorizeDriver(c.driver ?? '') });
+    }
+  }
+
   const insights: PortfolioInsights = {
     risk_exposure_m: riskExposure / 1_000_000,
     risk_class_counts: riskClassCounts,
@@ -427,6 +455,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
     contingency_rows,
     project_rows,
     pattern_rows,
+    co_rows,
   };
 
   // -------- Hot 5 — top projects of concern --------

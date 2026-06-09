@@ -34,7 +34,7 @@ export async function proxy(request: NextRequest) {
 
   // Extract token from URL
   const token = pathname.split('/')[2];
-  if (!token || token.length < 8) {
+  if (!token || token.length < 6) {
     return NextResponse.redirect(new URL('/invalid', request.url));
   }
 

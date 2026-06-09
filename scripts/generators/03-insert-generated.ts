@@ -308,7 +308,7 @@ async function main() {
   log.info(`  ${coRows.length} new change orders`);
   log.info(`  ${varRows.length} new variance reports`);
   log.info('');
-  log.info('Open your dashboard at http://localhost:3000/access/demo-pm-token-replace-me to see them.');
+  log.info('Open your dashboard at http://localhost:3000/access/demo-pm to see them.');
   log.info('The Active portfolio grid will now show 100 projects across renewables / water / industrial / power.');
 }
 

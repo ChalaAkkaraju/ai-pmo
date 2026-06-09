@@ -22,7 +22,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
-const TOKEN = process.env.TOKEN || 'demo-pm-token-replace-me';
+const TOKEN = process.env.TOKEN || 'demo-pm';
 let PROJECT = process.env.PROJECT || '';
 const OUT = path.resolve('docs/book/figures');
 const VIEWPORT = { width: 1360, height: 1000, deviceScaleFactor: 2 };
