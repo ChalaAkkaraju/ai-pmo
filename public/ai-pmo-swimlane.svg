@@ -53,7 +53,7 @@
 <rect x="20" y="171" width="126" height="15" rx="7.5" fill="#B5D4F4"/>
 <text x="83" y="181" text-anchor="middle" font-size="8" font-weight="700" fill="#0C447C">SYSTEM OF RECORD</text>
 <text x="20" y="280" font-size="12.5" font-weight="700" fill="#23231F">AI PMO — layer</text>
-<text x="20" y="296" font-size="8.6" fill="#5F5E5A">Writes once at booking, else read-only</text>
+<text x="20" y="296" font-size="8.6" fill="#5F5E5A">Writes to SAP once · owns its registers</text>
 <rect x="20" y="303" width="147" height="15" rx="7.5" fill="#97C459"/>
 <text x="94" y="313" text-anchor="middle" font-size="8" font-weight="700" fill="#173404">READS · AUTHORS WBS</text>
 <text x="20" y="434" font-size="12.5" font-weight="700" fill="#23231F">Scheduler</text>

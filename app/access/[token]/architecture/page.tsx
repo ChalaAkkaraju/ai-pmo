@@ -19,7 +19,7 @@ interface PageProps {
 const KEY = [
   { c: '#B5D4F4', t: 'SAP PS — ERP', d: 'System of record for cost, structure, change, revenue' },
   { c: '#FAC775', t: 'Scheduler', d: 'System of record for tasks, dates, progress, resources' },
-  { c: '#97C459', t: 'AI PMO', d: 'Reads both, authors the WBS — one write, else read-only' },
+  { c: '#97C459', t: 'AI PMO', d: 'Reads both; one write into SAP (the booked WBS); owns the risk & issue registers' },
   { c: '#D3D1C7', t: 'CRM / CPQ', d: 'Out of integration scope; as-sold baseline crosses at booking' },
 ];
 
@@ -66,9 +66,11 @@ export default async function ArchitecturePage({ params }: PageProps) {
       <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-muted-foreground">
         The layer sits above the ERP and the scheduler across the whole project lifecycle. The project is created in
         SAP — shelled from the won quote (CRM/CPQ) at booking — and mirrored into AI PMO, with SAP staying the system of
-        record. AI PMO then writes exactly once — authoring the WBS and booking it back into SAP — and publishes that
-        WBS to the scheduler so every task is born tagged. Everything after that is read-only synthesis, joined by the
-        WBS code, ending in the three-state margin reconciliation.
+        record. AI PMO writes into SAP exactly once — authoring the WBS and booking it back — and publishes that
+        WBS to the scheduler so every task is born tagged. Everything it reads from those two systems afterwards is
+        read-only synthesis, joined by the WBS code and ending in the three-state margin reconciliation. The registers
+        no ERP owns — risks and issues — are born and live in AI PMO itself: the assistant raises entries and assigns
+        tasks there, and only an approved change order books onward into SAP.
       </p>
 
       <div className="mt-6 overflow-x-auto rounded-xl border bg-card p-4">
