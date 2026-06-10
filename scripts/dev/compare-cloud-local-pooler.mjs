@@ -3,7 +3,7 @@
  * since the cloud REST gateway is wedged. Local via REST as before.
  *
  * Run (PowerShell, from repo root):
- *   $env:CLOUD_DB_URL="postgresql://postgres.edtxpjadvwsaktkvourr:<PASSWORD>@aws-1-us-east-1.pooler.supabase.com:5432/postgres"
+ *   $env:CLOUD_DB_URL="postgresql://postgres.icmqcesrwgbucpkwbory:<PASSWORD>@aws-1-us-east-1.pooler.supabase.com:5432/postgres"
  *   node scripts/dev/compare-cloud-local-pooler.mjs
  */
 import pg from 'pg';

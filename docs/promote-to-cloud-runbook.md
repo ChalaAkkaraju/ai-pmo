@@ -9,7 +9,7 @@ you're not demoing, **pause** the cloud project so it costs ~$0.
 
 **Before you start, confirm:**
 
-- Supabase **Pro** is active and the project `pmo-llm-demo` (`edtxpjadvwsaktkvourr`) shows **Database + PostgREST = Healthy**.
+- Supabase **Pro** is active and the project `pmo-llm-demo` (`icmqcesrwgbucpkwbory`) shows **Database + PostgREST = Healthy**.
 - Your local stack runs (Docker up, `supabase start`), and the app works at `http://localhost:3000`.
 - You have the cloud credentials in `.env.local.cloud-backup` (URL + anon + service-role key).
 - Supabase CLI is installed (it is — via Scoop).
@@ -69,11 +69,11 @@ Copy-Item .env.local.cloud-backup .env.local -Force
 ### B2. Apply all migrations to the cloud
 
 ```powershell
-supabase link --project-ref edtxpjadvwsaktkvourr
+supabase link --project-ref icmqcesrwgbucpkwbory
 supabase db push
 ```
 
-This runs all 30 migrations (through `0030`) against the cloud — same schema as local.
+This runs every migration in `supabase/migrations` (currently 35, through `0035`) against the cloud — same schema as local.
 
 ### B3. Seed the portfolio + narratives
 
@@ -89,16 +89,16 @@ For a quick free fill, run the agents via local Qwen against the cloud rows.
 
 ### B4. Replace the placeholder access tokens
 
-The seeded tokens are `demo-...-token-replace-me`. Before sharing publicly,
-replace them with unguessable values (Supabase Studio -> SQL editor), e.g.:
+Migration `0033` seeds clean short tokens (`demo-pm`, `demo-risk`, …) — fine
+locally, but **guessable on a public URL**. Before sharing publicly, append
+randomness to every role in one statement (Supabase Studio -> SQL editor):
 
 ```sql
-update roles set token = 'demo-pm-' || gen_random_uuid()
-where token = 'demo-pm-token-replace-me';
--- repeat per role
+update roles set token = token || '-' || replace(gen_random_uuid()::text, '-', '');
+select name, role_type, token from roles order by role_type;  -- note these down
 ```
 
-Note the new tokens — they go in the demo links you share.
+The select output gives the tokens for the demo links you share.
 
 ### B5. Switch env back to local
 
