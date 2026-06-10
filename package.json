@@ -29,6 +29,7 @@
     "openai": "^4.73.0",
     "pg": "^8.21.0",
     "puppeteer-core": "^24.9.0",
+    "puppeteer": "^25.1.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-markdown": "^9.0.1",
@@ -46,7 +47,6 @@
     "eslint": "^9.18.0",
     "eslint-config-next": "^16.2.6",
     "postcss": "^8.4.47",
-    "puppeteer": "^25.1.0",
     "tailwindcss": "^3.4.13",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3"
