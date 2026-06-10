@@ -46,21 +46,21 @@ export function IssueHeatmap({ rows, currentWeek }: { rows: Array<Record<string,
       <div className="mt-3 flex">
         <div className="flex w-10 items-center justify-center pb-6 pr-1"><span className="rotate-180 text-[10px] font-medium uppercase tracking-wider text-muted-foreground [writing-mode:vertical-rl]">Severity →</span></div>
         <div className="flex-1">
-          <div className="ml-12 mb-1 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-muted-foreground">
+          <div className="ml-9 mb-1 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-muted-foreground">
             {AGE_COLS.map((c) => <div key={c.key}>{c.label}</div>)}
           </div>
           {SEV_ROWS.map((sev) => (
-            <div key={sev} className="mb-2 flex items-stretch gap-2">
+            <div key={sev} className="mb-1.5 flex items-stretch gap-1.5">
               <div className="flex w-10 items-center justify-end pr-1 text-[11px] font-medium text-muted-foreground">{sevLabel(sev)}</div>
               <div className="grid flex-1 grid-cols-3 gap-2">
                 {AGE_COLS.map((col, ci) => {
                   const c = cell.get(`${sev}-${col.key}`);
                   return (
-                    <div key={col.key} className={`relative flex h-24 flex-col items-center justify-center rounded-md border ${tint(sev, ci)} p-2`}>
+                    <div key={col.key} className={`relative flex h-12 flex-col items-center justify-center rounded-md border ${tint(sev, ci)} p-1.5`}>
                       {c ? (
                         <>
-                          <span className="text-2xl font-bold leading-none tabular-nums text-foreground">{c.count}</span>
-                          {c.cost > 0 && <span className="mt-1 text-[11px] font-medium text-muted-foreground">{fmtUsd(c.cost)}</span>}
+                          <span className="text-lg font-bold leading-none tabular-nums text-foreground">{c.count}</span>
+                          {c.cost > 0 && <span className="mt-0.5 text-[10px] font-medium text-muted-foreground">{fmtUsd(c.cost)}</span>}
                         </>
                       ) : <span className="text-base text-muted-foreground/40">—</span>}
                     </div>
@@ -69,7 +69,7 @@ export function IssueHeatmap({ rows, currentWeek }: { rows: Array<Record<string,
               </div>
             </div>
           ))}
-          <div className="ml-12 mt-1 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Age →</div>
+          <div className="ml-9 mt-1 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Age →</div>
         </div>
       </div>
     </div>

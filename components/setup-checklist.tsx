@@ -103,31 +103,31 @@ export function SetupChecklist({
   }
 
   return (
-    <section className="mt-6 overflow-hidden rounded-lg border bg-card">
+    <section className="mt-6">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition hover:bg-muted/40"
+        className={`group flex w-full items-center gap-2.5 rounded-lg border border-indigo-200 bg-gradient-to-r from-indigo-50 via-sky-50 to-white px-4 py-3 text-left shadow-sm transition hover:from-indigo-100 hover:via-sky-100 ${open ? 'rounded-b-none border-b-0' : ''}`}
+        aria-expanded={open}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-base leading-none" aria-hidden="true">🧭</span>
-          <div>
-            <p className="text-sm font-semibold">Guided setup — build the planning artefacts</p>
-            <p className="text-xs text-muted-foreground">
-              {allDone ? 'All planning artefacts drafted.' : 'Work through the steps in order; each one unlocks the next.'}
-            </p>
-          </div>
+        <span className="text-lg leading-none" aria-hidden="true">🧭</span>
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold text-indigo-900">Guided setup — build the planning artefacts</h2>
+          <p className="text-xs text-indigo-900/60">
+            {allDone ? 'All planning artefacts drafted.' : 'Work through the steps in order; each one unlocks the next.'}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${allDone ? 'bg-emerald-100 text-emerald-800' : 'bg-muted text-foreground'}`}>
-            {doneCount}/{STEPS.length} done
-          </span>
-          <span className="text-muted-foreground">{open ? '▾' : '▸'}</span>
-        </div>
+        <span className={`ml-3 rounded-full px-2.5 py-1 text-xs font-medium ${allDone ? 'bg-emerald-100 text-emerald-800' : 'bg-white/70 text-indigo-900'}`}>
+          {doneCount}/{STEPS.length} done
+        </span>
+        <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition group-hover:bg-indigo-700">
+          {open ? 'Hide steps' : 'Show steps'}
+          <span className="transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>▾</span>
+        </span>
       </button>
 
       {open && (
-        <div className="border-t px-3 py-3 sm:px-5">
+        <div className="rounded-b-lg border border-t-0 border-indigo-200 bg-card px-3 py-3 sm:px-5">
           <ol className="space-y-2">
             {STEPS.map((step) => {
               const isDone = doneSet.has(step.key);

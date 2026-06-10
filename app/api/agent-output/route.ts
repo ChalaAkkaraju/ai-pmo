@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
 
 const patchSchema = z
   .object({
-    token: z.string().min(8),
+    token: z.string().min(6),
     id: z.string().uuid(),
     edited_md: z.string().min(1).optional(),
     revert: z.boolean().optional(),

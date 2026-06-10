@@ -26,7 +26,7 @@ export function LabourByWbs({ rows, workPackages }: { rows: LabourByWbsRow[]; wo
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <thead className="border-b bg-muted/60 text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-2 text-left">Phase</th>
               <th className="px-3 py-2 text-right">Planned</th>
@@ -35,12 +35,12 @@ export function LabourByWbs({ rows, workPackages }: { rows: LabourByWbsRow[]; wo
               <th className="px-3 py-2 text-center">Productivity</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
             {data.map((d) => {
               const pi = d.productivity;
               const piTone = pi == null ? 'text-muted-foreground' : pi >= 1.0 ? 'text-emerald-700' : pi < 0.95 ? 'text-red-600' : 'text-amber-700';
               return (
-                <tr key={d.phase} className="hover:bg-muted/30">
+                <tr key={d.phase} className="hover:bg-muted/70">
                   <td className="px-4 py-2.5"><span className="font-mono text-xs text-muted-foreground">{d.phase}</span> {nameByCode.get(d.phase) ?? ''}</td>
                   <td className="px-3 py-2.5 text-right font-mono text-xs">{hrs(d.plannedHours)}</td>
                   <td className="px-3 py-2.5 text-right font-mono text-xs">{d.actualHours > 0 ? hrs(d.actualHours) : '—'}</td>

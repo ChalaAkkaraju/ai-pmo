@@ -67,7 +67,7 @@ export function EarnedValueCard({
   const varTone = (v: number) => (v < 0 ? 'text-red-600' : v > 0 ? 'text-emerald-700' : 'text-foreground');
 
   const Metric = ({ label, value, cls = 'text-foreground', accent }: { label: string; value: string; cls?: string; accent?: string }) => (
-    <div className="rounded-md bg-muted/40 px-3 py-1.5" style={accent ? { backgroundColor: `${accent}1A` } : undefined}>
+    <div className="rounded-md border bg-card px-3 py-1.5" style={accent ? { backgroundColor: `${accent}1A` } : undefined}>
       <p className={`text-[10px] font-medium uppercase tracking-wider ${accent ? '' : 'text-muted-foreground'}`} style={accent ? { color: accent } : undefined}>{label}</p>
       <p className={`text-base font-semibold tabular-nums ${cls}`}>{value}</p>
     </div>

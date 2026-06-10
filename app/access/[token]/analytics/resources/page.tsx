@@ -74,8 +74,10 @@ export default async function ResourcesAnalyticsPage({ params }: { params: Promi
 
   return (
     <div className="container mx-auto max-w-screen-2xl px-8 py-8">
-      <h1 className="text-2xl font-bold tracking-tight">Portfolio analytics</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Cross-project breakdowns. Resource view is visibility only — levelling stays in the scheduler.</p>
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <h1 className="text-lg font-bold tracking-tight">Portfolio analytics</h1>
+        <p className="text-sm text-muted-foreground">Cross-project breakdowns. Resource view is visibility only — levelling stays in the scheduler.</p>
+      </div>
       <div className="mt-5"><AnalyticsNav token={token} /></div>
 
       <ResourceAnalyticsClient views={views} />

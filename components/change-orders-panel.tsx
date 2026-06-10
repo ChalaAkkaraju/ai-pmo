@@ -11,7 +11,7 @@ const fPct = (v: number | null) => (v == null ? '—' : `${v.toFixed(1)}%`);
 function Cell({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'ok' | 'warn' | 'bad' }) {
   const t = tone === 'ok' ? 'text-emerald-700' : tone === 'warn' ? 'text-amber-600' : tone === 'bad' ? 'text-red-600' : 'text-foreground';
   return (
-    <div className="rounded-md bg-muted/40 px-3 py-2">
+    <div className="rounded-md border bg-card px-3 py-2">
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={`text-base font-semibold tabular-nums ${t}`}>{value}</p>
       {sub && <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p>}
@@ -33,17 +33,13 @@ export function ChangeOrdersPanel({ rows, soldContract, baseMarginPct }: { rows:
 
   return (
     <div className="mb-5 space-y-4">
-      {/* Summary rollup */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {/* KPI strip — summary rollup + funding outcome read as one block */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <Cell label="Change orders" value={String(sum.count)} sub={`${sum.executed} executed · ${sum.pending} in pipeline`} />
         <Cell label="Net margin add" value={fM(sum.netMarginM)} tone={sum.netMarginM >= 0 ? 'ok' : 'bad'} sub={`blended ${fPct(sum.blendedMarginPct)}`} />
         <Cell label="Cost / revenue" value={`${fM(sum.totalCostM)} / ${fM(sum.totalRevenueM)}`} sub="change book" />
         <Cell label="Schedule added" value={`${sum.scheduleDays > 0 ? '+' : ''}${sum.scheduleDays} days`} tone={sum.scheduleDays > 0 ? 'warn' : undefined} />
         <Cell label="Revised contract" value={fM(sum.revisedContractM)} sub={`${sum.contractGrowthPct != null && sum.contractGrowthPct >= 0 ? '+' : ''}${fPct(sum.contractGrowthPct)} vs sold`} />
-      </div>
-
-      {/* Funding outcome — funded vs absorbed vs at-risk (the trend-register split) */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2">
           <p className="text-[10px] uppercase tracking-wider text-emerald-800">Funded · recoverable</p>
           <p className="text-base font-semibold tabular-nums text-emerald-700">{fM(sum.fundedRevenueM)}</p>
@@ -61,27 +57,27 @@ export function ChangeOrdersPanel({ rows, soldContract, baseMarginPct }: { rows:
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start">
         {/* Status pipeline */}
         <div className="rounded-lg border bg-card p-4">
           <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status pipeline</h4>
           <div className="mt-3 space-y-2">
             {stages.map((s) => (
               <div key={s.stage} className="flex items-center gap-2 text-xs">
-                <span className="w-28 shrink-0 text-muted-foreground">{s.stage}</span>
+                <span className="w-24 shrink-0 text-muted-foreground">{s.stage}</span>
                 <div className="flex h-4 flex-1 items-center rounded bg-muted/40">
                   <div className={`h-4 rounded ${STAGE_COLOR[s.stage] ?? 'bg-slate-300'}`} style={{ width: `${Math.max(s.revenueM > 0 ? 6 : 0, (s.revenueM / maxStage) * 100)}%` }} />
                 </div>
-                <span className="w-24 shrink-0 text-right tabular-nums text-muted-foreground">{s.count} · {fM(s.revenueM)}</span>
+                <span className="shrink-0 text-right tabular-nums text-muted-foreground">{s.count} · {fM(s.revenueM)}</span>
               </div>
             ))}
             {sum.absorbedCount > 0 && (
               <div className="flex items-center gap-2 border-t pt-2 text-xs">
-                <span className="w-28 shrink-0 font-medium text-orange-800">Absorbed</span>
+                <span className="w-24 shrink-0 font-medium text-orange-800">Absorbed</span>
                 <div className="flex h-4 flex-1 items-center rounded bg-muted/40">
                   <div className="h-4 rounded bg-orange-400" style={{ width: `${Math.max(6, (sum.absorbedCostM / Math.max(maxStage, sum.absorbedCostM)) * 100)}%` }} />
                 </div>
-                <span className="w-24 shrink-0 text-right tabular-nums text-muted-foreground">{sum.absorbedCount} · −{fM(sum.absorbedCostM)}</span>
+                <span className="shrink-0 text-right tabular-nums text-muted-foreground">{sum.absorbedCount} · −{fM(sum.absorbedCostM)}</span>
               </div>
             )}
           </div>
@@ -110,21 +106,23 @@ export function ChangeOrdersPanel({ rows, soldContract, baseMarginPct }: { rows:
             </div>
           )}
         </div>
-      </div>
 
-      {/* By driver */}
-      <div className="rounded-lg border bg-card p-4">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">By driver</h4>
-        <div className="mt-3 space-y-2">
-          {drivers.map((d) => (
-            <div key={d.category} className="flex items-center gap-2 text-xs">
-              <span className="w-40 shrink-0 font-medium text-foreground/80">{d.category}</span>
-              <div className="flex h-4 flex-1 items-center rounded bg-muted/40">
-                <div className="h-4 rounded bg-sky-400" style={{ width: `${Math.max(6, (d.revenueM / maxDrv) * 100)}%` }} />
+        {/* By driver */}
+        <div className="rounded-lg border bg-card p-4">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">By driver</h4>
+          <div className="mt-3 space-y-2">
+            {drivers.map((d) => (
+              <div key={d.category} className="text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate font-medium text-foreground/80">{d.category}</span>
+                  <span className="shrink-0 text-right tabular-nums text-muted-foreground">{d.count} · {fM(d.revenueM)}{d.scheduleDays > 0 ? ` · +${d.scheduleDays}d` : ''}</span>
+                </div>
+                <div className="mt-1 flex h-4 w-full items-center rounded bg-muted/40">
+                  <div className="h-4 rounded bg-sky-400" style={{ width: `${Math.max(6, (d.revenueM / maxDrv) * 100)}%` }} />
+                </div>
               </div>
-              <span className="w-44 shrink-0 text-right tabular-nums text-muted-foreground">{d.count} · {fM(d.revenueM)} rev{d.scheduleDays > 0 ? ` · +${d.scheduleDays}d` : ''}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

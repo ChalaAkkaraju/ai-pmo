@@ -159,9 +159,9 @@ export function ScheduleView({ tasks, workPackages }: { tasks: Task[]; workPacka
                 <th className="px-4 py-2 text-right">% complete</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
               {[...tasks].sort((a, b) => (a.wbs_code ?? '').localeCompare(b.wbs_code ?? '', undefined, { numeric: true })).map((t, i) => (
-                <tr key={i} className="hover:bg-muted/30">
+                <tr key={i} className="hover:bg-muted/70">
                   <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">
                     {t.wbs_code}
                     {t.is_critical && <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-medium text-red-700">critical</span>}

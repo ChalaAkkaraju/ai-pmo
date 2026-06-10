@@ -155,14 +155,14 @@ export function FrameworkMatrix({ token }: { token: string }) {
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full min-w-[940px] border-collapse text-left">
           <thead>
-            <tr className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <tr className="border-b bg-muted/60 text-[11px] uppercase tracking-wider text-muted-foreground">
               <th className="sticky left-0 z-10 bg-muted/50 px-3 py-2 font-semibold">Knowledge area</th>
               {GROUPS.map((g) => (
                 <th key={g} className="px-3 py-2 font-semibold">{g}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
             {MATRIX.map((row) => (
               <tr key={row.ka} className="align-top">
                 <th className="sticky left-0 z-10 bg-card px-3 py-3 text-sm font-semibold">{row.ka}</th>

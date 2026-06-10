@@ -64,7 +64,7 @@ const VALID_AGENT_TYPES: AgentType[] = [
 const VALID_AGENT_INPUTS: Array<AgentType | 'auto'> = ['auto', ...VALID_AGENT_TYPES];
 
 const invokeAgentSchema = z.object({
-  token: z.string().min(8, 'token must be at least 8 characters'),
+  token: z.string().min(6, 'token must be at least 6 characters'),
   agent_type: z
     .string()
     .refine(

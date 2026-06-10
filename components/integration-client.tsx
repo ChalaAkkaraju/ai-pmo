@@ -252,7 +252,7 @@ export function IntegrationClient({
                 <th className="w-[140px] bg-amber-100 px-3 py-2 font-semibold text-amber-800 text-center">SAP feed</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
               {FILE_OBJECTS.map((o) => (
                 <tr key={o.type}>
                   <td className="px-3 py-2.5 font-medium">{o.label}</td>
@@ -299,7 +299,7 @@ export function IntegrationClient({
           return (
             <div className="mt-3 overflow-x-auto rounded-xl border">
               <table className="w-full min-w-[720px] text-left text-sm">
-                <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <thead className="border-b bg-muted/60 text-[11px] uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 font-medium">Object</th>
                     <th className="px-3 py-2 font-medium">Source API</th>
@@ -308,7 +308,7 @@ export function IntegrationClient({
                     <th className="px-3 py-2 font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
                   {rows.map((r) => (
                     <tr key={r.entity}>
                       <td className="px-3 py-2 font-medium">{ENTITY_LABEL[r.entity as string] ?? r.entity}</td>
@@ -330,7 +330,7 @@ export function IntegrationClient({
         <h2 className="text-base font-semibold">Sync history</h2>
         <div className="mt-3 overflow-x-auto rounded-xl border">
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <thead className="border-b bg-muted/60 text-[11px] uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 font-medium">When</th>
                 <th className="px-3 py-2 font-medium">Source</th>
@@ -343,7 +343,7 @@ export function IntegrationClient({
                 <th className="px-3 py-2 font-medium">Message</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
               {runs.length === 0 ? (
                 <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">No syncs yet.</td></tr>
               ) : runs.map((r) => (
@@ -373,7 +373,7 @@ export function IntegrationClient({
         <p className="mt-1 text-xs text-muted-foreground">Records that could not be ingested — unmapped WBS, validation, conflicts. Resolve in the source, then re-sync; or ignore.</p>
         <div className="mt-3 overflow-x-auto rounded-xl border">
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <thead className="border-b bg-muted/60 text-[11px] uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 font-medium">When</th>
                 <th className="px-3 py-2 font-medium">Project</th>
@@ -384,7 +384,7 @@ export function IntegrationClient({
                 {canWrite && <th className="px-3 py-2 text-right font-medium">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
               {exceptions.length === 0 ? (
                 <tr><td colSpan={canWrite ? 7 : 6} className="px-3 py-6 text-center text-emerald-700">No open exceptions — all clean.</td></tr>
               ) : exceptions.map((e) => (

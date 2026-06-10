@@ -60,7 +60,7 @@ export function CommitmentPanel({ metrics, commitment }: { metrics: EvMetrics; c
 
 function Kpi({ label, value, sub, cls = 'text-foreground', accent }: { label: string; value: string; sub?: string; cls?: string; accent?: string }) {
   return (
-    <div className="rounded-md bg-muted/40 px-3 py-2" style={accent ? { backgroundColor: `${accent}14` } : undefined}>
+    <div className="rounded-md border bg-card px-3 py-2" style={accent ? { backgroundColor: `${accent}14` } : undefined}>
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={`text-base font-semibold tabular-nums ${cls}`}>{value}</p>
       {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}

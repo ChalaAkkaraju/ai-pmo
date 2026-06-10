@@ -31,7 +31,7 @@ const SEGMENT_PREFIX: Record<Segment, string> = {
 const segmentSchema = z.enum(['renewables', 'water', 'industrial', 'power']);
 
 const postSchema = z.object({
-  token: z.string().min(8),
+  token: z.string().min(6),
   segment: segmentSchema,
   name: z.string().min(1, 'Project name is required'),
   client: z.string().min(1, 'Customer / client is required'),

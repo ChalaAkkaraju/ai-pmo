@@ -4,6 +4,8 @@
  * data shaping — no hooks — so these can be used directly in server components.
  */
 
+import { toneCard, toneText, type KpiTone } from '@/lib/kpi-tone';
+
 export type Row = { label: string; count: number };
 
 export function tally<T>(items: T[], keyFn: (t: T) => string | null | undefined): Map<string, number> {
@@ -75,20 +77,14 @@ export function BreakdownTable({ title, rows, color }: { title: string; rows: Ro
 export function Kpis({
   items,
 }: {
-  items: { label: string; value: string | number; tone?: 'warn' | 'ok' }[];
+  items: { label: string; value: string | number; tone?: KpiTone }[];
 }) {
   return (
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
       {items.map((k) => (
-        <div key={k.label} className="rounded-lg border bg-muted/40 px-3 py-2.5">
+        <div key={k.label} className={`rounded-lg border px-3 py-2.5 ${toneCard(k.tone)}`}>
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{k.label}</p>
-          <p
-            className={`mt-0.5 text-xl font-semibold tabular-nums ${
-              k.tone === 'warn' ? 'text-red-600' : k.tone === 'ok' ? 'text-emerald-700' : ''
-            }`}
-          >
-            {k.value}
-          </p>
+          <p className={`mt-0.5 text-xl font-semibold tabular-nums ${toneText(k.tone)}`}>{k.value}</p>
         </div>
       ))}
     </div>

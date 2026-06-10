@@ -51,17 +51,18 @@ export function IssuesTable({ rows, currentWeek = 0 }: { rows: Array<Record<stri
       <div className="mb-2 flex items-center justify-end gap-1.5 text-xs">
         <span className="text-muted-foreground">Sort:</span>
         {(['default', 'overdue'] as const).map((s) => (
-          <button key={s} onClick={() => setSort(s)} className={`rounded px-2 py-0.5 font-medium transition ${sort === s ? 'bg-foreground text-background' : 'border text-muted-foreground hover:text-foreground'}`}>
+          <button key={s} onClick={() => setSort(s)} className={`rounded px-2 py-0.5 font-medium transition ${sort === s ? 'bg-amber-600 text-white shadow-sm' : 'border text-muted-foreground hover:text-foreground'}`}>
             {s === 'default' ? 'Register order' : 'Most overdue'}
           </button>
         ))}
       </div>
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+          <thead className="border-b bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-3 py-2 text-left">ID</th>
               <th className="px-3 py-2 text-left">Description</th>
+              <th className="px-3 py-2 text-left">WBS</th>
               <th className="px-3 py-2 text-center">Sev</th>
               <th className="px-3 py-2 text-left" title="Weeks open vs SLA target">Age</th>
               <th className="px-3 py-2 text-center" title="Severity × age">Pri</th>
@@ -69,7 +70,7 @@ export function IssuesTable({ rows, currentWeek = 0 }: { rows: Array<Record<stri
               <th className="px-3 py-2 text-left">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
             {ordered.map((i) => (
               <IssueRow key={i.issue_id} issue={i} currentWeek={currentWeek} isExpanded={expandedId === i.issue_id} onToggle={() => setExpandedId(expandedId === i.issue_id ? null : i.issue_id)} />
             ))}
@@ -94,13 +95,14 @@ function IssueRow({ issue, currentWeek, isExpanded, onToggle }: { issue: Issue; 
   const resolved = resolveWeeks(issue);
   return (
     <>
-      <tr className="cursor-pointer hover:bg-muted/30" onClick={onToggle}>
+      <tr className="cursor-pointer hover:bg-muted/70" onClick={onToggle}>
         <td className="px-3 py-3 font-mono text-xs">{issue.issue_id}</td>
         <td className="px-3 py-3">
           {issue.description}
           {(escalate || issue.escalated) && <span className="ml-2 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700" title="Escalation">⚑ {issue.escalated ? 'Escalated' : 'Escalate'}</span>}
           {issue.recurrence === 'Recurring' && <span className="ml-2 rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-medium text-orange-700">↻ Recurring</span>}
         </td>
+        <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{issue.linked_wbs && issue.linked_wbs.length ? issue.linked_wbs.join(', ') : '—'}</td>
         <td className="px-3 py-3 text-center"><span className={`inline-block rounded-full px-2 py-0.5 text-xs font-mono ${severityBadge(issue.severity)}`}>{issue.severity}</span></td>
         <td className="px-3 py-3">
           {open ? (
@@ -115,7 +117,7 @@ function IssueRow({ issue, currentWeek, isExpanded, onToggle }: { issue: Issue; 
       </tr>
       {isExpanded && (
         <tr className="bg-muted/20">
-          <td colSpan={7} className="px-4 py-4 text-sm">
+          <td colSpan={8} className="px-4 py-4 text-sm">
             <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Metric label="Age vs SLA" value={open ? `${age}w / ${sla}w` : `resolved ${resolved ?? '—'}w`} sub={open ? band : undefined} accent={overdue ? 'rose' : band === 'At risk' ? 'amber' : undefined} />
               <Metric label="Priority" value={open ? String(priorityScore(issue, currentWeek)) : '—'} sub="severity × age" />

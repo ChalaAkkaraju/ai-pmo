@@ -34,54 +34,45 @@ export function RiskExposurePanel({
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${bandColor}`}>Contingency cover: {adq.band}</span>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Live threats" value={String(exp.liveThreats)} />
-        <Stat label="Inherent EMV" value={fmtUsd(exp.inherentEmv)} />
-        <Stat label="Residual EMV" value={fmtUsd(exp.residualEmv)} accent="emerald" sub={`${reduction}% bought down`} />
-        <Stat label="Opportunity upside" value={fmtUsd(exp.opportunityUpside)} accent="emerald" />
-      </div>
+      <div className="mt-3 grid gap-4 lg:grid-cols-2 lg:items-start">
+        {/* KPIs — 3 across (two rows) */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <Stat label="Live threats" value={String(exp.liveThreats)} />
+          <Stat label="Inherent EMV" value={fmtUsd(exp.inherentEmv)} />
+          <Stat label="Residual EMV" value={fmtUsd(exp.residualEmv)} accent="emerald" sub={`${reduction}% bought down`} />
+          <Stat label="Opportunity upside" value={fmtUsd(exp.opportunityUpside)} accent="emerald" />
+          <Stat label="P50 reserve (expected)" value={fmtUsd(sizing.p50)} sub="Σ EMV of live threats" />
+          <Stat label="P80 reserve (recommended)" value={fmtUsd(sizing.p80)} accent={p80Covered ? 'emerald' : 'rose'} sub={p80Covered ? 'held contingency covers P80' : `held ${fmtUsd(contingency)} < P80`} />
+          {fa.n > 0 && (
+            <Stat label="EMV forecast accuracy" value={`${Math.round(fa.ratio * 100)}%`} accent={fa.ratio <= 1.1 ? 'emerald' : 'rose'} sub={`${fmtUsd(fa.actual)} actual vs ${fmtUsd(fa.predicted)} predicted (${fa.n})`} />
+          )}
+        </div>
 
-      <div className="mt-4">
-        <div className="flex justify-between text-[11px] text-muted-foreground">
-          <span>Mitigation burndown (inherent → residual)</span>
-          <span>{fmtUsd(exp.residualEmv)} of {fmtUsd(exp.inherentEmv)}</span>
+        {/* Bars — second half */}
+        <div className="space-y-4 lg:border-l lg:pl-4">
+          <div>
+            <div className="flex justify-between text-[11px] text-muted-foreground">
+              <span>Mitigation burndown (inherent → residual)</span>
+              <span>{fmtUsd(exp.residualEmv)} of {fmtUsd(exp.inherentEmv)}</span>
+            </div>
+            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-rose-200" title="green = exposure already mitigated away">
+              <div className="h-full rounded-full bg-emerald-500" style={{ width: `${100 - burndownPct}%` }} />
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between text-[11px] text-muted-foreground">
+              <span>Residual exposure vs contingency remaining</span>
+              <span>{fmtUsd(adq.residualExposure)} vs {fmtUsd(adq.remaining)} left</span>
+            </div>
+            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className={`h-full rounded-full ${barColor}`} style={{ width: `${covPct}%` }} />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Contingency ${(contingency / 1_000_000).toFixed(2)}M · drawn {fmtUsd(consumed)}
+              {exp.realisedCost > 0 ? ` · realised risk cost ${fmtUsd(exp.realisedCost)}` : ''}
+            </p>
+          </div>
         </div>
-        <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-rose-200" title="green = exposure already mitigated away">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${100 - burndownPct}%` }} />
-        </div>
-      </div>
-
-      <div className="mt-3">
-        <div className="flex justify-between text-[11px] text-muted-foreground">
-          <span>Residual exposure vs contingency remaining</span>
-          <span>{fmtUsd(adq.residualExposure)} vs {fmtUsd(adq.remaining)} left</span>
-        </div>
-        <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
-          <div className={`h-full rounded-full ${barColor}`} style={{ width: `${covPct}%` }} />
-        </div>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          Contingency ${(contingency / 1_000_000).toFixed(2)}M · drawn {fmtUsd(consumed)}
-          {exp.realisedCost > 0 ? ` · realised risk cost ${fmtUsd(exp.realisedCost)}` : ''}
-        </p>
-      </div>
-
-      {/* Risk-based contingency sizing (P50 / P80) + forecast accuracy */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat label="P50 reserve (expected)" value={fmtUsd(sizing.p50)} sub="Σ EMV of live threats" />
-        <Stat
-          label="P80 reserve (recommended)"
-          value={fmtUsd(sizing.p80)}
-          accent={p80Covered ? 'emerald' : 'rose'}
-          sub={p80Covered ? 'held contingency covers P80' : `held ${fmtUsd(contingency)} < P80`}
-        />
-        {fa.n > 0 && (
-          <Stat
-            label="EMV forecast accuracy"
-            value={`${Math.round(fa.ratio * 100)}%`}
-            accent={fa.ratio <= 1.1 ? 'emerald' : 'rose'}
-            sub={`${fmtUsd(fa.actual)} actual vs ${fmtUsd(fa.predicted)} predicted (${fa.n})`}
-          />
-        )}
       </div>
     </div>
   );
@@ -90,7 +81,7 @@ export function RiskExposurePanel({
 function Stat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
   const color = accent === 'emerald' ? 'text-emerald-600' : accent === 'rose' ? 'text-rose-600' : '';
   return (
-    <div className="rounded-md border bg-background p-2.5">
+    <div className="rounded-md border bg-card p-2.5">
       <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className={`mt-0.5 font-mono text-base font-semibold ${color}`}>{value}</div>
       {sub && <div className="text-[11px] text-muted-foreground">{sub}</div>}

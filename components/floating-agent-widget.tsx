@@ -33,6 +33,8 @@ import remarkGfm from 'remark-gfm';
 import type { AgentType } from '@/lib/types';
 import { parseProposedActions, stripActionsBlock } from '@/lib/action-parser';
 import { AssignActionsPanel } from '@/components/assign-actions-panel';
+import { parseProposedEntry, stripEntryBlock } from '@/lib/entry-parser';
+import { EntryDraftPanel } from '@/components/entry-draft-panel';
 
 type AgentTypeOrAuto = AgentType | 'auto';
 
@@ -363,6 +365,12 @@ export function FloatingAgentWidget({
   // Cap at 5 so the screen doesn't get overwhelmed.
   const [poppedOutBriefs, setPoppedOutBriefs] = useState<Invocation[]>([]);
   const MAX_POPPED_OUT = 5;
+  // Track entries already added (keyed by agent output id) so a popped-out copy
+  // of the same brief shows "Added" instead of offering the form a second time.
+  const [submittedEntries, setSubmittedEntries] = useState<Record<string, string>>({});
+  function markEntrySubmitted(outputId: string | undefined, code: string) {
+    if (outputId) setSubmittedEntries((prev) => ({ ...prev, [outputId]: code }));
+  }
 
   function handlePopOut(inv: Invocation) {
     setPoppedOutBriefs((prev) => {
@@ -484,6 +492,8 @@ export function FloatingAgentWidget({
       token={token}
       onClose={() => handleClosePopOut(i)}
       onUseAsPrompt={applyFollowUp}
+      submittedCode={inv.output_id ? submittedEntries[inv.output_id] : undefined}
+      onEntrySubmitted={markEntrySubmitted}
     />
   ));
 
@@ -541,7 +551,7 @@ export function FloatingAgentWidget({
 
       <div className="flex-1 overflow-y-auto px-4 py-2" style={{ backgroundColor: 'white' }}>
         {history.map((h, idx) => (
-          <InvocationCard key={idx} invocation={h} isLatest={idx === 0} token={token} onUseAsPrompt={applyFollowUp} onPopOut={handlePopOut} />
+          <InvocationCard key={idx} invocation={h} isLatest={idx === 0} token={token} onUseAsPrompt={applyFollowUp} onPopOut={handlePopOut} submittedCode={h.output_id ? submittedEntries[h.output_id] : undefined} onEntrySubmitted={markEntrySubmitted} />
         ))}
       </div>
 
@@ -628,6 +638,8 @@ function InvocationCard({
   token,
   onUseAsPrompt,
   onPopOut,
+  submittedCode,
+  onEntrySubmitted,
 }: {
   invocation: Invocation;
   isLatest: boolean;
@@ -636,10 +648,13 @@ function InvocationCard({
   onUseAsPrompt: (text: string) => void;
   /** Snapshot this invocation into a floating side panel. */
   onPopOut: (inv: Invocation) => void;
+  submittedCode?: string;
+  onEntrySubmitted: (outputId: string | undefined, code: string) => void;
 }) {
   const actions = extractActions(invocation.response_md);
   const choices = extractChoices(invocation.response_md);
   const proposedActions = parseProposedActions(invocation.response_md ?? '');
+  const proposedEntry = parseProposedEntry(invocation.response_md);
   const isInProgress = isLatest && !invocation.response_md && !invocation.error;
   const requested = invocation.agent_type_requested;
   const resolved = invocation.agent_type_resolved;
@@ -741,7 +756,7 @@ function InvocationCard({
                   },
                 }}
               >
-                {(() => { let b = stripActionsBlock(invocation.response_md ?? ''); if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
+                {(() => { let b = stripEntryBlock(stripActionsBlock(invocation.response_md ?? '')); if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
               </ReactMarkdown>
             </article>
             {proposedActions.length > 0 && (
@@ -752,6 +767,9 @@ function InvocationCard({
                 agentOutputId={invocation.output_id}
                 agentType={resolved ?? (requested === 'auto' ? undefined : (requested as AgentType))}
               />
+            )}
+            {proposedEntry && (
+              <EntryDraftPanel entry={proposedEntry} token={token} projectCode={invocation.project_code} alreadySubmittedCode={submittedCode} onSubmitted={(c) => onEntrySubmitted(invocation.output_id, c)} />
             )}
             <div className="mt-2 flex items-center justify-end gap-2 border-t pt-1.5 text-[10px] text-muted-foreground">
               {invocation.output_id && choices.length === 0 && (
@@ -839,21 +857,37 @@ function InvocationCard({
  * Stacking: each new pop-out cascades down-and-right from the previous one
  * (top-left origin). Up to MAX_POPPED_OUT can be open simultaneously.
  */
+const RZ_HANDLES: Array<{ mode: string; style: React.CSSProperties }> = [
+  { mode: 'n',  style: { top: 0, left: 12, right: 12, height: 7, cursor: 'ns-resize' } },
+  { mode: 's',  style: { bottom: 0, left: 12, right: 12, height: 7, cursor: 'ns-resize' } },
+  { mode: 'e',  style: { right: 0, top: 12, bottom: 12, width: 7, cursor: 'ew-resize' } },
+  { mode: 'w',  style: { left: 0, top: 12, bottom: 12, width: 7, cursor: 'ew-resize' } },
+  { mode: 'ne', style: { top: 0, right: 0, width: 14, height: 14, cursor: 'nesw-resize' } },
+  { mode: 'nw', style: { top: 0, left: 0, width: 14, height: 14, cursor: 'nwse-resize' } },
+  { mode: 'se', style: { bottom: 0, right: 0, width: 14, height: 14, cursor: 'nwse-resize' } },
+  { mode: 'sw', style: { bottom: 0, left: 0, width: 14, height: 14, cursor: 'nesw-resize' } },
+];
+
 function PoppedOutBriefPanel({
   invocation,
   index,
   token,
   onClose,
   onUseAsPrompt,
+  submittedCode,
+  onEntrySubmitted,
 }: {
   invocation: Invocation;
   index: number;
   token: string;
   onClose: () => void;
   onUseAsPrompt: (text: string) => void;
+  submittedCode?: string;
+  onEntrySubmitted: (outputId: string | undefined, code: string) => void;
 }) {
   const actions = extractActions(invocation.response_md);
   const choices = extractChoices(invocation.response_md);
+  const proposedEntry = parseProposedEntry(invocation.response_md);
 
   const requested = invocation.agent_type_requested;
   const resolved = invocation.agent_type_resolved;
@@ -879,22 +913,38 @@ function PoppedOutBriefPanel({
     panelStartTop: number;
     panelStartLeft: number;
   } | null>(null);
+  const [size, setSize] = useState({ width: 380, height: 480 });
+  const resizeRef = useRef<{ mode: string; px: number; py: number; w: number; h: number; top: number; left: number } | null>(null);
 
   // Drag handlers attached to the document (so the user can drag the panel
   // by sweeping the cursor outside the header without losing the drag).
   useEffect(() => {
     function onMove(e: MouseEvent) {
+      const rz = resizeRef.current;
+      if (rz) {
+        const dx = e.clientX - rz.px, dy = e.clientY - rz.py;
+        const minW = 300, minH = 180, maxW = window.innerWidth * 0.95, maxH = window.innerHeight * 0.9;
+        const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+        let w = rz.w, h = rz.h, top = rz.top, left = rz.left;
+        if (rz.mode.includes('e')) w = clamp(rz.w + dx, minW, maxW);
+        if (rz.mode.includes('s')) h = clamp(rz.h + dy, minH, maxH);
+        if (rz.mode.includes('w')) { const nw = clamp(rz.w - dx, minW, maxW); left = rz.left + (rz.w - nw); w = nw; }
+        if (rz.mode.includes('n')) { const nh = clamp(rz.h - dy, minH, maxH); top = rz.top + (rz.h - nh); h = nh; }
+        setSize({ width: w, height: h });
+        setPosition({ top, left });
+        return;
+      }
       const drag = dragStateRef.current;
       if (!drag) return;
       const dx = e.clientX - drag.pointerStartX;
       const dy = e.clientY - drag.pointerStartY;
-      // Keep the panel header reachable — never let it drag fully off-screen.
       const newTop = Math.max(0, Math.min(window.innerHeight - 48, drag.panelStartTop + dy));
       const newLeft = Math.max(0, Math.min(window.innerWidth - 80, drag.panelStartLeft + dx));
       setPosition({ top: newTop, left: newLeft });
     }
     function onUp() {
       dragStateRef.current = null;
+      resizeRef.current = null;
       document.body.style.userSelect = '';
     }
     document.addEventListener('mousemove', onMove);
@@ -917,6 +967,13 @@ function PoppedOutBriefPanel({
     document.body.style.userSelect = 'none';
   }
 
+  function startResize(e: React.MouseEvent, mode: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    resizeRef.current = { mode, px: e.clientX, py: e.clientY, w: size.width, h: size.height, top: position.top, left: position.left };
+    document.body.style.userSelect = 'none';
+  }
+
   return (
     <div
       className="no-print fixed z-40 flex flex-col rounded-lg border shadow-2xl"
@@ -924,17 +981,20 @@ function PoppedOutBriefPanel({
         backgroundColor: 'white',
         top: `${position.top}px`,
         left: `${position.left}px`,
-        width: 380,
+        width: size.width,
+        height: size.height,
         minWidth: 300,
         maxWidth: '95vw',
         minHeight: 180,
         maxHeight: '90vh',
         overflow: 'hidden',
-        resize: 'both',
       }}
       role="complementary"
       aria-label={`Popped-out brief: ${invocation.prompt.slice(0, 60)}`}
     >
+      {RZ_HANDLES.map((rh) => (
+        <div key={rh.mode} onMouseDown={(e) => startResize(e, rh.mode)} style={{ position: 'absolute', zIndex: 50, ...rh.style }} />
+      ))}
       <header
         className="flex items-start justify-between gap-2 px-4 py-2.5"
         style={{ backgroundColor: 'rgb(30 41 59)' }}
@@ -1040,9 +1100,12 @@ function PoppedOutBriefPanel({
                 },
               }}
             >
-              {(() => { let b = stripActionsBlock(invocation.response_md ?? ''); if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
+              {(() => { let b = stripEntryBlock(stripActionsBlock(invocation.response_md ?? '')); if (choices.length > 0) b = stripQuickReplyContent(b); if (actions.length > 0) b = stripActionCallouts(b); return b; })()}
             </ReactMarkdown>
           </article>
+        )}
+        {proposedEntry && (
+          <EntryDraftPanel entry={proposedEntry} token={token} projectCode={invocation.project_code} alreadySubmittedCode={submittedCode} onSubmitted={(c) => onEntrySubmitted(invocation.output_id, c)} />
         )}
       </div>
 

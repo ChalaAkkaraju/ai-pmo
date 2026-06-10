@@ -13,7 +13,7 @@ const mlabel = (s: string) => new Date(s).toLocaleDateString(undefined, { month:
 function Cell({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'ok' | 'warn' | 'bad' }) {
   const t = tone === 'ok' ? 'text-emerald-700' : tone === 'warn' ? 'text-amber-600' : tone === 'bad' ? 'text-red-600' : 'text-foreground';
   return (
-    <div className="rounded-md bg-muted/40 px-3 py-2">
+    <div className="rounded-md border bg-card px-3 py-2">
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={`text-base font-semibold tabular-nums ${t}`}>{value}</p>
       {sub && <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p>}

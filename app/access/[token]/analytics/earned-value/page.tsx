@@ -89,11 +89,13 @@ export default async function EarnedValueAnalyticsPage({ params }: { params: Pro
         : '#f59e0b';
 
   return (
-    <div className="container mx-auto max-w-screen-xl px-8 py-6 space-y-4">
+    <div className="container mx-auto max-w-screen-2xl px-8 py-6 space-y-4">
       <section>
         <Link href={`/access/${token}`} className="text-sm text-muted-foreground hover:text-foreground">← Dashboard</Link>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Analytics</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Earned value across the portfolio — cost from SAP PS, progress from the scheduler.</p>
+        <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2">
+          <h1 className="text-lg font-bold tracking-tight">Analytics</h1>
+          <p className="text-sm text-muted-foreground">Earned value across the portfolio — cost from SAP PS, progress from the scheduler.</p>
+        </div>
       </section>
 
       <AnalyticsNav token={token} />

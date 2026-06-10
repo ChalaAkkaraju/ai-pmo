@@ -18,7 +18,7 @@ import { resolveRoleFromToken } from '@/lib/role-context';
 
 export const dynamic = 'force-dynamic';
 
-const bodySchema = z.object({ token: z.string().min(8), projectCode: z.string().min(1) });
+const bodySchema = z.object({ token: z.string().min(6), projectCode: z.string().min(1) });
 
 export async function POST(request: NextRequest) {
   let body: z.infer<typeof bodySchema>;

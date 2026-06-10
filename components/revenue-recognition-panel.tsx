@@ -52,7 +52,7 @@ export function RevenueRecognitionPanel({ ra, billing, workPackages }: { ra: RaS
       {/* Per-phase RA */}
       <div className="overflow-x-auto border-t">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <thead className="border-b bg-muted/60 text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-2 text-left">Phase</th>
               <th className="px-3 py-2 text-center">POC</th>
@@ -63,9 +63,9 @@ export function RevenueRecognitionPanel({ ra, billing, workPackages }: { ra: RaS
               <th className="px-3 py-2 text-right">WIP / deferred</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
             {ra.byPhase.map((p) => (
-              <tr key={p.phase} className="hover:bg-muted/30">
+              <tr key={p.phase} className="hover:bg-muted/70">
                 <td className="px-4 py-2.5"><span className="font-mono text-xs text-muted-foreground">{p.phase}</span> {nameByCode.get(p.phase) ?? ''}</td>
                 <td className="px-3 py-2.5 text-center font-mono text-xs">{p.poc.toFixed(0)}%</td>
                 <td className="px-3 py-2.5 text-right font-mono text-xs">{money(p.recognised)}</td>
@@ -87,7 +87,7 @@ export function RevenueRecognitionPanel({ ra, billing, workPackages }: { ra: RaS
 
 function Kpi({ label, value, sub, cls = 'text-foreground', accent }: { label: string; value: string; sub?: string; cls?: string; accent?: string }) {
   return (
-    <div className="rounded-md bg-muted/40 px-3 py-2" style={accent ? { backgroundColor: `${accent}14` } : undefined}>
+    <div className="rounded-md border bg-card px-3 py-2" style={accent ? { backgroundColor: `${accent}14` } : undefined}>
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={`text-base font-semibold tabular-nums ${cls}`}>{value}</p>
       {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}

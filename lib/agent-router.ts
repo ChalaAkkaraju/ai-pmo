@@ -34,13 +34,13 @@ const AGENT_DESCRIPTIONS: Record<AgentType, string> = {
   communications_planner:
     'Produces the communications management plan: stakeholder needs, cadence, channels, escalation paths, reporting templates.',
   issue_logger:
-    'Reviews the project issue log and analyses severity, age, ownership, and outstanding items.',
+    'Reviews the project issue log (severity, age, ownership) AND raises/logs a NEW issue when the user asks to add, raise, log, or capture an issue.',
   variance_analyst:
     'Analyses CPI/SPI trends, cost variance, schedule variance, contingency consumption, projected margin trends.',
   change_order_reviewer:
-    'Reviews change orders with four-frame commercial analysis (scope, schedule, cost, contractual basis) and assesses margin protection.',
+    'Reviews change orders with four-frame commercial analysis AND raises/logs a NEW change order or trend-register entry when the user asks to add, raise, or log a change.',
   risk_analyst:
-    'Produces risk register narrative: cross-cutting classification, status, response stance, trigger conditions, top items to watch.',
+    'Produces the risk register narrative AND raises/logs a NEW risk when the user asks to add, raise, log, or capture a risk.',
   lessons_learned_synthesiser:
     'Synthesises lessons learned: situation, action, outcome, generalised lesson. Spans technical, commercial, schedule, and stakeholder themes.',
   closeout_reporter:

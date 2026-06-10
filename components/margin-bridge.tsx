@@ -46,8 +46,8 @@ export function MarginBridgeCard({ bridge, syncedAt }: { bridge: MarginBridge; s
         </div>
       </div>
 
-      {/* Table — the three states */}
-      <div className="px-5 pt-4">
+      {/* Table (left) + waterfall (right) */}
+      <div className="grid grid-cols-1 gap-5 px-5 py-4 lg:grid-cols-2 lg:items-start">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
@@ -59,19 +59,17 @@ export function MarginBridgeCard({ bridge, syncedAt }: { bridge: MarginBridge; s
                 <th className="px-3 py-1.5 text-right font-medium">Margin %</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
               <Row label="As-sold" sub="frozen at booking" contract={bridge.soldContract} cost={bridge.soldBudget} margin={bridge.soldMargin} pct={bridge.soldMarginPct} />
               <Row label="As-planned" sub="current WBS budget" contract={bridge.currentContract} cost={bridge.plannedBudget} margin={bridge.plannedMargin} pct={bridge.plannedMarginPct} />
               <Row label="As-built" sub="forecast at completion (EAC)" contract={bridge.currentContract} cost={bridge.eac} margin={bridge.forecastMargin} pct={bridge.forecastMarginPct} pctCls={tone} emphasize />
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Waterfall — what moved the margin from sold to forecast */}
-      <div className="px-5 pb-1 pt-4">
-        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">What moved it · sold → forecast</p>
-        <Waterfall bridge={bridge} />
+        <div className="lg:border-l lg:pl-5">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">What moved it · sold → forecast</p>
+          <Waterfall bridge={bridge} />
+        </div>
       </div>
 
       <p className="border-t px-5 py-2.5 text-[11px] text-muted-foreground">
@@ -105,7 +103,7 @@ function Waterfall({ bridge }: { bridge: MarginBridge }) {
   const barW = colW * 0.54;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Margin waterfall from sold to forecast">
+    <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto block h-[200px] w-auto max-w-full" role="img" aria-label="Margin waterfall from sold to forecast">
       <line x1={padL} y1={y1} x2={W - padR} y2={y1} stroke="currentColor" strokeOpacity="0.15" />
       {steps.map((s, i) => {
         const cx = padL + i * colW + (colW - barW) / 2;
@@ -151,7 +149,7 @@ function Row({
 }) {
   return (
     <tr className={emphasize ? 'bg-emerald-50/40' : ''}>
-      <td className="py-2 pr-3">
+      <td className="py-1.5 pr-3">
         <p className="font-medium leading-tight">{label}</p>
         <p className="text-[10px] text-muted-foreground">{sub}</p>
       </td>

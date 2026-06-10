@@ -1,0 +1,1 @@
+select role_type, token from roles order by token;

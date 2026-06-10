@@ -2,6 +2,10 @@
 
 *A capability chapter for the AI PMO book. Covers the conceptual model behind change and trend management, why it is modelled the way it is, and how AI PMO implements it.*
 
+![The project change & trend register.](book/figures/16-project-changes.png)
+
+![Portfolio change & trend — funded vs absorbed, with revenue-at-risk.](book/figures/05-portfolio-changes.png)
+
 ## The problem changes create
 
 On any sizeable contract, the scope that gets delivered is never exactly the scope that was sold. Ground turns out different from the survey; the client asks for more; a design develops; an estimate proves light. Each of these moves cost — and sometimes revenue — away from the baseline. The discipline of capturing those movements, pricing them, and recovering what is recoverable is the difference between a project that holds its margin and one that quietly bleeds it.

@@ -32,7 +32,7 @@ export function PoTable({ pos, workPackages }: { pos: PoRow[]; workPackages: Wor
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-[11px] uppercase tracking-wider text-muted-foreground">
+          <thead className="border-b bg-muted/60 text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-3 py-2 text-left">PO</th>
               <th className="px-3 py-2 text-left">Vendor</th>
@@ -44,11 +44,11 @@ export function PoTable({ pos, workPackages }: { pos: PoRow[]; workPackages: Wor
               <th className="px-3 py-2 text-left">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
             {rows.map((po, i) => {
               const br = branchOf(po.wbs_code);
               return (
-                <tr key={`${po.po_number}-${i}`} className="hover:bg-muted/30">
+                <tr key={`${po.po_number}-${i}`} className="hover:bg-muted/70">
                   <td className="px-3 py-2 font-mono text-xs">{po.po_number}</td>
                   <td className="px-3 py-2">{po.vendor}</td>
                   <td className="px-3 py-2"><span className="font-mono text-xs text-muted-foreground">{br}</span> {nameByCode.get(br) ?? ''}</td>

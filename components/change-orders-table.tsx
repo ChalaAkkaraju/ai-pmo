@@ -49,7 +49,12 @@ export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown
   }
 
   return (
-    <div className="space-y-3">
+    <div>
+      <div className="mb-2 flex items-baseline justify-between">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Change order register</h4>
+        <span className="text-[11px] text-muted-foreground">{cos.length} change order{cos.length === 1 ? '' : 's'}</span>
+      </div>
+      <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
       {cos.map((co) => {
         const isOpen = expandedId === co.co_id;
         const driverDup = norm(co.driver) === norm(co.scope_summary);
@@ -150,6 +155,7 @@ export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

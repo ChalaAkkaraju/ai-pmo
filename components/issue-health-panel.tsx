@@ -18,7 +18,7 @@ export function IssueHealthPanel({ issues, currentWeek }: { issues: Array<Record
         {h.needsEscalation > 0 && <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">{h.needsEscalation} need escalation</span>}
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Open issues" value={String(h.open)} sub={`${h.openH}H · ${h.openM}M · ${h.openL}L`} />
         <Stat label="Overdue" value={String(h.overdue)} accent={h.overdue > 0 ? 'rose' : undefined} sub={`${h.atRisk} at risk`} />
         <Stat label="Oldest open" value={`${h.oldestOpenAge}w`} />

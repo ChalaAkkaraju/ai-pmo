@@ -87,3 +87,26 @@
     background: white !important;
   }
 }
+
+/* Accented scrollbar — distinguishes an inner scroll region (e.g. long data
+   tables, the WBS tree) from the page scrollbar so the two don't read as one. */
+.scroll-accent {
+  scrollbar-color: hsl(243 75% 59%) hsl(226 100% 97%);   /* thumb / track (Firefox) */
+  scrollbar-width: thin;
+}
+.scroll-accent::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.scroll-accent::-webkit-scrollbar-track {
+  background: hsl(226 100% 97%);
+  border-radius: 8px;
+}
+.scroll-accent::-webkit-scrollbar-thumb {
+  background: hsl(243 75% 59%);          /* indigo-600 */
+  border: 3px solid hsl(226 100% 97%);   /* inset so the thumb reads as a pill */
+  border-radius: 8px;
+}
+.scroll-accent::-webkit-scrollbar-thumb:hover {
+  background: hsl(245 58% 51%);          /* indigo-700 */
+}

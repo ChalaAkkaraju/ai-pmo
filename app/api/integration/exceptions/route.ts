@@ -10,7 +10,7 @@ import { resolveRoleFromToken } from '@/lib/role-context';
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
-  token: z.string().min(8),
+  token: z.string().min(6),
   id: z.string().uuid(),
   status: z.enum(['resolved', 'ignored']),
 });

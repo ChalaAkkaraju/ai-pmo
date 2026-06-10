@@ -72,19 +72,22 @@ export function VarianceSummary({ rows }: { rows: Array<Record<string, unknown>>
       </div>
       )}
 
-      {/* Full report markdown */}
-      {selected && (
-        <div className="rounded-lg border bg-card p-6">
-          <h4 className="mb-4 text-sm font-semibold">
-            Full variance report — Week {selected.report_week}
-          </h4>
-          <article className="prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {selected.full_report_md}
-            </ReactMarkdown>
-          </article>
-        </div>
-      )}
+      {/* Full report markdown — compact when it's a one-line summary */}
+      {selected && (() => {
+        const short = (selected.full_report_md ?? '').trim().length < 280;
+        return (
+          <div className={`rounded-lg border bg-card ${short ? 'p-4' : 'p-6'}`}>
+            <h4 className={`text-sm font-semibold ${short ? 'mb-2' : 'mb-4'}`}>
+              Full variance report — Week {selected.report_week}
+            </h4>
+            <article className={`prose prose-sm max-w-none dark:prose-invert ${short ? 'prose-p:my-0 prose-headings:mt-0 prose-headings:mb-1' : ''}`}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {selected.full_report_md}
+              </ReactMarkdown>
+            </article>
+          </div>
+        );
+      })()}
     </div>
   );
 }

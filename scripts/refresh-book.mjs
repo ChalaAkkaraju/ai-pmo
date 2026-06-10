@@ -27,9 +27,11 @@ async function main() {
   // 1) Capture figures (inherits TOKEN/PROJECT/BASE_URL from the shell)
   console.log('\n=== 1/2 · Capturing figures ===');
   await run('node', ['scripts/capture-figures.mjs']);
+  console.log('\n  capturing role-specific dashboards...');
+  await run('node', ['scripts/capture-roles.mjs']);
 
   // 2) Rebuild chapter .docx from .md
-  console.log('\n=== 2/2 · Rebuilding chapter .docx (pandoc) ===');
+  console.log('\n=== 2/3 · Rebuilding chapter .docx (pandoc) ===');
   const hasPandoc = spawnSync('pandoc', ['--version'], { shell: WIN }).status === 0;
   if (!hasPandoc) {
     console.log('  pandoc not found — figures ARE captured, but .docx was not rebuilt.');
@@ -38,19 +40,24 @@ async function main() {
     return;
   }
 
-  const mdFiles = (await readdir('docs')).filter((f) => f.endsWith('.md'));
+  const mdFiles = (await readdir('docs')).filter((f) => f.endsWith('.md') && !f.startsWith('AI-PMO-') && !f.startsWith('_fm-'));
   let ok = 0, failed = 0;
   for (const md of mdFiles) {
     const docx = md.replace(/\.md$/, '.docx');
     process.stdout.write(`  ${md} -> ${docx} ... `);
     try {
-      await run('pandoc', [md, '-o', docx], { cwd: 'docs' });
+      await run('pandoc', [md, '--reference-doc', '_reference.docx', '--lua-filter', '_keyword.lua', '--lua-filter', '_callouts.lua', '--lua-filter', '_figures.lua', '-o', docx], { cwd: 'docs' });
       console.log('ok'); ok++;
     } catch (e) {
       console.log('FAILED (is it open in Word? close it and re-run)'); failed++;
     }
   }
-  console.log(`\nDone. Figures refreshed; ${ok} .docx rebuilt${failed ? `, ${failed} failed` : ''}.`);
+  console.log(`\n  per-chapter: ${ok} .docx rebuilt${failed ? `, ${failed} failed` : ''}.`);
+
+  // 3) Compile the two book editions (concatenate chapters + figures, pandoc --toc)
+  console.log('\n=== 3/3 · Compiling book editions ===');
+  await run('node', ['scripts/compile-book.mjs']);
+  console.log('\nDone. Figures refreshed; chapters + both editions rebuilt.');
 }
 
 main().catch((e) => { console.error('\n' + e.message); process.exit(1); });

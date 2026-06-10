@@ -324,6 +324,10 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     return t === 'warn' ? 'text-red-600' : t === 'ok' ? 'text-emerald-700' : 'text-foreground';
   }
 
+  function cardTone(t: 'ok' | 'warn' | 'neutral'): string {
+    return t === 'warn' ? 'border-red-300 bg-red-50/50' : t === 'ok' ? 'border-emerald-200 bg-emerald-50/50' : 'bg-card';
+  }
+
   return (
     <div className="container mx-auto max-w-screen-2xl px-8 py-8">
       <nav className="mb-6 text-sm text-muted-foreground">
@@ -345,7 +349,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 pl-2 sm:grid-cols-3 lg:grid-cols-6">
-          <div className="rounded-md border bg-background/60 p-3">
+          <div className="rounded-md border bg-card p-3">
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Segment</p>
             <p className="mt-1 text-sm font-semibold">
               <span className="inline-flex items-center gap-1.5">
@@ -354,22 +358,22 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
               </span>
             </p>
           </div>
-          <div className="rounded-md border bg-background/60 p-3">
+          <div className="rounded-md border border-sky-200 bg-sky-50/40 p-3">
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Contract</p>
             <p className="mt-1 text-base font-semibold tabular-nums">${(Number(project.contract_value_current) / 1_000_000).toFixed(2)}M</p>
             <p className="mt-0.5 text-[10px] text-muted-foreground">Budget ${(Number(project.approved_budget_current) / 1_000_000).toFixed(2)}M</p>
           </div>
-          <div className={`rounded-md border bg-background/60 p-3 ${cpiTone === 'warn' ? 'border-red-300 bg-red-50/30' : ''}`}>
+          <div className={`rounded-md border p-3 ${cardTone(cpiTone)}`}>
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">CPI</p>
             <p className={`mt-1 text-base font-semibold tabular-nums ${toneCls(cpiTone)}`}>{currentCpi !== null ? currentCpi.toFixed(2) : '—'}</p>
             <p className="mt-0.5 text-[10px] text-muted-foreground">Cost performance</p>
           </div>
-          <div className={`rounded-md border bg-background/60 p-3 ${spiTone === 'warn' ? 'border-red-300 bg-red-50/30' : ''}`}>
+          <div className={`rounded-md border p-3 ${cardTone(spiTone)}`}>
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">SPI</p>
             <p className={`mt-1 text-base font-semibold tabular-nums ${toneCls(spiTone)}`}>{currentSpi !== null ? currentSpi.toFixed(2) : '—'}</p>
             <p className="mt-0.5 text-[10px] text-muted-foreground">Schedule performance</p>
           </div>
-          <div className="rounded-md border bg-background/60 p-3">
+          <div className={`rounded-md border p-3 ${contingencyConsumedPct > 75 ? 'border-red-300 bg-red-50/50' : contingencyConsumedPct > 50 ? 'border-amber-300 bg-amber-50/50' : 'bg-card'}`}>
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Contingency</p>
             <p className="mt-1 text-base font-semibold tabular-nums">${(contingencyTotal / 1_000_000).toFixed(2)}M</p>
             <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -377,7 +381,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
             </div>
             <p className="mt-0.5 text-[10px] text-muted-foreground">{contingencyConsumedPct.toFixed(0)}% consumed</p>
           </div>
-          <div className="rounded-md border bg-background/60 p-3">
+          <div className={`rounded-md border p-3 ${openHIssues > 0 ? 'border-amber-300 bg-amber-50/50' : 'bg-card'}`}>
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Risk closeout</p>
             {totalRiskClosure > 0 ? (
               <>
@@ -399,15 +403,20 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
           </div>
         </div>
         {project.hard_deadline_description && (
-          <div className="mt-5 flex items-center gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-2.5">
-            <span className="text-lg leading-none" aria-hidden="true">⏱</span>
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">
-                Hard deadline
-              </p>
-              <p className="text-sm font-medium text-amber-900">
-                {project.hard_deadline_description}
-              </p>
+          <div className="relative mt-5 overflow-hidden rounded-lg border-2 border-amber-400 bg-gradient-to-r from-amber-100 via-amber-50 to-white px-4 py-3 shadow-sm">
+            <span className="absolute left-0 top-0 h-full w-1.5 bg-amber-500" />
+            <div className="flex items-center gap-3 pl-2">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white shadow-sm ring-4 ring-amber-200/70">
+                <span className="text-lg leading-none" aria-hidden="true">⏱</span>
+              </span>
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                  <span aria-hidden="true">⚠</span> Hard deadline
+                </p>
+                <p className="text-base font-semibold text-amber-950">
+                  {project.hard_deadline_description}
+                </p>
+              </div>
             </div>
           </div>
         )}

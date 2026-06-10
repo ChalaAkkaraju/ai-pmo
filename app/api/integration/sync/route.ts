@@ -19,7 +19,7 @@ import { MsProjectMockAdapter } from '@/lib/integration/adapters/msproject-mock'
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
-  token: z.string().min(8),
+  token: z.string().min(6),
   projectCode: z.string().min(1),
   source: z.enum(['SAP_PS', 'MS_PROJECT', 'P6']).optional().default('SAP_PS'),
   channel: z.enum(['api', 'file', 'manual']).optional().default('api'),

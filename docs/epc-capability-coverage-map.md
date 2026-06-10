@@ -2,6 +2,8 @@
 
 *Who owns what across SAP PS, the scheduler, AI PMO — and what still lives offline*
 
+![The capability coverage framework, rendered in the app.](book/figures/07-coverage-framework.png)
+
 ## Purpose
 
 Most "where does AI PMO fit?" conversations stall because nobody has written

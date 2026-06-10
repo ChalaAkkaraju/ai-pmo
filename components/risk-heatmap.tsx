@@ -1,14 +1,11 @@
-'use client';
-
-import { useState } from 'react';
 import { riskDot } from '@/lib/badge-styles';
 import { fmtUsd } from '@/lib/risk-emv';
 
 /**
- * 3×3 Probability × Impact risk heat map with an Inherent / Residual toggle.
- * Flip to Residual to see risks move down-left as mitigation buys down
- * probability/impact. Each cell shows its risk count, status dots, and the
- * total EMV sitting in that cell (inherent or residual to match the view).
+ * Probability × impact risk heat map. When residual data exists, the inherent
+ * (pre-mitigation) and residual (post-mitigation) 3×3 grids are shown side by
+ * side so the mitigation effect — risks moving down-left — reads at a glance.
+ * Each cell shows its risk count, status dots, and the EMV sitting in it.
  */
 interface Risk {
   risk_id: string;
@@ -55,18 +52,9 @@ function emvOf(r: Risk, view: View): number {
 
 export function RiskHeatmap({ rows }: { rows: Array<Record<string, unknown>> }) {
   const risks = rows as unknown as Risk[];
-  const [view, setView] = useState<View>('inherent');
   if (risks.length === 0) return null;
 
   const hasResidual = risks.some((r) => r.residual_probability);
-
-  const buckets = new Map<string, Risk[]>();
-  for (const r of risks) {
-    const key = cellOf(r, view);
-    if (!key) continue;
-    if (!buckets.has(key)) buckets.set(key, []);
-    buckets.get(key)!.push(r);
-  }
 
   const statusCounts = { realised: 0, open: 0, mitigated: 0, notMaterialised: 0 };
   for (const r of risks) {
@@ -84,46 +72,58 @@ export function RiskHeatmap({ rows }: { rows: Array<Record<string, unknown>> }) 
           <h3 className="text-sm font-semibold">Risk heat map</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {risks.length} risk{risks.length === 1 ? '' : 's'} by probability × impact ·{' '}
-            {view === 'residual' ? 'post-mitigation (residual) position' : 'pre-mitigation (inherent) position'}. Cell shows count + EMV.
+            {hasResidual ? 'inherent vs residual (post-mitigation)' : 'inherent position'}. Cell shows count + EMV.
           </p>
         </div>
         <Legend counts={statusCounts} />
       </div>
 
-      {hasResidual && (
-        <div className="mb-3 inline-flex rounded-md border bg-muted/40 p-0.5 text-xs">
-          {(['inherent', 'residual'] as View[]).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`rounded px-2.5 py-1 font-medium capitalize transition ${view === v ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              {v === 'residual' ? 'Residual (post-mitigation)' : 'Inherent'}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="flex">
-        <div className="flex w-6 items-center justify-center pb-6 pr-1">
-          <span className="rotate-180 text-[10px] font-medium uppercase tracking-wider text-muted-foreground [writing-mode:vertical-rl]">Probability →</span>
-        </div>
-        <div className="flex-1">
-          <div className="ml-12 mb-1 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-muted-foreground">
-            {IMPACT_COLS.map((c) => (<div key={c}>Impact {levelLabel(c)}</div>))}
+      {hasResidual ? (
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Inherent · pre-mitigation</p>
+            <HeatGrid risks={risks} view="inherent" />
           </div>
-          {PROB_ROWS.map((p) => (
-            <div key={p} className="mb-2 flex items-stretch gap-2">
-              <div className="flex w-10 items-center justify-end pr-1 text-[11px] font-medium text-muted-foreground">{levelLabel(p)}</div>
-              <div className="grid flex-1 grid-cols-3 gap-2">
-                {IMPACT_COLS.map((i) => (
-                  <Cell key={`${p}-${i}`} probability={p} impact={i} risks={buckets.get(`${p}-${i}`) ?? []} view={view} />
-                ))}
-              </div>
-            </div>
-          ))}
-          <div className="ml-12 mt-1 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Impact →</div>
+          <div className="lg:border-l lg:pl-5">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Residual · post-mitigation</p>
+            <HeatGrid risks={risks} view="residual" />
+          </div>
         </div>
+      ) : (
+        <HeatGrid risks={risks} view="inherent" />
+      )}
+    </div>
+  );
+}
+
+function HeatGrid({ risks, view }: { risks: Risk[]; view: View }) {
+  const buckets = new Map<string, Risk[]>();
+  for (const r of risks) {
+    const key = cellOf(r, view);
+    if (!key) continue;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key)!.push(r);
+  }
+  return (
+    <div className="flex">
+      <div className="flex w-5 items-center justify-center pb-6 pr-1">
+        <span className="rotate-180 text-[10px] font-medium uppercase tracking-wider text-muted-foreground [writing-mode:vertical-rl]">Probability →</span>
+      </div>
+      <div className="flex-1">
+        <div className="ml-9 mb-1 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-muted-foreground">
+          {IMPACT_COLS.map((c) => (<div key={c}>Impact {levelLabel(c)}</div>))}
+        </div>
+        {PROB_ROWS.map((p) => (
+          <div key={p} className="mb-2 flex items-stretch gap-2">
+            <div className="flex w-8 items-center justify-end pr-1 text-[11px] font-medium text-muted-foreground">{levelLabel(p)}</div>
+            <div className="grid flex-1 grid-cols-3 gap-2">
+              {IMPACT_COLS.map((i) => (
+                <Cell key={`${p}-${i}`} probability={p} impact={i} risks={buckets.get(`${p}-${i}`) ?? []} view={view} />
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="ml-9 mt-1 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Impact →</div>
       </div>
     </div>
   );
@@ -133,19 +133,19 @@ function Cell({ probability, impact, risks, view }: { probability: Level; impact
   const tint = cellTint(probability, impact);
   const emvTotal = risks.reduce((a, r) => a + emvOf(r, view), 0);
   return (
-    <div className={`relative flex h-32 flex-col rounded-md border ${tint} p-2`}>
+    <div className={`relative flex h-24 flex-col rounded-md border ${tint} p-2`}>
       <span className="absolute left-2 top-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">{probability}×{impact}</span>
       {risks.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-base text-muted-foreground/40">—</div>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
-          <span className="text-3xl font-bold leading-none tabular-nums text-foreground">{risks.length}</span>
+        <div className="flex flex-1 flex-col items-center justify-center gap-1">
+          <span className="text-2xl font-bold leading-none tabular-nums text-foreground">{risks.length}</span>
           {emvTotal > 0 && <span className="text-[11px] font-medium tabular-nums text-muted-foreground">{fmtUsd(emvTotal)} EMV</span>}
-          <div className="flex max-w-[88%] flex-wrap items-center justify-center gap-1.5">
+          <div className="flex max-w-[88%] flex-wrap items-center justify-center gap-1">
             {risks.map((r) => (
               <span
                 key={r.risk_id}
-                className={`inline-block h-3 w-3 rounded-full ring-1 ${riskDot(r.status)}`}
+                className={`inline-block h-2.5 w-2.5 rounded-full ring-1 ${riskDot(r.status)}`}
                 title={`${r.risk_id} (${r.status}) — ${r.description.slice(0, 100)}${r.description.length > 100 ? '…' : ''}`}
               />
             ))}

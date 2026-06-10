@@ -78,9 +78,14 @@ export function AssignTaskButton({ token, projectCode }: { token: string; projec
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="rounded-md border px-3.5 py-2 text-sm font-medium transition hover:bg-muted"
+          className="group flex w-full items-center gap-2.5 rounded-lg border border-indigo-200 bg-gradient-to-r from-indigo-50 via-sky-50 to-white px-4 py-3 text-left shadow-sm transition hover:from-indigo-100 hover:via-sky-100"
         >
-          ＋ Assign a task to a colleague
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">＋</span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-indigo-900">Assign a task to a colleague</p>
+            <p className="text-xs text-indigo-900/60">Hand a project task to another role — it lands in their action queue.</p>
+          </div>
+          <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition group-hover:bg-indigo-700">Assign ＋</span>
         </button>
       </div>
     );

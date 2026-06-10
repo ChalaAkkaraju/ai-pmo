@@ -90,7 +90,7 @@ source, needs work) · ○ gap (write new).
 | A19 | A worked example, end to end | PMO_LLM_Pilot_Walkthrough (rework) | ◐ |
 
 **Appendices (Business):** Glossary of EPC & EVM terms ○ · Where AI PMO fits vs
-ERP / scheduler / PPM suites (from *Cora-PPM-in-AI-PMO*) ★ · Future directions:
+ERP, schedulers (P6 / Microsoft Project) and generic scheduling tools ★ · Future directions:
 archetype expansion (from *PMO_LLM_Expansion_Strategy*) ◐.
 
 ---
@@ -160,7 +160,6 @@ dead-code audit (from *AI-PMO-Design-and-Deadcode-Audit*) ★.
 | forecasting-cost-revenue-to-eac-concept | A6 | As-is |
 | change-and-trend-management-concept | A10 | As-is |
 | kpi-provenance-colour-coding-proposal | A14 | As-is |
-| Cora-PPM-in-AI-PMO | A-appendix | Light edit |
 | PMO_LLM_Executive_Brief | A1 | Rework |
 | PMO_LLM_Pilot_Walkthrough | A16 / A19 | Rework |
 | PMO_LLM_Expansion_Strategy | A-appendix | Condense |

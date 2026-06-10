@@ -11,6 +11,7 @@
  */
 
 import { CHART } from '@/lib/chart-palette';
+import { toneCard } from '@/lib/kpi-tone';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -522,7 +523,7 @@ function DrillModal({ title, columns, data, seeAllHref, rowHref, onClose }: Dril
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
                 {rows.map((r, i) => (
                   <tr key={i} onClick={rowHref ? () => { onClose(); router.push(rowHref(r)); } : undefined} className={`align-top ${rowHref ? 'cursor-pointer hover:bg-muted/40' : ''}`}>
                     {columns.map((c) => <td key={c.key} className="py-1.5 pr-3">{c.render ? c.render(r[c.key], r) : String(r[c.key] ?? '')}</td>)}
@@ -1283,7 +1284,7 @@ export function DashboardClient({
                   <th className="px-3 py-2 text-center font-medium">Score</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
                 {hotItems.map((h, idx) => {
                   const ss = segmentStyle(h.segment);
                   const cpiCls = h.cpi < 0.95 ? 'text-red-600 font-semibold' : h.cpi < 1 ? 'text-amber-600' : 'text-foreground';
@@ -1624,10 +1625,7 @@ export function DashboardClient({
 }
 
 function KpiCard({ label, value, sub, tone = 'neutral', onClick }: { label: string; value: string; sub: string; tone?: 'neutral' | 'ok' | 'warn' | 'info'; onClick?: () => void }) {
-  const toneCls =
-    tone === 'warn' ? 'border-amber-300 bg-amber-50' :
-    tone === 'ok' ? 'border-emerald-200 bg-emerald-50/40' :
-    tone === 'info' ? 'border-sky-200 bg-sky-50/40' : 'bg-card';
+  const toneCls = toneCard(tone);
   return (
     <div onClick={onClick} className={`rounded-lg border p-4 ${toneCls} ${onClick ? 'cursor-pointer transition hover:border-foreground/30 hover:shadow-sm' : ''}`}>
       <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{label}</p>

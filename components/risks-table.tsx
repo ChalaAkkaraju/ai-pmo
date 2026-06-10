@@ -99,17 +99,18 @@ export function RisksTable({
       <div className="mb-2 flex items-center justify-end gap-1.5 text-xs">
         <span className="text-muted-foreground">Sort:</span>
         {(['default', 'soonest'] as const).map((s) => (
-          <button key={s} onClick={() => setSort(s)} className={`rounded px-2 py-0.5 font-medium transition ${sort === s ? 'bg-foreground text-background' : 'border text-muted-foreground hover:text-foreground'}`}>
+          <button key={s} onClick={() => setSort(s)} className={`rounded px-2 py-0.5 font-medium transition ${sort === s ? 'bg-rose-600 text-white shadow-sm' : 'border text-muted-foreground hover:text-foreground'}`}>
             {s === 'default' ? 'Register order' : 'Soonest to hit'}
           </button>
         ))}
       </div>
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+          <thead className="border-b bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-3 py-2 text-left">ID</th>
               <th className="px-3 py-2 text-left">Description</th>
+              <th className="px-3 py-2 text-left">WBS</th>
               <th className="px-3 py-2 text-left">Type</th>
               <th className="px-3 py-2 text-center" title="Inherent → residual score (P×I)">Score</th>
               <th className="px-3 py-2 text-right" title="Expected Monetary Value">EMV</th>
@@ -117,7 +118,7 @@ export function RisksTable({
               <th className="px-3 py-2 text-left">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
             {ordered.map((r) => (
               <RiskRow key={r.risk_id} risk={r} spawnedActions={actionsByRef.get(r.risk_id) ?? []} linkedIssues={issuesByRisk.get(r.risk_id) ?? []} isExpanded={expandedId === r.risk_id} onToggle={() => setExpandedId(expandedId === r.risk_id ? null : r.risk_id)} />
             ))}
@@ -142,7 +143,7 @@ function RiskRow({ risk, spawnedActions, linkedIssues, isExpanded, onToggle }: {
   const near = isLiveStatus(risk.status) && risk.proximity_weeks != null && risk.proximity_weeks <= 8;
   return (
     <>
-      <tr className="cursor-pointer hover:bg-muted/30" onClick={onToggle}>
+      <tr className="cursor-pointer hover:bg-muted/70" onClick={onToggle}>
         <td className="px-3 py-3 font-mono text-xs">{risk.risk_id}</td>
         <td className="px-3 py-3">
           {risk.description}
@@ -150,6 +151,7 @@ function RiskRow({ risk, spawnedActions, linkedIssues, isExpanded, onToggle }: {
           {spawnedActions.length > 0 && <span className="ml-2 rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium text-foreground">{spawnedActions.length} action{spawnedActions.length === 1 ? '' : 's'}</span>}
           {linkedIssues.length > 0 && <span className="ml-2 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">{linkedIssues.length} issue{linkedIssues.length === 1 ? '' : 's'}</span>}
         </td>
+        <td className="px-3 py-3 font-mono text-xs text-muted-foreground">{risk.wbs_code ?? '—'}</td>
         <td className="px-3 py-3"><TypeBadge risk={risk} /></td>
         <td className="px-3 py-3 text-center font-mono">{inh}{res !== inh && <span className={eased ? 'text-emerald-600' : 'text-rose-600'}> → {res}</span>}</td>
         <td className="px-3 py-3 text-right font-mono">{risk.emv_usd != null ? <span title={`Inherent ${fmtUsd(Number(risk.emv_usd))} → residual ${fmtUsd(Number(risk.residual_emv_usd ?? risk.emv_usd))}`}>{fmtUsd(Number(risk.emv_usd))}</span> : '—'}</td>
@@ -158,7 +160,7 @@ function RiskRow({ risk, spawnedActions, linkedIssues, isExpanded, onToggle }: {
       </tr>
       {isExpanded && (
         <tr className="bg-muted/20">
-          <td colSpan={7} className="px-4 py-4 text-sm">
+          <td colSpan={8} className="px-4 py-4 text-sm">
             <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Metric label="Inherent P × I" value={`${risk.probability}×${risk.impact} (${inh})`} sub={risk.probability_pct != null ? `${risk.probability_pct}% likely` : undefined} />
               <Metric label="Residual P × I" value={risk.residual_probability ? `${risk.residual_probability}×${risk.residual_impact} (${res})` : '—'} sub={risk.residual_probability_pct != null ? `${risk.residual_probability_pct}% likely` : undefined} accent={eased ? 'emerald' : undefined} />

@@ -28,7 +28,7 @@ const itemSchema = z.object({
 });
 
 const postSchema = z.object({
-  token: z.string().min(8),
+  token: z.string().min(6),
   project_code: z.string().optional(),
   source_type: z.enum(['risk', 'issue']).optional(),
   raised_by_agent_type: z.string().optional(),
@@ -38,7 +38,7 @@ const postSchema = z.object({
 
 const patchSchema = z
   .object({
-    token: z.string().min(8),
+    token: z.string().min(6),
     id: z.string().uuid(),
     status: z.enum(['Open', 'Acknowledged', 'In progress', 'Done']).optional(),
     response_md: z.string().min(1).optional(),

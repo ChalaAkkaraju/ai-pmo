@@ -15,7 +15,7 @@ const mlabel = (s: string) => new Date(s).toLocaleDateString(undefined, { month:
 function Cell({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'ok' | 'warn' | 'bad' }) {
   const t = tone === 'ok' ? 'text-emerald-700' : tone === 'warn' ? 'text-amber-600' : tone === 'bad' ? 'text-red-600' : 'text-foreground';
   return (
-    <div className="rounded-md bg-muted/40 px-3 py-2">
+    <div className="rounded-md border bg-card px-3 py-2">
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className={`text-base font-semibold tabular-nums ${t}`}>{value}</p>
       {sub && <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p>}
@@ -96,7 +96,7 @@ export function ForecastTrend({ points }: { points: ForecastPoint[] }) {
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[560px] text-xs tabular-nums" style={{ tableLayout: 'fixed' }}>
           <thead>
-            <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            <tr className="border-b text-[10px] uppercase tracking-wider text-muted-foreground">
               <th className="py-1 pr-2 text-left font-medium" style={{ width: `${((ml / W) * 100).toFixed(2)}%` }} />
               {points.map((p, i) => (
                 <th key={p.period} className={`py-1 text-center font-medium ${i === points.length - 1 ? 'text-foreground' : ''}`}>{mlabel(p.period)}</th>
@@ -105,7 +105,7 @@ export function ForecastTrend({ points }: { points: ForecastPoint[] }) {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.label} className="border-t">
+              <tr key={row.label} className="border-t even:bg-muted/50">
                 <td className="py-1 pr-2 text-left text-[11px] text-muted-foreground">{row.label}</td>
                 {points.map((p, i) => (
                   <td key={p.period} className={`py-1 text-center ${row.cls(p, i)} ${i === points.length - 1 ? 'font-semibold' : ''}`}>{row.cell(p, i)}</td>

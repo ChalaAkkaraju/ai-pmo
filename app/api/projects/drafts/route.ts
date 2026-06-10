@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 const CREATE_ROLES = new Set(['pm', 'engineering_manager']);
 
 const postSchema = z.object({
-  token: z.string().min(8),
+  token: z.string().min(6),
   segment: z.enum(['renewables', 'water', 'industrial', 'power']),
   draft_id: z.string().uuid().optional(),
   name: z.string().optional().nullable(),

@@ -144,9 +144,9 @@ function DataTable<R>({
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border bg-card">
+      <div className="scroll-accent max-h-[65vh] overflow-auto rounded-lg border bg-card">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+          <thead className="sticky top-0 z-10 border-b bg-muted text-xs uppercase tracking-wider text-muted-foreground shadow-sm">
             <tr>
               {columns.map((c) => (
                 <th key={c.key} className={`px-3 py-2 ${alignCls(c.align)}`}>
@@ -158,7 +158,7 @@ function DataTable<R>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y [&>tr:nth-child(even)]:bg-muted/50">
             {view.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-3 py-6 text-center text-sm text-muted-foreground">
@@ -167,7 +167,7 @@ function DataTable<R>({
               </tr>
             ) : (
               view.map((r, i) => (
-                <tr key={i} className="hover:bg-muted/30">
+                <tr key={i} className="hover:bg-muted/70">
                   {columns.map((c) => (
                     <td key={c.key} className={`px-3 py-2.5 align-top ${alignCls(c.align)} ${c.mono ? 'font-mono text-xs' : ''}`}>
                       {c.render ? c.render(r) : String((r as Record<string, unknown>)[c.key] ?? '')}

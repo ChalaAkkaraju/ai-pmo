@@ -51,6 +51,20 @@ const CAPTIONS = {
 
 async function settle(page, ms = 700) { await new Promise((r) => setTimeout(r, ms)); }
 
+// A figure must fit one Word page or Word clips it at the page boundary. Cap the
+// captured height (top portion) so each figure scales to page width without overflow.
+// MAX_FIG_PX (CSS px) keeps height*pageWidth/figWidth under a page; 2x scale stays crisp.
+const MAX_FIG_PX = 1650;
+async function capture(page, el, target) {
+  const box = await el.boundingBox();
+  if (box && box.height > MAX_FIG_PX) {
+    await page.screenshot({ path: target, captureBeyondViewport: true,
+      clip: { x: Math.max(0, box.x), y: Math.max(0, box.y), width: Math.ceil(box.width), height: MAX_FIG_PX } });
+  } else {
+    await el.screenshot({ path: target });
+  }
+}
+
 async function goto(page, rel) {
   const url = `${BASE}/access/${encodeURIComponent(TOKEN)}${rel}`;
   await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
@@ -63,9 +77,9 @@ async function shoot(page, selector, file) {
     try { await page.waitForSelector(selector, { timeout: 9000 }); el = await page.$(selector); } catch {}
   }
   const target = path.join(OUT, file);
-  if (el) { await el.screenshot({ path: target }); console.log('  saved', file); return; }
+  if (el) { await capture(page, el, target); console.log('  saved', file); return; }
   const m = await page.$('main');
-  if (m) { await m.screenshot({ path: target }); console.log('  saved', file, '(main fallback)'); return; }
+  if (m) { await capture(page, m, target); console.log('  saved', file, '(main fallback)'); return; }
   await page.screenshot({ path: target, fullPage: true });
   console.log('  saved', file, '(full-page fallback)');
 }

@@ -7,9 +7,15 @@
  *         Lines tinted red when current value < 0.95.
  *   Right: Contingency consumed (area) vs total contingency (reference line).
  *
+ * With a single report the trend is empty, so a richer week-snapshot of KPI
+ * tiles is shown instead (CPI, SPI, contingency, projected margin, buffer) —
+ * the contingency tile compares the LIVE project budget against the figure the
+ * report was written against. Tiles use the shared kpi-tone system.
+ *
  * Sits ABOVE the existing per-week summary buttons on the project Variance tab.
  * No external charting library — inline SVG using project tokens.
  */
+import { toneCard, toneText, type KpiTone } from '@/lib/kpi-tone';
 
 interface VarianceReport {
   report_week: number;
@@ -18,6 +24,9 @@ interface VarianceReport {
   cost_variance_m: number | string;
   schedule_variance_days: number;
   contingency_consumed_m: number | string;
+  projected_margin_pct?: number | string | null;
+  buffer_intact_days?: number | string | null;
+  full_report_md?: string | null;
 }
 
 interface Props {
@@ -28,6 +37,13 @@ interface Props {
 function safeNum(v: unknown, fallback: number): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
+}
+
+/** The report narrative records its own contingency basis as "… of $YY.YM." */
+function parseReportedTotalM(md: string | null | undefined): number | null {
+  if (!md) return null;
+  const m = md.match(/of\s+\$([\d.]+)\s*M/i);
+  return m ? Number(m[1]) : null;
 }
 
 const CHART_W = 320;
@@ -52,12 +68,13 @@ export function VarianceTrendChart({ rows, contingencyTotal }: Props) {
   }));
 
   const latest = data[data.length - 1];
+  const latestReport = reports[reports.length - 1];
   const totalContingencyM =
     Number.isFinite(contingencyTotal) && contingencyTotal > 0 ? contingencyTotal / 1_000_000 : 0;
   const consumedPct = totalContingencyM > 0 ? (latest.contingencyConsumedM / totalContingencyM) * 100 : 0;
 
   // A trend needs at least two points. With a single report, a line chart looks
-  // empty/broken — show a clean week-snapshot of gauges instead.
+  // empty/broken — show a clean week-snapshot of KPI tiles instead.
   const single = data.length < 2;
 
   return (
@@ -73,10 +90,14 @@ export function VarianceTrendChart({ rows, contingencyTotal }: Props) {
 
       {single ? (
         <VarianceSnapshot
+          week={latest.week}
           cpi={latest.cpi}
           spi={latest.spi}
+          marginPct={latestReport.projected_margin_pct == null ? null : safeNum(latestReport.projected_margin_pct, 0)}
+          bufferDays={latestReport.buffer_intact_days == null ? null : safeNum(latestReport.buffer_intact_days, 0)}
           consumedM={latest.contingencyConsumedM}
-          totalM={totalContingencyM}
+          liveTotalM={totalContingencyM}
+          reportedTotalM={parseReportedTotalM(latestReport.full_report_md)}
           consumedPct={consumedPct}
         />
       ) : (
@@ -89,33 +110,61 @@ export function VarianceTrendChart({ rows, contingencyTotal }: Props) {
   );
 }
 
-/** Single-report view: index gauges + a contingency burn bar. */
+/** Single-report view: CPI/SPI gauges, contingency (live vs as-reported), margin, buffer. */
 function VarianceSnapshot({
+  week,
   cpi,
   spi,
+  marginPct,
+  bufferDays,
   consumedM,
-  totalM,
+  liveTotalM,
+  reportedTotalM,
   consumedPct,
 }: {
+  week: number;
   cpi: number;
   spi: number;
+  marginPct: number | null;
+  bufferDays: number | null;
   consumedM: number;
-  totalM: number;
+  liveTotalM: number;
+  reportedTotalM: number | null;
   consumedPct: number;
 }) {
+  const cpiTone: KpiTone = cpi < 0.95 ? 'bad' : cpi >= 1 ? 'ok' : 'warn';
+  const spiTone: KpiTone = spi < 0.95 ? 'bad' : spi >= 1 ? 'ok' : 'warn';
+  const marginTone: KpiTone = marginPct == null ? 'neutral' : marginPct >= 8 ? 'ok' : marginPct >= 3 ? 'warn' : 'bad';
+  const bufferTone: KpiTone = bufferDays == null ? 'neutral' : bufferDays < 0 ? 'bad' : bufferDays < 14 ? 'warn' : 'ok';
+  const contTone: KpiTone = liveTotalM <= 0 ? 'neutral' : consumedPct > 75 ? 'bad' : consumedPct > 50 ? 'warn' : 'ok';
+  const reportedPct = reportedTotalM && reportedTotalM > 0 ? (consumedM / reportedTotalM) * 100 : null;
+  const drift = reportedTotalM != null && liveTotalM > 0 && Math.abs(reportedTotalM - liveTotalM) > 0.1;
+
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <IndexGauge label="CPI" sub="Cost performance" value={cpi} />
-      <IndexGauge label="SPI" sub="Schedule performance" value={spi} />
-      <div className="rounded-lg border bg-muted/20 p-4">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Contingency</p>
-        <p className="mt-1 text-2xl font-bold tabular-nums">
-          {totalM > 0 ? `${consumedPct.toFixed(0)}%` : `$${consumedM.toFixed(1)}M`}
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <IndexGauge label="CPI" sub="Cost performance" value={cpi} tone={cpiTone} />
+      <IndexGauge label="SPI" sub="Schedule performance" value={spi} tone={spiTone} />
+
+      {/* Contingency — live budget vs the figure the report was written against */}
+      <div className={`rounded-md border p-3 ${toneCard(contTone)}`}>
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Contingency</p>
+        <p className={`mt-1 text-xl font-bold tabular-nums ${toneText(contTone)}`}>
+          {liveTotalM > 0 ? `${consumedPct.toFixed(0)}%` : `$${consumedM.toFixed(1)}M`}
         </p>
-        <p className="text-[11px] text-muted-foreground">
-          ${consumedM.toFixed(1)}M{totalM > 0 ? ` of $${totalM.toFixed(1)}M consumed` : ' consumed'}
-        </p>
-        {totalM > 0 && (
+        <p className="text-[10px] text-muted-foreground">${consumedM.toFixed(2)}M drawn</p>
+        <div className="mt-1.5 space-y-0.5 text-[10px] tabular-nums">
+          <p className="flex justify-between gap-2">
+            <span className="text-muted-foreground">Live budget</span>
+            <span className="font-medium text-foreground">${liveTotalM.toFixed(1)}M · {consumedPct.toFixed(0)}%</span>
+          </p>
+          {reportedTotalM != null && (
+            <p className="flex justify-between gap-2">
+              <span className="text-muted-foreground">As reported · Wk {week}</span>
+              <span className="font-medium text-foreground">${reportedTotalM.toFixed(1)}M{reportedPct != null ? ` · ${reportedPct.toFixed(0)}%` : ''}</span>
+            </p>
+          )}
+        </div>
+        {liveTotalM > 0 && (
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
               className={`h-full rounded-full ${consumedPct > 100 ? 'bg-red-500' : consumedPct > 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}
@@ -123,23 +172,39 @@ function VarianceSnapshot({
             />
           </div>
         )}
+        {drift && (
+          <p className="mt-1 text-[9px] leading-tight text-muted-foreground">Budget revised since the Wk {week} report.</p>
+        )}
+      </div>
+
+      {/* Projected margin */}
+      <div className={`rounded-md border p-3 ${toneCard(marginTone)}`}>
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Projected margin</p>
+        <p className={`mt-1 text-xl font-bold tabular-nums ${toneText(marginTone)}`}>{marginPct == null ? '—' : `${marginPct.toFixed(1)}%`}</p>
+        <p className="text-[10px] text-muted-foreground">forecast at completion</p>
+      </div>
+
+      {/* Buffer intact */}
+      <div className={`rounded-md border p-3 ${toneCard(bufferTone)}`}>
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Buffer intact</p>
+        <p className={`mt-1 text-xl font-bold tabular-nums ${toneText(bufferTone)}`}>{bufferDays == null ? '—' : `${bufferDays}d`}</p>
+        <p className="text-[10px] text-muted-foreground">schedule float remaining</p>
       </div>
     </div>
   );
 }
 
-/** Compact index gauge: value vs a 1.0 baseline, color-coded. */
-function IndexGauge({ label, sub, value }: { label: string; sub: string; value: number }) {
-  const tone = value < 0.95 ? 'text-red-600' : value >= 1 ? 'text-emerald-700' : 'text-amber-600';
+/** Compact index gauge: value vs a 1.0 baseline, color-coded via shared tone. */
+function IndexGauge({ label, sub, value, tone }: { label: string; sub: string; value: number; tone: KpiTone }) {
   const barTone = value < 0.95 ? 'bg-red-500' : value >= 1 ? 'bg-emerald-500' : 'bg-amber-500';
   // Map 0.7..1.3 onto 0..100% for the bar, with a baseline tick at 1.0.
   const pct = Math.max(0, Math.min(100, ((value - 0.7) / 0.6) * 100));
   const basePct = ((1.0 - 0.7) / 0.6) * 100;
   return (
-    <div className="rounded-lg border bg-muted/20 p-4">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-2xl font-bold tabular-nums ${tone}`}>{value.toFixed(2)}</p>
-      <p className="text-[11px] text-muted-foreground">{sub}</p>
+    <div className={`rounded-md border p-3 ${toneCard(tone)}`}>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-xl font-bold tabular-nums ${toneText(tone)}`}>{value.toFixed(2)}</p>
+      <p className="text-[10px] text-muted-foreground">{sub}</p>
       <div className="relative mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
         <div className={`h-full rounded-full ${barTone}`} style={{ width: `${pct}%` }} />
         {/* 1.0 baseline tick */}

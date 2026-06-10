@@ -36,7 +36,7 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
 
   return (
     <header className="no-print border-b bg-background">
-      <div className="container mx-auto grid h-14 grid-cols-[1fr_auto_1fr] items-center px-6">
+      <div className="container mx-auto grid h-14 max-w-screen-2xl grid-cols-[1fr_auto_1fr] items-center px-8">
         {/* Left — brand */}
         <Link
           href={`/access/${token}`}

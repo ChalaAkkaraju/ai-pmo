@@ -50,7 +50,7 @@ export function WbsCanonicalTree({ workPackages, mode = 'synced' }: { workPackag
 
   if (workPackages.length === 0) {
     return (
-      <section className="mt-6 rounded-lg border bg-card p-6 text-center">
+      <section className="rounded-lg border bg-card p-6 text-center">
         <p className="text-sm font-medium">No work breakdown structure yet.</p>
         <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
           The WBS is mirrored from SAP PS. Run the SAP PS sync to populate it for this project.
@@ -60,7 +60,7 @@ export function WbsCanonicalTree({ workPackages, mode = 'synced' }: { workPackag
   }
 
   return (
-    <section className="mt-6 overflow-hidden rounded-lg border bg-card">
+    <section className="overflow-hidden rounded-lg border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3">
         <div className="flex items-center gap-2.5">
           <span className="text-base leading-none" aria-hidden="true">🗂️</span>
@@ -83,7 +83,7 @@ export function WbsCanonicalTree({ workPackages, mode = 'synced' }: { workPackag
         </div>
       </div>
 
-      <div className="divide-y">
+      <div className="max-h-[70vh] divide-y overflow-y-auto">
         {phases.map((ph) => {
           const kids = childrenOf(ph.wbs_code);
           const isOpen = open[ph.wbs_code];

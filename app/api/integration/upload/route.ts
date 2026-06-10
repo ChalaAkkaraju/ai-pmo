@@ -15,7 +15,7 @@ import { ingestSapProject, ingestSchedulerProject } from '@/lib/integration/inge
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
-  token: z.string().min(8),
+  token: z.string().min(6),
   projectCode: z.string().min(1),
   csv: z.string().min(1),
   type: z.enum(['wbs', 'cost', 'tasks', 'resources', 'commitment', 'billing', 'results_analysis', 'change_orders', 'milestones']).optional().default('wbs'),

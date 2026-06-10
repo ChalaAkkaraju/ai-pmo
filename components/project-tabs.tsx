@@ -40,12 +40,15 @@ import { ScheduleView, type Task } from './schedule-view';
 import { EarnedValueCard } from './earned-value-card';
 import { EvByWbs } from './ev-by-wbs';
 import { ForecastTrend } from './forecast-trend';
+import { toneCard, toneText, type KpiTone } from '@/lib/kpi-tone';
 import { CashFlow } from './cash-flow';
 import { CostTab } from './cost-tab';
+import { RiskIssuesTab } from './risk-issues-tab';
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, ListTree, CalendarDays, LineChart, Receipt,
   FileSignature, Users, ShieldAlert, Replace, Activity, ClipboardList,
+  ScrollText, Wallet, Megaphone, GraduationCap, PackageCheck,
 } from 'lucide-react';
 import { CommitmentPanel } from './commitment-panel';
 import { CostElementMix } from './cost-element-mix';
@@ -68,13 +71,13 @@ import type { MarginBridge } from '@/lib/margin';
 import type { AgentType } from '@/lib/types';
 
 /** AI planning artefacts, shown inside the Planning tab via an inner selector. */
-const PLANNING_TABS: Array<{ value: string; label: string; agentType: AgentType }> = [
-  { value: 'charter', label: 'Charter', agentType: 'charter_drafter' },
-  { value: 'stakeholders', label: 'Stakeholders', agentType: 'stakeholder_analyst' },
-  { value: 'budget', label: 'Budget', agentType: 'budget_builder' },
-  { value: 'comms', label: 'Comms', agentType: 'communications_planner' },
-  { value: 'lessons', label: 'Lessons', agentType: 'lessons_learned_synthesiser' },
-  { value: 'closeout', label: 'Closeout', agentType: 'closeout_reporter' },
+const PLANNING_TABS: Array<{ value: string; label: string; agentType: AgentType; Icon: LucideIcon; iconOn: string; activeBtn: string; edge: string }> = [
+  { value: 'charter', label: 'Charter', agentType: 'charter_drafter', Icon: ScrollText, iconOn: 'text-blue-600', activeBtn: 'border-blue-300 bg-blue-50 text-blue-800', edge: 'border-blue-300' },
+  { value: 'stakeholders', label: 'Stakeholders', agentType: 'stakeholder_analyst', Icon: Users, iconOn: 'text-cyan-600', activeBtn: 'border-cyan-300 bg-cyan-50 text-cyan-800', edge: 'border-cyan-300' },
+  { value: 'budget', label: 'Budget', agentType: 'budget_builder', Icon: Wallet, iconOn: 'text-emerald-600', activeBtn: 'border-emerald-300 bg-emerald-50 text-emerald-800', edge: 'border-emerald-300' },
+  { value: 'comms', label: 'Comms', agentType: 'communications_planner', Icon: Megaphone, iconOn: 'text-violet-600', activeBtn: 'border-violet-300 bg-violet-50 text-violet-800', edge: 'border-violet-300' },
+  { value: 'lessons', label: 'Lessons', agentType: 'lessons_learned_synthesiser', Icon: GraduationCap, iconOn: 'text-amber-600', activeBtn: 'border-amber-300 bg-amber-50 text-amber-800', edge: 'border-amber-300' },
+  { value: 'closeout', label: 'Closeout', agentType: 'closeout_reporter', Icon: PackageCheck, iconOn: 'text-rose-600', activeBtn: 'border-rose-300 bg-rose-50 text-rose-800', edge: 'border-rose-300' },
 ];
 
 interface ProjectTabsProps {
@@ -198,11 +201,13 @@ export function ProjectTabs({
 
       <Tabs.Content value="structure" className="space-y-6 pt-6">
         {activeWps.length > 0 ? (
-          <>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
             <WbsCanonicalTree workPackages={activeWps} />
-            <RiskByWbs risks={data.risks} workPackages={activeWps} />
-            <IssueByWbs issues={data.issues} workPackages={activeWps} />
-          </>
+            <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
+              <RiskByWbs risks={data.risks} workPackages={activeWps} />
+              <IssueByWbs issues={data.issues} workPackages={activeWps} />
+            </div>
+          </div>
         ) : proposedWps.length > 0 ? (
           <>
             {canWrite && <WbsAuthoring token={token} projectCode={projectCode} proposed />}
@@ -258,13 +263,25 @@ export function ProjectTabs({
         />
       </Tabs.Content>
 
-      <Tabs.Content value="risks" className="space-y-6 pt-6">
-        <RiskExposurePanel risks={data.risks} contingency={contingencyTotal} consumed={contingencyConsumed} />
-        <RiskHeatmap rows={data.risks} />
-        <RisksTable rows={data.risks} actions={data.action_items ?? []} issues={data.issues} />
-        <IssueHealthPanel issues={data.issues} currentWeek={projectCurrentWeek} />
-        <IssueHeatmap rows={data.issues} currentWeek={projectCurrentWeek} />
-        <IssuesTable rows={data.issues} currentWeek={projectCurrentWeek} />
+      <Tabs.Content value="risks" className="pt-6">
+        <RiskIssuesTab
+          risks={
+            <>
+              <RiskExposurePanel risks={data.risks} contingency={contingencyTotal} consumed={contingencyConsumed} />
+              <RiskHeatmap rows={data.risks} />
+              <RisksTable rows={data.risks} actions={data.action_items ?? []} issues={data.issues} />
+            </>
+          }
+          issues={
+            <>
+              <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
+                <IssueHealthPanel issues={data.issues} currentWeek={projectCurrentWeek} />
+                <IssueHeatmap rows={data.issues} currentWeek={projectCurrentWeek} />
+              </div>
+              <IssuesTable rows={data.issues} currentWeek={projectCurrentWeek} />
+            </>
+          }
+        />
       </Tabs.Content>
 
       <Tabs.Content value="cos" className="pt-6">
@@ -293,6 +310,10 @@ function fmtM(n: number | null): string {
 }
 function ratioTone(v: number | null): string {
   return v == null ? 'text-foreground' : v < 0.95 ? 'text-red-600' : v >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
+}
+
+function ratioToneKpi(v: number | null): KpiTone {
+  return v == null ? 'neutral' : v < 0.95 ? 'bad' : v >= 1.0 ? 'ok' : 'warn';
 }
 
 function OverviewPanel({
@@ -366,8 +387,8 @@ function OverviewPanel({
           {metrics.ready ? (
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Kpi label="Complete" value={`${metrics.complete_pct.toFixed(0)}%`} />
-              <Kpi label="CPI · cost" value={metrics.cpi == null ? '—' : metrics.cpi.toFixed(2)} cls={ratioTone(metrics.cpi)} />
-              <Kpi label="SPI · sched" value={metrics.spi == null ? '—' : metrics.spi.toFixed(2)} cls={ratioTone(metrics.spi)} />
+              <Kpi label="CPI · cost" value={metrics.cpi == null ? '—' : metrics.cpi.toFixed(2)} tone={ratioToneKpi(metrics.cpi)} />
+              <Kpi label="SPI · sched" value={metrics.spi == null ? '—' : metrics.spi.toFixed(2)} tone={ratioToneKpi(metrics.spi)} />
               <Kpi label="Forecast" value={fmtM(metrics.eac)} />
             </div>
           ) : (
@@ -378,7 +399,7 @@ function OverviewPanel({
         {/* Needs attention */}
         <div className="rounded-lg border bg-card p-4">
           <p className="text-sm font-semibold">Needs attention</p>
-          <div className="mt-3 space-y-1.5">
+          <div className="mt-3 grid grid-cols-3 gap-2">
             <AttnRow label="Open risks" n={openRisks} onClick={() => go('risks')} />
             <AttnRow label="Open issues" n={openIssues} onClick={() => go('risks')} />
             <AttnRow label="Open actions" n={openActions} onClick={() => go('risks')} />
@@ -398,11 +419,11 @@ function OverviewPanel({
   );
 }
 
-function Kpi({ label, value, cls = 'text-foreground' }: { label: string; value: string; cls?: string }) {
+function Kpi({ label, value, tone = 'neutral' }: { label: string; value: string; tone?: KpiTone }) {
   return (
-    <div className="rounded-md bg-muted/40 px-3 py-1.5">
+    <div className={`rounded-md border px-3 py-1.5 ${toneCard(tone)}`}>
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`text-base font-semibold tabular-nums ${cls}`}>{value}</p>
+      <p className={`text-base font-semibold tabular-nums ${toneText(tone)}`}>{value}</p>
     </div>
   );
 }
@@ -412,10 +433,10 @@ function AttnRow({ label, n, onClick }: { label: string; n: number; onClick: () 
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition hover:bg-muted/60"
+      className={`rounded-md border px-3 py-2 text-left transition hover:shadow-sm ${n > 0 ? 'border-amber-300 bg-amber-50/60' : 'bg-card'}`}
     >
-      <span className="text-muted-foreground">{label}</span>
-      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${n > 0 ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground'}`}>{n}</span>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-0.5 text-xl font-semibold tabular-nums ${n > 0 ? 'text-amber-700' : 'text-foreground'}`}>{n}</p>
     </button>
   );
 }
@@ -442,34 +463,35 @@ function PlanningPanel({ byAgent, token, canEdit }: { byAgent: Record<string, Ar
   const active = PLANNING_TABS.find((t) => t.value === sel) ?? PLANNING_TABS[0];
 
   return (
-    <div className="flex flex-col gap-6 md:flex-row">
-      <nav className="flex gap-1.5 overflow-x-auto pb-1 md:w-52 md:shrink-0 md:flex-col md:gap-0.5 md:overflow-visible md:border-r md:pb-0 md:pr-3">
-        <p className="hidden px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground md:block">Planning documents</p>
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2">
         {PLANNING_TABS.map((t) => {
           const count = byAgent[t.agentType]?.length ?? 0;
-          const isActive = t.value === sel;
+          const on = t.value === sel;
           return (
             <button
               key={t.value}
               type="button"
               onClick={() => setSel(t.value)}
-              className={`flex shrink-0 items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition md:shrink ${
-                isActive
-                  ? 'bg-muted font-medium text-foreground'
+              className={`group flex items-center gap-2.5 rounded-lg border px-3.5 py-2 text-left transition ${
+                on
+                  ? `${t.activeBtn} shadow-sm`
                   : count > 0
-                    ? 'text-muted-foreground hover:bg-muted/60'
-                    : 'text-muted-foreground/50 hover:bg-muted/40'
+                    ? 'border-transparent bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+                    : 'border-transparent bg-muted/20 text-muted-foreground/50 hover:bg-muted/40'
               }`}
             >
-              <span>{t.label}</span>
+              <t.Icon className={`h-4 w-4 shrink-0 ${on ? t.iconOn : count > 0 ? 'text-muted-foreground group-hover:text-foreground' : 'text-muted-foreground/40'}`} />
+              <span className="text-sm font-semibold">{t.label}</span>
               {count > 0 && (
                 <span className="rounded-full bg-background px-1.5 py-0.5 text-[11px] tabular-nums text-muted-foreground">{count}</span>
               )}
             </button>
           );
         })}
-      </nav>
-      <div className="min-w-0 flex-1">
+      </div>
+
+      <div className={`border-l-2 pl-5 ${active.edge}`}>
         <PlanningArtefactView rows={byAgent[active.agentType] ?? []} artefactLabel={active.label} token={token} canEdit={canEdit} />
       </div>
     </div>
