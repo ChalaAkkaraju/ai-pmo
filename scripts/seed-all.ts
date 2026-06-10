@@ -21,6 +21,21 @@ const steps: [string, string][] = [
   ['11 · freeze as-sold margin baseline (free)', 'scripts/generators/11-simulate-margin-baseline.ts'],
   ['12 · set WBS target-finish envelopes (free)', 'scripts/generators/12-simulate-target-finish.ts'],
   ['13 · set contractual project window (free)', 'scripts/generators/13-simulate-project-dates.ts'],
+  // Enrichment + cost-to-cash layers (all procedural, free). Order proven on
+  // local 2026-06-07/08: risk EMV -> lifecycle -> issues; then 09 --force
+  // (cost-element split) -> POs -> 10 --force (labour hours) -> billing -> RA;
+  // then change-order enrichment, forecast snapshots, action items last.
+  ['14 · risk EMV enrichment (free)', 'scripts/generators/14-enrich-risks.ts'],
+  ['15 · risk lifecycle/residual (free)', 'scripts/generators/15-enrich-risks-2.ts'],
+  ['16 · issue management enrichment (free)', 'scripts/generators/16-enrich-issues.ts'],
+  ['09f · cost actuals re-run with element split (free)', 'scripts/generators/09-simulate-cost-actuals.ts --force'],
+  ['17 · purchase-order commitments (free)', 'scripts/generators/17-simulate-purchase-orders.ts'],
+  ['10f · resources re-run with labour hours (free)', 'scripts/generators/10-simulate-resources.ts --force'],
+  ['18 · billing events (free)', 'scripts/generators/18-simulate-billing.ts'],
+  ['19 · results analysis (free)', 'scripts/generators/19-simulate-results-analysis.ts'],
+  ['21 · change-order enrichment + trend register (free)', 'scripts/generators/21-enrich-change-orders.ts'],
+  ['22 · forecast snapshots (free)', 'scripts/generators/22-forecast-snapshots.ts'],
+  ['20 · action items + responses (free)', 'scripts/generators/20-simulate-action-items.ts'],
 ];
 
 console.log(`\nStructural rebuild: ${steps.length} steps. Only step 01 costs money (~$0.51).\n`);
@@ -29,7 +44,7 @@ for (const [label, script] of steps) {
   n++;
   console.log(`\n\n========== [${n}/${steps.length}] ${label} ==========`);
   try {
-    execSync(`npx tsx "${script}"`, { stdio: 'inherit' });
+    execSync(`npx tsx ${script}`, { stdio: 'inherit' }); // no quotes: entries may carry flags (e.g. --force); paths have no spaces
   } catch {
     console.error(`\n\n!!! STOPPED at step ${n}: ${script}`);
     console.error('Fix the error above, then re-run `npx tsx scripts/seed-all.ts` (all steps are idempotent).');
