@@ -71,8 +71,9 @@ export default async function DataModelPage({ params }: PageProps) {
           CPQ wins the deal → feeds SAP → SAP creates the <span className="font-medium">shell project</span> (header +
           as-sold baseline) and stays the system of record → AI PMO <span className="font-medium">mirrors</span> it → the
           AI authors the scope-true <span className="font-medium">WBS</span> → a human approves → it is booked back to SAP
-          once → from then SAP (cost) and the scheduler (progress) feed AI PMO read-only. AI PMO authors exactly one thing
-          (the WBS); everything else is mirrored or read.
+          once → from then SAP (cost) and the scheduler (progress) feed AI PMO read-only. The WBS is AI PMO&rsquo;s one
+          write into SAP; what it mirrors from the two systems stays read-only, while its own layer — risks, issues,
+          actions, analyses — is born and owned in-app.
         </p>
       </div>
 

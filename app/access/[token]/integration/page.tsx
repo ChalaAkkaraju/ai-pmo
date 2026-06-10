@@ -77,8 +77,9 @@ export default async function IntegrationPage({ params }: PageProps) {
 
       <h1 className="text-2xl font-bold tracking-tight">Data integration</h1>
       <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-        The consume side: structure, cost, commitment, billing and revenue recognition are mirrored from the systems of
-        record into the canonical model, joined by WBS code. SAP PS is live (mock adapter through the real pipeline); the scheduler connectors follow the same
+        The consume side: structure, cost, commitment, billing, revenue recognition and change orders from SAP PS —
+        plus tasks, resources and milestones from the scheduler — are mirrored from the systems of record into the
+        canonical model, joined by WBS code. SAP PS is live (mock adapter through the real pipeline); the scheduler connectors follow the same
         contract. Records that can&apos;t map are queued below, never dropped.
       </p>
 
