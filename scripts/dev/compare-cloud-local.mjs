@@ -27,13 +27,17 @@ const TABLES = [
 
 async function count(env, table) {
   try {
+    const headers = {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      Prefer: 'count=exact',
+      Range: '0-0',
+    };
+    // legacy JWT keys also want the Bearer header; new sb_secret_ keys may not
+    if (!env.SUPABASE_SERVICE_ROLE_KEY.startsWith('sb_')) {
+      headers.Authorization = `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`;
+    }
     const r = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/${table}?select=count`, {
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-        Prefer: 'count=exact',
-        Range: '0-0',
-      },
+      headers,
       signal: AbortSignal.timeout(15000),
     });
     if (!r.ok && r.status !== 206) return `err ${r.status}`;
