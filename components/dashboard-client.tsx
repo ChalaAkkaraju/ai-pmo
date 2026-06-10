@@ -196,8 +196,9 @@ function fmtBillions(b: number): string {
   return `$${b.toFixed(2)}B`;
 }
 
+// Portfolio money is standardised on BILLIONS (project pages use millions).
 function fmtFin(n: number): string {
-  return Math.abs(n) >= 1_000_000_000 ? `$${(n / 1_000_000_000).toFixed(2)}B` : `$${(n / 1_000_000).toFixed(1)}M`;
+  return `$${(n / 1_000_000_000).toFixed(2)}B`;
 }
 
 function agentAccent(agentType: string): { bar: string; chip: string } {
@@ -550,8 +551,8 @@ function DrillModal({ title, columns, data, seeAllHref, rowHref, onClose }: Dril
 function PortfolioEvBand({ ev, onBehindClick, onOverClick }: { ev: PortfolioEv; onBehindClick?: () => void; onOverClick?: () => void }) {
   const money = (n: number | null) => {
     if (n == null) return '\u2014';
-    const m = n / 1_000_000;
-    return `${m < 0 ? '-' : ''}$${Math.abs(m).toFixed(1)}M`;
+    const b = n / 1_000_000_000;
+    return `${b < 0 ? '-' : ''}$${Math.abs(b).toFixed(2)}B`;
   };
   const ratioTone = (v: number | null) =>
     v == null ? 'text-slate-900' : v < 0.97 ? 'text-red-600' : v >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
@@ -1628,7 +1629,7 @@ function KpiCard({ label, value, sub, tone = 'neutral', onClick }: { label: stri
   const toneCls = toneCard(tone);
   return (
     <div onClick={onClick} className={`rounded-lg border p-4 ${toneCls} ${onClick ? 'cursor-pointer transition hover:border-foreground/30 hover:shadow-sm' : ''}`}>
-      <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="min-h-[2.5rem] text-sm font-medium uppercase leading-snug tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
       <p className="mt-0.5 text-sm text-muted-foreground">{sub}</p>
     </div>

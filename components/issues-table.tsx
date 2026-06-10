@@ -27,6 +27,7 @@ interface Issue extends IM {
   escalated?: boolean | null;
   root_cause?: string | null;
   recurrence?: string | null;
+  created_via?: string | null;
 }
 
 const BAND_BADGE: Record<AgingBand, string> = {
@@ -99,6 +100,7 @@ function IssueRow({ issue, currentWeek, isExpanded, onToggle }: { issue: Issue; 
         <td className="px-3 py-3 font-mono text-xs">{issue.issue_id}</td>
         <td className="px-3 py-3">
           {issue.description}
+          {issue.created_via === 'agent' && <span className="ml-2 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700" title="Raised in-app through the AI PMO agent">agent-raised</span>}
           {(escalate || issue.escalated) && <span className="ml-2 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700" title="Escalation">⚑ {issue.escalated ? 'Escalated' : 'Escalate'}</span>}
           {issue.recurrence === 'Recurring' && <span className="ml-2 rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-medium text-orange-700">↻ Recurring</span>}
         </td>

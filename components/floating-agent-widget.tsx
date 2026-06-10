@@ -322,6 +322,70 @@ const AGENT_LABELS: Record<AgentType, string> = {
   cost_controller: 'Cost Controller',
 };
 
+/** Starter prompts shown when the chat is empty — role-aware. Creation/assign
+ * options surface the write actions that aren't otherwise discoverable now that
+ * everything runs through the agent. Clicking one pre-fills the input to edit. */
+function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { allowedAgents: AgentType[]; canWrite: boolean; projectCode: string | null; onPick: (p: string) => void }) {
+  const has = (a: AgentType) => allowedAgents.includes(a);
+  const create: Array<{ label: string; prompt: string }> = [];
+  if (projectCode && canWrite) {
+    if (has('risk_analyst')) create.push({ label: '\uFF0B Raise a risk', prompt: 'Log a risk: [describe the risk \u2014 cause \u2192 event \u2192 consequence]' });
+    if (has('issue_logger')) create.push({ label: '\uFF0B Log an issue', prompt: 'Log an issue: [describe the issue and its effect]' });
+    if (has('change_order_reviewer')) create.push({ label: '\uFF0B Change / trend entry', prompt: 'Add a change/trend entry: [describe the scope change]' });
+  }
+  if (canWrite) create.push({ label: '\uFF0B Assign a task', prompt: 'Assign a task to [role]: [what to do] \u2014 [low/medium/high] urgency' });
+
+  // Ask prompts are role-aware too: built from the agents this role can use,
+  // so each role sees analysis starters that match what it is allowed to do.
+  const ASK_BY_AGENT: Array<[AgentType, string]> = [
+    ['variance_analyst', 'Is this project on cost and schedule? Summarise the latest variance and flag concerns.'],
+    ['risk_analyst', 'What are the top risks to watch on this project, and why?'],
+    ['cost_controller', 'Give me the cost and commitment position \u2014 cost-to-date, open commitment, and net unbilled.'],
+    ['change_order_reviewer', 'Review the open change orders \u2014 which threaten margin, and what approval routing?'],
+    ['issue_logger', 'Summarise the open issues; flag the overdue high-severity ones.'],
+    ['schedule_reasoner', 'What\u2019s the critical path, and which deliverables carry the most schedule risk?'],
+    ['status_reporter', 'Write this week\u2019s status report for the sponsor.'],
+    ['budget_builder', 'Lay out the cost breakdown across engineering, procurement, construction, and commissioning.'],
+    ['stakeholder_analyst', 'Build the stakeholder register and the engagement approach.'],
+    ['wbs_builder', 'Build the work breakdown structure to Level 1\u20133.'],
+    ['charter_drafter', 'Draft the project charter from the intake data.'],
+    ['communications_planner', 'Build the communications plan for this project.'],
+    ['lessons_learned_synthesiser', 'What are the top firm-level lessons from this project?'],
+    ['closeout_reporter', 'Draft the closeout executive summary.'],
+  ];
+  let ask: string[];
+  if (projectCode) {
+    const roleAsks = ASK_BY_AGENT.filter(([a]) => has(a)).map(([, prm]) => prm);
+    ask = ['Summarise this project\u2019s health \u2014 cost, schedule, and what needs my attention.', ...roleAsks].slice(0, 4);
+  } else {
+    ask = ['Which projects need attention this week, and why? Cite the variance reports.'];
+    if (has('portfolio_risk_reviewer')) ask.push('Where is cross-cutting risk emerging across the portfolio?');
+    if (has('cost_controller') || has('variance_analyst')) ask.push('Which projects are trending over cost or behind schedule?');
+  }
+
+  return (
+    <div className="px-1 py-1.5">
+      {create.length > 0 && (
+        <>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Create / update / assign</p>
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {create.map((c) => (
+              <button key={c.label} type="button" onClick={() => onPick(c.prompt)} className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-medium text-sky-800 transition hover:border-sky-400 hover:bg-sky-100">{c.label}</button>
+            ))}
+          </div>
+        </>
+      )}
+      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ask agent</p>
+      <div className="flex flex-col gap-1.5">
+        {ask.map((a) => (
+          <button key={a} type="button" onClick={() => onPick(a)} className="text-left rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100">{a}</button>
+        ))}
+      </div>
+      <p className="mt-2 px-0.5 text-[10px] text-muted-foreground">Pick one to pre-fill, edit, then Send.</p>
+    </div>
+  );
+}
+
 export function FloatingAgentWidget({
   token,
   roleDisplayName,
@@ -550,6 +614,9 @@ export function FloatingAgentWidget({
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-2" style={{ backgroundColor: 'white' }}>
+        {history.length === 0 && !isInvoking && (
+          <SuggestedPrompts allowedAgents={allowedAgents} canWrite={canWrite} projectCode={projectCode} onPick={(p) => setPrompt(p)} />
+        )}
         {history.map((h, idx) => (
           <InvocationCard key={idx} invocation={h} isLatest={idx === 0} token={token} onUseAsPrompt={applyFollowUp} onPopOut={handlePopOut} submittedCode={h.output_id ? submittedEntries[h.output_id] : undefined} onEntrySubmitted={markEntrySubmitted} />
         ))}

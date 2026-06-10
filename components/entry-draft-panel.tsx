@@ -44,7 +44,7 @@ export function EntryDraftPanel({ entry, token, projectCode, alreadySubmittedCod
   if (state === 'done' || alreadySubmittedCode) {
     return (
       <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-[12px] text-emerald-900">
-        ✓ Added <span className="font-mono font-semibold">{doneCode}</span> to the {KIND_LABEL[form.type]} register as <span className="font-medium">app-raised</span> (provisional until booked to the system of record).
+        ✓ Added <span className="font-mono font-semibold">{doneCode}</span> to the {KIND_LABEL[form.type]} register — <span className="font-medium">agent-raised</span>{form.type === 'change' ? ', provisional until booked into SAP PS.' : ' in AI PMO.'}
       </div>
     );
   }
@@ -53,7 +53,7 @@ export function EntryDraftPanel({ entry, token, projectCode, alreadySubmittedCod
     <div className="mt-2 rounded-md border border-sky-200 bg-sky-50/60 p-3">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-sky-800">Raise {KIND_LABEL[form.type]} — review &amp; confirm</p>
-        <span className="rounded-full bg-white px-1.5 py-0.5 text-[9px] font-medium text-sky-700">app-raised</span>
+        <span className="rounded-full bg-white px-1.5 py-0.5 text-[9px] font-medium text-sky-700">agent-raised</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2">

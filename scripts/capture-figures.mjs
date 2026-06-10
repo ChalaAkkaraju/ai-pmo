@@ -30,6 +30,7 @@ const ACTIVE_PANEL = '[role="tabpanel"][data-state="active"]';
 
 // filename -> { chapter, caption } for the figures index
 const CAPTIONS = {
+  '00-welcome-gateway.png':             ['A1',  'The welcome gateway — what AI PMO is, in one screen.'],
   '01-portfolio-dashboard.png':        ['A1',  'Executive portfolio dashboard — health, lifecycle and hot list.'],
   '02-portfolio-earned-value.png':     ['A5',  'Portfolio earned value — CPI×SPI quadrant and worst-performer register.'],
   '03-portfolio-cash-flow.png':        ['A8',  'Portfolio cash-flow — funding exposure with segment / project drill-down.'],
@@ -112,6 +113,11 @@ async function main() {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.setViewport(VIEWPORT);
+
+  // Welcome gateway
+  console.log('welcome');
+  await goto(page, '/welcome');
+  await shoot(page, 'main', '00-welcome-gateway.png');
 
   // Dashboard + auto-discover a project code
   console.log('dashboard');

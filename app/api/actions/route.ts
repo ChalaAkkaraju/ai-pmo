@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { isValidRoleType } from '@/lib/roles';
+import { isValidRoleType, getRoleDefinition } from '@/lib/roles';
 import type { Role } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -70,6 +70,9 @@ export async function POST(request: NextRequest) {
 
   const role = await roleFromToken(body.token);
   if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  if (!isValidRoleType(role.role_type) || !getRoleDefinition(role.role_type).can_write) {
+    return NextResponse.json({ error: 'This role is read-only and cannot assign tasks.' }, { status: 403 });
+  }
 
   const supabase = createSupabaseServiceClient();
 
@@ -176,6 +179,9 @@ export async function PATCH(request: NextRequest) {
 
   const role = await roleFromToken(body.token);
   if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  if (!isValidRoleType(role.role_type) || !getRoleDefinition(role.role_type).can_write) {
+    return NextResponse.json({ error: 'This role is read-only and cannot assign tasks.' }, { status: 403 });
+  }
 
   const supabase = createSupabaseServiceClient();
 

@@ -21,7 +21,7 @@ export function FloatingAgentWidgetGate(props: {
   canWrite: boolean;
 }) {
   const pathname = usePathname() ?? '';
-  // Hide on the agents catalog deck.
-  if (/\/access\/[^/]+\/agents$/.test(pathname)) return null;
+  // Hide on the agents catalog deck and the welcome screen (both are full-screen).
+  if (/\/access\/[^/]+\/(agents|welcome)$/.test(pathname)) return null;
   return <FloatingAgentWidget {...props} />;
 }

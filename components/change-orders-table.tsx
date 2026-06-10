@@ -21,6 +21,7 @@ interface ChangeOrder {
     client_position: string;
     northwood_acceptance: string;
   } | null;
+  created_via?: string | null;
 }
 
 
@@ -74,6 +75,7 @@ export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown
                   <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${changeOrderBadge(co.status)}`}>
                     {co.status}
                   </span>
+                  {co.created_via === 'agent' && <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700" title="Raised in-app through the AI PMO agent">agent-raised</span>}
                   <span className="text-muted-foreground/40">{isOpen ? '▾' : '▸'}</span>
                 </div>
                 <p className="mt-2 text-sm font-semibold leading-snug text-foreground">

@@ -4,6 +4,8 @@
 
 *Business Edition · Chapter A1 — the opening chapter*
 
+![The welcome gateway — what AI PMO is, in one screen.](book/figures/00-welcome-gateway.png)
+
 ![The executive portfolio dashboard — AI PMO's synthesis layer across SAP PS and the scheduler.](book/figures/01-portfolio-dashboard.png)
 
 ## Two systems of record, one project

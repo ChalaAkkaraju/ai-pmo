@@ -45,6 +45,7 @@ const BUSINESS = [
   { doc: 'reading-the-executive-dashboard-concept' },
   { doc: 'the-analytics-pages-concept' },
   { doc: 'the-project-workspace-concept' },
+  { doc: 'the-ai-agents-concept' },
   { part: 'Part V — Justification & Governance' },
   { doc: 'why-these-formulas-standards-concept' },
   { part: 'Appendices' },

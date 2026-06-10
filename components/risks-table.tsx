@@ -36,6 +36,7 @@ interface Risk {
   realised_cost_usd?: number | null;
   proximity_weeks?: number | null;
   velocity?: string | null;
+  created_via?: string | null;
 }
 
 interface ActionItemLite { id: string; source_ref: string | null; description: string; assigned_to_role_type: string; status: string; urgency: string; }
@@ -147,6 +148,7 @@ function RiskRow({ risk, spawnedActions, linkedIssues, isExpanded, onToggle }: {
         <td className="px-3 py-3 font-mono text-xs">{risk.risk_id}</td>
         <td className="px-3 py-3">
           {risk.description}
+          {risk.created_via === 'agent' && <span className="ml-2 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700" title="Raised in-app through the AI PMO agent">agent-raised</span>}
           {near && <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700" title="Time to potential impact">⏱ {risk.proximity_weeks}w</span>}
           {spawnedActions.length > 0 && <span className="ml-2 rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium text-foreground">{spawnedActions.length} action{spawnedActions.length === 1 ? '' : 's'}</span>}
           {linkedIssues.length > 0 && <span className="ml-2 rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">{linkedIssues.length} issue{linkedIssues.length === 1 ? '' : 's'}</span>}

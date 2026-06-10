@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Authentication-aware app header.
  *
@@ -16,6 +18,7 @@
  */
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import type { ResolvedRole } from '@/lib/role-context';
 
 const CREATE_ROLES = ['pm', 'engineering_manager'];
@@ -33,6 +36,21 @@ const LEARN_LINKS: Array<{ path: string; label: string }> = [
 
 export function Header({ token, resolved }: { token: string; resolved: ResolvedRole }) {
   const canCreate = CREATE_ROLES.includes(resolved.role.role_type);
+  // On the welcome gateway (its own branding + entry buttons) the full header is
+  // redundant — keep only a minimal, centred name / role so you still see who
+  // you're signed in as.
+  if (/\/welcome$/.test(usePathname() ?? '')) {
+    return (
+      <header className="no-print">
+        <div className="container mx-auto flex h-12 max-w-screen-2xl items-center justify-center px-8 leading-tight">
+          <div className="flex flex-col items-center">
+            <span className="text-sm font-semibold text-foreground">{resolved.role.name}</span>
+            <span className="text-[11px] text-muted-foreground">{resolved.definition.display_name}</span>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="no-print border-b bg-background">

@@ -12,7 +12,6 @@ import { resolveRoleFromToken } from '@/lib/role-context';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { ProjectTabs } from '@/components/project-tabs';
 import { SetupChecklist } from '@/components/setup-checklist';
-import { AssignTaskButton } from '@/components/assign-task-button';
 import type { WorkPackage } from '@/components/wbs-canonical-tree';
 import type { Task } from '@/components/schedule-view';
 import { computeEv, evCurve, computeEvByWbs, earnedSchedule } from '@/lib/earned-value';
@@ -431,7 +430,6 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         defaultOpen={isFreshProject && doneAgents.length < 6}
       />
 
-      {resolved.definition.can_write && <AssignTaskButton token={token} projectCode={code} />}
 
       <ProjectTabs
         token={token}
