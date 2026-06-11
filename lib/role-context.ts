@@ -32,6 +32,11 @@ export async function resolveRoleFromToken(token: string): Promise<ResolvedRole 
     .eq('token', token)
     .maybeSingle<Role>();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    // Surface the real reason in server logs — a silent null here renders as a
+    // bare 404, which hides config problems (bad key, unreachable DB) entirely.
+    if (error) console.error('[role-context] token lookup failed:', error.message);
+    return null;
+  }
   return { role: data, definition: getRoleDefinition(data.role_type) };
 }
