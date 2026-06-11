@@ -122,7 +122,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         console.log(`[report-pdf:browser:${type}]`, msg.text());
       }
     });
-    page.on('pageerror', (err: Error) => {
+    page.on('pageerror', (err: unknown) => {
       console.log('[report-pdf:browser:pageerror]', (err as Error).message);
     });
 
