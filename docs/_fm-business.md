@@ -23,6 +23,8 @@ finally to the standards and governance that keep every number defensible.
 A note on the figures: worked examples use a synthetic demonstration portfolio, not
 any real project or organisation.
 
+As of June 2026 the system described here is no longer a prototype on a developer machine: it runs live — a Next.js application on Railway over a cloud Supabase database — and every screenshot in this edition is captured from the published application.
+
 # How to read this book
 
 Each capability has a Business chapter here and a counterpart in the Technical

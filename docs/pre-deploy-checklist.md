@@ -1,6 +1,6 @@
 # AI PMO — Pre-Deploy Testing Checklist
 
-Run through this once before deploying to Vercel. Designed for ~45 minutes of focused testing — substantial enough to catch the failures that would embarrass in production, brief enough that you'll actually do it.
+Run through this once before deploying to Railway. Designed for ~45 minutes of focused testing — substantial enough to catch the failures that would embarrass in production, brief enough that you'll actually do it.
 
 Tick each box as you go. If anything fails, note it under "Issues found" at the bottom. Don't deploy until every must-pass item is green.
 
@@ -19,16 +19,16 @@ Tick each box as you go. If anything fails, note it under "Issues found" at the 
 - [ ] No "PMO LLM" text anywhere on the landing page (should be fully rebranded)
 - [ ] An invalid token like `/access/totally-fake-token` redirects to a 404 / "not found" page
 - [ ] Clicking each role's access link loads the dashboard for that role without error:
-  - [ ] Senior PM / PMO Director — J. Okafor (`demo-pm-token-replace-me`)
-  - [ ] Portfolio Procurement Strategist — M. Patel (`demo-procurement-token-replace-me`)
-  - [ ] Portfolio Risk Analyst — R. Yuen (`demo-risk-token-replace-me`)
-  - [ ] VP Sponsor — L. Andersen (`demo-sponsor-token-replace-me`)
-  - [ ] Commercial Manager — A. Whitfield (`demo-commercial-token-replace-me`)
-  - [ ] Project Controls Manager — K. Müller (`demo-project-controls-token-replace-me`)
-  - [ ] Program Manager (Renewables) — S. Park (`demo-program-manager-token-replace-me`)
-  - [ ] Engineering Manager — D. Sato (`demo-engineering-manager-token-replace-me`)
-  - [ ] Construction Manager — T. O'Brien (`demo-construction-manager-token-replace-me`)
-  - [ ] HSE Manager — F. Mahmoud (`demo-hse-manager-token-replace-me`)
+  - [ ] Senior PM / PMO Director — J. Okafor (`demo-pm`)
+  - [ ] Portfolio Procurement Strategist — M. Patel (`demo-procurement`)
+  - [ ] Portfolio Risk Analyst — R. Yuen (`demo-risk`)
+  - [ ] VP Sponsor — L. Andersen (`demo-sponsor`)
+  - [ ] Commercial Manager — A. Whitfield (`demo-commercial`)
+  - [ ] Project Controls Manager — K. Müller (`demo-project-controls`)
+  - [ ] Program Manager (Renewables) — S. Park (`demo-program-manager`)
+  - [ ] Engineering Manager — D. Sato (`demo-engineering-manager`)
+  - [ ] Construction Manager — T. O'Brien (`demo-construction-manager`)
+  - [ ] HSE Manager — F. Mahmoud (`demo-hse-manager`)
 - [ ] The header bar shows the correct colleague name and role for the token you used
 
 ---

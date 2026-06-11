@@ -19,4 +19,4 @@ flow, margin, risk and change intelligence.
 
 Several chapters in Parts I–III and V are the original design notes written during
 the build; the library chapters and the data dictionary were written to complete the
-volume. Together they document the system as built.
+volume. Together they document the system as built. As of June 2026 that system is live: a Next.js application on Railway, a cloud Supabase database promoted from the local-first build, and the full PDF/report pipeline running on a persistent server.

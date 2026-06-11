@@ -1,6 +1,6 @@
 # AI PMO — Agent Technical Profiles
 
-For each of the 14 specialist agents: what it needs as **input**, where the app **grounds** it, the methodology **rules** it follows, and what it **refuses** to do.
+For each of the 15 specialist agents: what it needs as **input**, where the app **grounds** it, the methodology **rules** it follows, and what it **refuses** to do.
 
 Each profile *summarises* the agent's prompt file (`lib/agent-prompts/<agent>.md`), which is the **authoritative source** — consult the prompt for the full rules. (Keeping these as summaries of the prompt, not a parallel spec, is deliberate: it stops the documentation drifting from the prompts — see interview‑prep Q16.)
 
@@ -71,6 +71,13 @@ These read the live project data (the canonical model + the domain tables) and s
 - **Rules:** Earned Value Management (PMBOK); summarise the latest position + trend across reporting weeks; flag thresholds and projected margin.
 - **Boundary:** Does not compute portfolio‑wide trend; does not replace the monthly variance committee.
 - *Source of truth:* `lib/agent-prompts/variance_analyst.md`
+
+### Cost Controller — Project-level
+- **Inputs:** The project's cost-to-cash picture — budget, open purchase-order commitment, actual cost by element, labour hours, billing events.
+- **Grounding:** Structured facts computed *in code* from `cost_actuals` (by element), the PO commitment ledger, labour planned-vs-actual hours and `billing_events` — cost-to-date = actual **+ open commitment**, commitment-aware EAC, earned-vs-billed and net unbilled (WIP).
+- **Rules:** SAP PS cost-lifecycle discipline (budget → commitment → actual → billed); breaks cost down by element (labour, materials, subcontract, travel); reads labour productivity from hours, not spend; flags over-billing as well as under-billing.
+- **Boundary:** Does not measure schedule performance or CPI/SPI variance — that is the Variance Analyst; the two are complementary (variance measures, this one controls commitment, cash and cost composition).
+- *Source of truth:* `lib/agent-prompts/cost_controller.md`
 
 ### Change Order Reviewer — Single-item
 - **Inputs:** One change order + Charter + WBS + Cost Baseline + project.
