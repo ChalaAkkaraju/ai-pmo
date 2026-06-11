@@ -35,7 +35,14 @@ export async function resolveRoleFromToken(token: string): Promise<ResolvedRole 
   if (error || !data) {
     // Surface the real reason in server logs — a silent null here renders as a
     // bare 404, which hides config problems (bad key, unreachable DB) entirely.
-    if (error) console.error('[role-context] token lookup failed:', error.message);
+    if (error) {
+      const k = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+      console.error(
+        '[role-context] token lookup failed:', error.message,
+        '| url:', process.env.NEXT_PUBLIC_SUPABASE_URL,
+        '| key:', k ? `${k.slice(0, 12)}… len=${k.length}` : 'MISSING'
+      );
+    }
     return null;
   }
   return { role: data, definition: getRoleDefinition(data.role_type) };
