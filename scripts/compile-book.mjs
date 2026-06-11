@@ -85,7 +85,11 @@ const TECHNICAL = [
 
 function run(cmd, args, opts) {
   return new Promise((res, rej) => {
-    const p = spawn(cmd, args, { stdio: 'inherit', shell: process.platform === 'win32', ...opts });
+    // On Windows we spawn through the shell, which splits on spaces — quote any
+    // argument containing one (e.g. paths under "C:\\Claude\\Projects\\PMO LLM").
+    const win = process.platform === 'win32';
+    const a = win ? args.map((x) => (/\s/.test(x) ? `"${x}"` : x)) : args;
+    const p = spawn(cmd, a, { stdio: 'inherit', shell: win, ...opts });
     p.on('close', (c) => (c === 0 ? res() : rej(new Error(`${cmd} exited ${c}`))));
     p.on('error', rej);
   });
