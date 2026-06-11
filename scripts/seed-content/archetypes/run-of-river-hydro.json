@@ -1,139 +1,144 @@
 {
   "archetype_id": "run-of-river-hydro",
   "segment": "renewables",
-  "subsegment": "Run-of-river hydroelectric — small/medium (10-50 MW)",
-  "description": "Diversion-style or low-head run-of-river hydro project with intake, penstock, powerhouse, and tailrace. Schedules are dictated by in-stream work windows and FERC licensing conditions.",
-  "name_pattern": "{location} Hydro Phase {phase}",
+  "subsegment": "Run-of-river hydroelectric — small to mid-scale (10-50 MW)",
+  "description": "Low-head or medium-head run-of-river hydro with weir, intake, penstock, and powerhouse. Schedule and cost are dominated by in-water work windows, FERC licensing conditions, and geotechnical surprises in tunnel or penstock alignments.",
+  "name_pattern": "{location} Hydro Project Phase {phase}",
   "client_pattern": "{location} {client_suffix}",
   "client_suffixes": [
     "Hydro Power LLC",
-    "River Energy Partners",
-    "Public Utility District",
-    "Hydro Generation Corp",
-    "Watershed Power Co"
+    "Renewable Hydro Partners",
+    "Watershed Energy Corp",
+    "Hydroelectric Holdings",
+    "Public Utility District"
   ],
-  "contract_value_min_m": 80,
-  "contract_value_max_m": 260,
+  "contract_value_min_m": 75,
+  "contract_value_max_m": 280,
   "contingency_pct_typical": 7,
-  "margin_pct_typical": 10,
-  "duration_weeks_min": 110,
-  "duration_weeks_max": 180,
+  "margin_pct_typical": 9,
+  "duration_weeks_min": 130,
+  "duration_weeks_max": 200,
   "hard_deadline_themes": [
-    "FERC license article compliance dates",
-    "In-stream work window (fish window) closure",
-    "USACE Section 404 permit conditions",
-    "PPA COD with hydrologic season alignment"
+    "FERC license condition deadlines",
+    "In-water work window (fish protection)",
+    "USACE Section 404/401 permit conditions",
+    "PTC/ITC commercial operation window"
   ],
   "typical_risks": [
     {
-      "category": "Turbine-generator unit OEM",
-      "description_template": "Sole-source Francis/Kaplan unit from {oem} has {weeks}-week lead time with limited expediting leverage.",
+      "category": "Turbine-generator OEM concentration",
+      "description_template": "Francis/Kaplan turbine-generator package from {oem} on critical path; factory acceptance test delays propagate to wet commissioning.",
       "cross_cutting_class": "Vendor / supplier concentration",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "FERC fish-passage compliance",
-      "description_template": "License article requires functional downstream fish passage at COD; testing protocol with USFWS unresolved.",
+      "category": "FERC license condition compliance",
+      "description_template": "License Articles impose minimum flow, ramping, and fish passage conditions during construction; non-compliance risks suspension orders.",
       "cross_cutting_class": "Regulatory / external deadline",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "Bedrock condition at intake",
-      "description_template": "Differing site conditions in dam foundation excavation reveal sheared rock requiring redesigned anchorage.",
+      "category": "Tunnel/penstock geotechnical variance",
+      "description_template": "Tunnel alignment crosses {n_zones} fault and shear zones; actual rock quality may diverge from baseline GBR, driving support and over-break costs.",
       "cross_cutting_class": "Site-conditions variance",
-      "likely_probability": "M",
+      "likely_probability": "H",
       "likely_impact": "H"
     },
     {
-      "category": "Tunneling/penstock craft labour",
-      "description_template": "Specialty underground crews are committed to peer projects; mobilisation premium of {pct}% expected.",
+      "category": "Specialist tunneling labour",
+      "description_template": "Drill-and-blast and shotcrete crews are nationally scarce; loss of crew to competing project delays heading advance rates.",
       "cross_cutting_class": "Resource / labour scarcity",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
       "category": "Spring freshet flooding",
-      "description_template": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for {weeks} weeks.",
+      "description_template": "Cofferdam and diversion works exposed to spring freshet flows exceeding design return period; rebuild of in-river works possible.",
       "cross_cutting_class": "Weather / climate-sensitive construction",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "In-stream work window",
-      "description_template": "State fish & wildlife window restricts in-water work to {months}, with no extension mechanism.",
+      "category": "In-water work window",
+      "description_template": "ESA-driven in-water work windows of {n_weeks} weeks/year compress diversion, intake, and tailrace construction sequences.",
       "cross_cutting_class": "Regulatory / external deadline",
       "likely_probability": "H",
-      "likely_impact": "H"
-    },
-    {
-      "category": "Client scope on fish ladder design",
-      "description_template": "Client requests enhanced ladder design to support broader anadromous species, mid-execution.",
-      "cross_cutting_class": "Client-driven scope or sequence changes",
-      "likely_probability": "L",
       "likely_impact": "M"
     },
     {
-      "category": "Sediment management plan",
-      "description_template": "Reservoir flushing protocol contested by downstream users; could require operational redesign.",
+      "category": "Client design evolution",
+      "description_template": "Owner-driven changes to fish passage facility design during construction trigger re-permitting and rework of intake structure.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "First Nations / Tribal consultation",
+      "description_template": "Ongoing consultation with {tribe} regarding cultural resources may produce mid-construction mitigation requirements.",
       "cross_cutting_class": "Project-specific",
-      "likely_probability": "L",
+      "likely_probability": "M",
       "likely_impact": "M"
     }
   ],
   "typical_issues": [
     {
-      "category": "Cofferdam seepage",
-      "description_template": "Higher-than-modeled seepage requires supplemental dewatering pumps.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Penstock weld rejects",
-      "description_template": "RT inspection flagged {pct}% weld rejection rate on penstock segments.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Turbine runner damage in shipping",
-      "description_template": "Runner arrived with surface damage requiring OEM field repair.",
+      "category": "Cofferdam overtopping",
+      "description_template": "Unseasonal flow event overtopped upstream cofferdam; dewatering and inspection in progress.",
       "typical_severity": "H"
     },
     {
-      "category": "Fish window curtailment",
-      "description_template": "Early arrival of monitored species triggered early shutdown of in-water work.",
-      "typical_severity": "H"
-    },
-    {
-      "category": "Rock anchor pull-test failures",
-      "description_template": "{n_anchors} rock anchors failed proof load and require redrill.",
+      "category": "Rock support overrun",
+      "description_template": "Class IV/V rock encountered in tunnel; rock-bolt and shotcrete quantities trending {pct}% over baseline.",
       "typical_severity": "M"
     },
     {
-      "category": "Powerhouse concrete cold joint",
-      "description_template": "Cold-weather pour resulted in cold joint requiring repair.",
+      "category": "Penstock weld NDE failures",
+      "description_template": "Repeat NDE rejections on penstock circumferential welds; welder qualification under review.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Fish screen design rejection",
+      "description_template": "Resource agency rejected fish screen approach velocity calculation; revised design under expedited review.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Powerhouse concrete temperature",
+      "description_template": "Mass concrete pour exceeded thermal control plan limits; engineering disposition pending.",
       "typical_severity": "L"
     },
     {
-      "category": "FERC compliance filing delay",
-      "description_template": "Quarterly compliance filing slipped, prompting agency inquiry.",
-      "typical_severity": "L"
-    },
-    {
-      "category": "Tailrace scour",
-      "description_template": "Initial wet commissioning revealed scour patterns requiring riprap augmentation.",
+      "category": "Tailrace excavation overbreak",
+      "description_template": "Controlled blasting tolerance exceeded in tailrace; remediation grouting required.",
       "typical_severity": "M"
     },
     {
-      "category": "Tribal consultation extension",
-      "description_template": "Section 106 consultation extended after artifact discovery near intake.",
+      "category": "Turbine runner damage in transit",
+      "description_template": "Transport damage to runner detected at site; vendor repair plan under review.",
       "typical_severity": "H"
+    },
+    {
+      "category": "Access road washout",
+      "description_template": "Storm event washed out site access road; alternative routing impacting deliveries.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Sediment release exceedance",
+      "description_template": "Turbidity downstream exceeded NPDES limit during diversion works; regulator notified.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Generator stator shipping delay",
+      "description_template": "Specialty heavy-haul permit delays generator stator delivery to powerhouse.",
+      "typical_severity": "M"
     }
   ],
   "typical_co_drivers": [
-    "Cofferdam redesign for higher-than-baseline flow",
-    "Enhanced fish passage features per agency comment",
-    "Differing site conditions in foundation rock",
-    "Owner-directed switchyard expansion for second circuit",
-    "Additional sediment handling per reservoir management plan"
+    "Geotechnical variance triggering tunnel support class change",
+    "Resource agency-driven fish passage design modifications",
+    "Client-directed capacity uprate or runner design change",
+    "Extended in-water work window restrictions",
+    "Flood event recovery and cofferdam reconstruction"
   ]
 }

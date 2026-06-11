@@ -1,139 +1,137 @@
 {
   "archetype_id": "utility-scale-solar",
   "segment": "renewables",
-  "subsegment": "Utility-scale PV solar — single-axis tracker (50-200 MW AC)",
-  "description": "Fixed-price EPC for single-axis tracker PV plants with central or string inverters, MV collection, and gen-tie to a POI substation. Margin is highly sensitive to module/tracker pricing, AD/CVD posture, and ITC milestones.",
-  "name_pattern": "{location} Solar Phase {phase}",
+  "subsegment": "Utility-scale solar PV — single-axis tracker (50-250 MWac)",
+  "description": "Greenfield PV plants on flat agricultural or desert land, with optional DC-coupled BESS scope. Fixed-price EPC with module supply often owner-furnished or carved out; schedule risk concentrated around tracker delivery and interconnection.",
+  "name_pattern": "{location} Solar Project Phase {phase}",
   "client_pattern": "{location} {client_suffix}",
   "client_suffixes": [
     "Solar Holdings LLC",
-    "PV Energy Partners",
-    "Renewable IPP Co",
-    "Solar Yield LP",
-    "Sun Power Generation"
+    "Renewables IPP",
+    "Clean Energy Partners",
+    "Solar Capital LLC",
+    "Power Development Corp"
   ],
   "contract_value_min_m": 45,
-  "contract_value_max_m": 210,
+  "contract_value_max_m": 220,
   "contingency_pct_typical": 4,
-  "margin_pct_typical": 8,
+  "margin_pct_typical": 7,
   "duration_weeks_min": 52,
-  "duration_weeks_max": 95,
+  "duration_weeks_max": 88,
   "hard_deadline_themes": [
-    "IRA ITC placed-in-service milestone",
-    "Module customs/UFLPA clearance dates",
-    "PPA COD with daily LDs",
-    "Interconnection facilities study completion"
+    "ITC safe-harbor placed-in-service date",
+    "FERC LGIA milestone for backfeed",
+    "PPA guaranteed COD",
+    "State RPS compliance year"
   ],
   "typical_risks": [
     {
-      "category": "Module customs hold (UFLPA)",
-      "description_template": "Bifacial modules held under UFLPA WRO at port {port}, risking {weeks}-week stacking delay.",
+      "category": "Module supply / UFLPA detention",
+      "description_template": "Module shipments may be detained under UFLPA enforcement at port of entry; release timelines from CBP are unpredictable and can delay mechanical completion.",
       "cross_cutting_class": "Vendor / supplier concentration",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "ITC safe-harbor lapse",
-      "description_template": "Slippage past placed-in-service trigger erodes ITC bonus adders worth ${itc_m}M.",
+      "category": "Tracker OEM concentration",
+      "description_template": "Single tracker vendor {tracker_oem} supplies torque tubes, drives, and controls; any quality hold cascades across {n_blocks} blocks.",
+      "cross_cutting_class": "Vendor / supplier concentration",
+      "likely_probability": "M",
+      "likely_impact": "M"
+    },
+    {
+      "category": "ITC step-down deadline",
+      "description_template": "Placed-in-service must precede the IRA bonus credit step-down; substation backfeed dependency on utility is the critical schedule chain.",
       "cross_cutting_class": "Regulatory / external deadline",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "Tracker pile refusal",
-      "description_template": "Caliche/rock layers at {pct}% of pile locations cause refusals requiring pre-drill program.",
+      "category": "Geotechnical pile refusal",
+      "description_template": "Pile driving across {n_acres} acres may encounter refusal in caliche or rock layers, requiring pre-drilling for a percentage of {pile_count} piles.",
       "cross_cutting_class": "Site-conditions variance",
       "likely_probability": "H",
       "likely_impact": "M"
     },
     {
-      "category": "Electrician shortage",
-      "description_template": "Regional IBEW Local {local_n} hall is short {n_workers} journeymen during peak DC pull.",
+      "category": "Electrical labour scarcity",
+      "description_template": "Concurrent regional solar build-out pressures journeyman electrician availability; ramp curve for DC and MV terminations at risk.",
       "cross_cutting_class": "Resource / labour scarcity",
-      "likely_probability": "M",
-      "likely_impact": "M"
-    },
-    {
-      "category": "Heat-stress curtailment",
-      "description_template": "OSHA heat-illness standards force shortened shifts when wet-bulb exceeds threshold during {month}.",
-      "cross_cutting_class": "Weather / climate-sensitive construction",
       "likely_probability": "H",
       "likely_impact": "M"
     },
     {
-      "category": "Owner-directed module swap",
-      "description_template": "Client pivots from {original_module} to higher-wattage SKU mid-build, requiring stringing redesign.",
+      "category": "Severe weather — hail and wind",
+      "description_template": "Site in {region} hail-alley exposes installed modules to in-construction hail damage; stow algorithm and insurance coverage gaps may be exposed.",
+      "cross_cutting_class": "Weather / climate-sensitive construction",
+      "likely_probability": "M",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Owner module substitution",
+      "description_template": "Owner-furnished module substitution mid-construction triggers re-stamping of structural and electrical calculations and tracker re-configuration.",
       "cross_cutting_class": "Client-driven scope or sequence changes",
       "likely_probability": "M",
       "likely_impact": "M"
-    },
-    {
-      "category": "Stormwater NPDES exceedance",
-      "description_template": "Sediment discharge from disturbed acreage risks NOV under construction general permit.",
-      "cross_cutting_class": "Regulatory / external deadline",
-      "likely_probability": "L",
-      "likely_impact": "M"
-    },
-    {
-      "category": "Inverter firmware ride-through",
-      "description_template": "ISO updates Order 2023A ride-through requirements after PO, requiring vendor firmware revision.",
-      "cross_cutting_class": "Project-specific",
-      "likely_probability": "M",
-      "likely_impact": "L"
     }
   ],
   "typical_issues": [
     {
-      "category": "Pile refusal cluster",
-      "description_template": "Block {block_id} pile refusals require predrill mobilisation.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Module damage in transit",
-      "description_template": "Container of modules arrived with {n_pallets} pallets damaged.",
-      "typical_severity": "L"
-    },
-    {
-      "category": "Tracker motor failures",
-      "description_template": "Early-batch tracker drive motors failing burn-in at {pct}% rate.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "DC combiner mis-wiring",
-      "description_template": "QA flagged combiner box polarity errors in {n_boxes} units.",
-      "typical_severity": "L"
-    },
-    {
-      "category": "Substation steel late",
-      "description_template": "Gen-tie substation structural steel delivery slipped {weeks} weeks.",
+      "category": "Module port detention",
+      "description_template": "Container of modules held at port pending UFLPA documentation review; {n_mw} MW of installation deferred.",
       "typical_severity": "H"
     },
     {
-      "category": "Vegetation/erosion NOV",
-      "description_template": "State environmental agency issued notice of violation for sediment leaving site.",
+      "category": "Pile refusal cluster",
+      "description_template": "Pile refusal rate exceeded {pct}% in north sectors; pre-drill rig mobilised, productivity impact under quantification.",
       "typical_severity": "M"
     },
     {
-      "category": "Trenching strike",
-      "description_template": "Underground utility strike during DC trenching at row {row_id}.",
+      "category": "Inverter firmware non-conformance",
+      "description_template": "Central inverter firmware fails utility witness test; vendor field engineer dispatched.",
       "typical_severity": "M"
     },
     {
-      "category": "Commissioning string faults",
-      "description_template": "IV-curve testing identified {n_strings} underperforming strings requiring rework.",
+      "category": "Tracker row mis-alignment",
+      "description_template": "QC found row-to-row alignment outside spec across {n_blocks} blocks; rework planned during low-wind windows.",
       "typical_severity": "L"
     },
     {
-      "category": "Heat day shutdown",
-      "description_template": "Site evacuated for portion of shift due to heat index above threshold.",
+      "category": "Wildfire smoke productivity loss",
+      "description_template": "Regional wildfire smoke reducing crew hours under company AQI policy.",
       "typical_severity": "L"
+    },
+    {
+      "category": "MV collection cable damage",
+      "description_template": "Trencher damaged previously installed MV cable; repair and re-test ongoing.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Substation transformer DGA flag",
+      "description_template": "DGA results on GSU transformer show elevated gases during energisation; vendor investigation in progress.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Stormwater BMP failure",
+      "description_template": "Heavy rainfall overwhelmed sediment controls; CGP corrective action notice expected.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Cultural resource find",
+      "description_template": "Artifact discovered during civil works; tribal monitor consultation paused work in affected area.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Performance ratio shortfall",
+      "description_template": "Initial capacity test PR below contractual threshold by {pct}%; soiling and string-level diagnostics underway.",
+      "typical_severity": "H"
     }
   ],
   "typical_co_drivers": [
-    "Module wattage upgrade to capture higher-yield SKU",
-    "Predrill program added for refusal-prone blocks",
-    "Owner-directed addition of battery DC-coupling provisions",
-    "Substation scope expansion for second feeder",
-    "Revised stormwater controls to address NOV"
+    "Owner-directed module technology change (bifacial / larger format)",
+    "BESS scope addition or capacity increase post-NTP",
+    "Differing subsurface conditions requiring pre-drill or ballasted foundations",
+    "Interconnection facility scope additions from utility",
+    "Acceleration to preserve ITC/PIS deadline"
   ]
 }

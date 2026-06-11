@@ -1,139 +1,137 @@
 {
   "archetype_id": "water-treatment-municipal",
   "segment": "water",
-  "subsegment": "Municipal water/wastewater treatment plant upgrade (10-80 MGD)",
-  "description": "Brownfield modernisation or expansion of a municipal WTP/WWTP including biological treatment, filtration, disinfection, and SCADA. Delivered against consent decree or NPDES schedules with tight tie-in windows on a live plant.",
-  "name_pattern": "{location} WTP Phase {phase}",
+  "subsegment": "Municipal drinking water treatment plant (20-100 MGD)",
+  "description": "Conventional or membrane-based municipal water treatment, often design-build or progressive design-build for municipal utility clients. Schedule is bounded by consent-decree compliance dates and the need to maintain finished-water delivery throughout construction.",
+  "name_pattern": "{location} Water Treatment Plant Phase {phase}",
   "client_pattern": "{location} {client_suffix}",
   "client_suffixes": [
-    "Municipal Water Authority",
-    "Water & Sewer District",
-    "Public Works Department",
-    "Regional Water Utility",
-    "Sanitation Commission"
+    "Water Authority",
+    "Municipal Utility District",
+    "Department of Water",
+    "Regional Water District",
+    "Public Works Department"
   ],
-  "contract_value_min_m": 60,
-  "contract_value_max_m": 280,
-  "contingency_pct_typical": 6,
-  "margin_pct_typical": 8,
-  "duration_weeks_min": 95,
-  "duration_weeks_max": 165,
+  "contract_value_min_m": 90,
+  "contract_value_max_m": 450,
+  "contingency_pct_typical": 5,
+  "margin_pct_typical": 7,
+  "duration_weeks_min": 130,
+  "duration_weeks_max": 210,
   "hard_deadline_themes": [
-    "NPDES permit / consent decree milestones",
-    "EPA LT2 or DBP rule compliance deadlines",
-    "PFAS/Lead & Copper Rule revisions",
-    "Bond issuance drawdown schedule"
+    "EPA consent decree compliance deadline",
+    "Safe Drinking Water Act regulatory milestone",
+    "State revolving fund disbursement schedule",
+    "Bond covenant in-service date"
   ],
   "typical_risks": [
     {
-      "category": "Membrane/UV equipment OEM concentration",
-      "description_template": "{tech_pkg} package is sole-sourced via {oem} with {weeks}-week lead time and pre-purchase exposure.",
+      "category": "Membrane / specialty equipment vendor",
+      "description_template": "Sole-source membrane modules from {membrane_oem} or specialty UV reactors create concentration risk on a critical-path package.",
       "cross_cutting_class": "Vendor / supplier concentration",
       "likely_probability": "M",
-      "likely_impact": "H"
+      "likely_impact": "M"
     },
     {
-      "category": "Consent decree milestone",
-      "description_template": "EPA/state consent decree imposes hard placed-in-service date with stipulated penalties of ${k}k/day.",
+      "category": "Consent decree compliance",
+      "description_template": "EPA/state consent decree imposes hard regulatory deadline of {decree_date}; stipulated penalties accrue daily on slip.",
       "cross_cutting_class": "Regulatory / external deadline",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "Existing buried utility conflicts",
-      "description_template": "Record drawings inaccurate for brownfield site; yard piping conflicts likely during excavation.",
+      "category": "Brownfield subsurface conditions",
+      "description_template": "Existing plant site has documented buried utilities, abandoned structures, and potential contamination not fully characterised pre-bid.",
       "cross_cutting_class": "Site-conditions variance",
       "likely_probability": "H",
       "likely_impact": "M"
     },
     {
-      "category": "Skilled millwright/I&C scarcity",
-      "description_template": "Specialty process mechanical and instrument crews competing with peer water projects in {region}.",
+      "category": "Skilled instrumentation labour",
+      "description_template": "Process instrumentation and SCADA integration labour in {region} is constrained; commissioning ramp at risk.",
       "cross_cutting_class": "Resource / labour scarcity",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "Live-plant tie-in window",
-      "description_template": "Tie-ins to active basins require coordinated bypass with peak-flow season constraint.",
-      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "category": "Tie-in outage windows",
+      "description_template": "Maintaining continuous finished-water delivery requires limited shutdown windows, each requiring 60+ day owner notification.",
+      "cross_cutting_class": "Project-specific",
       "likely_probability": "H",
       "likely_impact": "M"
     },
     {
-      "category": "Wet-weather flow events",
-      "description_template": "Heavy rainfall events overwhelm temporary bypass capacity, suspending tie-in work.",
+      "category": "Wet-weather earthworks",
+      "description_template": "Site earthworks in {region} are sensitive to wet-season precipitation; multiple wet-weather shutdowns possible during foundation phase.",
       "cross_cutting_class": "Weather / climate-sensitive construction",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "PFAS regulatory expansion",
-      "description_template": "New EPA PFAS MCLs may require scope addition for GAC or IX polishing post-NTP.",
-      "cross_cutting_class": "Regulatory / external deadline",
+      "category": "Owner-driven scope evolution",
+      "description_template": "Municipal owner adds resilience or treatment scope (e.g., PFAS, ozone) mid-project in response to emerging regulation.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
       "likely_probability": "M",
       "likely_impact": "M"
-    },
-    {
-      "category": "Operator training/handover",
-      "description_template": "Client operations staff turnover risks delayed acceptance testing and beneficial use.",
-      "cross_cutting_class": "Project-specific",
-      "likely_probability": "M",
-      "likely_impact": "L"
     }
   ],
   "typical_issues": [
     {
       "category": "Buried utility strike",
-      "description_template": "Excavation struck unmapped {utility_type} requiring emergency repair.",
+      "description_template": "Excavation struck unmapped utility; work paused pending utility owner coordination.",
       "typical_severity": "M"
     },
     {
-      "category": "Bypass pump capacity exceeded",
-      "description_template": "Wet weather event exceeded temporary bypass capacity, triggering SSO notification.",
-      "typical_severity": "H"
-    },
-    {
-      "category": "Concrete leak test failure",
-      "description_template": "Basin leak test failed; epoxy injection repair required.",
+      "category": "Membrane skid delivery delay",
+      "description_template": "Membrane skid factory schedule slipped by {n_weeks} weeks; commissioning sequence re-planned.",
       "typical_severity": "M"
     },
     {
-      "category": "Equipment FAT slip",
-      "description_template": "Membrane skids failed initial FAT, requiring vendor rework before shipping.",
+      "category": "Process basin concrete crack",
+      "description_template": "Hairline cracks in basin walls detected during hydrostatic test; repair and re-test scheduled.",
       "typical_severity": "M"
     },
     {
       "category": "SCADA integration defects",
-      "description_template": "Legacy PLC integration revealed protocol mismatches delaying functional testing.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Hazmat encountered",
-      "description_template": "Asbestos pipe insulation discovered during demolition of original works.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Permit condition added",
-      "description_template": "State agency added supplemental sampling requirement mid-construction.",
+      "description_template": "SCADA point-to-point testing identified {n_points} non-conformances; integrator remediation in progress.",
       "typical_severity": "L"
     },
     {
-      "category": "Disinfection startup hold",
-      "description_template": "Chlorine residual targets not met during startup; recirculation extended.",
+      "category": "Disinfection byproduct exceedance",
+      "description_template": "Commissioning runs produced DBP levels above target; chemistry adjustment trials underway.",
       "typical_severity": "M"
     },
     {
-      "category": "Power outage during tie-in",
-      "description_template": "Utility outage exceeded planned window, damaging in-service drives.",
+      "category": "Tie-in window missed",
+      "description_template": "Planned tie-in shutdown could not proceed due to upstream system condition; rescheduling required.",
       "typical_severity": "H"
+    },
+    {
+      "category": "Contaminated soil discovery",
+      "description_template": "Petroleum-impacted soil discovered during excavation; characterisation and disposal scoping underway.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Standby power test failure",
+      "description_template": "Generator load bank test failed acceptance; vendor returning for tuning.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Chemical feed system leak",
+      "description_template": "Sodium hypochlorite feed line leak during commissioning; containment and material review in progress.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Owner training delay",
+      "description_template": "Operator training curriculum lagging plant turnover schedule; risk to substantial completion.",
+      "typical_severity": "L"
     }
   ],
   "typical_co_drivers": [
-    "PFAS treatment addition per evolving regulation",
-    "Differing subsurface conditions / unmapped utilities",
-    "Owner-directed SCADA platform standardisation",
-    "Additional bypass pumping for wet-weather events",
-    "Hazmat abatement scope (asbestos / lead paint)"
+    "Differing subsurface conditions (contamination, buried structures)",
+    "Owner-directed treatment process additions (PFAS, ozone, GAC)",
+    "Regulatory rule changes during construction",
+    "Tie-in sequence revisions to maintain water delivery",
+    "Resilience / seismic scope upgrades"
   ]
 }

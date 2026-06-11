@@ -1,139 +1,144 @@
 {
   "archetype_id": "onshore-wind-utility",
   "segment": "renewables",
-  "subsegment": "Onshore wind farm — utility-scale (60-150 turbines, 200-500 MW)",
-  "description": "Greenfield utility-scale onshore wind project with turbine supply, BOP civil/electrical, collection system, and substation tie-in. Schedule and economics are dominated by PTC/ITC safe-harbor windows and OEM turbine delivery slots.",
+  "subsegment": "Onshore wind farm — utility-scale (60-100 turbines, 150-400 MW)",
+  "description": "Utility-scale onshore wind generation projects on agricultural or rangeland sites, typically structured as fixed-price EPC with separate turbine supply agreements (TSA) wrapped under the EPC. Schedule is dominated by tax-credit safe-harbor windows and seasonal access constraints.",
   "name_pattern": "{location} Wind Farm Phase {phase}",
   "client_pattern": "{location} {client_suffix}",
   "client_suffixes": [
     "Wind Holdings LLC",
     "Renewable Power Partners",
-    "Energy IPP Corp",
-    "Clean Generation LP",
-    "Wind Repower LLC"
+    "Energy Capital Fund",
+    "Wind Energy IPP",
+    "Clean Power Development"
   ],
   "contract_value_min_m": 180,
-  "contract_value_max_m": 550,
+  "contract_value_max_m": 520,
   "contingency_pct_typical": 5,
-  "margin_pct_typical": 9,
+  "margin_pct_typical": 8,
   "duration_weeks_min": 78,
-  "duration_weeks_max": 130,
+  "duration_weeks_max": 110,
   "hard_deadline_themes": [
-    "IRA PTC safe-harbor placed-in-service deadline",
-    "ISO/RTO interconnection queue milestone",
-    "FAA obstruction lighting clearance prior to commissioning",
-    "PPA commercial operation date (COD) with LDs"
+    "PTC/ITC safe-harbor commercial operation date",
+    "FERC interconnection queue milestone",
+    "Avian migration construction blackout windows",
+    "State PUC PPA delivery date"
   ],
   "typical_risks": [
     {
-      "category": "Turbine OEM delivery slot",
-      "description_template": "{turbine_oem} nacelle and blade deliveries are sequenced against a global order book; loss of slot pushes erection past the {month} weather window.",
+      "category": "Turbine OEM delivery slippage",
+      "description_template": "Single-source nacelle supply from {oem} exposes schedule to factory delivery slippage; nacelle bottleneck would defer COD beyond PTC safe-harbor window.",
       "cross_cutting_class": "Vendor / supplier concentration",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "PTC safe-harbor window",
-      "description_template": "Placed-in-service date must precede IRS continuity-of-construction expiry to preserve full PTC value at ${ptc_value}M.",
+      "category": "PTC/ITC qualification window",
+      "description_template": "COD must precede IRA tax-credit step-down on {deadline_date}; any 4+ week slip materially erodes project economics for owner and triggers LDs.",
       "cross_cutting_class": "Regulatory / external deadline",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "Geotechnical variability at tower foundations",
-      "description_template": "Borings show variable competent rock depth across the {n_turbines}-turbine layout, risking rock excavation overruns at foundation pours.",
+      "category": "Geotechnical variance at foundations",
+      "description_template": "Caisson and spread-footing designs assumed competent bedrock at <8m; site investigation across {n_turbines} pads may reveal variable depth-to-rock requiring redesign.",
       "cross_cutting_class": "Site-conditions variance",
-      "likely_probability": "H",
-      "likely_impact": "M"
-    },
-    {
-      "category": "Crane and ironworker availability",
-      "description_template": "Regional shortage of 750-ton class crawler cranes and certified turbine erection crews coincides with peer projects in the {region} ISO.",
-      "cross_cutting_class": "Resource / labour scarcity",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "Winter erection halt",
-      "description_template": "Sustained winds above {wind_threshold} m/s and icing conditions historically suspend blade lifts for {n_days} days through Q1.",
+      "category": "Crane crew availability",
+      "description_template": "Specialised LR-series crawler crane crews are regionally scarce during peak wind construction season; mobilisation slip cascades into turbine erection sequence.",
+      "cross_cutting_class": "Resource / labour scarcity",
+      "likely_probability": "H",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Winter erection blackout",
+      "description_template": "Sustained winds above 11 m/s and icing conditions prevent main-component lifts; {region} historical data suggests 6-10 week erection blackout from December to February.",
       "cross_cutting_class": "Weather / climate-sensitive construction",
       "likely_probability": "H",
       "likely_impact": "M"
     },
     {
-      "category": "Layout optimisation pressure",
-      "description_template": "Client requests post-NTP micrositing changes to chase {pct} MWh yield improvement, forcing re-permitting of access roads.",
+      "category": "Avian/bat take permit constraints",
+      "description_template": "USFWS eagle take permit conditions impose seasonal construction restrictions; non-compliance triggers permit suspension and stop-work.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "L",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Interconnection upgrade scope creep",
+      "description_template": "Network upgrade scope on the {utility} side may shift through SIS/Facilities Study revisions, exposing schedule to transmission owner delivery dates outside EPC control.",
       "cross_cutting_class": "Client-driven scope or sequence changes",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "Avian/bat mitigation order",
-      "description_template": "USFWS post-construction mortality monitoring may impose curtailment regimes affecting PPA energy delivery.",
-      "cross_cutting_class": "Regulatory / external deadline",
-      "likely_probability": "L",
-      "likely_impact": "M"
-    },
-    {
-      "category": "Collector substation transformer lead time",
-      "description_template": "Main step-up transformer lead time of {weeks} weeks creates schedule float erosion if FAT slips.",
-      "cross_cutting_class": "Vendor / supplier concentration",
+      "category": "Landowner access disputes",
+      "description_template": "Crossing agreements with {n_landowners} parcel owners along collection lines may produce localised access denials forcing route revisions.",
+      "cross_cutting_class": "Project-specific",
       "likely_probability": "M",
-      "likely_impact": "H"
+      "likely_impact": "L"
     }
   ],
   "typical_issues": [
     {
-      "category": "Blade transport permit delay",
-      "description_template": "State DOT superload permits for 70m+ blades delayed at county handoff.",
+      "category": "Blade transport oversize permit",
+      "description_template": "State DOT oversize-load permit for blade delivery delayed, holding turbine erection sequence.",
       "typical_severity": "M"
     },
     {
-      "category": "Foundation rock encountered",
-      "description_template": "Rock pedestal excavation at turbines {ids} exceeded baseline cubic yards.",
+      "category": "Foundation rebar shortage",
+      "description_template": "Domestic rebar lead time extended; foundation pour sequence at risk for next 4 weeks.",
       "typical_severity": "M"
     },
     {
-      "category": "Crane wind standdown",
-      "description_template": "Sustained winds aloft halted nacelle lifts for {n_days} consecutive shifts.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Cable splice rework",
-      "description_template": "Medium-voltage collection cable splice QA failures required re-termination on {n_circuits} circuits.",
+      "category": "Met tower data gap",
+      "description_template": "Met tower SCADA outage during commissioning created a wind data gap requiring extended performance test window.",
       "typical_severity": "L"
     },
     {
-      "category": "Interconnection witness delay",
-      "description_template": "Utility witness test rescheduled, pushing back-feed energisation by {weeks} weeks.",
-      "typical_severity": "H"
-    },
-    {
-      "category": "SCADA integration defects",
-      "description_template": "Turbine OEM SCADA points failing PPA real-time telemetry handshake with ISO.",
+      "category": "Collection cable splice failures",
+      "description_template": "Two MV collection cable splice failures detected during energisation; remediation across affected runs in progress.",
       "typical_severity": "M"
     },
     {
-      "category": "Access road washout",
-      "description_template": "Heavy rain eroded {miles} miles of crane path requiring re-grading prior to walking the crane.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Tribal cultural resource find",
-      "description_template": "Inadvertent discovery during trenching triggered Section 106 stop-work.",
+      "category": "Substation transformer delivery slip",
+      "description_template": "GSU transformer ex-works date slipped by {n_weeks} weeks; substation backfeed sequence rebaselined.",
       "typical_severity": "H"
     },
     {
-      "category": "Punch list at COD",
-      "description_template": "Open punch items on {n_turbines} units threaten substantial completion certificate.",
+      "category": "Crane pad subgrade failure",
+      "description_template": "Heavy rain caused crane pad subgrade failure at pads {pad_ids}; remediation and re-survey required before next lift.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "OSHA recordable — fall from height",
+      "description_template": "Recordable injury during nacelle internal work; stand-down completed, root cause under investigation.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Punch list closure backlog",
+      "description_template": "Turbine-level punch list closure lagging COD requirement; warranty handover at risk.",
       "typical_severity": "L"
+    },
+    {
+      "category": "FAA lighting commissioning delay",
+      "description_template": "FAA-compliant obstruction lighting controller firmware issue delaying final acceptance.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "PPA performance test failure",
+      "description_template": "Initial PPA capacity test underperformed by {pct}%; investigation into curtailment and curve underperformance underway.",
+      "typical_severity": "H"
     }
   ],
   "typical_co_drivers": [
-    "Owner-directed micrositing changes after geotech reveal",
-    "Turbine model upgrade mid-execution to higher nameplate",
-    "Additional rock excavation beyond baseline at WTG foundations",
-    "Utility-requested upgrades to substation protection scheme",
-    "Curtailment-driven SCADA logic changes to satisfy avian mitigation"
+    "Owner-directed turbine model upgrade mid-procurement",
+    "Interconnection network upgrade scope additions from utility re-study",
+    "Differing site conditions at foundation locations requiring redesign",
+    "Collection line re-routing around late-identified wetland or cultural resource",
+    "Acceleration directive to preserve tax-credit COD window"
   ]
 }

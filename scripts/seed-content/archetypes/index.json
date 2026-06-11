@@ -2,221 +2,82 @@
   {
     "archetype_id": "onshore-wind-utility",
     "segment": "renewables",
-    "subsegment": "Onshore wind farm — utility-scale (60-150 turbines, 200-500 MW)",
-    "description": "Greenfield utility-scale onshore wind project with turbine supply, BOP civil/electrical, collection system, and substation tie-in. Schedule and economics are dominated by PTC/ITC safe-harbor windows and OEM turbine delivery slots.",
+    "subsegment": "Onshore wind farm — utility-scale (60-100 turbines, 150-400 MW)",
+    "description": "Utility-scale onshore wind generation projects on agricultural or rangeland sites, typically structured as fixed-price EPC with separate turbine supply agreements (TSA) wrapped under the EPC. Schedule is dominated by tax-credit safe-harbor windows and seasonal access constraints.",
     "name_pattern": "{location} Wind Farm Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
       "Wind Holdings LLC",
       "Renewable Power Partners",
-      "Energy IPP Corp",
-      "Clean Generation LP",
-      "Wind Repower LLC"
+      "Energy Capital Fund",
+      "Wind Energy IPP",
+      "Clean Power Development"
     ],
     "contract_value_min_m": 180,
-    "contract_value_max_m": 550,
+    "contract_value_max_m": 520,
     "contingency_pct_typical": 5,
-    "margin_pct_typical": 9,
-    "duration_weeks_min": 78,
-    "duration_weeks_max": 130,
-    "hard_deadline_themes": [
-      "IRA PTC safe-harbor placed-in-service deadline",
-      "ISO/RTO interconnection queue milestone",
-      "FAA obstruction lighting clearance prior to commissioning",
-      "PPA commercial operation date (COD) with LDs"
-    ],
-    "typical_risks": [
-      {
-        "category": "Turbine OEM delivery slot",
-        "description_template": "{turbine_oem} nacelle and blade deliveries are sequenced against a global order book; loss of slot pushes erection past the {month} weather window.",
-        "cross_cutting_class": "Vendor / supplier concentration",
-        "likely_probability": "M",
-        "likely_impact": "H"
-      },
-      {
-        "category": "PTC safe-harbor window",
-        "description_template": "Placed-in-service date must precede IRS continuity-of-construction expiry to preserve full PTC value at ${ptc_value}M.",
-        "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "M",
-        "likely_impact": "H"
-      },
-      {
-        "category": "Geotechnical variability at tower foundations",
-        "description_template": "Borings show variable competent rock depth across the {n_turbines}-turbine layout, risking rock excavation overruns at foundation pours.",
-        "cross_cutting_class": "Site-conditions variance",
-        "likely_probability": "H",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Crane and ironworker availability",
-        "description_template": "Regional shortage of 750-ton class crawler cranes and certified turbine erection crews coincides with peer projects in the {region} ISO.",
-        "cross_cutting_class": "Resource / labour scarcity",
-        "likely_probability": "M",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Winter erection halt",
-        "description_template": "Sustained winds above {wind_threshold} m/s and icing conditions historically suspend blade lifts for {n_days} days through Q1.",
-        "cross_cutting_class": "Weather / climate-sensitive construction",
-        "likely_probability": "H",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Layout optimisation pressure",
-        "description_template": "Client requests post-NTP micrositing changes to chase {pct} MWh yield improvement, forcing re-permitting of access roads.",
-        "cross_cutting_class": "Client-driven scope or sequence changes",
-        "likely_probability": "M",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Avian/bat mitigation order",
-        "description_template": "USFWS post-construction mortality monitoring may impose curtailment regimes affecting PPA energy delivery.",
-        "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "L",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Collector substation transformer lead time",
-        "description_template": "Main step-up transformer lead time of {weeks} weeks creates schedule float erosion if FAT slips.",
-        "cross_cutting_class": "Vendor / supplier concentration",
-        "likely_probability": "M",
-        "likely_impact": "H"
-      }
-    ],
-    "typical_issues": [
-      {
-        "category": "Blade transport permit delay",
-        "description_template": "State DOT superload permits for 70m+ blades delayed at county handoff.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Foundation rock encountered",
-        "description_template": "Rock pedestal excavation at turbines {ids} exceeded baseline cubic yards.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Crane wind standdown",
-        "description_template": "Sustained winds aloft halted nacelle lifts for {n_days} consecutive shifts.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Cable splice rework",
-        "description_template": "Medium-voltage collection cable splice QA failures required re-termination on {n_circuits} circuits.",
-        "typical_severity": "L"
-      },
-      {
-        "category": "Interconnection witness delay",
-        "description_template": "Utility witness test rescheduled, pushing back-feed energisation by {weeks} weeks.",
-        "typical_severity": "H"
-      },
-      {
-        "category": "SCADA integration defects",
-        "description_template": "Turbine OEM SCADA points failing PPA real-time telemetry handshake with ISO.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Access road washout",
-        "description_template": "Heavy rain eroded {miles} miles of crane path requiring re-grading prior to walking the crane.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Tribal cultural resource find",
-        "description_template": "Inadvertent discovery during trenching triggered Section 106 stop-work.",
-        "typical_severity": "H"
-      },
-      {
-        "category": "Punch list at COD",
-        "description_template": "Open punch items on {n_turbines} units threaten substantial completion certificate.",
-        "typical_severity": "L"
-      }
-    ],
-    "typical_co_drivers": [
-      "Owner-directed micrositing changes after geotech reveal",
-      "Turbine model upgrade mid-execution to higher nameplate",
-      "Additional rock excavation beyond baseline at WTG foundations",
-      "Utility-requested upgrades to substation protection scheme",
-      "Curtailment-driven SCADA logic changes to satisfy avian mitigation"
-    ]
-  },
-  {
-    "archetype_id": "utility-scale-solar",
-    "segment": "renewables",
-    "subsegment": "Utility-scale PV solar — single-axis tracker (50-200 MW AC)",
-    "description": "Fixed-price EPC for single-axis tracker PV plants with central or string inverters, MV collection, and gen-tie to a POI substation. Margin is highly sensitive to module/tracker pricing, AD/CVD posture, and ITC milestones.",
-    "name_pattern": "{location} Solar Phase {phase}",
-    "client_pattern": "{location} {client_suffix}",
-    "client_suffixes": [
-      "Solar Holdings LLC",
-      "PV Energy Partners",
-      "Renewable IPP Co",
-      "Solar Yield LP",
-      "Sun Power Generation"
-    ],
-    "contract_value_min_m": 45,
-    "contract_value_max_m": 210,
-    "contingency_pct_typical": 4,
     "margin_pct_typical": 8,
-    "duration_weeks_min": 52,
-    "duration_weeks_max": 95,
+    "duration_weeks_min": 78,
+    "duration_weeks_max": 110,
     "hard_deadline_themes": [
-      "IRA ITC placed-in-service milestone",
-      "Module customs/UFLPA clearance dates",
-      "PPA COD with daily LDs",
-      "Interconnection facilities study completion"
+      "PTC/ITC safe-harbor commercial operation date",
+      "FERC interconnection queue milestone",
+      "Avian migration construction blackout windows",
+      "State PUC PPA delivery date"
     ],
     "typical_risks": [
       {
-        "category": "Module customs hold (UFLPA)",
-        "description_template": "Bifacial modules held under UFLPA WRO at port {port}, risking {weeks}-week stacking delay.",
+        "category": "Turbine OEM delivery slippage",
+        "description_template": "Single-source nacelle supply from {oem} exposes schedule to factory delivery slippage; nacelle bottleneck would defer COD beyond PTC safe-harbor window.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "ITC safe-harbor lapse",
-        "description_template": "Slippage past placed-in-service trigger erodes ITC bonus adders worth ${itc_m}M.",
+        "category": "PTC/ITC qualification window",
+        "description_template": "COD must precede IRA tax-credit step-down on {deadline_date}; any 4+ week slip materially erodes project economics for owner and triggers LDs.",
         "cross_cutting_class": "Regulatory / external deadline",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Tracker pile refusal",
-        "description_template": "Caliche/rock layers at {pct}% of pile locations cause refusals requiring pre-drill program.",
+        "category": "Geotechnical variance at foundations",
+        "description_template": "Caisson and spread-footing designs assumed competent bedrock at <8m; site investigation across {n_turbines} pads may reveal variable depth-to-rock requiring redesign.",
         "cross_cutting_class": "Site-conditions variance",
-        "likely_probability": "H",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Electrician shortage",
-        "description_template": "Regional IBEW Local {local_n} hall is short {n_workers} journeymen during peak DC pull.",
-        "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Heat-stress curtailment",
-        "description_template": "OSHA heat-illness standards force shortened shifts when wet-bulb exceeds threshold during {month}.",
+        "category": "Crane crew availability",
+        "description_template": "Specialised LR-series crawler crane crews are regionally scarce during peak wind construction season; mobilisation slip cascades into turbine erection sequence.",
+        "cross_cutting_class": "Resource / labour scarcity",
+        "likely_probability": "H",
+        "likely_impact": "M"
+      },
+      {
+        "category": "Winter erection blackout",
+        "description_template": "Sustained winds above 11 m/s and icing conditions prevent main-component lifts; {region} historical data suggests 6-10 week erection blackout from December to February.",
         "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "H",
         "likely_impact": "M"
       },
       {
-        "category": "Owner-directed module swap",
-        "description_template": "Client pivots from {original_module} to higher-wattage SKU mid-build, requiring stringing redesign.",
+        "category": "Avian/bat take permit constraints",
+        "description_template": "USFWS eagle take permit conditions impose seasonal construction restrictions; non-compliance triggers permit suspension and stop-work.",
+        "cross_cutting_class": "Regulatory / external deadline",
+        "likely_probability": "L",
+        "likely_impact": "H"
+      },
+      {
+        "category": "Interconnection upgrade scope creep",
+        "description_template": "Network upgrade scope on the {utility} side may shift through SIS/Facilities Study revisions, exposing schedule to transmission owner delivery dates outside EPC control.",
         "cross_cutting_class": "Client-driven scope or sequence changes",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Stormwater NPDES exceedance",
-        "description_template": "Sediment discharge from disturbed acreage risks NOV under construction general permit.",
-        "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "L",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Inverter firmware ride-through",
-        "description_template": "ISO updates Order 2023A ride-through requirements after PO, requiring vendor firmware revision.",
+        "category": "Landowner access disputes",
+        "description_template": "Crossing agreements with {n_landowners} parcel owners along collection lines may produce localised access denials forcing route revisions.",
         "cross_cutting_class": "Project-specific",
         "likely_probability": "M",
         "likely_impact": "L"
@@ -224,698 +85,828 @@
     ],
     "typical_issues": [
       {
-        "category": "Pile refusal cluster",
-        "description_template": "Block {block_id} pile refusals require predrill mobilisation.",
+        "category": "Blade transport oversize permit",
+        "description_template": "State DOT oversize-load permit for blade delivery delayed, holding turbine erection sequence.",
         "typical_severity": "M"
       },
       {
-        "category": "Module damage in transit",
-        "description_template": "Container of modules arrived with {n_pallets} pallets damaged.",
-        "typical_severity": "L"
-      },
-      {
-        "category": "Tracker motor failures",
-        "description_template": "Early-batch tracker drive motors failing burn-in at {pct}% rate.",
+        "category": "Foundation rebar shortage",
+        "description_template": "Domestic rebar lead time extended; foundation pour sequence at risk for next 4 weeks.",
         "typical_severity": "M"
       },
       {
-        "category": "DC combiner mis-wiring",
-        "description_template": "QA flagged combiner box polarity errors in {n_boxes} units.",
+        "category": "Met tower data gap",
+        "description_template": "Met tower SCADA outage during commissioning created a wind data gap requiring extended performance test window.",
         "typical_severity": "L"
       },
       {
-        "category": "Substation steel late",
-        "description_template": "Gen-tie substation structural steel delivery slipped {weeks} weeks.",
+        "category": "Collection cable splice failures",
+        "description_template": "Two MV collection cable splice failures detected during energisation; remediation across affected runs in progress.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Substation transformer delivery slip",
+        "description_template": "GSU transformer ex-works date slipped by {n_weeks} weeks; substation backfeed sequence rebaselined.",
         "typical_severity": "H"
       },
       {
-        "category": "Vegetation/erosion NOV",
-        "description_template": "State environmental agency issued notice of violation for sediment leaving site.",
+        "category": "Crane pad subgrade failure",
+        "description_template": "Heavy rain caused crane pad subgrade failure at pads {pad_ids}; remediation and re-survey required before next lift.",
         "typical_severity": "M"
       },
       {
-        "category": "Trenching strike",
-        "description_template": "Underground utility strike during DC trenching at row {row_id}.",
-        "typical_severity": "M"
+        "category": "OSHA recordable — fall from height",
+        "description_template": "Recordable injury during nacelle internal work; stand-down completed, root cause under investigation.",
+        "typical_severity": "H"
       },
       {
-        "category": "Commissioning string faults",
-        "description_template": "IV-curve testing identified {n_strings} underperforming strings requiring rework.",
+        "category": "Punch list closure backlog",
+        "description_template": "Turbine-level punch list closure lagging COD requirement; warranty handover at risk.",
         "typical_severity": "L"
       },
       {
-        "category": "Heat day shutdown",
-        "description_template": "Site evacuated for portion of shift due to heat index above threshold.",
+        "category": "FAA lighting commissioning delay",
+        "description_template": "FAA-compliant obstruction lighting controller firmware issue delaying final acceptance.",
         "typical_severity": "L"
+      },
+      {
+        "category": "PPA performance test failure",
+        "description_template": "Initial PPA capacity test underperformed by {pct}%; investigation into curtailment and curve underperformance underway.",
+        "typical_severity": "H"
       }
     ],
     "typical_co_drivers": [
-      "Module wattage upgrade to capture higher-yield SKU",
-      "Predrill program added for refusal-prone blocks",
-      "Owner-directed addition of battery DC-coupling provisions",
-      "Substation scope expansion for second feeder",
-      "Revised stormwater controls to address NOV"
+      "Owner-directed turbine model upgrade mid-procurement",
+      "Interconnection network upgrade scope additions from utility re-study",
+      "Differing site conditions at foundation locations requiring redesign",
+      "Collection line re-routing around late-identified wetland or cultural resource",
+      "Acceleration directive to preserve tax-credit COD window"
     ]
   },
   {
-    "archetype_id": "run-of-river-hydro",
+    "archetype_id": "utility-scale-solar",
     "segment": "renewables",
-    "subsegment": "Run-of-river hydroelectric — small/medium (10-50 MW)",
-    "description": "Diversion-style or low-head run-of-river hydro project with intake, penstock, powerhouse, and tailrace. Schedules are dictated by in-stream work windows and FERC licensing conditions.",
-    "name_pattern": "{location} Hydro Phase {phase}",
+    "subsegment": "Utility-scale solar PV — single-axis tracker (50-250 MWac)",
+    "description": "Greenfield PV plants on flat agricultural or desert land, with optional DC-coupled BESS scope. Fixed-price EPC with module supply often owner-furnished or carved out; schedule risk concentrated around tracker delivery and interconnection.",
+    "name_pattern": "{location} Solar Project Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
-      "Hydro Power LLC",
-      "River Energy Partners",
-      "Public Utility District",
-      "Hydro Generation Corp",
-      "Watershed Power Co"
+      "Solar Holdings LLC",
+      "Renewables IPP",
+      "Clean Energy Partners",
+      "Solar Capital LLC",
+      "Power Development Corp"
     ],
-    "contract_value_min_m": 80,
-    "contract_value_max_m": 260,
-    "contingency_pct_typical": 7,
-    "margin_pct_typical": 10,
-    "duration_weeks_min": 110,
-    "duration_weeks_max": 180,
+    "contract_value_min_m": 45,
+    "contract_value_max_m": 220,
+    "contingency_pct_typical": 4,
+    "margin_pct_typical": 7,
+    "duration_weeks_min": 52,
+    "duration_weeks_max": 88,
     "hard_deadline_themes": [
-      "FERC license article compliance dates",
-      "In-stream work window (fish window) closure",
-      "USACE Section 404 permit conditions",
-      "PPA COD with hydrologic season alignment"
+      "ITC safe-harbor placed-in-service date",
+      "FERC LGIA milestone for backfeed",
+      "PPA guaranteed COD",
+      "State RPS compliance year"
     ],
     "typical_risks": [
       {
-        "category": "Turbine-generator unit OEM",
-        "description_template": "Sole-source Francis/Kaplan unit from {oem} has {weeks}-week lead time with limited expediting leverage.",
+        "category": "Module supply / UFLPA detention",
+        "description_template": "Module shipments may be detained under UFLPA enforcement at port of entry; release timelines from CBP are unpredictable and can delay mechanical completion.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "FERC fish-passage compliance",
-        "description_template": "License article requires functional downstream fish passage at COD; testing protocol with USFWS unresolved.",
+        "category": "Tracker OEM concentration",
+        "description_template": "Single tracker vendor {tracker_oem} supplies torque tubes, drives, and controls; any quality hold cascades across {n_blocks} blocks.",
+        "cross_cutting_class": "Vendor / supplier concentration",
+        "likely_probability": "M",
+        "likely_impact": "M"
+      },
+      {
+        "category": "ITC step-down deadline",
+        "description_template": "Placed-in-service must precede the IRA bonus credit step-down; substation backfeed dependency on utility is the critical schedule chain.",
         "cross_cutting_class": "Regulatory / external deadline",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Bedrock condition at intake",
-        "description_template": "Differing site conditions in dam foundation excavation reveal sheared rock requiring redesigned anchorage.",
+        "category": "Geotechnical pile refusal",
+        "description_template": "Pile driving across {n_acres} acres may encounter refusal in caliche or rock layers, requiring pre-drilling for a percentage of {pile_count} piles.",
         "cross_cutting_class": "Site-conditions variance",
+        "likely_probability": "H",
+        "likely_impact": "M"
+      },
+      {
+        "category": "Electrical labour scarcity",
+        "description_template": "Concurrent regional solar build-out pressures journeyman electrician availability; ramp curve for DC and MV terminations at risk.",
+        "cross_cutting_class": "Resource / labour scarcity",
+        "likely_probability": "H",
+        "likely_impact": "M"
+      },
+      {
+        "category": "Severe weather — hail and wind",
+        "description_template": "Site in {region} hail-alley exposes installed modules to in-construction hail damage; stow algorithm and insurance coverage gaps may be exposed.",
+        "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Tunneling/penstock craft labour",
-        "description_template": "Specialty underground crews are committed to peer projects; mobilisation premium of {pct}% expected.",
+        "category": "Owner module substitution",
+        "description_template": "Owner-furnished module substitution mid-construction triggers re-stamping of structural and electrical calculations and tracker re-configuration.",
+        "cross_cutting_class": "Client-driven scope or sequence changes",
+        "likely_probability": "M",
+        "likely_impact": "M"
+      }
+    ],
+    "typical_issues": [
+      {
+        "category": "Module port detention",
+        "description_template": "Container of modules held at port pending UFLPA documentation review; {n_mw} MW of installation deferred.",
+        "typical_severity": "H"
+      },
+      {
+        "category": "Pile refusal cluster",
+        "description_template": "Pile refusal rate exceeded {pct}% in north sectors; pre-drill rig mobilised, productivity impact under quantification.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Inverter firmware non-conformance",
+        "description_template": "Central inverter firmware fails utility witness test; vendor field engineer dispatched.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Tracker row mis-alignment",
+        "description_template": "QC found row-to-row alignment outside spec across {n_blocks} blocks; rework planned during low-wind windows.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Wildfire smoke productivity loss",
+        "description_template": "Regional wildfire smoke reducing crew hours under company AQI policy.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "MV collection cable damage",
+        "description_template": "Trencher damaged previously installed MV cable; repair and re-test ongoing.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Substation transformer DGA flag",
+        "description_template": "DGA results on GSU transformer show elevated gases during energisation; vendor investigation in progress.",
+        "typical_severity": "H"
+      },
+      {
+        "category": "Stormwater BMP failure",
+        "description_template": "Heavy rainfall overwhelmed sediment controls; CGP corrective action notice expected.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Cultural resource find",
+        "description_template": "Artifact discovered during civil works; tribal monitor consultation paused work in affected area.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Performance ratio shortfall",
+        "description_template": "Initial capacity test PR below contractual threshold by {pct}%; soiling and string-level diagnostics underway.",
+        "typical_severity": "H"
+      }
+    ],
+    "typical_co_drivers": [
+      "Owner-directed module technology change (bifacial / larger format)",
+      "BESS scope addition or capacity increase post-NTP",
+      "Differing subsurface conditions requiring pre-drill or ballasted foundations",
+      "Interconnection facility scope additions from utility",
+      "Acceleration to preserve ITC/PIS deadline"
+    ]
+  },
+  {
+    "archetype_id": "run-of-river-hydro",
+    "segment": "renewables",
+    "subsegment": "Run-of-river hydroelectric — small to mid-scale (10-50 MW)",
+    "description": "Low-head or medium-head run-of-river hydro with weir, intake, penstock, and powerhouse. Schedule and cost are dominated by in-water work windows, FERC licensing conditions, and geotechnical surprises in tunnel or penstock alignments.",
+    "name_pattern": "{location} Hydro Project Phase {phase}",
+    "client_pattern": "{location} {client_suffix}",
+    "client_suffixes": [
+      "Hydro Power LLC",
+      "Renewable Hydro Partners",
+      "Watershed Energy Corp",
+      "Hydroelectric Holdings",
+      "Public Utility District"
+    ],
+    "contract_value_min_m": 75,
+    "contract_value_max_m": 280,
+    "contingency_pct_typical": 7,
+    "margin_pct_typical": 9,
+    "duration_weeks_min": 130,
+    "duration_weeks_max": 200,
+    "hard_deadline_themes": [
+      "FERC license condition deadlines",
+      "In-water work window (fish protection)",
+      "USACE Section 404/401 permit conditions",
+      "PTC/ITC commercial operation window"
+    ],
+    "typical_risks": [
+      {
+        "category": "Turbine-generator OEM concentration",
+        "description_template": "Francis/Kaplan turbine-generator package from {oem} on critical path; factory acceptance test delays propagate to wet commissioning.",
+        "cross_cutting_class": "Vendor / supplier concentration",
+        "likely_probability": "M",
+        "likely_impact": "H"
+      },
+      {
+        "category": "FERC license condition compliance",
+        "description_template": "License Articles impose minimum flow, ramping, and fish passage conditions during construction; non-compliance risks suspension orders.",
+        "cross_cutting_class": "Regulatory / external deadline",
+        "likely_probability": "M",
+        "likely_impact": "H"
+      },
+      {
+        "category": "Tunnel/penstock geotechnical variance",
+        "description_template": "Tunnel alignment crosses {n_zones} fault and shear zones; actual rock quality may diverge from baseline GBR, driving support and over-break costs.",
+        "cross_cutting_class": "Site-conditions variance",
+        "likely_probability": "H",
+        "likely_impact": "H"
+      },
+      {
+        "category": "Specialist tunneling labour",
+        "description_template": "Drill-and-blast and shotcrete crews are nationally scarce; loss of crew to competing project delays heading advance rates.",
         "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
         "category": "Spring freshet flooding",
-        "description_template": "Cofferdam overtopping risk during freshet could flood powerhouse excavation for {weeks} weeks.",
+        "description_template": "Cofferdam and diversion works exposed to spring freshet flows exceeding design return period; rebuild of in-river works possible.",
         "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "In-stream work window",
-        "description_template": "State fish & wildlife window restricts in-water work to {months}, with no extension mechanism.",
+        "category": "In-water work window",
+        "description_template": "ESA-driven in-water work windows of {n_weeks} weeks/year compress diversion, intake, and tailrace construction sequences.",
         "cross_cutting_class": "Regulatory / external deadline",
         "likely_probability": "H",
-        "likely_impact": "H"
-      },
-      {
-        "category": "Client scope on fish ladder design",
-        "description_template": "Client requests enhanced ladder design to support broader anadromous species, mid-execution.",
-        "cross_cutting_class": "Client-driven scope or sequence changes",
-        "likely_probability": "L",
         "likely_impact": "M"
       },
       {
-        "category": "Sediment management plan",
-        "description_template": "Reservoir flushing protocol contested by downstream users; could require operational redesign.",
+        "category": "Client design evolution",
+        "description_template": "Owner-driven changes to fish passage facility design during construction trigger re-permitting and rework of intake structure.",
+        "cross_cutting_class": "Client-driven scope or sequence changes",
+        "likely_probability": "M",
+        "likely_impact": "M"
+      },
+      {
+        "category": "First Nations / Tribal consultation",
+        "description_template": "Ongoing consultation with {tribe} regarding cultural resources may produce mid-construction mitigation requirements.",
         "cross_cutting_class": "Project-specific",
-        "likely_probability": "L",
+        "likely_probability": "M",
         "likely_impact": "M"
       }
     ],
     "typical_issues": [
       {
-        "category": "Cofferdam seepage",
-        "description_template": "Higher-than-modeled seepage requires supplemental dewatering pumps.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Penstock weld rejects",
-        "description_template": "RT inspection flagged {pct}% weld rejection rate on penstock segments.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Turbine runner damage in shipping",
-        "description_template": "Runner arrived with surface damage requiring OEM field repair.",
+        "category": "Cofferdam overtopping",
+        "description_template": "Unseasonal flow event overtopped upstream cofferdam; dewatering and inspection in progress.",
         "typical_severity": "H"
       },
       {
-        "category": "Fish window curtailment",
-        "description_template": "Early arrival of monitored species triggered early shutdown of in-water work.",
-        "typical_severity": "H"
-      },
-      {
-        "category": "Rock anchor pull-test failures",
-        "description_template": "{n_anchors} rock anchors failed proof load and require redrill.",
+        "category": "Rock support overrun",
+        "description_template": "Class IV/V rock encountered in tunnel; rock-bolt and shotcrete quantities trending {pct}% over baseline.",
         "typical_severity": "M"
       },
       {
-        "category": "Powerhouse concrete cold joint",
-        "description_template": "Cold-weather pour resulted in cold joint requiring repair.",
+        "category": "Penstock weld NDE failures",
+        "description_template": "Repeat NDE rejections on penstock circumferential welds; welder qualification under review.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Fish screen design rejection",
+        "description_template": "Resource agency rejected fish screen approach velocity calculation; revised design under expedited review.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Powerhouse concrete temperature",
+        "description_template": "Mass concrete pour exceeded thermal control plan limits; engineering disposition pending.",
         "typical_severity": "L"
       },
       {
-        "category": "FERC compliance filing delay",
-        "description_template": "Quarterly compliance filing slipped, prompting agency inquiry.",
-        "typical_severity": "L"
-      },
-      {
-        "category": "Tailrace scour",
-        "description_template": "Initial wet commissioning revealed scour patterns requiring riprap augmentation.",
+        "category": "Tailrace excavation overbreak",
+        "description_template": "Controlled blasting tolerance exceeded in tailrace; remediation grouting required.",
         "typical_severity": "M"
       },
       {
-        "category": "Tribal consultation extension",
-        "description_template": "Section 106 consultation extended after artifact discovery near intake.",
+        "category": "Turbine runner damage in transit",
+        "description_template": "Transport damage to runner detected at site; vendor repair plan under review.",
         "typical_severity": "H"
+      },
+      {
+        "category": "Access road washout",
+        "description_template": "Storm event washed out site access road; alternative routing impacting deliveries.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Sediment release exceedance",
+        "description_template": "Turbidity downstream exceeded NPDES limit during diversion works; regulator notified.",
+        "typical_severity": "H"
+      },
+      {
+        "category": "Generator stator shipping delay",
+        "description_template": "Specialty heavy-haul permit delays generator stator delivery to powerhouse.",
+        "typical_severity": "M"
       }
     ],
     "typical_co_drivers": [
-      "Cofferdam redesign for higher-than-baseline flow",
-      "Enhanced fish passage features per agency comment",
-      "Differing site conditions in foundation rock",
-      "Owner-directed switchyard expansion for second circuit",
-      "Additional sediment handling per reservoir management plan"
+      "Geotechnical variance triggering tunnel support class change",
+      "Resource agency-driven fish passage design modifications",
+      "Client-directed capacity uprate or runner design change",
+      "Extended in-water work window restrictions",
+      "Flood event recovery and cofferdam reconstruction"
     ]
   },
   {
     "archetype_id": "geothermal-binary-cycle",
     "segment": "renewables",
-    "subsegment": "Geothermal binary-cycle plant (20-60 MW)",
-    "description": "Binary-cycle (ORC) geothermal generation with production/injection wellfield tie-ins, gathering system, plant island, and gen-tie. Resource risk and ORC equipment lead times dominate execution planning.",
-    "name_pattern": "{location} Geothermal Phase {phase}",
+    "subsegment": "Geothermal binary-cycle plant (20-80 MW net)",
+    "description": "Binary ORC geothermal plants tied to a producer/injector well field, typically EPC scope from wellhead tie-in through plant and step-up substation. Resource risk is usually carved out, but plant performance under varying resource conditions is a core engineering risk.",
+    "name_pattern": "{location} Geothermal Plant Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
-      "Geothermal Power LLC",
-      "Renewable Heat Partners",
-      "Earth Energy Corp",
-      "Geothermal IPP LP",
-      "Resource Generation Co"
+      "Geothermal Energy LLC",
+      "Renewable Resources Corp",
+      "Volcanic Power Partners",
+      "Geothermal IPP Holdings",
+      "Clean Baseload Energy"
     ],
-    "contract_value_min_m": 140,
+    "contract_value_min_m": 120,
     "contract_value_max_m": 380,
-    "contingency_pct_typical": 7,
-    "margin_pct_typical": 11,
-    "duration_weeks_min": 95,
-    "duration_weeks_max": 160,
+    "contingency_pct_typical": 6,
+    "margin_pct_typical": 10,
+    "duration_weeks_min": 100,
+    "duration_weeks_max": 150,
     "hard_deadline_themes": [
-      "IRA ITC/PTC placed-in-service window",
+      "ITC/PTC placed-in-service deadline",
       "BLM geothermal lease milestones",
-      "PPA COD with capacity-based LDs",
-      "UIC Class V injection permit conditions"
+      "PPA guaranteed COD",
+      "Air quality permit construction window"
     ],
     "typical_risks": [
       {
-        "category": "ORC heat exchanger / turbine OEM",
-        "description_template": "ORC island package from {oem} has {weeks}-week schedule float with limited domestic alternatives.",
+        "category": "ORC module vendor concentration",
+        "description_template": "Binary cycle ORC modules supplied by a single OEM ({orc_oem}); factory schedule slip directly impacts mechanical completion.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "BLM/NEPA EA timing",
-        "description_template": "Categorical exclusion or EA approval gating gathering-line construction may slip past mobilisation.",
+        "category": "BLM/State geothermal permit conditions",
+        "description_template": "BLM lease and state geothermal permit impose mitigation requirements that may be revised mid-construction.",
         "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "M",
-        "likely_impact": "H"
+        "likely_probability": "L",
+        "likely_impact": "M"
       },
       {
-        "category": "Resource temperature variance",
-        "description_template": "Production well wellhead temperatures running {delta}°F below resource report, reducing net output.",
+        "category": "Resource temperature / flow variance",
+        "description_template": "Actual production well enthalpy may differ from owner-furnished resource basis, impacting heat exchanger sizing and net output guarantees.",
         "cross_cutting_class": "Site-conditions variance",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Specialty welder availability",
-        "description_template": "Coded welders for high-pressure two-phase piping are in short supply across {region}.",
+        "category": "Specialty welding / piping labour",
+        "description_template": "High-temp / sour-service piping welding crews in {region} are scarce; productivity loss likely during peak mechanical phase.",
         "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Winter access to wellpads",
-        "description_template": "Snow closure of access roads halts gathering pipework for {weeks} weeks of Q1.",
+        "category": "Working fluid handling and storage",
+        "description_template": "Pentane/isobutane working fluid handling triggers PSM/RMP-equivalent controls; non-conformance during commissioning causes delay.",
+        "cross_cutting_class": "Project-specific",
+        "likely_probability": "L",
+        "likely_impact": "H"
+      },
+      {
+        "category": "Winter access at high elevation",
+        "description_template": "Plant site at elevation {elev_ft} ft subject to winter access constraints, compressing concrete and outdoor mechanical work.",
         "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Client expansion to flash add-on",
-        "description_function": "owner",
-        "description_template": "Owner explores flash-cycle topping unit late in design, threatening plant layout freeze.",
+        "category": "Owner-driven configuration changes",
+        "description_template": "Owner-directed change in cooling configuration (air-cooled vs hybrid) during detailed design impacts heat rejection package and footprint.",
         "cross_cutting_class": "Client-driven scope or sequence changes",
-        "likely_probability": "L",
-        "likely_impact": "M"
-      },
-      {
-        "category": "H2S abatement",
-        "description_template": "Non-condensable gas content exceeds design basis; H2S scrubbing scope may expand.",
-        "cross_cutting_class": "Project-specific",
-        "likely_probability": "M",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Working-fluid customs/transport",
-        "description_template": "Isopentane shipment customs hold could delay plant fill and commissioning.",
-        "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "L",
         "likely_impact": "M"
       }
     ],
     "typical_issues": [
       {
-        "category": "Wellhead temperature shortfall",
-        "description_template": "Tested wellhead temperature below resource report by {delta}°F.",
+        "category": "ORC module FAT failure",
+        "description_template": "Factory acceptance test of ORC turbo-generator skid failed vibration limits; vendor remediation in progress.",
         "typical_severity": "H"
       },
       {
-        "category": "Gathering pipe weld rework",
-        "description_template": "Two-phase piping welds failing RT at {pct}% rate.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "ORC vacuum hold failure",
-        "description_template": "Plant failed vacuum tightness test on first attempt, requiring leak hunt.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Injection pump cavitation",
-        "description_template": "NPSH margin lower than designed; vendor redesign required.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Scaling/silica deposition",
-        "description_function": "ops",
-        "description_template": "Early operations show faster-than-expected silica scaling in heat exchangers.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Gen-tie line outage window",
-        "description_template": "Utility tie-in outage rescheduled, deferring back-feed.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "BLM stop-work order",
-        "description_template": "Stop-work issued for activity outside permitted disturbance area.",
+        "category": "Production well flow shortfall",
+        "description_template": "Initial production test flows below resource basis; resizing of plant inlet manifold under evaluation.",
         "typical_severity": "H"
       },
       {
-        "category": "Cold weather pipe freeze",
-        "description_template": "Heat trace gap caused condensate freeze damage to instrument line.",
+        "category": "H2S abatement issue",
+        "description_template": "Non-condensable gas H2S concentrations exceeded design basis; abatement skid sizing being revisited.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Air-cooled condenser fan vibration",
+        "description_template": "ACC fan vibration during run-in exceeded acceptance; gearbox alignment investigation underway.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Hot pipe insulation deficiency",
+        "description_template": "QC audit found insulation system thickness below spec on geothermal fluid piping; rework scope being scoped.",
         "typical_severity": "L"
       },
       {
-        "category": "Working-fluid leak",
-        "description_template": "Minor pentane leak required area evacuation and seal replacement.",
+        "category": "Working fluid leak during commissioning",
+        "description_template": "Minor hydrocarbon working-fluid leak during commissioning triggered area evacuation and re-inspection.",
         "typical_severity": "M"
+      },
+      {
+        "category": "Step-up transformer delivery slip",
+        "description_template": "GSU transformer ex-works date slipped, impacting energisation milestone.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Wellhead tie-in scope ambiguity",
+        "description_template": "Battery limit between drilling contractor and EPC at wellhead under dispute; resolution required to close mechanical interfaces.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Severe weather damage to insulation",
+        "description_template": "High winds damaged installed weather jacketing; repairs scheduled.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Net output test shortfall",
+        "description_template": "Performance test net output {pct}% below guarantee; cause analysis on ambient correction underway.",
+        "typical_severity": "H"
       }
     ],
     "typical_co_drivers": [
-      "Additional H2S abatement to meet emissions limits",
-      "Resource-driven downrating mitigation (added wells or HX surface)",
-      "Owner-directed plant layout change for future expansion",
-      "Winterisation upgrades after first-season operational learnings",
-      "Pipeline reroute to avoid sage-grouse habitat"
+      "Resource basis revision after additional well testing",
+      "Owner-directed cooling system reconfiguration",
+      "H2S/NCG abatement scope additions",
+      "Plant capacity uprate post-FEED",
+      "Permit-driven environmental mitigation additions"
     ]
   },
   {
     "archetype_id": "water-treatment-municipal",
     "segment": "water",
-    "subsegment": "Municipal water/wastewater treatment plant upgrade (10-80 MGD)",
-    "description": "Brownfield modernisation or expansion of a municipal WTP/WWTP including biological treatment, filtration, disinfection, and SCADA. Delivered against consent decree or NPDES schedules with tight tie-in windows on a live plant.",
-    "name_pattern": "{location} WTP Phase {phase}",
+    "subsegment": "Municipal drinking water treatment plant (20-100 MGD)",
+    "description": "Conventional or membrane-based municipal water treatment, often design-build or progressive design-build for municipal utility clients. Schedule is bounded by consent-decree compliance dates and the need to maintain finished-water delivery throughout construction.",
+    "name_pattern": "{location} Water Treatment Plant Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
-      "Municipal Water Authority",
-      "Water & Sewer District",
-      "Public Works Department",
-      "Regional Water Utility",
-      "Sanitation Commission"
+      "Water Authority",
+      "Municipal Utility District",
+      "Department of Water",
+      "Regional Water District",
+      "Public Works Department"
     ],
-    "contract_value_min_m": 60,
-    "contract_value_max_m": 280,
-    "contingency_pct_typical": 6,
-    "margin_pct_typical": 8,
-    "duration_weeks_min": 95,
-    "duration_weeks_max": 165,
+    "contract_value_min_m": 90,
+    "contract_value_max_m": 450,
+    "contingency_pct_typical": 5,
+    "margin_pct_typical": 7,
+    "duration_weeks_min": 130,
+    "duration_weeks_max": 210,
     "hard_deadline_themes": [
-      "NPDES permit / consent decree milestones",
-      "EPA LT2 or DBP rule compliance deadlines",
-      "PFAS/Lead & Copper Rule revisions",
-      "Bond issuance drawdown schedule"
+      "EPA consent decree compliance deadline",
+      "Safe Drinking Water Act regulatory milestone",
+      "State revolving fund disbursement schedule",
+      "Bond covenant in-service date"
     ],
     "typical_risks": [
       {
-        "category": "Membrane/UV equipment OEM concentration",
-        "description_template": "{tech_pkg} package is sole-sourced via {oem} with {weeks}-week lead time and pre-purchase exposure.",
+        "category": "Membrane / specialty equipment vendor",
+        "description_template": "Sole-source membrane modules from {membrane_oem} or specialty UV reactors create concentration risk on a critical-path package.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
-        "likely_impact": "H"
+        "likely_impact": "M"
       },
       {
-        "category": "Consent decree milestone",
-        "description_template": "EPA/state consent decree imposes hard placed-in-service date with stipulated penalties of ${k}k/day.",
+        "category": "Consent decree compliance",
+        "description_template": "EPA/state consent decree imposes hard regulatory deadline of {decree_date}; stipulated penalties accrue daily on slip.",
         "cross_cutting_class": "Regulatory / external deadline",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Existing buried utility conflicts",
-        "description_template": "Record drawings inaccurate for brownfield site; yard piping conflicts likely during excavation.",
+        "category": "Brownfield subsurface conditions",
+        "description_template": "Existing plant site has documented buried utilities, abandoned structures, and potential contamination not fully characterised pre-bid.",
         "cross_cutting_class": "Site-conditions variance",
         "likely_probability": "H",
         "likely_impact": "M"
       },
       {
-        "category": "Skilled millwright/I&C scarcity",
-        "description_template": "Specialty process mechanical and instrument crews competing with peer water projects in {region}.",
+        "category": "Skilled instrumentation labour",
+        "description_template": "Process instrumentation and SCADA integration labour in {region} is constrained; commissioning ramp at risk.",
         "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Live-plant tie-in window",
-        "description_template": "Tie-ins to active basins require coordinated bypass with peak-flow season constraint.",
-        "cross_cutting_class": "Client-driven scope or sequence changes",
+        "category": "Tie-in outage windows",
+        "description_template": "Maintaining continuous finished-water delivery requires limited shutdown windows, each requiring 60+ day owner notification.",
+        "cross_cutting_class": "Project-specific",
         "likely_probability": "H",
         "likely_impact": "M"
       },
       {
-        "category": "Wet-weather flow events",
-        "description_template": "Heavy rainfall events overwhelm temporary bypass capacity, suspending tie-in work.",
+        "category": "Wet-weather earthworks",
+        "description_template": "Site earthworks in {region} are sensitive to wet-season precipitation; multiple wet-weather shutdowns possible during foundation phase.",
         "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "PFAS regulatory expansion",
-        "description_template": "New EPA PFAS MCLs may require scope addition for GAC or IX polishing post-NTP.",
-        "cross_cutting_class": "Regulatory / external deadline",
+        "category": "Owner-driven scope evolution",
+        "description_template": "Municipal owner adds resilience or treatment scope (e.g., PFAS, ozone) mid-project in response to emerging regulation.",
+        "cross_cutting_class": "Client-driven scope or sequence changes",
         "likely_probability": "M",
         "likely_impact": "M"
-      },
-      {
-        "category": "Operator training/handover",
-        "description_template": "Client operations staff turnover risks delayed acceptance testing and beneficial use.",
-        "cross_cutting_class": "Project-specific",
-        "likely_probability": "M",
-        "likely_impact": "L"
       }
     ],
     "typical_issues": [
       {
         "category": "Buried utility strike",
-        "description_template": "Excavation struck unmapped {utility_type} requiring emergency repair.",
+        "description_template": "Excavation struck unmapped utility; work paused pending utility owner coordination.",
         "typical_severity": "M"
       },
       {
-        "category": "Bypass pump capacity exceeded",
-        "description_template": "Wet weather event exceeded temporary bypass capacity, triggering SSO notification.",
-        "typical_severity": "H"
-      },
-      {
-        "category": "Concrete leak test failure",
-        "description_template": "Basin leak test failed; epoxy injection repair required.",
+        "category": "Membrane skid delivery delay",
+        "description_template": "Membrane skid factory schedule slipped by {n_weeks} weeks; commissioning sequence re-planned.",
         "typical_severity": "M"
       },
       {
-        "category": "Equipment FAT slip",
-        "description_template": "Membrane skids failed initial FAT, requiring vendor rework before shipping.",
+        "category": "Process basin concrete crack",
+        "description_template": "Hairline cracks in basin walls detected during hydrostatic test; repair and re-test scheduled.",
         "typical_severity": "M"
       },
       {
         "category": "SCADA integration defects",
-        "description_template": "Legacy PLC integration revealed protocol mismatches delaying functional testing.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Hazmat encountered",
-        "description_template": "Asbestos pipe insulation discovered during demolition of original works.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Permit condition added",
-        "description_template": "State agency added supplemental sampling requirement mid-construction.",
+        "description_template": "SCADA point-to-point testing identified {n_points} non-conformances; integrator remediation in progress.",
         "typical_severity": "L"
       },
       {
-        "category": "Disinfection startup hold",
-        "description_template": "Chlorine residual targets not met during startup; recirculation extended.",
+        "category": "Disinfection byproduct exceedance",
+        "description_template": "Commissioning runs produced DBP levels above target; chemistry adjustment trials underway.",
         "typical_severity": "M"
       },
       {
-        "category": "Power outage during tie-in",
-        "description_template": "Utility outage exceeded planned window, damaging in-service drives.",
+        "category": "Tie-in window missed",
+        "description_template": "Planned tie-in shutdown could not proceed due to upstream system condition; rescheduling required.",
         "typical_severity": "H"
+      },
+      {
+        "category": "Contaminated soil discovery",
+        "description_template": "Petroleum-impacted soil discovered during excavation; characterisation and disposal scoping underway.",
+        "typical_severity": "H"
+      },
+      {
+        "category": "Standby power test failure",
+        "description_template": "Generator load bank test failed acceptance; vendor returning for tuning.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Chemical feed system leak",
+        "description_template": "Sodium hypochlorite feed line leak during commissioning; containment and material review in progress.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Owner training delay",
+        "description_template": "Operator training curriculum lagging plant turnover schedule; risk to substantial completion.",
+        "typical_severity": "L"
       }
     ],
     "typical_co_drivers": [
-      "PFAS treatment addition per evolving regulation",
-      "Differing subsurface conditions / unmapped utilities",
-      "Owner-directed SCADA platform standardisation",
-      "Additional bypass pumping for wet-weather events",
-      "Hazmat abatement scope (asbestos / lead paint)"
+      "Differing subsurface conditions (contamination, buried structures)",
+      "Owner-directed treatment process additions (PFAS, ozone, GAC)",
+      "Regulatory rule changes during construction",
+      "Tie-in sequence revisions to maintain water delivery",
+      "Resilience / seismic scope upgrades"
     ]
   },
   {
     "archetype_id": "seawater-desalination",
     "segment": "water",
-    "subsegment": "Seawater reverse-osmosis desalination plant (20-100 MGD)",
-    "description": "Coastal SWRO plant including intake (open or subsurface), pretreatment, RO trains, post-treatment, brine outfall, and product delivery. Permitting around marine impacts and energy intensity are dominant constraints.",
-    "name_pattern": "{location} Desalination Phase {phase}",
+    "subsegment": "Seawater reverse-osmosis desalination plant (20-75 MGD)",
+    "description": "Coastal SWRO plants delivering municipal or industrial water, with intake/outfall marine works and high-pressure RO trains. Marine permitting, brine outfall compliance, and energy-recovery device performance are the dominant risk drivers.",
+    "name_pattern": "{location} Desalination Plant Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
       "Water Authority",
+      "Coastal Water Agency",
+      "Desalination Partners LLC",
       "Regional Water District",
-      "Coastal Utility Co",
-      "Water Resources Agency",
-      "Public Water Wholesaler"
+      "Municipal Water Authority"
     ],
-    "contract_value_min_m": 220,
+    "contract_value_min_m": 250,
     "contract_value_max_m": 750,
-    "contingency_pct_typical": 7,
-    "margin_pct_typical": 10,
-    "duration_weeks_min": 130,
-    "duration_weeks_max": 210,
+    "contingency_pct_typical": 6,
+    "margin_pct_typical": 9,
+    "duration_weeks_min": 156,
+    "duration_weeks_max": 230,
     "hard_deadline_themes": [
-      "State coastal commission / NEPA ROD",
-      "USACE Section 10/404 marine permits",
-      "NPDES brine outfall conditions",
-      "Take-or-pay water purchase agreement COD"
+      "NPDES brine outfall permit milestones",
+      "Coastal Zone Management Act / state coastal commission approvals",
+      "Take-or-pay water purchase agreement COD",
+      "Marine construction seasonal windows"
     ],
     "typical_risks": [
       {
-        "category": "RO membrane / ERD vendor lock-in",
-        "description_template": "Membrane and pressure exchanger packages effectively sole-sourced from {oem}; price/lead-time exposure significant.",
+        "category": "RO membrane / ERD vendor concentration",
+        "description_template": "Energy recovery devices and RO membranes from {oem} concentrate technology risk; ERD performance shortfalls directly hit specific energy consumption guarantee.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Coastal commission conditions",
-        "description_template": "State coastal authority may impose subsurface intake requirement increasing scope by ${m}M.",
+        "category": "Coastal commission / NPDES delay",
+        "description_template": "Brine outfall NPDES and coastal commission conditions may be appealed by third parties, deferring marine work start.",
         "cross_cutting_class": "Regulatory / external deadline",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
         "category": "Marine geotechnical variance",
-        "description_template": "Microtunnel for intake/outfall encounters cobble/boulder strata not in baseline borings.",
+        "description_template": "Intake and outfall tunnel/pipeline alignment may encounter variable seabed conditions, requiring micro-tunnel method changes.",
         "cross_cutting_class": "Site-conditions variance",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
         "category": "Marine contractor availability",
-        "description_template": "Specialty marine spread (jack-up, microtunneling crew) has narrow availability window.",
+        "description_template": "Specialist marine contractors for intake/outfall installation are globally scarce; mobilisation slip cascades into entire schedule.",
         "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "M",
-        "likely_impact": "M"
+        "likely_impact": "H"
       },
       {
         "category": "Marine weather window",
-        "description_template": "Offshore work limited to {months} due to sea state; storm season slips intake completion.",
+        "description_template": "Marine construction confined to {n_months}-month seasonal weather window; missing the window pushes outfall completion by a full year.",
         "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "H",
         "likely_impact": "H"
       },
       {
-        "category": "Client membrane choice change",
-        "description_function": "owner",
-        "description_template": "Owner reconsiders membrane vendor for lifecycle cost reasons mid-design.",
+        "category": "Brine diffuser performance",
+        "description_template": "Brine diffuser dilution performance under operating conditions may not meet permit, triggering redesign and re-permitting.",
+        "cross_cutting_class": "Project-specific",
+        "likely_probability": "L",
+        "likely_impact": "H"
+      },
+      {
+        "category": "Owner take-off scope change",
+        "description_template": "Owner-driven changes to product water specification (boron, hardness) require additional post-treatment stages.",
         "cross_cutting_class": "Client-driven scope or sequence changes",
         "likely_probability": "L",
         "likely_impact": "M"
-      },
-      {
-        "category": "Brine outfall plume modeling",
-        "description_template": "Regulators require expanded mixing-zone modeling, potentially expanding diffuser scope.",
-        "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "M",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Energy price exposure",
-        "description_template": "Energy cost escalation passes through to LCOW; PPA hedging exposure remains with owner but stresses schedule.",
-        "cross_cutting_class": "Project-specific",
-        "likely_probability": "M",
-        "likely_impact": "L"
       }
     ],
     "typical_issues": [
       {
-        "category": "Microtunnel obstruction",
-        "description_template": "TBM encountered boulder/clog requiring intervention shaft.",
+        "category": "Marine permit appeal",
+        "description_template": "Third-party appeal of coastal commission approval delaying marine NTP.",
         "typical_severity": "H"
       },
       {
-        "category": "Marine weather standdown",
-        "description_template": "Sea-state exceeded vessel limits for {n_days} days.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Diffuser deployment failure",
-        "description_template": "Initial diffuser sinking attempt aborted; second mobilisation required.",
+        "category": "HDD frac-out",
+        "description_template": "Frac-out during HDD intake installation triggered regulatory notification and method review.",
         "typical_severity": "H"
       },
       {
-        "category": "Membrane fouling on commissioning",
-        "description_template": "Pretreatment underperformance fouled first train requiring CIP and rework.",
+        "category": "Outfall diffuser fabrication delay",
+        "description_template": "Outfall diffuser fabrication slipped, jeopardising marine installation window.",
+        "typical_severity": "H"
+      },
+      {
+        "category": "Membrane element supply",
+        "description_template": "Initial membrane element lot failed integrity tests; replacement shipment in progress.",
         "typical_severity": "M"
       },
       {
-        "category": "Marine biofouling on intake",
-        "description_template": "Rapid biofouling on intake screens reduced flow during testing.",
+        "category": "Pretreatment fouling",
+        "description_template": "Pretreatment SDI exceeded design; pretreatment chemistry being revisited.",
         "typical_severity": "M"
       },
       {
-        "category": "Corrosion on duplex piping",
-        "description_template": "Weld discolouration on duplex piping required additional PMI and rework.",
+        "category": "High-pressure pump alignment",
+        "description_template": "HP pump alignment issues found during string testing; vendor field service mobilised.",
         "typical_severity": "M"
       },
       {
-        "category": "Marine permit condition update",
-        "description_template": "Agency added entrainment monitoring scope mid-construction.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Power import outage",
-        "description_function": "tie-in",
-        "description_template": "Utility tie-in outage exceeded planned window.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Outfall hydrostatic test rerun",
-        "description_template": "Initial hydrostatic test on outfall failed acceptance.",
+        "category": "Concrete pour rejected for chloride",
+        "description_template": "Concrete batch rejected for chloride exposure non-conformance; mix design revision underway.",
         "typical_severity": "L"
+      },
+      {
+        "category": "Marine fauna observation stop-work",
+        "description_template": "Marine mammal observer triggered work stoppage for protected species in zone.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Brine plume modelling re-run",
+        "description_template": "Regulator requested additional plume modelling; resubmission required before commissioning.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Specific energy consumption shortfall",
+        "description_template": "Performance test SEC exceeded contractual guarantee by {pct}%; ERD tuning and membrane condition investigation in progress.",
+        "typical_severity": "H"
       }
     ],
     "typical_co_drivers": [
-      "Conversion to subsurface intake per coastal commission ruling",
-      "Expanded diffuser/outfall scope from mixing-zone modeling",
-      "Differing subsea geotechnical conditions during microtunneling",
-      "Owner-directed energy recovery device upgrade",
-      "Pretreatment scope expansion (DAF/UF) to address algal events"
+      "Marine permit conditions adding mitigation scope",
+      "Differing marine subsurface conditions during HDD/tunneling",
+      "Owner-directed post-treatment additions for product water spec",
+      "Capacity uprate or train addition post-NTP",
+      "Schedule acceleration to recover marine season slip"
     ]
   },
   {
     "archetype_id": "large-diameter-conveyance",
     "segment": "water",
-    "subsegment": "Large-diameter water conveyance / transmission main (48\"-120\", 5-40 miles)",
-    "description": "Linear infrastructure delivering raw or treated water across long alignments via steel/PCCP/RCP pipe, with pump stations, tunnels, and crossings. Right-of-way, permits, and tunneling productivity dominate the risk profile.",
-    "name_pattern": "{location} Conveyance Phase {phase}",
+    "subsegment": "Large-diameter water conveyance pipeline / tunnel (60-120 inch, 10-40 miles)",
+    "description": "Major water transmission projects involving large-diameter steel or PCCP pipeline, micro-tunneling under road/rail/river crossings, and pump stations. Schedule and cost risk are concentrated in geotechnical variance and right-of-way coordination.",
+    "name_pattern": "{location} Water Conveyance Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
-      "Water District",
-      "Metropolitan Water Authority",
-      "Regional Water Agency",
-      "Public Utility Commission",
-      "Water Wholesale Co"
+      "Water Authority",
+      "Regional Water Wholesaler",
+      "Municipal Water District",
+      "Water Resources Department",
+      "Joint Powers Authority"
     ],
-    "contract_value_min_m": 90,
-    "contract_value_max_m": 420,
-    "contingency_pct_typical": 6,
-    "margin_pct_typical": 9,
-    "duration_weeks_min": 110,
-    "duration_weeks_max": 190,
+    "contract_value_min_m": 150,
+    "contract_value_max_m": 600,
+    "contingency_pct_typical": 7,
+    "margin_pct_typical": 8,
+    "duration_weeks_min": 130,
+    "duration_weeks_max": 200,
     "hard_deadline_themes": [
-      "USACE 404 / state stream-alteration permit windows",
-      "Railroad/DOT crossing permits",
-      "Drought-response delivery milestones",
-      "Bond covenant draw schedule"
+      "USACE Section 404 permit construction windows",
+      "Railroad/DOT crossing agreement milestones",
+      "State drought response delivery deadlines",
+      "Easement acquisition completion"
     ],
     "typical_risks": [
       {
-        "category": "Large-diameter pipe mill capacity",
-        "description_template": "Domestic AWWA C200/C301 pipe mills booked through {quarter}; substitution risks Buy America compliance.",
+        "category": "Pipe mill capacity",
+        "description_template": "Large-diameter steel or PCCP pipe mill capacity is constrained nationally; competing megaprojects may displace delivery slots.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Crossings permits",
-        "description_template": "DOT/railroad crossing permits with {n_crossings} agencies in series may slip critical path.",
+        "category": "USACE / state permit delays",
+        "description_template": "Section 404 and state stream-crossing permits subject to seasonal restrictions and conditions that may be issued late.",
         "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "H",
+        "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Subsurface variability along alignment",
-        "description_template": "Borings limited; karst/cobble/contaminated soils possible across {miles}-mile alignment.",
+        "category": "Geotechnical / micro-tunnel variance",
+        "description_template": "Crossings under {n_crossings} road/rail/river alignments expose project to differing-site-conditions claims if rock or groundwater conditions vary from GBR.",
         "cross_cutting_class": "Site-conditions variance",
         "likely_probability": "H",
+        "likely_impact": "H"
+      },
+      {
+        "category": "Right-of-way / easement acquisition",
+        "description_template": "Owner-furnished easements across {n_parcels} parcels may not be timely; condemnation timelines outside EPC control.",
+        "cross_cutting_class": "Client-driven scope or sequence changes",
+        "likely_probability": "H",
         "likely_impact": "M"
       },
       {
-        "category": "Pipe-laying / tunneling crews",
-        "description_template": "Microtunneling and large-diameter pipelayer crews limited regionally during peak season.",
+        "category": "Welder / pipe crew availability",
+        "description_template": "Large-diameter pipe welding crews are scarce; competing pipeline projects in {region} compress regional supply.",
         "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Wet season trenching halt",
-        "description_template": "Saturated soils suspend open-cut for {weeks} weeks; trench dewatering scope grows.",
+        "category": "Wet-weather corridor work",
+        "description_template": "Open-cut corridor work sensitive to wet-season conditions; trench wall stability and dewatering costs may escalate.",
         "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Alignment changes by owner",
-        "description_template": "Owner shifts alignment to accommodate landowner negotiations, triggering re-permitting.",
-        "cross_cutting_class": "Client-driven scope or sequence changes",
-        "likely_probability": "M",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Cultural / Section 106",
-        "description_template": "Inadvertent discovery during trenching may require monitor-mandated stop-work.",
-        "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "M",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Hydrotest failure clusters",
-        "description_template": "Hydrostatic testing fails on segments due to joint workmanship requiring expose-and-repair.",
+        "category": "Railroad / DOT crossing coordination",
+        "description_template": "Railroad crossing agreement conditions and DOT lane closure windows constrain crossing sequence and timing.",
         "cross_cutting_class": "Project-specific",
         "likely_probability": "M",
         "likely_impact": "M"
@@ -923,421 +914,417 @@
     ],
     "typical_issues": [
       {
-        "category": "Easement holdout",
-        "description_template": "Landowner refused entry causing detour design at MP {mp}.",
+        "category": "Easement delay",
+        "description_template": "Owner-furnished easement for parcel {parcel_id} not delivered; crew demobilised from segment.",
         "typical_severity": "H"
       },
       {
-        "category": "Rock excavation overrun",
-        "description_template": "Trench rock encountered exceeding baseline cubic yards.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Tunnel face instability",
-        "description_template": "Microtunnel face encountered running sand requiring grouting.",
+        "category": "Micro-tunnel boulder obstruction",
+        "description_template": "MTBM struck boulder field at crossing {crossing_id}; rescue shaft under evaluation.",
         "typical_severity": "H"
-      },
-      {
-        "category": "Hydrotest failure",
-        "description_template": "Test segment failed pressure test, requiring localised expose-and-repair.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Crossing permit delay",
-        "description_template": "Railroad crossing permit slipped, deferring boring activity.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Contaminated soil discovery",
-        "description_template": "Petroleum-impacted soil discovered along legacy industrial corridor.",
-        "typical_severity": "M"
       },
       {
         "category": "Pipe coating damage",
-        "description_template": "Coating damage from handling required field repair on {n_joints} joints.",
-        "typical_severity": "L"
+        "description_template": "Field-applied coating failed holiday testing on multiple joints; rework in progress.",
+        "typical_severity": "M"
       },
       {
-        "category": "Stormwater NOV",
-        "description_template": "Sediment migration triggered notice of violation under construction stormwater permit.",
+        "category": "Hydrotest failure",
+        "description_template": "Hydrotest segment failed pressure hold; investigation isolating leak location.",
         "typical_severity": "M"
       },
       {
         "category": "Cultural resource find",
-        "description_template": "Archaeological monitor halted trenching pending evaluation.",
+        "description_template": "Artifact discovered during trenching; SHPO consultation paused work in affected reach.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Dewatering discharge exceedance",
+        "description_template": "Construction dewatering discharge exceeded turbidity limit; corrective action required.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Pump station equipment delay",
+        "description_template": "Vertical turbine pump delivery slipped, impacting pump station commissioning.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Railroad flagger scheduling",
+        "description_template": "Railroad flagger availability constrained crossing work to limited windows.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Trench wall collapse",
+        "description_template": "Localised trench wall failure after rain event; OSHA review and re-shoring required.",
         "typical_severity": "H"
+      },
+      {
+        "category": "Welder qualification gap",
+        "description_template": "WPS qualification gap for specific pipe-to-fitting combination identified late; qualification testing scheduled.",
+        "typical_severity": "L"
       }
     ],
     "typical_co_drivers": [
-      "Alignment change to resolve easement holdout",
-      "Differing subsurface conditions (rock/contaminated soil)",
-      "Owner-directed pipe material change (PCCP to steel)",
-      "Added bore-and-jack at agency-mandated crossing",
-      "Cultural resource mitigation scope additions"
+      "Differing subsurface conditions at crossings",
+      "Easement / right-of-way delays driving sequence changes",
+      "Permit-driven alignment modifications",
+      "Owner-directed alignment or scope changes (added connections)",
+      "Acceleration to meet drought-response delivery date"
     ]
   },
   {
     "archetype_id": "steel-mill-modernisation",
     "segment": "industrial",
-    "subsegment": "Steel mill modernisation — EAF/caster/rolling-line upgrade",
-    "description": "Brownfield modernisation of an integrated or mini-mill, typically EAF replacement, caster upgrade, or hot-strip line revamp. Executed within tight production outage windows with significant tie-in to live operations.",
+    "subsegment": "Integrated or mini-mill modernisation (caster, reheat furnace, rolling mill upgrade)",
+    "description": "Brownfield modernisation of operating steel facilities, including caster replacement, furnace re-line, mill upgrades, and emissions controls. Schedule risk is dominated by the production turnaround window and live-plant interface management.",
     "name_pattern": "{location} Steel Mill Modernisation Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
-      "Steel Holdings Corp",
-      "Metals Manufacturing LLC",
-      "Steel Works Inc",
-      "Specialty Metals Co",
-      "Iron & Steel Partners"
+      "Steel Corporation",
+      "Steelworks LLC",
+      "Specialty Metals Inc",
+      "Steel Holdings USA",
+      "Integrated Steel Company"
     ],
-    "contract_value_min_m": 150,
-    "contract_value_max_m": 600,
-    "contingency_pct_typical": 7,
+    "contract_value_min_m": 120,
+    "contract_value_max_m": 500,
+    "contingency_pct_typical": 6,
     "margin_pct_typical": 10,
-    "duration_weeks_min": 80,
-    "duration_weeks_max": 145,
+    "duration_weeks_min": 70,
+    "duration_weeks_max": 130,
     "hard_deadline_themes": [
-      "Planned outage / turnaround window",
-      "EPA Title V air permit modification deadlines",
-      "Tariff/IRA 45X advanced manufacturing credit alignment",
-      "Customer commitment / contract restart dates"
+      "Production turnaround / outage window",
+      "EPA Title V air permit compliance",
+      "Customer order book restart date",
+      "OSHA confined-space hot-work protocols"
     ],
     "typical_risks": [
       {
-        "category": "OEM mill technology supplier",
-        "description_template": "Process technology supplier ({oem}) provides proprietary equipment with no alternative; FAT slippage threatens outage.",
+        "category": "Specialised mill OEM concentration",
+        "description_template": "Caster / mill packages from {oem} (e.g., SMS, Primetals, Danieli) on critical path; OEM field service availability for commissioning is constrained.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Air permit modification",
-        "description_template": "EPA Title V permit modification for new EAF emissions point may slip past mechanical completion.",
+        "category": "Turnaround window compression",
+        "description_template": "Outage window of {n_weeks} weeks is owner-fixed and tied to order book; any slip causes LDs and lost production claims.",
         "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "M",
+        "likely_probability": "H",
         "likely_impact": "H"
       },
       {
-        "category": "Existing-condition surprises",
-        "description_template": "As-found foundations, refractory chases, and embedded utilities differ from record drawings.",
+        "category": "Brownfield as-builts variance",
+        "description_template": "Existing structure, foundation, and utility as-builts unreliable; interferences typically discovered during demolition phase.",
         "cross_cutting_class": "Site-conditions variance",
         "likely_probability": "H",
         "likely_impact": "M"
       },
       {
-        "category": "Boilermaker/millwright peak demand",
-        "description_template": "Outage window coincides with regional turnaround season, driving labour premiums.",
+        "category": "Specialty trades labour",
+        "description_template": "Refractory masons, millwrights, and high-voltage electricians available only through narrow regional pool during turnaround windows.",
         "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "H",
-        "likely_impact": "M"
+        "likely_impact": "H"
       },
       {
-        "category": "Cold-weather outdoor lift",
-        "description_function": "weather",
-        "description_template": "Heavy lifts of EAF shell/caster modules wind-restricted during winter outage.",
-        "cross_cutting_class": "Weather / climate-sensitive construction",
+        "category": "Live-plant interface safety",
+        "description_template": "Adjacent operating units expose work face to hot work, molten metal, and confined space hazards; LOTO and permit-to-work compliance critical.",
+        "cross_cutting_class": "Project-specific",
         "likely_probability": "M",
-        "likely_impact": "M"
+        "likely_impact": "H"
       },
       {
-        "category": "Owner-driven scope creep in outage",
-        "description_template": "Owner adds scope into outage window late, compressing critical path.",
+        "category": "EPA Title V compliance",
+        "description_template": "Emissions control upgrades must demonstrate compliance per consent agreement; stack test failure triggers operational restrictions.",
+        "cross_cutting_class": "Regulatory / external deadline",
+        "likely_probability": "L",
+        "likely_impact": "H"
+      },
+      {
+        "category": "Owner production change requests",
+        "description_template": "Owner adjusts product mix or grade specifications mid-project, driving changes to mill stand, cooling, or coating scope.",
         "cross_cutting_class": "Client-driven scope or sequence changes",
-        "likely_probability": "H",
-        "likely_impact": "H"
-      },
-      {
-        "category": "Production restart curve",
-        "description_template": "Ramp-up to nameplate may stretch beyond contract acceptance, triggering performance LDs.",
-        "cross_cutting_class": "Project-specific",
-        "likely_probability": "M",
-        "likely_impact": "H"
-      },
-      {
-        "category": "Refractory dryout schedule",
-        "description_template": "Refractory dryout sequence requires uninterrupted gas supply that conflicts with site outage planning.",
-        "cross_cutting_class": "Project-specific",
         "likely_probability": "M",
         "likely_impact": "M"
       }
     ],
     "typical_issues": [
       {
-        "category": "Outage extension",
-        "description_template": "Owner-directed scope additions extended outage by {days} days.",
+        "category": "Demolition interference",
+        "description_template": "Demolition uncovered unmapped structural ties to adjacent operating bay; engineering disposition pending.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Refractory delivery slip",
+        "description_template": "Specialty refractory shipment delayed; furnace re-line sequence at risk.",
         "typical_severity": "H"
       },
       {
         "category": "Heavy lift weather hold",
-        "description_template": "Sustained winds delayed shell setting by {days} days.",
+        "description_template": "Wind speeds exceeded crane plan limits during heavy lift; sequence rescheduled.",
         "typical_severity": "M"
-      },
-      {
-        "category": "Refractory dryout schedule slip",
-        "description_template": "Burner availability constraints delayed dryout completion.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Hidden foundation reinforcement",
-        "description_template": "As-found rebar congestion required redesign of new anchor pattern.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Hydraulic system contamination",
-        "description_template": "Particulate ingress during commissioning required system flush.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Crane congestion in mill bay",
-        "description_template": "Overhead crane outage conflicts created lift sequencing rework.",
-        "typical_severity": "L"
-      },
-      {
-        "category": "I&C integration defects",
-        "description_template": "Legacy L2 system integration delays automated startup.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Performance test shortfall",
-        "description_function": "ramp",
-        "description_template": "Initial performance test below guarantee on throughput; tuning extended.",
-        "typical_severity": "H"
       },
       {
         "category": "OSHA recordable",
-        "description_template": "Hand injury during refractory work generated OSHA recordable.",
+        "description_template": "Hand injury recordable during pipe-fitting in confined area; stand-down and JHA refresh completed.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Hydraulic system flush failure",
+        "description_template": "Particle count out of spec after mill hydraulic flush; extended flush required.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Caster cold commissioning defects",
+        "description_template": "Caster cold commissioning identified mould oscillation defects; vendor field engineering on site.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Stack test failure",
+        "description_template": "Initial stack test on baghouse exceeded particulate limit; tuning and re-test required.",
+        "typical_severity": "H"
+      },
+      {
+        "category": "Outage extension request",
+        "description_template": "Owner requested two-week outage extension; commercial impact under negotiation.",
+        "typical_severity": "H"
+      },
+      {
+        "category": "Crane runway tolerance",
+        "description_template": "EOT crane runway survey exceeded tolerance; shim adjustments and re-survey scheduled.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Hot commissioning yield shortfall",
+        "description_template": "First-coil yield below ramp curve; process tuning and OEM support ongoing.",
         "typical_severity": "M"
       }
     ],
     "typical_co_drivers": [
-      "Owner-added scope folded into outage window",
-      "Differing as-found conditions in foundations and utilities",
-      "Acceleration directives to recover outage schedule",
-      "Air permit-driven baghouse upsizing",
-      "Additional automation upgrades requested for production ramp"
+      "Brownfield interferences and unforeseen demolition scope",
+      "Owner-directed product mix or grade changes",
+      "Outage window extension or compression",
+      "Emissions control scope additions per regulator",
+      "Acceleration to recover from turnaround slippage"
     ]
   },
   {
     "archetype_id": "specialty-chemicals-plant",
     "segment": "industrial",
-    "subsegment": "Specialty chemicals greenfield/expansion plant",
-    "description": "Greenfield or major-expansion specialty chemicals facility with reactor trains, separation, utilities, and tank farm. Process safety (PSM/RMP), licensor IP integration, and commissioning sequencing govern delivery.",
-    "name_pattern": "{location} Specialty Chemicals Phase {phase}",
+    "subsegment": "Specialty chemicals plant — greenfield or major expansion (200-2000 TPD)",
+    "description": "Greenfield or expansion specialty chemical plants (e.g., polymers, intermediates, electronic-grade chemicals) executed as fixed-price or reimbursable EPC. Schedule risks center on long-lead equipment, PSM compliance, and licensor coordination.",
+    "name_pattern": "{location} Specialty Chemicals Plant Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
-      "Chemical Holdings Corp",
-      "Specialty Materials LLC",
-      "Industrial Chemicals Inc",
-      "Performance Chemicals Co",
-      "Advanced Materials Partners"
+      "Chemical Company",
+      "Specialty Materials Inc",
+      "Industries USA Corp",
+      "Chemicals Holdings LLC",
+      "Advanced Materials Co"
     ],
-    "contract_value_min_m": 180,
-    "contract_value_max_m": 650,
-    "contingency_pct_typical": 8,
-    "margin_pct_typical": 11,
-    "duration_weeks_min": 110,
+    "contract_value_min_m": 200,
+    "contract_value_max_m": 850,
+    "contingency_pct_typical": 7,
+    "margin_pct_typical": 10,
+    "duration_weeks_min": 120,
     "duration_weeks_max": 180,
     "hard_deadline_themes": [
-      "EPA RMP / Title V approval",
-      "OSHA PSM PHA completion gates",
       "Customer offtake agreement first-product date",
-      "State environmental construction permit milestones"
+      "EPA Risk Management Plan submission",
+      "Title V air permit construction approval",
+      "OSHA PSM pre-startup safety review"
     ],
     "typical_risks": [
       {
-        "category": "Licensor / proprietary package",
-        "description_template": "Process licensor controls reactor internals and catalyst loading procedures; schedule depends on their field reps.",
+        "category": "Licensor / proprietary equipment vendor",
+        "description_template": "Process licensor {licensor} controls reactor and key proprietary equipment delivery; FAT slips directly drive mechanical completion.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Air permit / RMP approval",
-        "description_template": "State air construction permit and RMP review may not align with mechanical completion.",
+        "category": "PSM / RMP compliance",
+        "description_template": "PSSR closure under OSHA PSM is gate to startup; documentation gaps commonly delay first feed by 2-6 weeks.",
         "cross_cutting_class": "Regulatory / external deadline",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Subsurface contamination",
-        "description_template": "Brownfield site has historic contamination requiring management plan during excavation.",
+        "category": "Greenfield subsurface variance",
+        "description_template": "Site investigation may understate variability in soil bearing or groundwater across {n_acres}-acre plot, driving foundation rework.",
         "cross_cutting_class": "Site-conditions variance",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Pipe fitter / E&I shortage",
-        "description_template": "Coded pipe fitters and instrument techs constrained by Gulf Coast turnaround season.",
+        "category": "Specialty welding / E&I labour",
+        "description_template": "Stainless and exotic-alloy welders and instrument fitters are nationally scarce; productivity and rework rates highly sensitive.",
         "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "H",
         "likely_impact": "M"
       },
       {
-        "category": "Hurricane / severe weather",
-        "description_function": "weather",
-        "description_template": "Plant location in hurricane zone risks tank-farm and structural module stand-down during season.",
+        "category": "Hurricane / severe-weather exposure",
+        "description_template": "Gulf Coast or Southeast site location exposes outdoor construction and modules to hurricane-season disruption.",
         "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Owner-driven product slate change",
-        "description_template": "Owner pivots product mix mid-FEED, forcing reactor and feed-system redesign.",
+        "category": "Owner / licensor scope evolution",
+        "description_template": "Licensor PFD revisions or owner capacity uprates during detailed engineering propagate piping, electrical, and structural rework.",
         "cross_cutting_class": "Client-driven scope or sequence changes",
-        "likely_probability": "M",
-        "likely_impact": "H"
+        "likely_probability": "H",
+        "likely_impact": "M"
       },
       {
-        "category": "PHA / MOC backlog",
-        "description_template": "Process Hazard Analysis closure items pile up at commissioning, blocking startup.",
+        "category": "Hazardous commissioning",
+        "description_template": "First chemical introduction involves toxic/flammable hazards; any deviation triggers lengthy MOC and risk review.",
         "cross_cutting_class": "Project-specific",
         "likely_probability": "M",
-        "likely_impact": "M"
-      },
-      {
-        "category": "Catalyst delivery",
-        "description_template": "Catalyst lot from {oem} requires specialised handling and arrives near loading window.",
-        "cross_cutting_class": "Vendor / supplier concentration",
-        "likely_probability": "L",
-        "likely_impact": "M"
+        "likely_impact": "H"
       }
     ],
     "typical_issues": [
       {
-        "category": "Module fit-up issue",
-        "description_template": "Modular skid alignment discrepancies required field rework at tie-in.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Hydrotest failure on critical line",
-        "description_template": "Reactor feed line failed hydrotest, requiring weld repair and re-PWHT.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Hazmat in excavation",
-        "description_template": "Contaminated soil encountered required offsite disposal.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "PHA action item backlog",
-        "description_template": "PSI/PHA action item closures slipped, deferring readiness review.",
+        "category": "Reactor delivery delay",
+        "description_template": "Reactor vessel ex-works slipped {n_weeks} weeks due to fabricator NDE rework; mechanical completion at risk.",
         "typical_severity": "H"
       },
       {
-        "category": "Instrument loop checks failing",
-        "description_template": "Loop checks revealed wiring errors in {n_loops} loops.",
+        "category": "Welding NDE rejection rate",
+        "description_template": "Pipe weld NDE rejection rate trending above {pct}%; welder qualification audit and remediation underway.",
         "typical_severity": "M"
       },
       {
-        "category": "Storm standdown",
-        "description_template": "Tropical storm forced site standdown and module securing.",
+        "category": "Hurricane preparedness shutdown",
+        "description_template": "Site secured for tropical storm; {n_days} days lost and post-event inspection required.",
         "typical_severity": "M"
       },
       {
-        "category": "Permit modification needed",
-        "description_template": "Late design change required Title V permit modification.",
+        "category": "Module transportation damage",
+        "description_template": "Pipe rack module sustained transit damage; field repair plan under review.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "MOC backlog",
+        "description_template": "Management of Change backlog exceeds {n_items}; risk to PSSR closure schedule.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Hydrotest failure",
+        "description_template": "High-pressure piping circuit failed hydrotest; isolation and repair underway.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "DCS configuration defects",
+        "description_template": "Loop check identified DCS configuration errors across {n_loops} loops; controls integrator on site.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Cooling tower commissioning",
+        "description_template": "Cooling tower fill defects discovered during commissioning; vendor remediation required.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "Air permit construction limit",
+        "description_template": "Construction-phase fugitive emissions tracking approaching permit limit; controls being augmented.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "First-product specification miss",
+        "description_template": "Initial product samples off-spec on {parameter}; licensor support engaged for diagnostic.",
         "typical_severity": "H"
-      },
-      {
-        "category": "First-product off-spec",
-        "description_template": "Initial product runs off-spec; tuning extended commissioning.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "OSHA PSM finding",
-        "description_template": "Pre-startup safety review identified gaps in MOC documentation.",
-        "typical_severity": "M"
       }
     ],
     "typical_co_drivers": [
-      "Owner product slate / capacity change",
-      "Permit-driven equipment additions (flare, scrubber, RTO)",
-      "Differing brownfield subsurface conditions",
-      "Module rework following dimensional control issues",
-      "Acceleration to meet customer first-product commitment"
+      "Licensor PFD/P&ID revisions",
+      "Owner-directed capacity uprate",
+      "Differing site conditions at foundations",
+      "Hurricane recovery and schedule mitigation",
+      "Scope additions for emissions / PSM compliance"
     ]
   },
   {
     "archetype_id": "combined-cycle-gas-turbine",
     "segment": "power",
-    "subsegment": "Combined-cycle gas turbine plant (500-1100 MW, 1x1 or 2x1)",
-    "description": "Greenfield or repower CCGT with F-class or H-class gas turbines, HRSGs, steam turbine, ACC or wet cooling, and gas/water interconnects. Interconnection queue, gas tap, and emissions permits dominate schedule logic.",
-    "name_pattern": "{location} CCGT Phase {phase}",
+    "subsegment": "Combined-cycle gas turbine (CCGT) plant — 500-1100 MW (1x1 or 2x1)",
+    "description": "Greenfield or repower CCGT plants with F- or H-class gas turbines, HRSGs, and steam turbine. Fixed-price EPC with OEM-supplied power island; schedule and commercial risk dominated by gas turbine delivery, interconnection, and capacity market commitments.",
+    "name_pattern": "{location} CCGT Plant Phase {phase}",
     "client_pattern": "{location} {client_suffix}",
     "client_suffixes": [
-      "Power Holdings LLC",
-      "Generation Partners LP",
-      "Energy IPP Corp",
-      "Electric Cooperative",
-      "Power Generation Co"
+      "Energy LLC",
+      "Power Generation Partners",
+      "Electric Utility",
+      "Generation Holdings",
+      "Power Development Corp"
     ],
     "contract_value_min_m": 420,
     "contract_value_max_m": 780,
-    "contingency_pct_typical": 6,
+    "contingency_pct_typical": 5,
     "margin_pct_typical": 9,
     "duration_weeks_min": 140,
     "duration_weeks_max": 200,
     "hard_deadline_themes": [
-      "ISO/RTO interconnection in-service date with capacity auction tie-in",
-      "EPA NSR/PSD and state air permit milestones",
-      "FERC tariff and gas pipeline in-service date",
-      "PPA/tolling COD with capacity LDs"
+      "FERC / ISO interconnection queue COD",
+      "Capacity market auction delivery year",
+      "EPA NSR/PSD air permit conditions",
+      "Gas pipeline interconnect in-service date"
     ],
     "typical_risks": [
       {
-        "category": "Gas turbine OEM slot",
-        "description_template": "GT/ST trains from {oem} are slotted globally; loss of slot extends in-service date by {months} months.",
+        "category": "Gas turbine OEM delivery",
+        "description_template": "Critical-path gas turbine and generator supply from {oem} (GE Vernova, Mitsubishi Power, Siemens Energy); global delivery queue creates limited recovery options on slip.",
         "cross_cutting_class": "Vendor / supplier concentration",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Air permit (PSD/NSR)",
-        "description_function": "permit",
-        "description_template": "PSD/NSR permit conditions on NOx/CO and startup emissions may require SCR/CO catalyst resizing.",
+        "category": "Interconnection / capacity market COD",
+        "description_template": "ISO interconnection agreement and capacity market commitment impose hard COD; LDs and replacement capacity cost on slip.",
         "cross_cutting_class": "Regulatory / external deadline",
         "likely_probability": "M",
         "likely_impact": "H"
       },
       {
-        "category": "Geotechnical at HRSG/ST foundations",
-        "description_template": "Variable bearing capacity may force pile foundation redesign for heavy equipment pads.",
+        "category": "Site / subsurface conditions",
+        "description_template": "Site geotechnical may reveal soft soils or shallow groundwater requiring deep foundations under HRSG and STG pedestals.",
         "cross_cutting_class": "Site-conditions variance",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Boilermaker / pipe fitter peak demand",
-        "description_template": "HRSG erection and large-bore piping crews are constrained by peer CCGT and LNG projects.",
+        "category": "Boilermaker / pipefitter labour",
+        "description_template": "HRSG erection and large-bore piping crews are nationally scarce during peak season; competing CCGT and industrial projects compress supply.",
         "cross_cutting_class": "Resource / labour scarcity",
         "likely_probability": "H",
         "likely_impact": "M"
       },
       {
-        "category": "Hurricane / winter weather",
-        "description_function": "weather",
-        "description_template": "Outdoor heavy lifts and HRSG module setting are weather-restricted during {season}.",
+        "category": "Air permit / NSR conditions",
+        "description_template": "PSD/Title V permit may impose stack height, emissions limits, or operating restrictions that propagate to design changes.",
+        "cross_cutting_class": "Regulatory / external deadline",
+        "likely_probability": "L",
+        "likely_impact": "M"
+      },
+      {
+        "category": "Severe weather exposure",
+        "description_template": "Outdoor construction, HRSG erection, and transformer setting exposed to seasonal severe weather in {region}.",
         "cross_cutting_class": "Weather / climate-sensitive construction",
         "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "ISO interconnection sequence",
-        "description_template": "Network upgrades by transmission owner are not contractually owned but gate back-feed and synchronisation.",
-        "cross_cutting_class": "Regulatory / external deadline",
-        "likely_probability": "M",
-        "likely_impact": "H"
-      },
-      {
-        "category": "Owner change in gas supply config",
-        "description_template": "Owner explores dual-fuel or hydrogen-blend provisions late, affecting BOP design.",
+        "category": "Owner-driven configuration changes",
+        "description_template": "Owner-directed duct firing addition, fuel flexibility, or hydrogen-blending readiness scope drives engineering rework.",
         "cross_cutting_class": "Client-driven scope or sequence changes",
-        "likely_probability": "L",
+        "likely_probability": "M",
         "likely_impact": "M"
       },
       {
-        "category": "Performance test guarantees",
-        "description_template": "Heat-rate and capacity guarantees with significant LDs require precise commissioning and ambient correction.",
+        "category": "Gas pipeline interconnect dependency",
+        "description_template": "Gas lateral delivery date is outside EPC control; pipeline slip prevents first-fire and performance testing.",
         "cross_cutting_class": "Project-specific",
         "likely_probability": "M",
         "likely_impact": "H"
@@ -1345,57 +1332,62 @@
     ],
     "typical_issues": [
       {
-        "category": "HRSG module damage in transit",
-        "description_template": "Module arrived with shipping damage requiring on-site repair.",
-        "typical_severity": "M"
-      },
-      {
-        "category": "Transformer FAT failure",
-        "description_template": "GSU transformer failed factory test, deferring delivery {weeks} weeks.",
+        "category": "GT shipment delay",
+        "description_template": "Gas turbine ex-works slipped {n_weeks} weeks; commissioning sequence rebaselined.",
         "typical_severity": "H"
       },
       {
-        "category": "Pipe weld rejection rate",
-        "description_template": "High-pressure steam piping weld rejection above benchmark.",
+        "category": "HRSG harp leak",
+        "description_template": "HRSG harp pressure-test leak identified; repair in progress.",
         "typical_severity": "M"
       },
       {
-        "category": "Network upgrade delay",
-        "description_template": "Transmission owner's network upgrade slipped, deferring back-feed.",
+        "category": "STG alignment",
+        "description_template": "Steam turbine alignment outside OEM tolerance; recheck after foundation grout cure.",
+        "typical_severity": "M"
+      },
+      {
+        "category": "Large transformer DGA",
+        "description_template": "GSU DGA results elevated during energisation; vendor investigation underway.",
         "typical_severity": "H"
       },
       {
-        "category": "Gas pipeline tap delay",
-        "description_template": "Pipeline tap-in by interstate operator slipped, deferring fuel-in.",
+        "category": "Gas lateral commissioning slip",
+        "description_template": "Gas pipeline interconnect in-service date slipped; first-fire deferred.",
         "typical_severity": "H"
       },
       {
-        "category": "Combustor tuning extended",
-        "description_template": "Emissions tuning extended commissioning due to ambient swings.",
+        "category": "Cooling system performance",
+        "description_template": "ACC fan and gearbox vibration during commissioning out of spec; tuning ongoing.",
         "typical_severity": "M"
       },
       {
-        "category": "Cold-weather construction halt",
-        "description_template": "Sustained cold halted concrete and outdoor lifts for {days} days.",
+        "category": "Boiler chemistry excursion",
+        "description_template": "HRSG chemistry excursion during steam blow-out; cleanup required.",
+        "typical_severity": "L"
+      },
+      {
+        "category": "OSHA serious near-miss",
+        "description_template": "Near-miss during HRSG modular lift; standdown and lift-plan review completed.",
         "typical_severity": "M"
       },
       {
-        "category": "OSHA recordable on heavy lift",
-        "description_template": "Rigging incident during heavy lift generated OSHA recordable.",
+        "category": "Stack CEMS certification",
+        "description_template": "CEMS RATA failed certification; instrument vendor on site.",
         "typical_severity": "M"
       },
       {
-        "category": "Reliability run interruption",
-        "description_template": "Reliability run interrupted by aux equipment trip, restarting clock.",
+        "category": "Performance test heat rate miss",
+        "description_template": "Net heat rate test exceeded guarantee by {pct}%; corrections and re-test under evaluation.",
         "typical_severity": "H"
       }
     ],
     "typical_co_drivers": [
-      "Network upgrade / interconnection scope changes",
-      "Air permit-driven SCR/CO catalyst sizing increases",
-      "Owner-directed dual-fuel or H2-blend provisions",
-      "Acceleration directives to preserve capacity auction commitment",
-      "Differing site conditions requiring pile foundations"
+      "OEM GT delivery slippage and acceleration response",
+      "Owner-directed duct firing or hydrogen-readiness additions",
+      "Air permit conditions driving design changes",
+      "Gas pipeline interconnect delay mitigation",
+      "Differing site conditions at major equipment foundations"
     ]
   }
 ]

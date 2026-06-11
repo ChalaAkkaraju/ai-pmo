@@ -1,84 +1,82 @@
 {
   "archetype_id": "combined-cycle-gas-turbine",
   "segment": "power",
-  "subsegment": "Combined-cycle gas turbine plant (500-1100 MW, 1x1 or 2x1)",
-  "description": "Greenfield or repower CCGT with F-class or H-class gas turbines, HRSGs, steam turbine, ACC or wet cooling, and gas/water interconnects. Interconnection queue, gas tap, and emissions permits dominate schedule logic.",
-  "name_pattern": "{location} CCGT Phase {phase}",
+  "subsegment": "Combined-cycle gas turbine (CCGT) plant — 500-1100 MW (1x1 or 2x1)",
+  "description": "Greenfield or repower CCGT plants with F- or H-class gas turbines, HRSGs, and steam turbine. Fixed-price EPC with OEM-supplied power island; schedule and commercial risk dominated by gas turbine delivery, interconnection, and capacity market commitments.",
+  "name_pattern": "{location} CCGT Plant Phase {phase}",
   "client_pattern": "{location} {client_suffix}",
   "client_suffixes": [
-    "Power Holdings LLC",
-    "Generation Partners LP",
-    "Energy IPP Corp",
-    "Electric Cooperative",
-    "Power Generation Co"
+    "Energy LLC",
+    "Power Generation Partners",
+    "Electric Utility",
+    "Generation Holdings",
+    "Power Development Corp"
   ],
   "contract_value_min_m": 420,
   "contract_value_max_m": 780,
-  "contingency_pct_typical": 6,
+  "contingency_pct_typical": 5,
   "margin_pct_typical": 9,
   "duration_weeks_min": 140,
   "duration_weeks_max": 200,
   "hard_deadline_themes": [
-    "ISO/RTO interconnection in-service date with capacity auction tie-in",
-    "EPA NSR/PSD and state air permit milestones",
-    "FERC tariff and gas pipeline in-service date",
-    "PPA/tolling COD with capacity LDs"
+    "FERC / ISO interconnection queue COD",
+    "Capacity market auction delivery year",
+    "EPA NSR/PSD air permit conditions",
+    "Gas pipeline interconnect in-service date"
   ],
   "typical_risks": [
     {
-      "category": "Gas turbine OEM slot",
-      "description_template": "GT/ST trains from {oem} are slotted globally; loss of slot extends in-service date by {months} months.",
+      "category": "Gas turbine OEM delivery",
+      "description_template": "Critical-path gas turbine and generator supply from {oem} (GE Vernova, Mitsubishi Power, Siemens Energy); global delivery queue creates limited recovery options on slip.",
       "cross_cutting_class": "Vendor / supplier concentration",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "Air permit (PSD/NSR)",
-      "description_function": "permit",
-      "description_template": "PSD/NSR permit conditions on NOx/CO and startup emissions may require SCR/CO catalyst resizing.",
+      "category": "Interconnection / capacity market COD",
+      "description_template": "ISO interconnection agreement and capacity market commitment impose hard COD; LDs and replacement capacity cost on slip.",
       "cross_cutting_class": "Regulatory / external deadline",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "Geotechnical at HRSG/ST foundations",
-      "description_template": "Variable bearing capacity may force pile foundation redesign for heavy equipment pads.",
+      "category": "Site / subsurface conditions",
+      "description_template": "Site geotechnical may reveal soft soils or shallow groundwater requiring deep foundations under HRSG and STG pedestals.",
       "cross_cutting_class": "Site-conditions variance",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "Boilermaker / pipe fitter peak demand",
-      "description_template": "HRSG erection and large-bore piping crews are constrained by peer CCGT and LNG projects.",
+      "category": "Boilermaker / pipefitter labour",
+      "description_template": "HRSG erection and large-bore piping crews are nationally scarce during peak season; competing CCGT and industrial projects compress supply.",
       "cross_cutting_class": "Resource / labour scarcity",
       "likely_probability": "H",
       "likely_impact": "M"
     },
     {
-      "category": "Hurricane / winter weather",
-      "description_function": "weather",
-      "description_template": "Outdoor heavy lifts and HRSG module setting are weather-restricted during {season}.",
+      "category": "Air permit / NSR conditions",
+      "description_template": "PSD/Title V permit may impose stack height, emissions limits, or operating restrictions that propagate to design changes.",
+      "cross_cutting_class": "Regulatory / external deadline",
+      "likely_probability": "L",
+      "likely_impact": "M"
+    },
+    {
+      "category": "Severe weather exposure",
+      "description_template": "Outdoor construction, HRSG erection, and transformer setting exposed to seasonal severe weather in {region}.",
       "cross_cutting_class": "Weather / climate-sensitive construction",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "ISO interconnection sequence",
-      "description_template": "Network upgrades by transmission owner are not contractually owned but gate back-feed and synchronisation.",
-      "cross_cutting_class": "Regulatory / external deadline",
-      "likely_probability": "M",
-      "likely_impact": "H"
-    },
-    {
-      "category": "Owner change in gas supply config",
-      "description_template": "Owner explores dual-fuel or hydrogen-blend provisions late, affecting BOP design.",
+      "category": "Owner-driven configuration changes",
+      "description_template": "Owner-directed duct firing addition, fuel flexibility, or hydrogen-blending readiness scope drives engineering rework.",
       "cross_cutting_class": "Client-driven scope or sequence changes",
-      "likely_probability": "L",
+      "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "Performance test guarantees",
-      "description_template": "Heat-rate and capacity guarantees with significant LDs require precise commissioning and ambient correction.",
+      "category": "Gas pipeline interconnect dependency",
+      "description_template": "Gas lateral delivery date is outside EPC control; pipeline slip prevents first-fire and performance testing.",
       "cross_cutting_class": "Project-specific",
       "likely_probability": "M",
       "likely_impact": "H"
@@ -86,56 +84,61 @@
   ],
   "typical_issues": [
     {
-      "category": "HRSG module damage in transit",
-      "description_template": "Module arrived with shipping damage requiring on-site repair.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Transformer FAT failure",
-      "description_template": "GSU transformer failed factory test, deferring delivery {weeks} weeks.",
+      "category": "GT shipment delay",
+      "description_template": "Gas turbine ex-works slipped {n_weeks} weeks; commissioning sequence rebaselined.",
       "typical_severity": "H"
     },
     {
-      "category": "Pipe weld rejection rate",
-      "description_template": "High-pressure steam piping weld rejection above benchmark.",
+      "category": "HRSG harp leak",
+      "description_template": "HRSG harp pressure-test leak identified; repair in progress.",
       "typical_severity": "M"
     },
     {
-      "category": "Network upgrade delay",
-      "description_template": "Transmission owner's network upgrade slipped, deferring back-feed.",
+      "category": "STG alignment",
+      "description_template": "Steam turbine alignment outside OEM tolerance; recheck after foundation grout cure.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Large transformer DGA",
+      "description_template": "GSU DGA results elevated during energisation; vendor investigation underway.",
       "typical_severity": "H"
     },
     {
-      "category": "Gas pipeline tap delay",
-      "description_template": "Pipeline tap-in by interstate operator slipped, deferring fuel-in.",
+      "category": "Gas lateral commissioning slip",
+      "description_template": "Gas pipeline interconnect in-service date slipped; first-fire deferred.",
       "typical_severity": "H"
     },
     {
-      "category": "Combustor tuning extended",
-      "description_template": "Emissions tuning extended commissioning due to ambient swings.",
+      "category": "Cooling system performance",
+      "description_template": "ACC fan and gearbox vibration during commissioning out of spec; tuning ongoing.",
       "typical_severity": "M"
     },
     {
-      "category": "Cold-weather construction halt",
-      "description_template": "Sustained cold halted concrete and outdoor lifts for {days} days.",
+      "category": "Boiler chemistry excursion",
+      "description_template": "HRSG chemistry excursion during steam blow-out; cleanup required.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "OSHA serious near-miss",
+      "description_template": "Near-miss during HRSG modular lift; standdown and lift-plan review completed.",
       "typical_severity": "M"
     },
     {
-      "category": "OSHA recordable on heavy lift",
-      "description_template": "Rigging incident during heavy lift generated OSHA recordable.",
+      "category": "Stack CEMS certification",
+      "description_template": "CEMS RATA failed certification; instrument vendor on site.",
       "typical_severity": "M"
     },
     {
-      "category": "Reliability run interruption",
-      "description_template": "Reliability run interrupted by aux equipment trip, restarting clock.",
+      "category": "Performance test heat rate miss",
+      "description_template": "Net heat rate test exceeded guarantee by {pct}%; corrections and re-test under evaluation.",
       "typical_severity": "H"
     }
   ],
   "typical_co_drivers": [
-    "Network upgrade / interconnection scope changes",
-    "Air permit-driven SCR/CO catalyst sizing increases",
-    "Owner-directed dual-fuel or H2-blend provisions",
-    "Acceleration directives to preserve capacity auction commitment",
-    "Differing site conditions requiring pile foundations"
+    "OEM GT delivery slippage and acceleration response",
+    "Owner-directed duct firing or hydrogen-readiness additions",
+    "Air permit conditions driving design changes",
+    "Gas pipeline interconnect delay mitigation",
+    "Differing site conditions at major equipment foundations"
   ]
 }

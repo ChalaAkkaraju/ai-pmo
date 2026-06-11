@@ -1,141 +1,137 @@
 {
   "archetype_id": "seawater-desalination",
   "segment": "water",
-  "subsegment": "Seawater reverse-osmosis desalination plant (20-100 MGD)",
-  "description": "Coastal SWRO plant including intake (open or subsurface), pretreatment, RO trains, post-treatment, brine outfall, and product delivery. Permitting around marine impacts and energy intensity are dominant constraints.",
-  "name_pattern": "{location} Desalination Phase {phase}",
+  "subsegment": "Seawater reverse-osmosis desalination plant (20-75 MGD)",
+  "description": "Coastal SWRO plants delivering municipal or industrial water, with intake/outfall marine works and high-pressure RO trains. Marine permitting, brine outfall compliance, and energy-recovery device performance are the dominant risk drivers.",
+  "name_pattern": "{location} Desalination Plant Phase {phase}",
   "client_pattern": "{location} {client_suffix}",
   "client_suffixes": [
     "Water Authority",
+    "Coastal Water Agency",
+    "Desalination Partners LLC",
     "Regional Water District",
-    "Coastal Utility Co",
-    "Water Resources Agency",
-    "Public Water Wholesaler"
+    "Municipal Water Authority"
   ],
-  "contract_value_min_m": 220,
+  "contract_value_min_m": 250,
   "contract_value_max_m": 750,
-  "contingency_pct_typical": 7,
-  "margin_pct_typical": 10,
-  "duration_weeks_min": 130,
-  "duration_weeks_max": 210,
+  "contingency_pct_typical": 6,
+  "margin_pct_typical": 9,
+  "duration_weeks_min": 156,
+  "duration_weeks_max": 230,
   "hard_deadline_themes": [
-    "State coastal commission / NEPA ROD",
-    "USACE Section 10/404 marine permits",
-    "NPDES brine outfall conditions",
-    "Take-or-pay water purchase agreement COD"
+    "NPDES brine outfall permit milestones",
+    "Coastal Zone Management Act / state coastal commission approvals",
+    "Take-or-pay water purchase agreement COD",
+    "Marine construction seasonal windows"
   ],
   "typical_risks": [
     {
-      "category": "RO membrane / ERD vendor lock-in",
-      "description_template": "Membrane and pressure exchanger packages effectively sole-sourced from {oem}; price/lead-time exposure significant.",
+      "category": "RO membrane / ERD vendor concentration",
+      "description_template": "Energy recovery devices and RO membranes from {oem} concentrate technology risk; ERD performance shortfalls directly hit specific energy consumption guarantee.",
       "cross_cutting_class": "Vendor / supplier concentration",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "Coastal commission conditions",
-      "description_template": "State coastal authority may impose subsurface intake requirement increasing scope by ${m}M.",
+      "category": "Coastal commission / NPDES delay",
+      "description_template": "Brine outfall NPDES and coastal commission conditions may be appealed by third parties, deferring marine work start.",
       "cross_cutting_class": "Regulatory / external deadline",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
       "category": "Marine geotechnical variance",
-      "description_template": "Microtunnel for intake/outfall encounters cobble/boulder strata not in baseline borings.",
+      "description_template": "Intake and outfall tunnel/pipeline alignment may encounter variable seabed conditions, requiring micro-tunnel method changes.",
       "cross_cutting_class": "Site-conditions variance",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
       "category": "Marine contractor availability",
-      "description_template": "Specialty marine spread (jack-up, microtunneling crew) has narrow availability window.",
+      "description_template": "Specialist marine contractors for intake/outfall installation are globally scarce; mobilisation slip cascades into entire schedule.",
       "cross_cutting_class": "Resource / labour scarcity",
       "likely_probability": "M",
-      "likely_impact": "M"
+      "likely_impact": "H"
     },
     {
       "category": "Marine weather window",
-      "description_template": "Offshore work limited to {months} due to sea state; storm season slips intake completion.",
+      "description_template": "Marine construction confined to {n_months}-month seasonal weather window; missing the window pushes outfall completion by a full year.",
       "cross_cutting_class": "Weather / climate-sensitive construction",
       "likely_probability": "H",
       "likely_impact": "H"
     },
     {
-      "category": "Client membrane choice change",
-      "description_function": "owner",
-      "description_template": "Owner reconsiders membrane vendor for lifecycle cost reasons mid-design.",
+      "category": "Brine diffuser performance",
+      "description_template": "Brine diffuser dilution performance under operating conditions may not meet permit, triggering redesign and re-permitting.",
+      "cross_cutting_class": "Project-specific",
+      "likely_probability": "L",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Owner take-off scope change",
+      "description_template": "Owner-driven changes to product water specification (boron, hardness) require additional post-treatment stages.",
       "cross_cutting_class": "Client-driven scope or sequence changes",
       "likely_probability": "L",
       "likely_impact": "M"
-    },
-    {
-      "category": "Brine outfall plume modeling",
-      "description_template": "Regulators require expanded mixing-zone modeling, potentially expanding diffuser scope.",
-      "cross_cutting_class": "Regulatory / external deadline",
-      "likely_probability": "M",
-      "likely_impact": "M"
-    },
-    {
-      "category": "Energy price exposure",
-      "description_template": "Energy cost escalation passes through to LCOW; PPA hedging exposure remains with owner but stresses schedule.",
-      "cross_cutting_class": "Project-specific",
-      "likely_probability": "M",
-      "likely_impact": "L"
     }
   ],
   "typical_issues": [
     {
-      "category": "Microtunnel obstruction",
-      "description_template": "TBM encountered boulder/clog requiring intervention shaft.",
+      "category": "Marine permit appeal",
+      "description_template": "Third-party appeal of coastal commission approval delaying marine NTP.",
       "typical_severity": "H"
     },
     {
-      "category": "Marine weather standdown",
-      "description_template": "Sea-state exceeded vessel limits for {n_days} days.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Diffuser deployment failure",
-      "description_template": "Initial diffuser sinking attempt aborted; second mobilisation required.",
+      "category": "HDD frac-out",
+      "description_template": "Frac-out during HDD intake installation triggered regulatory notification and method review.",
       "typical_severity": "H"
     },
     {
-      "category": "Membrane fouling on commissioning",
-      "description_template": "Pretreatment underperformance fouled first train requiring CIP and rework.",
+      "category": "Outfall diffuser fabrication delay",
+      "description_template": "Outfall diffuser fabrication slipped, jeopardising marine installation window.",
+      "typical_severity": "H"
+    },
+    {
+      "category": "Membrane element supply",
+      "description_template": "Initial membrane element lot failed integrity tests; replacement shipment in progress.",
       "typical_severity": "M"
     },
     {
-      "category": "Marine biofouling on intake",
-      "description_template": "Rapid biofouling on intake screens reduced flow during testing.",
+      "category": "Pretreatment fouling",
+      "description_template": "Pretreatment SDI exceeded design; pretreatment chemistry being revisited.",
       "typical_severity": "M"
     },
     {
-      "category": "Corrosion on duplex piping",
-      "description_template": "Weld discolouration on duplex piping required additional PMI and rework.",
+      "category": "High-pressure pump alignment",
+      "description_template": "HP pump alignment issues found during string testing; vendor field service mobilised.",
       "typical_severity": "M"
     },
     {
-      "category": "Marine permit condition update",
-      "description_template": "Agency added entrainment monitoring scope mid-construction.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Power import outage",
-      "description_function": "tie-in",
-      "description_template": "Utility tie-in outage exceeded planned window.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Outfall hydrostatic test rerun",
-      "description_template": "Initial hydrostatic test on outfall failed acceptance.",
+      "category": "Concrete pour rejected for chloride",
+      "description_template": "Concrete batch rejected for chloride exposure non-conformance; mix design revision underway.",
       "typical_severity": "L"
+    },
+    {
+      "category": "Marine fauna observation stop-work",
+      "description_template": "Marine mammal observer triggered work stoppage for protected species in zone.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Brine plume modelling re-run",
+      "description_template": "Regulator requested additional plume modelling; resubmission required before commissioning.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Specific energy consumption shortfall",
+      "description_template": "Performance test SEC exceeded contractual guarantee by {pct}%; ERD tuning and membrane condition investigation in progress.",
+      "typical_severity": "H"
     }
   ],
   "typical_co_drivers": [
-    "Conversion to subsurface intake per coastal commission ruling",
-    "Expanded diffuser/outfall scope from mixing-zone modeling",
-    "Differing subsea geotechnical conditions during microtunneling",
-    "Owner-directed energy recovery device upgrade",
-    "Pretreatment scope expansion (DAF/UF) to address algal events"
+    "Marine permit conditions adding mitigation scope",
+    "Differing marine subsurface conditions during HDD/tunneling",
+    "Owner-directed post-treatment additions for product water spec",
+    "Capacity uprate or train addition post-NTP",
+    "Schedule acceleration to recover marine season slip"
   ]
 }

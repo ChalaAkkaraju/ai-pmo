@@ -1,82 +1,75 @@
 {
   "archetype_id": "large-diameter-conveyance",
   "segment": "water",
-  "subsegment": "Large-diameter water conveyance / transmission main (48\"-120\", 5-40 miles)",
-  "description": "Linear infrastructure delivering raw or treated water across long alignments via steel/PCCP/RCP pipe, with pump stations, tunnels, and crossings. Right-of-way, permits, and tunneling productivity dominate the risk profile.",
-  "name_pattern": "{location} Conveyance Phase {phase}",
+  "subsegment": "Large-diameter water conveyance pipeline / tunnel (60-120 inch, 10-40 miles)",
+  "description": "Major water transmission projects involving large-diameter steel or PCCP pipeline, micro-tunneling under road/rail/river crossings, and pump stations. Schedule and cost risk are concentrated in geotechnical variance and right-of-way coordination.",
+  "name_pattern": "{location} Water Conveyance Phase {phase}",
   "client_pattern": "{location} {client_suffix}",
   "client_suffixes": [
-    "Water District",
-    "Metropolitan Water Authority",
-    "Regional Water Agency",
-    "Public Utility Commission",
-    "Water Wholesale Co"
+    "Water Authority",
+    "Regional Water Wholesaler",
+    "Municipal Water District",
+    "Water Resources Department",
+    "Joint Powers Authority"
   ],
-  "contract_value_min_m": 90,
-  "contract_value_max_m": 420,
-  "contingency_pct_typical": 6,
-  "margin_pct_typical": 9,
-  "duration_weeks_min": 110,
-  "duration_weeks_max": 190,
+  "contract_value_min_m": 150,
+  "contract_value_max_m": 600,
+  "contingency_pct_typical": 7,
+  "margin_pct_typical": 8,
+  "duration_weeks_min": 130,
+  "duration_weeks_max": 200,
   "hard_deadline_themes": [
-    "USACE 404 / state stream-alteration permit windows",
-    "Railroad/DOT crossing permits",
-    "Drought-response delivery milestones",
-    "Bond covenant draw schedule"
+    "USACE Section 404 permit construction windows",
+    "Railroad/DOT crossing agreement milestones",
+    "State drought response delivery deadlines",
+    "Easement acquisition completion"
   ],
   "typical_risks": [
     {
-      "category": "Large-diameter pipe mill capacity",
-      "description_template": "Domestic AWWA C200/C301 pipe mills booked through {quarter}; substitution risks Buy America compliance.",
+      "category": "Pipe mill capacity",
+      "description_template": "Large-diameter steel or PCCP pipe mill capacity is constrained nationally; competing megaprojects may displace delivery slots.",
       "cross_cutting_class": "Vendor / supplier concentration",
       "likely_probability": "M",
       "likely_impact": "H"
     },
     {
-      "category": "Crossings permits",
-      "description_template": "DOT/railroad crossing permits with {n_crossings} agencies in series may slip critical path.",
+      "category": "USACE / state permit delays",
+      "description_template": "Section 404 and state stream-crossing permits subject to seasonal restrictions and conditions that may be issued late.",
       "cross_cutting_class": "Regulatory / external deadline",
-      "likely_probability": "H",
+      "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "Subsurface variability along alignment",
-      "description_template": "Borings limited; karst/cobble/contaminated soils possible across {miles}-mile alignment.",
+      "category": "Geotechnical / micro-tunnel variance",
+      "description_template": "Crossings under {n_crossings} road/rail/river alignments expose project to differing-site-conditions claims if rock or groundwater conditions vary from GBR.",
       "cross_cutting_class": "Site-conditions variance",
       "likely_probability": "H",
+      "likely_impact": "H"
+    },
+    {
+      "category": "Right-of-way / easement acquisition",
+      "description_template": "Owner-furnished easements across {n_parcels} parcels may not be timely; condemnation timelines outside EPC control.",
+      "cross_cutting_class": "Client-driven scope or sequence changes",
+      "likely_probability": "H",
       "likely_impact": "M"
     },
     {
-      "category": "Pipe-laying / tunneling crews",
-      "description_template": "Microtunneling and large-diameter pipelayer crews limited regionally during peak season.",
+      "category": "Welder / pipe crew availability",
+      "description_template": "Large-diameter pipe welding crews are scarce; competing pipeline projects in {region} compress regional supply.",
       "cross_cutting_class": "Resource / labour scarcity",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "Wet season trenching halt",
-      "description_template": "Saturated soils suspend open-cut for {weeks} weeks; trench dewatering scope grows.",
+      "category": "Wet-weather corridor work",
+      "description_template": "Open-cut corridor work sensitive to wet-season conditions; trench wall stability and dewatering costs may escalate.",
       "cross_cutting_class": "Weather / climate-sensitive construction",
       "likely_probability": "M",
       "likely_impact": "M"
     },
     {
-      "category": "Alignment changes by owner",
-      "description_template": "Owner shifts alignment to accommodate landowner negotiations, triggering re-permitting.",
-      "cross_cutting_class": "Client-driven scope or sequence changes",
-      "likely_probability": "M",
-      "likely_impact": "M"
-    },
-    {
-      "category": "Cultural / Section 106",
-      "description_template": "Inadvertent discovery during trenching may require monitor-mandated stop-work.",
-      "cross_cutting_class": "Regulatory / external deadline",
-      "likely_probability": "M",
-      "likely_impact": "M"
-    },
-    {
-      "category": "Hydrotest failure clusters",
-      "description_template": "Hydrostatic testing fails on segments due to joint workmanship requiring expose-and-repair.",
+      "category": "Railroad / DOT crossing coordination",
+      "description_template": "Railroad crossing agreement conditions and DOT lane closure windows constrain crossing sequence and timing.",
       "cross_cutting_class": "Project-specific",
       "likely_probability": "M",
       "likely_impact": "M"
@@ -84,56 +77,61 @@
   ],
   "typical_issues": [
     {
-      "category": "Easement holdout",
-      "description_template": "Landowner refused entry causing detour design at MP {mp}.",
+      "category": "Easement delay",
+      "description_template": "Owner-furnished easement for parcel {parcel_id} not delivered; crew demobilised from segment.",
       "typical_severity": "H"
     },
     {
-      "category": "Rock excavation overrun",
-      "description_template": "Trench rock encountered exceeding baseline cubic yards.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Tunnel face instability",
-      "description_template": "Microtunnel face encountered running sand requiring grouting.",
+      "category": "Micro-tunnel boulder obstruction",
+      "description_template": "MTBM struck boulder field at crossing {crossing_id}; rescue shaft under evaluation.",
       "typical_severity": "H"
-    },
-    {
-      "category": "Hydrotest failure",
-      "description_template": "Test segment failed pressure test, requiring localised expose-and-repair.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Crossing permit delay",
-      "description_template": "Railroad crossing permit slipped, deferring boring activity.",
-      "typical_severity": "M"
-    },
-    {
-      "category": "Contaminated soil discovery",
-      "description_template": "Petroleum-impacted soil discovered along legacy industrial corridor.",
-      "typical_severity": "M"
     },
     {
       "category": "Pipe coating damage",
-      "description_template": "Coating damage from handling required field repair on {n_joints} joints.",
-      "typical_severity": "L"
+      "description_template": "Field-applied coating failed holiday testing on multiple joints; rework in progress.",
+      "typical_severity": "M"
     },
     {
-      "category": "Stormwater NOV",
-      "description_template": "Sediment migration triggered notice of violation under construction stormwater permit.",
+      "category": "Hydrotest failure",
+      "description_template": "Hydrotest segment failed pressure hold; investigation isolating leak location.",
       "typical_severity": "M"
     },
     {
       "category": "Cultural resource find",
-      "description_template": "Archaeological monitor halted trenching pending evaluation.",
+      "description_template": "Artifact discovered during trenching; SHPO consultation paused work in affected reach.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Dewatering discharge exceedance",
+      "description_template": "Construction dewatering discharge exceeded turbidity limit; corrective action required.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Pump station equipment delay",
+      "description_template": "Vertical turbine pump delivery slipped, impacting pump station commissioning.",
+      "typical_severity": "M"
+    },
+    {
+      "category": "Railroad flagger scheduling",
+      "description_template": "Railroad flagger availability constrained crossing work to limited windows.",
+      "typical_severity": "L"
+    },
+    {
+      "category": "Trench wall collapse",
+      "description_template": "Localised trench wall failure after rain event; OSHA review and re-shoring required.",
       "typical_severity": "H"
+    },
+    {
+      "category": "Welder qualification gap",
+      "description_template": "WPS qualification gap for specific pipe-to-fitting combination identified late; qualification testing scheduled.",
+      "typical_severity": "L"
     }
   ],
   "typical_co_drivers": [
-    "Alignment change to resolve easement holdout",
-    "Differing subsurface conditions (rock/contaminated soil)",
-    "Owner-directed pipe material change (PCCP to steel)",
-    "Added bore-and-jack at agency-mandated crossing",
-    "Cultural resource mitigation scope additions"
+    "Differing subsurface conditions at crossings",
+    "Easement / right-of-way delays driving sequence changes",
+    "Permit-driven alignment modifications",
+    "Owner-directed alignment or scope changes (added connections)",
+    "Acceleration to meet drought-response delivery date"
   ]
 }
