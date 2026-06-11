@@ -33,6 +33,10 @@ async function main() {
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.setViewport(VIEWPORT);
+  // Defuse the first-visit welcome gate once per browser profile — otherwise
+  // every capture lands on the welcome page instead of the dashboard.
+  await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.evaluate(() => localStorage.setItem('pmo-welcome-skip', '1'));
   let ok = 0;
   for (const token of ROLES) {
     process.stdout.write(`  ${token} ... `);

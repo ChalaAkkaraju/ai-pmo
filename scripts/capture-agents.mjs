@@ -52,6 +52,9 @@ async function main() {
   const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.setViewport({ width: 1500, height: 1100, deviceScaleFactor: 2 });
+  // Defuse the first-visit welcome gate once per browser profile.
+  await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.evaluate(() => localStorage.setItem('pmo-welcome-skip', '1'));
 
   const project = await discoverProject(page);
   console.log(`Using project: ${project ?? '(none found — portfolio shots only)'}`);
