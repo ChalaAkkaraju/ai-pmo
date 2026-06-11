@@ -120,6 +120,9 @@ async function main() {
   // The welcome canvas is full-width with the content centred inside it —
   // shoot the inner container so the figure isn't mostly background.
   await shoot(page, 'main > div', '00-welcome-gateway.png');
+  // Persist the first-visit skip so the next navigation lands on the real
+  // dashboard instead of being redirected back to the welcome gate.
+  await page.evaluate(() => localStorage.setItem('pmo-welcome-skip', '1'));
 
   // Dashboard + auto-discover a project code
   console.log('dashboard');
