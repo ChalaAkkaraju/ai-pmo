@@ -117,7 +117,9 @@ async function main() {
   // Welcome gateway
   console.log('welcome');
   await goto(page, '/welcome');
-  await shoot(page, 'main', '00-welcome-gateway.png');
+  // The welcome canvas is full-width with the content centred inside it —
+  // shoot the inner container so the figure isn't mostly background.
+  await shoot(page, 'main > div', '00-welcome-gateway.png');
 
   // Dashboard + auto-discover a project code
   console.log('dashboard');
