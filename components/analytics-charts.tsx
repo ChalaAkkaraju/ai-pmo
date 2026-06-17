@@ -230,7 +230,7 @@ export function RankedBarPanel({ title, rows }: { title: string; rows: Row[] }) 
           const fill = colorFor(d.label, i);
           return (
             <li key={d.label} className="flex items-center gap-2 text-[12px]">
-              <span className="w-36 flex-none truncate" title={d.label}>{d.label}</span>
+              <span className="w-44 flex-none whitespace-normal leading-tight" title={d.label}>{d.label}</span>
               <span className="relative h-4 flex-1 overflow-hidden rounded-full bg-muted/50">
                 <span
                   className="absolute inset-y-0 left-0 rounded-full"
