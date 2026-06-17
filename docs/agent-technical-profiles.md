@@ -38,11 +38,11 @@ These six produce the upstream PM artefacts. All are *reference‑grounded* — 
 - **Boundary:** Never produces dated P6 / MS Project schedules; does not commit durations or owners without PM input.
 - *Source of truth:* `lib/agent-prompts/schedule_reasoner.md`
 
-### Budget Builder — Project-level
+### Cost Planner — Project-level
 - **Inputs:** Intake + Charter §7 commercial baseline + the approved WBS + Schedule Analysis. **Authoritative (never invented):** contract value, target margin, approved budget, contingency, contract type.
 - **Grounding:** Project header (the control totals — the SAP/CPQ shell) + the canonical WBS + a reference project's cost baseline + the Northwood cost‑baseline worked example + the risk register (for contingency mapping).
 - **Rules:** PMBOK cost management; one P50 cost line per WBS Level‑2 branch, totalling to the approved budget; contingency mapped to charter risks; cash flow tied to milestones.
-- **Boundary:** Does not forecast actuals (no forecast engine) or generate ERP cost codes; flags inferred lines `[NEEDS PM REVIEW]`.
+- **Boundary:** Does not estimate the cost total from scratch (that comes from the quotation/estimate), forecast actuals (no forecast engine) or generate ERP cost codes; flags inferred lines `[NEEDS PM REVIEW]`.
 - *Source of truth:* `lib/agent-prompts/budget_builder.md`
 
 ### Communications Planner — Project-level

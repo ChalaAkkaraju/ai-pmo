@@ -49,7 +49,7 @@ async function main() {
   let total = 0, processed = 0, skipped = 0, backfilled = 0;
   for (const p of (projects ?? []) as Array<{ id: string; code: string; approved_budget_current: number | string; current_week: number | string }>) {
     // Backfill recovery on funded COs (they're fully recovered).
-    const bf = await db.from('change_orders').update({ recovery_confidence: 100 }).eq('project_id', p.id).in('status', ['Executed', 'Complete']).is('recovery_confidence', null).select('id');
+    const bf = await db.from('change_orders').update({ recovery_confidence: 100 }).eq('project_id', p.id).in('status', ['Approved']).is('recovery_confidence', null).select('id');
     backfilled += bf.data?.length ?? 0;
 
     const has = await db.from('change_orders').select('id').eq('project_id', p.id).eq('status', 'Absorbed').limit(1);
@@ -69,14 +69,22 @@ async function main() {
 
     const t = pick(r, TRENDS);
     const u = pick(r, ABSORBED);
+    // Lifecycle lineage (optional): a trend often traces to a client-driven risk;
+    // an absorbed change often traces to a technical/rework issue. Nullable when none.
+    const rkq = await db.from('risks').select('risk_id, cross_cutting_class').eq('project_id', p.id);
+    const rkRows = (rkq.data ?? []) as Array<{ risk_id: string; cross_cutting_class: string }>;
+    const srcRisk = (rkRows.find((x) => x.cross_cutting_class === 'Client-driven scope or sequence changes') ?? rkRows[0])?.risk_id ?? null;
+    const isq = await db.from('issues').select('issue_id, category').eq('project_id', p.id);
+    const isRows = (isq.data ?? []) as Array<{ issue_id: string; category: string }>;
+    const srcIssue = (isRows.find((x) => /tech|qual|rework|weld|design|construct/i.test(String(x.category))) ?? isRows[0])?.issue_id ?? null;
     const rows = [
       {
         project_id: p.id, co_id: 'CO-T01', driver: t.driver,
         scope_summary: t.scope,
         cost_impact_m: tCost, revenue_impact_m: tRev, schedule_impact_days: Math.floor(r() * 22),
-        margin_realized_pct: r2(((tRev - tCost) / tRev) * 100), status: pick(r, ['Under analysis', 'Priced']),
+        margin_realized_pct: r2(((tRev - tCost) / tRev) * 100), status: pick(r, ['Submitted to client', 'In negotiation']),
         approval_routing: 'Client variation request — awaiting agreement', executed_week: null,
-        recovery_confidence: 40 + Math.floor(r() * 45), source_system: 'SAP_PS',
+        recovery_confidence: 40 + Math.floor(r() * 45), source_system: 'SAP_PS', source_risk_id: srcRisk,
       },
       {
         project_id: p.id, co_id: 'CO-U01', driver: u.driver,
@@ -84,7 +92,7 @@ async function main() {
         cost_impact_m: uCost, revenue_impact_m: 0, schedule_impact_days: Math.floor(r() * 8),
         margin_realized_pct: 0, status: 'Absorbed',
         approval_routing: 'Absorbed — non-recoverable cost growth', executed_week: Math.max(1, Math.round(wk * (0.4 + r() * 0.4))),
-        recovery_confidence: 0, source_system: 'SAP_PS',
+        recovery_confidence: 0, source_system: 'SAP_PS', source_issue_id: srcIssue,
       },
     ];
     const { error: insErr } = await db.from('change_orders').insert(rows);

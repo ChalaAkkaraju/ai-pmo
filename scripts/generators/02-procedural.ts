@@ -383,8 +383,8 @@ function generateChangeOrder(
   const scheduleImpactDays = intInRange(-10, 30, r);
   const status =
     bucket === 'closed' || bucket === 'sc'
-      ? 'Complete'
-      : pick(['Under analysis', 'Priced', 'Executed', 'Executed'], r);
+      ? 'Approved'
+      : pick(['Quantified', 'Submitted to client', 'In negotiation', 'Approved', 'Approved'], r);
 
   return {
     co_id: 'CO-001',
@@ -394,13 +394,13 @@ function generateChangeOrder(
     revenue_impact_m: Number(revenueImpactM.toFixed(3)),
     schedule_impact_days: scheduleImpactDays,
     margin_realized_pct:
-      status === 'Complete' || status === 'Executed'
+      status === 'Approved'
         ? Number(floatInRange(5, 12, r).toFixed(2))
         : null,
     status,
     approval_routing: 'PM → Commercial Manager → Sponsor',
     executed_week:
-      status === 'Complete' || status === 'Executed'
+      status === 'Approved'
         ? Math.min(currentWeek, intInRange(10, Math.max(11, currentWeek), r))
         : null,
     four_frame_analysis: null,

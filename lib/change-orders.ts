@@ -11,16 +11,16 @@ export type CoLike = Record<string, unknown>;
 const num = (v: unknown) => Number(v) || 0;
 const str = (v: unknown) => (v == null ? '' : String(v));
 
-export const CO_STAGES = ['Anticipated', 'Under analysis', 'Priced', 'Executed', 'Complete'] as const;
-const APPROVED = new Set(['Executed', 'Complete']);
-const OPEN = new Set(['Anticipated', 'Under analysis', 'Priced']);
+export const CO_STAGES = ['Identified', 'Quantified', 'Submitted to client', 'In negotiation', 'Approved'] as const;
+const APPROVED = new Set(['Approved']);
+const OPEN = new Set(['Identified', 'Quantified', 'Submitted to client', 'In negotiation']);
 
 export type CoOutcome = 'funded' | 'absorbed' | 'open' | 'withdrawn';
 /** Resolve a change/trend status to its commercial outcome. */
 export function classifyOutcome(status: string): CoOutcome {
-  if (status === 'Executed' || status === 'Complete') return 'funded';
+  if (status === 'Approved') return 'funded';
   if (status === 'Absorbed') return 'absorbed';
-  if (status === 'Rejected' || status === 'Withdrawn') return 'withdrawn';
+  if (status === 'Withdrawn') return 'withdrawn';
   return 'open';
 }
 

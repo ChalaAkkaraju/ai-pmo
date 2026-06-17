@@ -32,20 +32,20 @@ export default async function ChangesAnalyticsPage({ params }: { params: Promise
   ]);
   const projById = new Map(projects.map((p) => [p.id, p]));
 
-  const active = cos.filter((c) => c.status !== 'Rejected');
+  const active = cos.filter((c) => c.status !== 'Withdrawn');
   const total = cos.length;
-  const executed = cos.filter((c) => c.status === 'Executed' || c.status === 'Complete').length;
-  const pending = cos.filter((c) => ['Anticipated', 'Under analysis', 'Priced'].includes(c.status)).length;
+  const executed = cos.filter((c) => c.status === 'Approved').length;
+  const pending = cos.filter((c) => ['Identified', 'Quantified', 'Submitted to client', 'In negotiation'].includes(c.status)).length;
   const cumRevM = active.reduce((s, c) => s + num(c.revenue_impact_m), 0);
   const netMarginM = active.reduce((s, c) => s + (num(c.revenue_impact_m) - num(c.cost_impact_m)), 0);
   const scheduleDays = active.reduce((s, c) => s + num(c.schedule_impact_days), 0);
   const absorbedCostM = cos.filter((c) => c.status === 'Absorbed').reduce((s, c) => s + num(c.cost_impact_m), 0);
-  const openCos = cos.filter((c) => ['Anticipated', 'Under analysis', 'Priced'].includes(c.status));
+  const openCos = cos.filter((c) => ['Identified', 'Quantified', 'Submitted to client', 'In negotiation'].includes(c.status));
   const openRevM = openCos.reduce((s, c) => s + num(c.revenue_impact_m), 0);
   const expRecM = openCos.reduce((s, c) => s + num(c.revenue_impact_m) * (num(c.recovery_confidence) / 100), 0);
   const revAtRiskM = openRevM - expRecM;
 
-  const byStatus = rowsFrom(tally(cos, (c) => c.status), [...CO_STAGES, 'Rejected']);
+  const byStatus = rowsFrom(tally(cos, (c) => c.status), [...CO_STAGES, 'Withdrawn']);
   const byDriver = rowsFrom(tally(active, (c) => categorizeDriver(c.driver)));
   const bySegment = rowsFrom(tally(active, (c) => cap(projById.get(c.project_id)?.segment ?? '')));
 
@@ -83,7 +83,7 @@ export default async function ChangesAnalyticsPage({ params }: { params: Promise
       <Kpis
         items={[
           { label: 'Total change orders', value: total },
-          { label: 'Executed', value: executed, tone: 'ok' },
+          { label: 'Approved', value: executed, tone: 'ok' },
           { label: 'In pipeline', value: pending, tone: pending > 0 ? 'warn' : undefined },
           { label: 'Cumulative revenue', value: m(cumRevM) },
           { label: 'Net margin add', value: m(netMarginM), tone: netMarginM >= 0 ? 'ok' : 'warn' },

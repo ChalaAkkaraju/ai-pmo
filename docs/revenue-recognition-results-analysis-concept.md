@@ -1,6 +1,6 @@
 # Revenue Recognition
 
-## How AI PMO decides what you've actually earned (IFRS 15 / Results Analysis)
+## How AI PMO shows what you've actually earned (IFRS 15 / Results Analysis)
 
 *Business Edition · Chapter A7 — pairs with the Technical Edition's results-analysis library*
 
@@ -45,17 +45,17 @@ different audiences. A project that is 60% complete by physical progress might
 recognise revenue at 71% on a cost basis. **Neither is wrong.** Treating them as
 interchangeable is the classic error that AI PMO is built to avoid — which is
 why the app labels the Results Analysis panel "independent of the managerial
-earned value on the EV tab," and computes it from its own posted figures rather
+earned value on the EV tab," and builds it from the posted Results Analysis figures rather
 than reusing the earned-value percentage.
 
 ## The method: cost-based percentage-of-completion
 
-AI PMO recognises revenue **over time** using the **cost-based
-percentage-of-completion (POC)** method — the same mechanism SAP exposes as
-*Results Analysis*. In plain terms: you recognise revenue in proportion to the
+Revenue is recognised **over time** using the **cost-based
+percentage-of-completion (POC)** method — the mechanism SAP PS runs as
+*Results Analysis*. AI PMO does not perform the recognition itself — it displays the figure the system of record (SAP PS) posts, then explains the method and reconciles it against billing. In plain terms: revenue is recognised in proportion to the
 cost you have incurred against the total cost you expect to incur.
 
-The method works phase by phase (at the WBS level), then rolls up:
+Results Analysis applies the method phase by phase (at the WBS level); AI PMO reads the posted figures and rolls them up:
 
 1. **Percentage of completion.** For each phase,
    *POC = actual cost to date ÷ planned (or expected) cost*, capped at 100%.

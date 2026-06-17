@@ -96,7 +96,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
   const changeOrders = (changeOrdersRes.data ?? []) as Array<{ project_id: string; status: string; revenue_impact_m: number | string | null; margin_realized_pct: number | string | null; cost_impact_m: number | string | null; recovery_confidence: number | string | null; co_id: string | null; scope_summary: string | null; driver: string | null }>;
 
   // Change exposure: absorbed (unfunded cost eaten) + revenue-at-risk (open trends unlikely to recover)
-  const OPEN_CO_STATUS = ['Anticipated', 'Under analysis', 'Priced'];
+  const OPEN_CO_STATUS = ['Identified', 'Quantified', 'Submitted to client', 'In negotiation'];
   let coAbsorbedM = 0, openTrendRevM = 0, expectedRecoveryM = 0;
   for (const c of changeOrders) {
     if (c.status === 'Absorbed') coAbsorbedM += Number(c.cost_impact_m) || 0;
@@ -208,7 +208,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
     let coValue = 0, coInFlight = 0;
     for (const c of changeOrders) {
       coValue += (Number(c.revenue_impact_m) || 0) * 1_000_000;
-      if (c.status === 'Anticipated' || c.status === 'Under analysis' || c.status === 'Priced') coInFlight++;
+      if (c.status === 'Identified' || c.status === 'Quantified' || c.status === 'Submitted to client' || c.status === 'In negotiation') coInFlight++;
     }
     for (const po of pos) {
       if (!activeIds.has(po.project_id) || po.status === 'Closed') continue;
@@ -255,7 +255,7 @@ export default async function RoleLandingPage({ params }: PageProps) {
         marginSum += Number(c.margin_realized_pct);
         marginN++;
       }
-      if (c.status === 'Under analysis' || c.status === 'Priced') inFlight++;
+      if (c.status === 'Quantified' || c.status === 'Submitted to client' || c.status === 'In negotiation') inFlight++;
     }
     const avgMargin = marginN > 0 ? marginSum / marginN : 0;
     roleKpis = {

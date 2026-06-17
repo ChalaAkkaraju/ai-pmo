@@ -242,7 +242,7 @@ const changeOrder = {
   revenue_impact_m: 1.4,
   schedule_impact_days: 0,
   margin_realized_pct: 8.5,
-  status: 'Complete' as const,
+  status: 'Approved' as const,
   approval_routing: 'Director (per charter §11; cost $1.28M within Director authority).',
   executed_week: 44,
   four_frame_analysis: {

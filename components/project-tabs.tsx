@@ -179,7 +179,7 @@ export function ProjectTabs({
         <TabTrigger value="resources" label="Resources" count={resourceLoad.roles.length} />
         <span className="mx-2 self-center text-muted-foreground/40">|</span>
         <TabTrigger value="risks" label="Risks & issues" count={data.risks.length + data.issues.length} />
-        <TabTrigger value="cos" label="Changes" count={data.change_orders.length} />
+        <TabTrigger value="cos" label="Changes & trends" count={data.change_orders.length} />
         <TabTrigger value="variance" label="Variance" count={data.variance_reports.length} />
         <TabTrigger value="planning" label="Planning" count={planningCount} dimWhenEmpty />
       </Tabs.List>

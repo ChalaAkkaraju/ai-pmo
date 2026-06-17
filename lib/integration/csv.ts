@@ -317,7 +317,7 @@ export function parseChangeOrderCsv(text: string): { rows: SapChangeOrderDTO[]; 
       RevenueImpactM: toNum(field(header, v, 'revenue_impact_m')) ?? 0,
       ScheduleImpactDays: toNum(field(header, v, 'schedule_impact_days')) ?? 0,
       MarginRealizedPct: toNum(field(header, v, 'margin_realized_pct')),
-      COStatus: field(header, v, 'status') || 'Under analysis',
+      COStatus: field(header, v, 'status') || 'Quantified',
       ApprovalRouting: field(header, v, 'approval_routing') || null,
       ExecutedPeriodWeek: toNum(field(header, v, 'executed_week')),
     });

@@ -102,7 +102,7 @@ export interface Risk {
 }
 
 export type CODriver = 'Client-driven' | 'Northwood-driven' | 'External regulatory' | 'Scope clarification';
-export type COStatus = 'Anticipated' | 'Under analysis' | 'Priced' | 'Executed' | 'Complete' | 'Rejected';
+export type COStatus = 'Identified' | 'Quantified' | 'Submitted to client' | 'In negotiation' | 'Approved' | 'Absorbed' | 'Withdrawn';
 
 export interface ChangeOrder {
   id: string;
@@ -123,6 +123,8 @@ export interface ChangeOrder {
     client_position: string;
     northwood_acceptance: string;
   } | null;
+  source_issue_id?: string | null;
+  source_risk_id?: string | null;
   created_at: string;
 }
 

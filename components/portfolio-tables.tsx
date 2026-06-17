@@ -401,7 +401,7 @@ export function PortfolioChangeOrdersTable({ token, rows }: { token: string; row
   ];
   const filters: FilterDef<PortfolioChangeOrderRow>[] = [
     { key: 'segment', label: 'Segment', options: SEGMENT_OPTS, match: (r, v) => r.segment === v },
-    { key: 'status', label: 'Status', options: ['Anticipated', 'Under analysis', 'Priced', 'Executed', 'Complete', 'Rejected'].map((x) => ({ value: x, label: x })), match: (r, v) => r.status === v },
+    { key: 'status', label: 'Status', options: ['Identified', 'Quantified', 'Submitted to client', 'In negotiation', 'Approved', 'Absorbed', 'Withdrawn'].map((x) => ({ value: x, label: x })), match: (r, v) => r.status === v },
     { key: 'driver', label: 'Driver', options: CO_DRIVER_OPTS, match: (r, v) => r.driver === v },
   ];
   return (

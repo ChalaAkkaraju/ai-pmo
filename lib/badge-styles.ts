@@ -65,10 +65,10 @@ export function actionBadge(raw: string): string {
 /** Change-order lifecycle badge. */
 export function changeOrderBadge(raw: string): string {
   const s = (raw ?? '').toLowerCase();
-  if (s === 'executed' || s === 'complete') return 'bg-emerald-100 text-emerald-800';
+  if (s === 'approved') return 'bg-emerald-100 text-emerald-800';
   if (s === 'absorbed') return 'bg-orange-100 text-orange-800';
-  if (s === 'rejected' || s === 'withdrawn') return 'bg-slate-200 text-slate-600';
-  if (s === 'priced' || s === 'under analysis' || s === 'anticipated') return 'bg-blue-100 text-blue-900';
+  if (s === 'withdrawn') return 'bg-slate-200 text-slate-600';
+  if (s === 'submitted to client' || s === 'in negotiation' || s === 'quantified' || s === 'identified') return 'bg-blue-100 text-blue-900';
   return 'bg-slate-100 text-slate-700';
 }
 

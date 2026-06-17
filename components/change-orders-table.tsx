@@ -22,6 +22,8 @@ interface ChangeOrder {
     northwood_acceptance: string;
   } | null;
   created_via?: string | null;
+  source_issue_id?: string | null;
+  source_risk_id?: string | null;
 }
 
 
@@ -52,7 +54,7 @@ export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Change order register</h4>
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Change &amp; trend register</h4>
         <span className="text-[11px] text-muted-foreground">{cos.length} change order{cos.length === 1 ? '' : 's'}</span>
       </div>
       <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
@@ -97,10 +99,16 @@ export function ChangeOrdersTable({ rows }: { rows: Array<Record<string, unknown
                   {co.status === 'Absorbed' && (
                     <span className="font-medium text-orange-700">Unfunded · absorbed</span>
                   )}
-                  {co.recovery_confidence != null && ['Anticipated', 'Under analysis', 'Priced'].includes(co.status) && (
+                  {co.recovery_confidence != null && ['Identified', 'Quantified', 'Submitted to client', 'In negotiation'].includes(co.status) && (
                     <span className="inline-flex items-center gap-1">
                       <span className="text-muted-foreground/70">Recovery:</span>
                       <span className="font-medium text-foreground/80">{co.recovery_confidence}%</span>
+                    </span>
+                  )}
+                  {(co.source_risk_id || co.source_issue_id) && (
+                    <span className="inline-flex items-center gap-1" title="Lifecycle lineage: the risk and/or issue this change traces back to">
+                      <span className="text-muted-foreground/70">Traces to:</span>
+                      <span className="font-medium font-mono text-foreground/80">{[co.source_risk_id, co.source_issue_id].filter(Boolean).join(' \u2192 ')}</span>
                     </span>
                   )}
                 </div>

@@ -82,7 +82,7 @@ export function EntryDraftPanel({ entry, token, projectCode, alreadySubmittedCod
             <div className="col-span-2"><label className={labelCls}>Driver</label><input className={inputCls} value={form.driver} onChange={(e) => set('driver', e.target.value)} /></div>
             <div><label className={labelCls}>Cost impact ($M)</label><input className={inputCls} type="number" step="0.1" value={form.cost_impact_m} onChange={(e) => set('cost_impact_m', Number(e.target.value))} /></div>
             <div><label className={labelCls}>Revenue impact ($M)</label><input className={inputCls} type="number" step="0.1" value={form.revenue_impact_m} onChange={(e) => set('revenue_impact_m', Number(e.target.value))} /></div>
-            <div className="col-span-2"><label className={labelCls}>Status</label><select className={inputCls} value={form.status} onChange={(e) => set('status', e.target.value)}><option>Anticipated</option><option>Under analysis</option><option>Priced</option><option>Executed</option><option>Complete</option><option>Rejected</option></select></div>
+            <div className="col-span-2"><label className={labelCls}>Status</label><select className={inputCls} value={form.status} onChange={(e) => set('status', e.target.value)}><option>Identified</option><option>Quantified</option><option>Submitted to client</option><option>In negotiation</option><option>Approved</option><option>Absorbed</option><option>Withdrawn</option></select></div>
           </>
         )}
       </div>

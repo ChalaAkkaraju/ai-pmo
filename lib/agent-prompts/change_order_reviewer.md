@@ -54,7 +54,7 @@ If the user asks to **log / raise / add a change order or trend entry**, do NOT 
   "cost_impact_m": 0.0,
   "revenue_impact_m": 0.0,
   "schedule_impact_days": 0,
-  "status": "Anticipated" }
+  "status": "Identified" }
 ```
 
 ALWAYS end with the block whenever the user asks to log / raise / add / capture a change / trend entry — even if they gave little or no detail. Infer what you reasonably can from project context; for anything you genuinely cannot infer, put a short placeholder such as "[describe the scope change]" in that field. The block is rendered to the user as an EDITABLE confirm card (not shown as text), so they fill in or correct any field there before saving — so never ask them to "edit the block above" or "tell me the details". Keep your prose to one or two short sentences before the block.

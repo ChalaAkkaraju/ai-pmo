@@ -181,7 +181,7 @@ export async function loadProjectState(
       .order('risk_id', { ascending: true }),
     supabase
       .from('change_orders')
-      .select('co_id, driver, scope_summary, cost_impact_m, revenue_impact_m, schedule_impact_days, margin_realized_pct, status, approval_routing, executed_week, four_frame_analysis')
+      .select('co_id, driver, scope_summary, cost_impact_m, revenue_impact_m, schedule_impact_days, margin_realized_pct, status, approval_routing, executed_week, four_frame_analysis, source_issue_id, source_risk_id')
       .eq('project_id', project.id)
       .order('co_id', { ascending: true }),
     supabase

@@ -86,7 +86,7 @@ const CAPABILITIES = [
 const TABLE_STAKES = ['Pull cost and schedule into one view', 'Charts, roll-ups and status tables', 'Filters and drill-downs'];
 const DIFFERENTIATOR = ['Drafts the charter, WBS, schedule and budget', 'Writes the status narrative in plain language', 'Spots cross-project risk and change patterns', 'Recommends the next action to the right role', 'Every output reviewed and correctable by a human'];
 
-const AGENTS = ['Charter Drafter', 'Stakeholder Analyst', 'WBS Builder', 'Schedule Reasoner', 'Budget Builder', 'Communications Planner', 'Variance Analyst', 'Risk Analyst', 'Change Order Reviewer', 'Issue Logger', 'Portfolio Risk Reviewer', 'Status Reporter', 'Lessons-Learned Synthesiser', 'Closeout Reporter'];
+const AGENTS = ['Charter Drafter', 'Stakeholder Analyst', 'WBS Builder', 'Schedule Reasoner', 'Cost Planner', 'Communications Planner', 'Variance Analyst', 'Risk Analyst', 'Change Order Reviewer', 'Issue Logger', 'Portfolio Risk Reviewer', 'Status Reporter', 'Lessons-Learned Synthesiser', 'Closeout Reporter'];
 
 const SLIDES: Array<{ label: string; accent: string }> = [
   { label: 'Overview', accent: '#d97706' },

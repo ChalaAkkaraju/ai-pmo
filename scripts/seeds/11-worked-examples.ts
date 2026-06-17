@@ -84,7 +84,7 @@ const workedExamples: WorkedExample[] = [
     archive_path: 'p1_riverside_water/01d_schedule_analysis.md',
   },
 
-  // Budget Builder — Skyhawk
+  // Cost Planner — Skyhawk
   {
     agent_type: 'budget_builder',
     past_project: 'Skyhawk Solar',

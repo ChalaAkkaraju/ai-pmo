@@ -14,7 +14,7 @@ const TABS: Array<{ slug: string; label: string }> = [
   { slug: 'issues', label: 'Issues' },
   { slug: 'risks', label: 'Risks' },
   { slug: 'earned-value', label: 'Earned value' },
-  { slug: 'changes', label: 'Changes' },
+  { slug: 'changes', label: 'Changes & trends' },
   { slug: 'cash-flow', label: 'Cash flow' },
   { slug: 'resources', label: 'Resources' },
 ];

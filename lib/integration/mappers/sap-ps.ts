@@ -210,7 +210,7 @@ export function mapSapResultsAnalysis(dtos: SapResultsAnalysisDTO[], projectId: 
   return { rows, exceptions };
 }
 
-const CO_STATUSES = new Set(['Anticipated', 'Under analysis', 'Priced', 'Executed', 'Complete', 'Rejected']);
+const CO_STATUSES = new Set(['Identified', 'Quantified', 'Submitted to client', 'In negotiation', 'Approved', 'Absorbed', 'Withdrawn']);
 
 /** Change orders / variations — project-level (no WBS join). Validate ID + scope. */
 export function mapSapChangeOrders(dtos: SapChangeOrderDTO[], projectId: string, syncedAt: string): MapResult<ChangeOrderRow> {
@@ -235,7 +235,7 @@ export function mapSapChangeOrders(dtos: SapChangeOrderDTO[], projectId: string,
       revenue_impact_m: Number(d.RevenueImpactM) || 0,
       schedule_impact_days: Math.round(Number(d.ScheduleImpactDays) || 0),
       margin_realized_pct: d.MarginRealizedPct ?? null,
-      status: CO_STATUSES.has(d.COStatus) ? d.COStatus : 'Under analysis',
+      status: CO_STATUSES.has(d.COStatus) ? d.COStatus : 'Quantified',
       approval_routing: d.ApprovalRouting ?? null,
       executed_week: d.ExecutedPeriodWeek ?? null,
       source_system: 'SAP_PS',

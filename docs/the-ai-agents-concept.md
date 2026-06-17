@@ -24,7 +24,7 @@ Each agent does a few things well and deliberately *not* others (so it never str
 | **Stakeholder Analyst** | Who has a stake, and how to engage each | "Build the stakeholder register." |
 | **WBS Builder** | The work broken into deliverable packages | "Build the WBS to Level 1–3." |
 | **Schedule Reasoner** | Critical path, float, sequencing risk | "What's the critical path, and what's most at risk?" |
-| **Budget Builder** | Cost broken across the major categories | "Build the cost breakdown structure." |
+| **Cost Planner** | Approved/quoted cost total allocated across categories and time-phased | "Allocate the approved budget across the major cost categories." |
 | **Communications Planner** | Who hears what, how often, through which channel | "Build the comms plan." |
 | **Issue Logger** | What open issues matter most, and why | "Summarise the open issues; flag overdue high‑severity ones." |
 | **Variance Analyst** | Are we on cost and on schedule? (CPI/SPI) | "Summarise the variance position and flag concerns." |

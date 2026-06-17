@@ -46,7 +46,7 @@ const entrySchema = z.discriminatedUnion('type', [
     cost_impact_m: z.coerce.number().default(0),
     revenue_impact_m: z.coerce.number().default(0),
     schedule_impact_days: z.coerce.number().default(0),
-    status: z.enum(['Anticipated', 'Under analysis', 'Priced', 'Executed', 'Complete', 'Rejected']).default('Anticipated'),
+    status: z.enum(['Identified', 'Quantified', 'Submitted to client', 'In negotiation', 'Approved', 'Absorbed', 'Withdrawn']).default('Identified'),
   }),
 ]);
 

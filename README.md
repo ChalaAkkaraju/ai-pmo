@@ -1,6 +1,6 @@
 # AI PMO
 
-A methodology-aware, multi-agent system for EPC (engineering, procurement, construction) project-management offices. Thirteen specialist agents grounded in PMBOK 7 and a cross-cutting risk taxonomy, coordinated by a small auto-router that picks the right specialist from natural-language prompts. Built as a personal learning project; engineered to the standard a real commercial product would require, minus the go-to-market layer.
+A methodology-aware, multi-agent system for EPC (engineering, procurement, construction) project-management offices. Fifteen specialist agents grounded in PMBOK 7 and a cross-cutting risk taxonomy, coordinated by a small auto-router that picks the right specialist from natural-language prompts. Built as a personal learning project; engineered to the standard a real commercial product would require, minus the go-to-market layer.
 
 > **Personal portfolio project.** This is a self-directed build by [Chala Akkaraju](https://github.com/ChalaAkkaraju), an SAP PS solution architect pivoting into AI Solutions Architecture. The deliberate scope is to demonstrate end-to-end enterprise-AI engineering competence — architecture, data, evaluation, reliability — without commercialisation work. Not affiliated with any employer.
 
@@ -8,7 +8,7 @@ A methodology-aware, multi-agent system for EPC (engineering, procurement, const
 
 The demo lets up to ten colleagues across a realistic PMO org (PMO Director, Procurement, Risk, Sponsor, Commercial, Project Controls, Program Manager, Engineering Manager, Construction Manager, HSE Manager) collaboratively interact with a portfolio of 100 active and historical capital projects across four industry segments (renewables, water, industrial, power). Each colleague accesses the system via a unique URL token; they share the same project state with role-appropriate filtering; updates from any colleague's agent invocation propagate to others in real time.
 
-Behind the chat surface, prompts route to one of thirteen specialist agents — Charter Drafter, Stakeholder Analyst, WBS Builder, Schedule Reasoner, Budget Builder, Communications Planner, Issue Logger, Variance Analyst, Change Order Reviewer, Risk Analyst, Lessons-Learned Synthesiser, Closeout Reporter, Portfolio Risk Reviewer. The router (a cheap Claude Haiku 4.5 classifier) picks the right specialist from the user's prompt; the specialist itself (Claude Opus 4.7 via OpenRouter) generates the grounded response using the project's actual data passed in via context.
+Behind the chat surface, prompts route to one of fifteen specialist agents — Charter Drafter, Stakeholder Analyst, WBS Builder, Schedule Reasoner, Cost Planner, Communications Planner, Issue Logger, Variance Analyst, Change Order Reviewer, Risk Analyst, Lessons-Learned Synthesiser, Closeout Reporter, Portfolio Risk Reviewer, Status Reporter, Cost Controller. The router (a cheap Claude Haiku 4.5 classifier) picks the right specialist from the user's prompt; the specialist itself (Claude Opus 4.7 via OpenRouter) generates the grounded response using the project's actual data passed in via context.
 
 ## Headline features
 
@@ -18,7 +18,7 @@ Behind the chat surface, prompts route to one of thirteen specialist agents — 
 - **Per-project visualizations**: 3×3 risk heat-map, variance-trend chart with contingency burn-down, Gantt-style schedule strip, hierarchical WBS tree.
 - **Polished printable report viewer** at `/access/<token>/report/<output-id>`. Two-tier layout (Summary + Full detail), letterhead with brand mark, project context strip, request quote, footer. **Searchable PDF download** via a server-side Puppeteer route — Chromium headless renders the same page server-side and captures it as a real PDF with selectable, copyable, searchable text (no rasterization).
 - **Quick + full response modes.** Chat-panel responses default to a 250-word brief (~$0.06, ~12s). Opening the polished report regenerates in long-form (~$0.30, ~30s) and caches per browser session.
-- **Agent catalog page** at `/access/<token>/agents` — documents what each of the 13 specialists does and doesn't do, scope, sample prompts, methodology grounding.
+- **Agent catalog page** at `/access/<token>/agents` — documents what each of the 15 specialists does and doesn't do, scope, sample prompts, methodology grounding.
 - **Empirical reliability evaluation.** Formal consistency test of the Risk Analyst agent (5 runs, same prompt, same project): 5/5 decision agreement, 5/5 factual agreement, healthy prose variation. Full methodology + raw outputs at [`docs/eval/consistency-2026-05-27/`](./docs/eval/consistency-2026-05-27/).
 
 ## Architecture
@@ -60,13 +60,13 @@ All ten roles are portfolio-level — each colleague sees the full ~100-project 
 
 | Role | Scope | Agents available |
 |---|---|---|
-| Senior PM (PMO Director) | All 100 projects + all artefacts | All 13 agents |
+| Senior PM (PMO Director) | All 100 projects + all artefacts | All 15 agents |
 | Portfolio Procurement Strategist | Procurement slice across portfolio | Risk Analyst, Variance Analyst, Change Order Reviewer, Portfolio Risk Reviewer |
 | Portfolio Risk Analyst | Risks + cross-cutting patterns across portfolio | Risk Analyst, Portfolio Risk Reviewer, Lessons-Learned Synthesiser, Issue Logger |
 | VP Sponsor | Executive view + status reports + change orders (read-only) | Closeout Reporter, Portfolio Risk Reviewer |
 | Commercial Manager | Change-order four-frame dynamics + margin protection | Change Order Reviewer, Variance Analyst |
-| Project Controls Manager | Cost & schedule analytics — CPI/SPI health, baseline reasoning | Variance Analyst, Schedule Reasoner, Budget Builder |
-| Program Manager — Renewables | Multi-project programme oversight + escalations | Stakeholder Analyst, Schedule Reasoner, Budget Builder, Communications Planner, Issue Logger, Variance Analyst, Change Order Reviewer, Risk Analyst, Portfolio Risk Reviewer, Closeout Reporter |
+| Project Controls Manager | Cost & schedule analytics — CPI/SPI health, baseline reasoning | Variance Analyst, Schedule Reasoner, Cost Planner |
+| Program Manager — Renewables | Multi-project programme oversight + escalations | Stakeholder Analyst, Schedule Reasoner, Cost Planner, Communications Planner, Issue Logger, Variance Analyst, Change Order Reviewer, Risk Analyst, Portfolio Risk Reviewer, Closeout Reporter |
 | Engineering Manager | Early-phase planning + engineering risk identification | Charter Drafter, Stakeholder Analyst, WBS Builder, Risk Analyst |
 | Construction Manager | Execution-phase site issues + variance + field change orders | Issue Logger, Variance Analyst, Change Order Reviewer |
 | HSE Manager | Safety incidents + cross-cutting HSE pattern detection | Issue Logger, Portfolio Risk Reviewer |
@@ -114,7 +114,7 @@ app/                  Next.js App Router routes
 
 components/           React components (dashboard, widget, charts, report)
 lib/
-├── agent-prompts/      13 specialist agent system prompts (.md)
+├── agent-prompts/      15 specialist agent system prompts (.md)
 ├── agent-router.ts     Haiku classifier — picks specialist from prompt
 ├── agent-runner.ts     End-to-end orchestrator (validate, route, ground, call, write)
 ├── agent-context.ts    Builds the LLM input from project state + worked example

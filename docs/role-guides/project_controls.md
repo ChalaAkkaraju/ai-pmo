@@ -17,7 +17,7 @@ You interact with everything through one place — the **Ask AI Assistant** (bot
 |---|---|---|
 | **Variance Analyst** | CPI/SPI, cost & schedule variance, contingency, projected margin. | "Summarise the variance position and flag concerns." |
 | **Schedule Reasoner** | Reasons about the critical path, float and sequencing risk. | "What's the critical path, and what's most at risk?" |
-| **Budget Builder** | Allocates budget across the cost categories. | "Build the cost breakdown structure." |
+| **Cost Planner** | Allocates an approved or quoted cost total across the cost categories and time-phases it. | "Allocate the approved budget across the major cost categories." |
 | **Cost Controller** | Commitment, cost-to-date, cost by element, earned-vs-billed. | "Give me the cost and commitment position." |
 
 
@@ -49,7 +49,7 @@ The assistant shows role-aware starter chips when the chat is empty; these are t
 - "Summarise the variance position and flag any threshold breaches."
 - "What's the critical path, and which deliverables carry the most schedule risk?"
 - "Give me the cost and commitment position — cost-to-date and open commitment."
-- "Build the cost breakdown structure for this project."
+- "Allocate the approved budget across the major cost categories."
 
 # A worked example
 

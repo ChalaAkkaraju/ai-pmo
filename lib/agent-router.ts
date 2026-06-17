@@ -30,7 +30,7 @@ const AGENT_DESCRIPTIONS: Record<AgentType, string> = {
   schedule_reasoner:
     'Reasons about the project schedule: critical path, milestones, float, sequencing logic, schedule risks.',
   budget_builder:
-    'Builds the cost breakdown structure: allocation across engineering / procurement / construction / commissioning / contingency / management reserve.',
+    'Builds the project cost plan: allocates an approved or quoted cost total across categories (engineering / procurement / construction / commissioning / contingency / management reserve) and time-phases it; does not estimate the total from scratch.',
   communications_planner:
     'Produces the communications management plan: stakeholder needs, cadence, channels, escalation paths, reporting templates.',
   issue_logger:

@@ -28,7 +28,7 @@ export function ChangeOrdersPanel({ rows, soldContract, baseMarginPct }: { rows:
   const maxStage = Math.max(1, ...stages.map((s) => s.revenueM));
   const maxDrv = Math.max(1, ...drivers.map((d) => d.revenueM));
   const STAGE_COLOR: Record<string, string> = {
-    Anticipated: 'bg-slate-300', 'Under analysis': 'bg-sky-300', Priced: 'bg-amber-300', Executed: 'bg-emerald-400', Complete: 'bg-emerald-600',
+    Identified: 'bg-slate-300', Quantified: 'bg-sky-300', 'Submitted to client': 'bg-amber-300', 'In negotiation': 'bg-amber-400', Approved: 'bg-emerald-500',
   };
 
   return (

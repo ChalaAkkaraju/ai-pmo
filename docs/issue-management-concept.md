@@ -96,3 +96,14 @@ queue legible and the urgent visible.
 *Cross-reference: implemented in the Technical Edition's issue-metrics library
 (age vs severity-based SLA → On track / At risk / Overdue; priority = severity ×
 age; escalation rule; MTTR). Receives materialised risks from A11.*
+
+
+## The full lifecycle — and why it is not a pipeline
+
+Risk, issue and change are three points on one continuum, but the path between them is *conditional*, not a fixed sequence:
+
+> **Risk** (it *might* happen) → *materialises* → **Issue** (it *has* happened) **and a Trend** (the cost/schedule movement it creates) → *worked* → a **funded change order** (the customer pays) **or** an **absorbed, unfunded change** (a straight margin hit).
+
+Every step is optional. Most risks never materialise; many issues are **born directly**, with no prior risk; and some trends arise on their own. So the registers each stand alone — the chain exists only where a real hand-off happened, and a database that *enforced* it would be wrong.
+
+AI PMO captures that lineage in the data without enforcing it: an issue points back to its risk (`issues.linked_risk`, shown as *"Materialised from risk"*), and a change/trend points back to the issue and/or risk it came from (`change_orders.source_risk_id` / `source_issue_id`, shown as a *"Traces to …"* chip). The downstream half — trend resolving into a funded or absorbed change — is covered in the Change & trend chapter.

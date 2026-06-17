@@ -162,11 +162,11 @@ export class SapPsMockAdapter implements SapConnector {
       MarginRealizedPct: margin, COStatus: status, ApprovalRouting: routing, ExecutedPeriodWeek: wk,
     });
     return [
-      co(1, 'Owner-requested scope', 'Additional grid connection bay + protection upgrade', baseM * 0.025, baseM * 0.031, 21, 'Executed', 'Steering committee', 19, 41),
-      co(2, 'Site condition', 'Unforeseen ground conditions — extra piling to civil works', baseM * 0.018, baseM * 0.012, 35, 'Priced', 'Project board', null, null),
-      co(3, 'Regulatory', 'Revised environmental permit — added monitoring scope', baseM * 0.006, baseM * 0.007, 0, 'Under analysis', 'Commercial review', null, null),
+      co(1, 'Owner-requested scope', 'Additional grid connection bay + protection upgrade', baseM * 0.025, baseM * 0.031, 21, 'Approved', 'Steering committee', 19, 41),
+      co(2, 'Site condition', 'Unforeseen ground conditions — extra piling to civil works', baseM * 0.018, baseM * 0.012, 35, 'Submitted to client', 'Project board', null, null),
+      co(3, 'Regulatory', 'Revised environmental permit — added monitoring scope', baseM * 0.006, baseM * 0.007, 0, 'In negotiation', 'Commercial review', null, null),
       // Malformed CO — no document ID -> exception queue.
-      { ChangeOrderID: '', ChangeDriver: 'Owner change', ScopeDescription: 'Draft variation pending pricing', CostImpactM: 0.4, RevenueImpactM: 0.5, ScheduleImpactDays: 0, MarginRealizedPct: null, COStatus: 'Anticipated', ApprovalRouting: null, ExecutedPeriodWeek: null },
+      { ChangeOrderID: '', ChangeDriver: 'Owner change', ScopeDescription: 'Draft variation pending pricing', CostImpactM: 0.4, RevenueImpactM: 0.5, ScheduleImpactDays: 0, MarginRealizedPct: null, COStatus: 'Identified', ApprovalRouting: null, ExecutedPeriodWeek: null },
     ];
   }
 }

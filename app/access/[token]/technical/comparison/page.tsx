@@ -21,7 +21,7 @@ const CLOSE_CLS: Record<Close, string> = {
 };
 
 const COMPARE: Array<{ ours: string; sap: string; close: Close; note: string }> = [
-  { ours: 'Charter Drafter · WBS Builder · Budget Builder', sap: 'Project Setup Agent (S/4HANA Cloud Public Edition)', close: 'Closest match', note: 'Same intent — speed up standing a project up with AI. SAP builds the project inside S/4 EPPM from templates; AI PMO authors a scope-true WBS, charter and budget and books it.' },
+  { ours: 'Charter Drafter · WBS Builder · Cost Planner', sap: 'Project Setup Agent (S/4HANA Cloud Public Edition)', close: 'Closest match', note: 'Same intent — speed up standing a project up with AI. SAP builds the project inside S/4 EPPM from templates; AI PMO authors a scope-true WBS, charter and cost plan and books it.' },
   { ours: 'Variance Analyst · Portfolio Risk Reviewer', sap: 'Project budget analytics + portfolio assistant (Joule for EPPM)', close: 'Partial', note: 'SAP surfaces schedule/cost variance and earned-value KPIs natively in S/4 and Joule summarises them — but only when cost and schedule both live inside S/4.' },
   { ours: 'Change Order Reviewer', sap: 'Change Record Management Agent', close: 'Name-only', note: 'SAP’s is engineering change records (supply chain / product) — not commercial change orders and their margin impact.' },
   { ours: 'Schedule Reasoner · Risk Analyst · Status Reporter · Stakeholder Analyst · Communications Planner · Issue Logger · Lessons-Learned Synthesiser · Closeout Reporter', sap: '— no SAP agent —', close: 'No equivalent', note: 'PMBOK process-area agents that are not core S/4 transactions, so SAP does not ship them.' },

@@ -19,7 +19,7 @@ const A = {
   stakeholder_analyst: ['Stakeholder Analyst', 'Builds the stakeholder register and engagement approach.', 'Build the stakeholder register.'],
   wbs_builder: ['WBS Builder', 'Breaks scope into a deliverable WBS (Level 1–3).', 'Build the WBS to Level 1–3.'],
   schedule_reasoner: ['Schedule Reasoner', 'Reasons about the critical path, float and sequencing risk.', "What's the critical path, and what's most at risk?"],
-  budget_builder: ['Budget Builder', 'Allocates budget across the cost categories.', 'Build the cost breakdown structure.'],
+  budget_builder: ['Cost Planner', 'Allocates an approved or quoted cost total across the cost categories and time-phases it.', 'Allocate the approved budget across the major cost categories.'],
   communications_planner: ['Communications Planner', 'Builds the communications plan.', 'Build the comms plan.'],
   issue_logger: ['Issue Logger', 'Raises issues and triages the log (severity, age, ownership).', 'Summarise the open issues; flag overdue high-severity ones.'],
   variance_analyst: ['Variance Analyst', 'CPI/SPI, cost & schedule variance, contingency, projected margin.', 'Summarise the variance position and flag concerns.'],

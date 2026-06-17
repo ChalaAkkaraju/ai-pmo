@@ -30,7 +30,7 @@ const AGENT_LABELS: Record<string, string> = {
   stakeholder_analyst: 'Stakeholder Analyst',
   wbs_builder: 'WBS Builder',
   schedule_reasoner: 'Schedule Reasoner',
-  budget_builder: 'Budget Builder',
+  budget_builder: 'Cost Planner',
   communications_planner: 'Communications Planner',
   issue_logger: 'Issue Logger',
   variance_analyst: 'Variance Analyst',

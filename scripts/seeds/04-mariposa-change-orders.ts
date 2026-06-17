@@ -19,7 +19,7 @@ const CO001 = {
   revenue_impact_m: 0.85,
   schedule_impact_days: 0,
   margin_realized_pct: 8.2,
-  status: 'Complete' as const,
+  status: 'Approved' as const,
   approval_routing:
     'Director (per charter §11: PM up to $100k, Director up to $1M, Sponsor above; CO-001 cost-side $0.78M sits within Director authority). Sponsor notified for monthly portfolio dashboard awareness; CFO not in routing path.',
   executed_week: 40,

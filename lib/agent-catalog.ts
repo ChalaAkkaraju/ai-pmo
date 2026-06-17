@@ -124,22 +124,25 @@ export const AGENT_CATALOG: AgentCatalogEntry[] = [
   },
   {
     agent_type: 'budget_builder',
-    name: 'Budget Builder',
-    purpose: 'Builds the cost breakdown structure with category allocation and cost-loading.',
+    name: 'Cost Planner',
+    purpose: 'Builds the project cost plan — allocates an approved or quoted cost total across the WBS and time-phases it.',
     plain:
-      'This agent lays out where the money goes — allocating your approved budget across the major cost categories: engineering, procurement, construction, commissioning, plus contingency and management reserve. It also documents the assumptions behind how spending is expected to flow over time, and flags any allocation it had to estimate so you can confirm it. You get a clear cost breakdown to review — not a finished financial model.',
+      'This agent lays out where the money goes. Taking the project’s approved or quoted cost total as the control figure, it allocates that total across the major cost categories — engineering, procurement, construction, commissioning, plus contingency and management reserve — and documents how spend is expected to flow over time (the cost baseline). It does not estimate the total from scratch: in a revenue project that figure comes from the quotation, so the agent structures and time-phases it for review and flags any allocation it had to infer. You get a clear cost plan to review — not a finished financial model, and not a substitute for the estimate.',
     scope: 'project',
     does: [
-      'Allocates budget across engineering / procurement / construction / commissioning / contingency / management reserve',
-      'Documents cost-loading curve assumptions',
+      'Allocates the approved or quoted cost total across categories and WBS branches',
+      'Time-phases the plan into a cost baseline (cost-loading curve)',
+      'Reasons contingency against the risk register',
       'Flags inferred allocations for PM review',
     ],
     doesNot: [
-      'Doesn\'t generate ERP cost codes',
-      'Doesn\'t model future actuals (no forecast engine)',
+      'Does not estimate the cost total from scratch (that comes from the quotation or estimate)',
+      'Does not generate ERP cost codes',
+      'Does not model future actuals (no forecast engine)',
     ],
-    samplePrompt: 'Build the cost breakdown structure for this project — allocate budget across major categories.',
-    methodology: 'Follows the PMBOK cost-management standard, using Northwood’s cost-breakdown template.',
+    samplePrompt: 'Allocate the approved budget across the major cost categories and time-phase it.',
+    methodology:
+      'Follows the PMBOK cost-management standard; turns an approved or quoted total into a time-phased cost plan (cost baseline), using Northwood’s cost-plan template.',
   },
   {
     agent_type: 'communications_planner',

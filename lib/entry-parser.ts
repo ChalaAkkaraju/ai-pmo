@@ -53,7 +53,7 @@ const changeSchema = z.object({
   cost_impact_m: z.coerce.number().optional().default(0),
   revenue_impact_m: z.coerce.number().optional().default(0),
   schedule_impact_days: z.coerce.number().optional().default(0),
-  status: z.enum(['Anticipated', 'Under analysis', 'Priced', 'Executed', 'Complete', 'Rejected']).optional().default('Anticipated'),
+  status: z.enum(['Identified', 'Quantified', 'Submitted to client', 'In negotiation', 'Approved', 'Absorbed', 'Withdrawn']).optional().default('Identified'),
 });
 
 const entrySchema = z.discriminatedUnion('type', [riskSchema, issueSchema, changeSchema]);

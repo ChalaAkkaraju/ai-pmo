@@ -96,3 +96,14 @@ Three reasons this model earns its place:
 1. **Margin protection.** Absorbed cost is the silent killer of EPC margin. Making it a first‑class, named, quantified category — instead of an unexplained gap in the cost forecast — is what lets a team see it early and act.
 2. **Forecast honesty.** Recognising cost when it is foreseen and revenue only when it is probable produces an EAC and a recognised‑revenue position that survive audit, rather than an optimistic one that unwinds later.
 3. **A single source of truth across the lifecycle.** Risk, trend, and change order become states of one record, not three disconnected logs — so nothing falls between the registers, and the story of how margin moved from as‑sold to as‑built is complete.
+
+
+## Where it sits in the lifecycle, and the lineage we keep
+
+A trend is the **middle** of a longer, conditional lifecycle — not the start of it:
+
+> **Risk** (might happen) → *materialises* → **Issue** (has happened) **+ Trend** (the cost/schedule movement) → *worked* → **funded change order** (customer pays) **or** **absorbed, unfunded change** (margin hit).
+
+The chain is conditional at every step: most risks never materialise, many issues are born directly with no prior risk, and a trend can arise on its own. Each register stands alone; the lifecycle is a set of optional hand-offs, never a forced pipeline.
+
+AI PMO records the hand-offs where they happen, so a commercial lead can trace a change back to its origin: a change/trend carries `source_risk_id` / `source_issue_id` (rendered as a *"Traces to R-009 → I-021"* chip), complementing the upstream `issues.linked_risk` link described in the Issue-management chapter. Lineage is captured, never enforced.
