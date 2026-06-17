@@ -131,6 +131,8 @@ async function build(name, fmFile, order) {
   if (PYTHON) {
     try { await run(PYTHON, [path.resolve('scripts', 'fix-table-breaks.py'), `AI-PMO-${name}-Edition.docx`], { cwd: DOCS }); }
     catch (e) { console.log(`  (table-break fix skipped: ${e.message})`); }
+    try { await run(PYTHON, [path.resolve('scripts', 'recolour-swatches.py'), `AI-PMO-${name}-Edition.docx`], { cwd: DOCS }); }
+    catch (e) { console.log(`  (swatch recolour skipped: ${e.message})`); }
   }
   if (PYTHON) {
     const coverPng = `book/figures/cover-${name.toLowerCase()}.png`;
