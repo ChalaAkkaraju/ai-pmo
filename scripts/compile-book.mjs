@@ -129,6 +129,10 @@ async function build(name, fmFile, order) {
   await writeFile(path.join(DOCS, md), out);
   await run('pandoc', [md, '--toc', '--toc-depth=2', '--reference-doc', '_reference.docx', '--lua-filter', '_keyword.lua', '--lua-filter', '_callouts.lua', '--lua-filter', '_figures.lua', '--resource-path', ['.', path.relative(DOCS, PARENT)].join(path.delimiter), '-o', `AI-PMO-${name}-Edition.docx`], { cwd: DOCS });
   if (PYTHON) {
+    try { await run(PYTHON, [path.resolve('scripts', 'fix-table-breaks.py'), `AI-PMO-${name}-Edition.docx`], { cwd: DOCS }); }
+    catch (e) { console.log(`  (table-break fix skipped: ${e.message})`); }
+  }
+  if (PYTHON) {
     const coverPng = `book/figures/cover-${name.toLowerCase()}.png`;
     try {
       await run(PYTHON, [path.resolve('scripts', 'add_cover.py'), `AI-PMO-${name}-Edition.docx`, coverPng], { cwd: DOCS });
