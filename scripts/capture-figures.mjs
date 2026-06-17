@@ -66,9 +66,22 @@ async function capture(page, el, target) {
   }
 }
 
+// Hide UI chrome that should not appear in book figures: the floating "Ask AI
+// Assistant" widget (marked .no-print) and the "← Dashboard" back-links (which
+// all point at the access-token root). Re-injected after every navigation
+// because each page load drops previously-added styles.
+async function hideChrome(page) {
+  const t = TOKEN, e = encodeURIComponent(TOKEN);
+  await page.addStyleTag({ content:
+    `.no-print{display:none !important}\n` +
+    `a[href="/access/${t}"],a[href="/access/${t}/"],a[href="/access/${e}"],a[href="/access/${e}/"]{display:none !important}`
+  }).catch(() => {});
+}
+
 async function goto(page, rel) {
   const url = `${BASE}/access/${encodeURIComponent(TOKEN)}${rel}`;
   await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+  await hideChrome(page);
 }
 
 async function shoot(page, selector, file) {

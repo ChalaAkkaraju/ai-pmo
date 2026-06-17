@@ -28,6 +28,14 @@ const ROLES = (process.env.ROLES ||
   'demo-pm,demo-procurement,demo-risk,demo-sponsor,demo-commercial,demo-project-controls,demo-program-manager,demo-engineering-manager,demo-construction-manager,demo-hse-manager'
 ).split(',').map((r) => r.trim()).filter(Boolean);
 
+async function hideChrome(page, token) {
+  const t = token, e = encodeURIComponent(token);
+  await page.addStyleTag({ content:
+    `.no-print{display:none !important}\n` +
+    `a[href="/access/${t}"],a[href="/access/${t}/"],a[href="/access/${e}"],a[href="/access/${e}/"]{display:none !important}`
+  }).catch(() => {});
+}
+
 async function main() {
   await mkdir(OUT, { recursive: true });
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
@@ -43,6 +51,7 @@ async function main() {
     try {
       await page.goto(`${BASE}/access/${encodeURIComponent(token)}`, { waitUntil: 'networkidle0', timeout: 30000 });
       await new Promise((r) => setTimeout(r, 900));
+      await hideChrome(page, token);
       const el = await page.$('main');
       const file = `role-${token}-dashboard.png`;
       if (el) { await capture(page, el, path.join(OUT, file)); console.log('saved', file); ok++; }
