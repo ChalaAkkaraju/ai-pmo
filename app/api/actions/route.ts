@@ -14,8 +14,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
+import { getSessionRole } from '@/lib/auth';
 import { isValidRoleType, getRoleDefinition } from '@/lib/roles';
-import type { Role } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,6 @@ const itemSchema = z.object({
 });
 
 const postSchema = z.object({
-  token: z.string().min(6),
   project_code: z.string().optional(),
   source_type: z.enum(['risk', 'issue']).optional(),
   raised_by_agent_type: z.string().optional(),
@@ -38,7 +37,6 @@ const postSchema = z.object({
 
 const patchSchema = z
   .object({
-    token: z.string().min(6),
     id: z.string().uuid(),
     status: z.enum(['Open', 'Acknowledged', 'In progress', 'Done']).optional(),
     response_md: z.string().min(1).optional(),
@@ -46,16 +44,6 @@ const patchSchema = z
   .refine((v) => v.status !== undefined || v.response_md !== undefined, {
     message: 'Provide at least one of status or response_md',
   });
-
-async function roleFromToken(token: string): Promise<Role | null> {
-  const supabase = createSupabaseServiceClient();
-  const { data } = await supabase
-    .from('roles')
-    .select('*')
-    .eq('token', token)
-    .maybeSingle<Role>();
-  return data ?? null;
-}
 
 export async function POST(request: NextRequest) {
   let body: z.infer<typeof postSchema>;
@@ -68,8 +56,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not parse JSON body' }, { status: 400 });
   }
 
-  const role = await roleFromToken(body.token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const role = resolved.role;
   if (!isValidRoleType(role.role_type) || !getRoleDefinition(role.role_type).can_write) {
     return NextResponse.json({ error: 'This role is read-only and cannot assign tasks.' }, { status: 403 });
   }
@@ -133,13 +122,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token') ?? '';
   const scope = request.nextUrl.searchParams.get('scope') ?? 'mine';
   const projectCode = request.nextUrl.searchParams.get('project_code') ?? undefined;
-  if (token.length < 8) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-  const role = await roleFromToken(token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const role = resolved.role;
 
   const supabase = createSupabaseServiceClient();
   let query = supabase.from('action_items').select('*').order('created_at', { ascending: false });
@@ -177,8 +165,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Could not parse JSON body' }, { status: 400 });
   }
 
-  const role = await roleFromToken(body.token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const role = resolved.role;
   if (!isValidRoleType(role.role_type) || !getRoleDefinition(role.role_type).can_write) {
     return NextResponse.json({ error: 'This role is read-only and cannot assign tasks.' }, { status: 403 });
   }

@@ -1,55 +1,69 @@
 /**
- * URL-token auth proxy for the PMO LLM Demo.
+ * Auth proxy for the AI PMO app (Next.js 16 `proxy.ts`, Node runtime).
  *
- * Routes under /access/[token] are validated by looking up the token in the
- * `roles` table. If valid, the role context is attached to the request via
- * cookies that downstream Server Components and route handlers can read.
+ * Two jobs:
+ *   1. Refresh the Supabase Auth session on every request (the @supabase/ssr
+ *      pattern) so session cookies stay valid for Server Components and route
+ *      handlers.
+ *   2. Gate protected routes: an unauthenticated request to anything that isn't
+ *      public is redirected to /login?next=<path>.
  *
- * All other routes are public.
- *
- * NOTE: This file replaces the previous `middleware.ts`. Next.js 16 renamed
- * the file convention and exported function from `middleware` to `proxy`
- * to clarify the network-boundary intent and to free `middleware` for
- * future use cases that align with Express-style request transforms.
- * See: https://nextjs.org/docs/messages/middleware-to-proxy
- *
- * Per the Next 16 docs, `proxy.ts` runs on the Node.js runtime only —
- * edge runtime is no longer supported here. This is fine for us because
- * we only set cookies; no DB calls or compute-heavy work happens at the
- * proxy layer.
+ * Identity now comes from the session, so EVERY app route requires sign-in,
+ * including the legacy /access/<token> dashboards (the token in the URL is
+ * ignored — lib/role-context resolves the role from the session). Only the
+ * landing page, /invalid, and /login are public.
  */
 
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const ACCESS_ROUTE_PREFIX = '/access/';
-const ROLE_COOKIE = 'pmo_role_token';
+/** Paths reachable without a session. Everything else requires sign-in. */
+function isPublicPath(pathname: string): boolean {
+  if (pathname === '/' || pathname === '/invalid') return true;
+  if (pathname.startsWith('/login')) return true;
+  return false;
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Only enforce token auth on /access/[token] routes
-  if (!pathname.startsWith(ACCESS_ROUTE_PREFIX)) {
-    return NextResponse.next();
-  }
+  // Response we can attach refreshed auth cookies to.
+  let response = NextResponse.next({ request });
 
-  // Extract token from URL
-  const token = pathname.split('/')[2];
-  if (!token || token.length < 6) {
-    return NextResponse.redirect(new URL('/invalid', request.url));
-  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Set the role cookie so Server Components downstream can read the token
-  // and look up role context via Supabase. Token validation itself happens
-  // server-side in the page/API handlers (not in this proxy) to keep the
-  // proxy small and database calls out of the request boundary.
-  const response = NextResponse.next();
-  response.cookies.set(ROLE_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: '/',
-  });
+  // If env is missing we can't refresh the session; fall through so the app can
+  // surface its own clear config error rather than 500-ing in the proxy.
+  if (url && anonKey) {
+    const supabase = createServerClient(url, anonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
+        },
+      },
+    });
+
+    // IMPORTANT: getUser() both validates the token and triggers the cookie
+    // refresh via setAll above. Do not remove.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user && !isPublicPath(pathname)) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = '/login';
+      redirectUrl.search = `?next=${encodeURIComponent(pathname)}`;
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
 
   return response;
 }
@@ -57,13 +71,13 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes handle their own auth)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public/* (public files)
+     * Run on everything except:
+     * - api            (route handlers do their own auth)
+     * - _next/static   (static assets)
+     * - _next/image    (image optimizer)
+     * - favicon.ico
+     * - public assets with a file extension (svg/png/jpg/…)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };

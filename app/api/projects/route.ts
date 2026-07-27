@@ -14,7 +14,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import type { Role, Segment } from '@/lib/types';
+import { getSessionRole } from '@/lib/auth';
+import type { Segment } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,6 @@ const SEGMENT_PREFIX: Record<Segment, string> = {
 const segmentSchema = z.enum(['renewables', 'water', 'industrial', 'power']);
 
 const postSchema = z.object({
-  token: z.string().min(6),
   segment: segmentSchema,
   name: z.string().min(1, 'Project name is required'),
   client: z.string().min(1, 'Customer / client is required'),
@@ -44,12 +44,6 @@ const postSchema = z.object({
   // segment-specific facts, governance, risk confirmations, preparer).
   intake: z.record(z.unknown()).optional().default({}),
 });
-
-async function roleFromToken(token: string): Promise<Role | null> {
-  const supabase = createSupabaseServiceClient();
-  const { data } = await supabase.from('roles').select('*').eq('token', token).maybeSingle<Role>();
-  return data ?? null;
-}
 
 /**
  * Compute the next available code for a segment by scanning existing codes
@@ -70,12 +64,10 @@ async function nextCodeForSegment(segment: Segment): Promise<string> {
 }
 
 export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token') ?? '';
   const segmentRaw = request.nextUrl.searchParams.get('segment') ?? '';
-  if (token.length < 8) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-  const role = await roleFromToken(token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const parsed = segmentSchema.safeParse(segmentRaw);
   if (!parsed.success) return NextResponse.json({ error: 'Unknown segment' }, { status: 400 });
@@ -95,8 +87,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not parse JSON body' }, { status: 400 });
   }
 
-  const role = await roleFromToken(body.token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const role = resolved.role;
   if (!CREATE_ROLES.has(role.role_type)) {
     return NextResponse.json(
       { error: 'Your role cannot create projects. Ask a PM or Engineering Manager.' },

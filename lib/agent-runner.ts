@@ -25,8 +25,8 @@ import { routeUserIntent, type RouterResult } from './agent-router';
 import type { AgentType, Role } from './types';
 
 export interface RunAgentInput {
-  /** Role token from the URL (identifies the colleague). */
-  token: string;
+  /** The resolved role of the authenticated colleague making the request. */
+  role: Role;
   /** Which agent to invoke. 'auto' invokes the router first to pick a specialist. */
   agent_type: AgentType | 'auto';
   /** Project code (e.g. NW-REN-2511) if the agent operates on a specific project. */
@@ -83,19 +83,8 @@ export type RunAgentResult =
 export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
   const supabase = createSupabaseServiceClient();
 
-  // ---- 1. Validate role token ----
-  const { data: role, error: roleErr } = await supabase
-    .from('roles')
-    .select('*')
-    .eq('token', input.token)
-    .maybeSingle<Role>();
-
-  if (roleErr) {
-    return { ok: false, status: 500, error: `Role lookup failed: ${roleErr.message}` };
-  }
-  if (!role) {
-    return { ok: false, status: 401, error: 'Invalid token' };
-  }
+  // ---- 1. Role comes pre-resolved from the caller (session-authenticated) ----
+  const role = input.role;
 
   const allowedAgents = ROLE_DEFINITIONS[role.role_type]?.allowed_agents ?? [];
   if (allowedAgents.length === 0) {

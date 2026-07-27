@@ -13,14 +13,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
+import { getSessionRole } from '@/lib/auth';
 import { ROLE_DEFINITIONS } from '@/lib/roles';
-import type { Role } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 const patchSchema = z
   .object({
-    token: z.string().min(6),
     id: z.string().uuid(),
     edited_md: z.string().min(1).optional(),
     revert: z.boolean().optional(),
@@ -28,12 +27,6 @@ const patchSchema = z
   .refine((v) => v.revert === true || typeof v.edited_md === 'string', {
     message: 'Provide edited_md to save, or revert: true to clear edits',
   });
-
-async function roleFromToken(token: string): Promise<Role | null> {
-  const supabase = createSupabaseServiceClient();
-  const { data } = await supabase.from('roles').select('*').eq('token', token).maybeSingle<Role>();
-  return data ?? null;
-}
 
 export async function PATCH(request: NextRequest) {
   let body: z.infer<typeof patchSchema>;
@@ -46,8 +39,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Could not parse JSON body' }, { status: 400 });
   }
 
-  const role = await roleFromToken(body.token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const role = resolved.role;
   if (ROLE_DEFINITIONS[role.role_type]?.can_write !== true) {
     return NextResponse.json({ error: 'Your role is read-only and cannot edit drafts.' }, { status: 403 });
   }

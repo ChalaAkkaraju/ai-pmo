@@ -11,9 +11,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
+import { getSessionRole } from '@/lib/auth';
 import { getRoleDefinition, isValidRoleType, roleLabel } from '@/lib/roles';
 import { CROSS_CUTTING_CLASSES } from '@/lib/entry-parser';
-import type { Role, RoleType } from '@/lib/types';
+import type { RoleType } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,18 +52,11 @@ const entrySchema = z.discriminatedUnion('type', [
 ]);
 
 const postSchema = z.object({
-  token: z.string().min(6),
   project_code: z.string().min(1),
   entry: entrySchema,
 });
 
 const lmhNum = (v: string) => (v === 'H' ? 3 : v === 'M' ? 2 : 1);
-
-async function roleFromToken(token: string): Promise<Role | null> {
-  const supabase = createSupabaseServiceClient();
-  const { data } = await supabase.from('roles').select('*').eq('token', token).maybeSingle<Role>();
-  return data ?? null;
-}
 
 export async function POST(request: NextRequest) {
   let body: z.infer<typeof postSchema>;
@@ -75,8 +69,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not parse JSON body' }, { status: 400 });
   }
 
-  const role = await roleFromToken(body.token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const role = resolved.role;
   if (!isValidRoleType(role.role_type)) return NextResponse.json({ error: 'Unknown role' }, { status: 403 });
   if (!getRoleDefinition(role.role_type).can_write) {
     return NextResponse.json({ error: 'This role is read-only and cannot raise entries.' }, { status: 403 });

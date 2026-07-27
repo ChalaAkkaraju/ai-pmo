@@ -10,6 +10,7 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
+    "seed:users": "tsx scripts/seed-users.ts",
     "test:agent": "tsx scripts/test-agent.ts"
   },
   "dependencies": {

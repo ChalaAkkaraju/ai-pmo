@@ -39,7 +39,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { runAgent } from '@/lib/agent-runner';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import type { AgentType } from '@/lib/types';
+import { getSessionRole } from '@/lib/auth';
+import type { AgentType, Role } from '@/lib/types';
 
 const VALID_AGENT_TYPES: AgentType[] = [
   'charter_drafter',
@@ -64,7 +65,6 @@ const VALID_AGENT_TYPES: AgentType[] = [
 const VALID_AGENT_INPUTS: Array<AgentType | 'auto'> = ['auto', ...VALID_AGENT_TYPES];
 
 const invokeAgentSchema = z.object({
-  token: z.string().min(6, 'token must be at least 6 characters'),
   agent_type: z
     .string()
     .refine(
@@ -104,8 +104,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Identity comes from the authenticated session, not the request body.
+  const resolved = await getSessionRole();
+  if (!resolved) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
   const result = await runAgent({
-    token: body.token,
+    role: resolved.role,
     agent_type: body.agent_type as AgentType | 'auto',
     project_code: body.project_code,
     user_prompt: body.user_prompt,
@@ -134,7 +140,7 @@ export async function POST(request: NextRequest) {
     result.agent_output_id
   ) {
     void generateAndCacheLongForm({
-      token: body.token,
+      role: resolved.role,
       agent_type: result.agent_type, // resolved type (not 'auto' — avoids re-routing)
       project_code: body.project_code,
       user_prompt: body.user_prompt,
@@ -166,7 +172,7 @@ export async function POST(request: NextRequest) {
  * is already populated.
  */
 async function generateAndCacheLongForm(args: {
-  token: string;
+  role: Role;
   agent_type: AgentType;
   project_code?: string;
   user_prompt: string;
@@ -174,7 +180,7 @@ async function generateAndCacheLongForm(args: {
 }): Promise<void> {
   try {
     const longResult = await runAgent({
-      token: args.token,
+      role: args.role,
       agent_type: args.agent_type,
       project_code: args.project_code,
       user_prompt: args.user_prompt,

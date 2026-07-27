@@ -14,25 +14,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import type { Role } from '@/lib/types';
+import { getSessionRole } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 const CREATE_ROLES = new Set(['pm', 'engineering_manager']);
 
 const postSchema = z.object({
-  token: z.string().min(6),
   segment: z.enum(['renewables', 'water', 'industrial', 'power']),
   draft_id: z.string().uuid().optional(),
   name: z.string().optional().nullable(),
   payload: z.record(z.unknown()).optional().default({}),
 });
-
-async function roleFromToken(token: string): Promise<Role | null> {
-  const supabase = createSupabaseServiceClient();
-  const { data } = await supabase.from('roles').select('*').eq('token', token).maybeSingle<Role>();
-  return data ?? null;
-}
 
 export async function POST(request: NextRequest) {
   let body: z.infer<typeof postSchema>;
@@ -45,8 +38,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not parse JSON body' }, { status: 400 });
   }
 
-  const role = await roleFromToken(body.token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const role = resolved.role;
   if (!CREATE_ROLES.has(role.role_type)) {
     return NextResponse.json({ error: 'Your role cannot save project drafts.' }, { status: 403 });
   }
@@ -76,12 +70,10 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ id: data?.id }, { status: 200 });
 }
 
-export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token') ?? '';
-  if (token.length < 8) return NextResponse.json({ error: 'Invalid token', items: [] }, { status: 401 });
-
-  const role = await roleFromToken(token);
-  if (!role) return NextResponse.json({ error: 'Invalid token', items: [] }, { status: 401 });
+export async function GET() {
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated', items: [] }, { status: 401 });
+  const role = resolved.role;
 
   const supabase = createSupabaseServiceClient();
   const { data, error } = await supabase
@@ -94,12 +86,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token') ?? '';
   const id = request.nextUrl.searchParams.get('id') ?? '';
-  if (token.length < 8) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-  const role = await roleFromToken(token);
-  if (!role) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  const resolved = await getSessionRole();
+  if (!resolved) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const role = resolved.role;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
   const supabase = createSupabaseServiceClient();

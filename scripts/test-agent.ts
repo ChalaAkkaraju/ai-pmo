@@ -28,7 +28,7 @@ config({ path: '.env.local' });
 import { runAgent } from '../lib/agent-runner';
 import { createSupabaseServiceClient } from '../lib/supabase';
 import { log, section } from './lib/log';
-import type { AgentType } from '../lib/types';
+import type { AgentType, Role } from '../lib/types';
 
 async function main() {
   log.header('Phase 2.3 — agent invocation test');
@@ -37,9 +37,9 @@ async function main() {
   const supabase = createSupabaseServiceClient();
   const { data: pmRole, error: pmErr } = await supabase
     .from('roles')
-    .select('token, name, role_type')
+    .select('*')
     .eq('role_type', 'pm')
-    .single();
+    .single<Role>();
 
   if (pmErr || !pmRole) {
     log.error(`Could not look up PM role: ${pmErr?.message ?? 'no row'}`);
@@ -57,13 +57,12 @@ async function main() {
   log.info(`Agent:        ${agentType}`);
   log.info(`Project:      ${projectCode}`);
   log.info(`Role:         ${pmRole.name} (${pmRole.role_type})`);
-  log.info(`Token (8):    ${pmRole.token.slice(0, 8)}…`);
   log.info(`User prompt:  ${userPrompt}`);
 
   section('Calling runAgent() — this can take 10-60 seconds');
   const start = Date.now();
   const result = await runAgent({
-    token: pmRole.token,
+    role: pmRole,
     agent_type: agentType,
     project_code: projectCode,
     user_prompt: userPrompt,

@@ -1,14 +1,20 @@
 /**
- * Server-side helper to load a role from a URL token.
+ * Server-side role resolution.
  *
- * Used by all dashboard pages — every page under /access/[token]/ takes the
- * token from the route params and resolves it to a Role row from Supabase.
- * If the token is missing or invalid, the caller should redirect to /invalid.
+ * Identity now comes from the authenticated Supabase session, NOT the URL
+ * token. This function is kept (with its original name and signature) so that
+ * the many callers under /access/[token]/ — which pass params.token — keep
+ * compiling and working during the migration off token routes. The token
+ * argument is ignored; the role is resolved from the logged-in user via
+ * lib/auth.getSessionRole().
+ *
+ * Once Stage 3 moves pages onto clean authenticated URLs, callers should switch
+ * to getSessionRole()/requireRole() directly and this shim can be deleted.
  */
 
-import { createSupabaseServiceClient } from './supabase';
-import { getRoleDefinition } from './roles';
+import type { getRoleDefinition } from './roles';
 import type { Role } from './types';
+import { getSessionRole } from './auth';
 
 export interface ResolvedRole {
   role: Role;
@@ -17,33 +23,12 @@ export interface ResolvedRole {
 }
 
 /**
- * Look up a role by token. Returns null if not found.
+ * Resolve the current colleague's role from their session. Returns null when
+ * there is no valid session (the caller — layout or page — should have already
+ * been redirected to /login by the proxy, so null here renders as notFound).
  *
- * Uses the service-role client (bypasses RLS) since the URL token IS the auth
- * mechanism and we need to read the row before we know which colleague is asking.
+ * @param _token Ignored. Present only for backward-compatible call sites.
  */
-export async function resolveRoleFromToken(token: string): Promise<ResolvedRole | null> {
-  if (!token || token.length < 6) return null;
-
-  const supabase = createSupabaseServiceClient();
-  const { data, error } = await supabase
-    .from('roles')
-    .select('*')
-    .eq('token', token)
-    .maybeSingle<Role>();
-
-  if (error || !data) {
-    // Surface the real reason in server logs — a silent null here renders as a
-    // bare 404, which hides config problems (bad key, unreachable DB) entirely.
-    if (error) {
-      const k = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
-      console.error(
-        '[role-context] token lookup failed:', error.message,
-        '| url:', process.env.NEXT_PUBLIC_SUPABASE_URL,
-        '| key:', k ? `${k.slice(0, 12)}… len=${k.length}` : 'MISSING'
-      );
-    }
-    return null;
-  }
-  return { role: data, definition: getRoleDefinition(data.role_type) };
+export async function resolveRoleFromToken(_token?: string): Promise<ResolvedRole | null> {
+  return getSessionRole();
 }
