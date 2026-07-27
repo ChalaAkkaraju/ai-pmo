@@ -21,7 +21,7 @@
 -- =============================================================================
 
 create table if not exists action_items (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid references projects(id) on delete cascade,
   source_type text not null default 'risk' check (source_type in ('risk', 'issue')),
   source_id uuid,

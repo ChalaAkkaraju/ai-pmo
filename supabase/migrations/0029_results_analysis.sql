@@ -9,7 +9,7 @@
 -- with its own POC — never recomputed from the EV %. Keyed to the WBS phase.
 
 create table if not exists results_analysis (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   wbs_code text,                                  -- WBS Level-2 phase
   period date not null,

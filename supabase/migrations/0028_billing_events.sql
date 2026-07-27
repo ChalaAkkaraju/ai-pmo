@@ -5,7 +5,7 @@
 -- Neither the scheduler nor a billing system shows this alone. WBS-tied.
 
 create table if not exists billing_events (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   wbs_code text,                                 -- phase/WBS the invoice maps to (nullable = project-level)
   invoice_number text not null,

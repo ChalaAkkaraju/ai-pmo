@@ -15,11 +15,17 @@
 create extension if not exists "uuid-ossp";
 create extension if not exists "vector";
 
+-- On hosted Supabase, extensions may live in the `extensions` schema rather than
+-- `public`, which isn't on the default search_path during `supabase db push`.
+-- Add it so extension-provided types (e.g. pgvector's `vector`) resolve. (uuid
+-- generation uses the built-in gen_random_uuid(), so it needs no extension.)
+set search_path = public, extensions;
+
 -- -----------------------------------------------------------------------------
 -- Roles (3-5 colleagues, each with a unique URL token)
 -- -----------------------------------------------------------------------------
 create table roles (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   token text unique not null,
   name text not null,
   role_type text not null check (
@@ -35,7 +41,7 @@ create index roles_token_idx on roles(token);
 -- Projects (portfolio members — typically 4 active at a time)
 -- -----------------------------------------------------------------------------
 create table projects (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   name text not null,
   code text unique not null,
   client text not null,
@@ -59,7 +65,7 @@ create table projects (
 -- Issues (the append-only issue log per project)
 -- -----------------------------------------------------------------------------
 create table issues (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   issue_id text not null,
   description text not null,
@@ -86,7 +92,7 @@ create index issues_status_idx on issues(status);
 -- Risks (the project risk register)
 -- -----------------------------------------------------------------------------
 create table risks (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   risk_id text not null,
   category text not null,
@@ -122,7 +128,7 @@ create index risks_class_idx on risks(cross_cutting_class);
 -- Change orders (per project)
 -- -----------------------------------------------------------------------------
 create table change_orders (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   co_id text not null,
   driver text not null,
@@ -147,7 +153,7 @@ create index change_orders_project_idx on change_orders(project_id);
 -- Variance reports (per project, per reporting cadence)
 -- -----------------------------------------------------------------------------
 create table variance_reports (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   report_week int not null,
   cpi numeric(5, 3) not null,
@@ -168,7 +174,7 @@ create index variance_project_week_idx on variance_reports(project_id, report_we
 -- Agent outputs (audit log of every agent invocation)
 -- -----------------------------------------------------------------------------
 create table agent_outputs (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid references projects(id) on delete set null,
   agent_type text not null,
   invoked_by_role_id uuid not null references roles(id),
@@ -189,7 +195,7 @@ create index agent_outputs_invoked_idx on agent_outputs(invoked_at desc);
 -- Portfolio patterns (cross-cutting; not project-scoped)
 -- -----------------------------------------------------------------------------
 create table portfolio_patterns (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   pattern_id text unique not null,
   name text not null,
   cross_cutting_class text not null,
@@ -208,7 +214,7 @@ create table portfolio_patterns (
 -- Worked examples library (vectorised for semantic retrieval)
 -- -----------------------------------------------------------------------------
 create table worked_examples (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   agent_type text not null,
   past_project text not null,
   artefact_name text not null,

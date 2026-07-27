@@ -6,7 +6,7 @@
 
 -- Purchase orders drive commitment. Open commitment = po_value − received_value.
 create table if not exists purchase_orders (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   wbs_code text not null,                       -- ties the PO to the WBS
   po_number text not null,

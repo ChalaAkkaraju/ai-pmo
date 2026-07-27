@@ -21,7 +21,7 @@
 
 -- Work packages — the WBS (scope), sourced from SAP PS.
 create table if not exists work_packages (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   wbs_code text not null,
   parent_wbs_code text,
@@ -42,7 +42,7 @@ create index if not exists work_packages_wbs_idx on work_packages(project_id, wb
 
 -- Tasks — schedule activities, sourced from the scheduler (Microsoft Project / P6).
 create table if not exists tasks (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   work_package_id uuid references work_packages(id) on delete set null,
   wbs_code text,
@@ -66,7 +66,7 @@ create index if not exists tasks_wbs_idx on tasks(project_id, wbs_code);
 
 -- Milestones — contractual / key dates.
 create table if not exists milestones (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   work_package_id uuid references work_packages(id) on delete set null,
   name text not null,
@@ -83,7 +83,7 @@ create index if not exists milestones_project_idx on milestones(project_id);
 
 -- Cost actuals — per WBS, by period, sourced from SAP PS (the money).
 create table if not exists cost_actuals (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   wbs_code text not null,
   period date not null,
@@ -100,7 +100,7 @@ create index if not exists cost_actuals_wbs_idx on cost_actuals(project_id, wbs_
 
 -- Resource assignments — from the scheduler (visibility, not levelling).
 create table if not exists resource_assignments (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   task_id uuid references tasks(id) on delete cascade,
   resource_name text not null,

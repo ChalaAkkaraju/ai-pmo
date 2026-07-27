@@ -20,7 +20,7 @@
 -- =============================================================================
 
 create table if not exists project_drafts (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   segment text not null check (segment in ('renewables', 'water', 'industrial', 'power')),
   name text,
   payload jsonb not null default '{}',

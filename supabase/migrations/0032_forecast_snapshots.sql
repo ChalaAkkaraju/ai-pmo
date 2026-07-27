@@ -7,7 +7,7 @@
 -- movement (how much of the change is scope vs cost performance).
 
 create table if not exists forecast_snapshots (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects(id) on delete cascade,
   period date not null,                         -- month-end close (YYYY-MM-01)
   bac numeric(15, 2) not null default 0,        -- budget at complete

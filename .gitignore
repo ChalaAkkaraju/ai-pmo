@@ -77,3 +77,6 @@ docs/AI-PMO-Technical-Edition.md
 # Compiled book PDFs (derived artefacts, like the .md/.docx intermediates)
 docs/AI-PMO-Business-Edition.pdf
 docs/AI-PMO-Technical-Edition.pdf
+
+# QA env copy holding QA keys (never commit)
+.env.local.qa
