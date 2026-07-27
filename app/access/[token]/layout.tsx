@@ -8,6 +8,7 @@
 import { notFound } from 'next/navigation';
 import { resolveRoleFromToken } from '@/lib/role-context';
 import { Header } from '@/components/header';
+import { getSessionRole } from '@/lib/auth';
 import { FloatingAgentWidgetGate } from '@/components/floating-agent-widget-gate';
 
 interface AccessLayoutProps {
@@ -18,6 +19,7 @@ interface AccessLayoutProps {
 export default async function AccessLayout({ children, params }: AccessLayoutProps) {
   const { token } = await params;
   const resolved = await resolveRoleFromToken(token);
+  const session = await getSessionRole();
 
   if (!resolved) {
     notFound();
@@ -25,7 +27,7 @@ export default async function AccessLayout({ children, params }: AccessLayoutPro
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header token={token} resolved={resolved} />
+      <Header token={token} resolved={resolved} signedIn={!!session} />
       <main className="flex-1">{children}</main>
       <FloatingAgentWidgetGate
         token={token}

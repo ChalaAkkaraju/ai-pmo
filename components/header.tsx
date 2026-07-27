@@ -20,6 +20,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ResolvedRole } from '@/lib/role-context';
+import { signOut } from '@/app/login/actions';
 
 const CREATE_ROLES = ['pm', 'engineering_manager'];
 
@@ -34,7 +35,7 @@ const LEARN_LINKS: Array<{ path: string; label: string }> = [
   { path: 'technical', label: 'Technical notes' },
 ];
 
-export function Header({ token, resolved }: { token: string; resolved: ResolvedRole }) {
+export function Header({ token, resolved, signedIn = false }: { token: string; resolved: ResolvedRole; signedIn?: boolean }) {
   const canCreate = CREATE_ROLES.includes(resolved.role.role_type);
   // On the welcome gateway (its own branding + entry buttons) the full header is
   // redundant — keep only a minimal, centred name / role so you still see who
@@ -123,6 +124,24 @@ export function Header({ token, resolved }: { token: string; resolved: ResolvedR
           <Link href={`/access/${token}/integration`} className="text-muted-foreground transition hover:text-foreground">Integration</Link>
           <Link href={`/access/${token}/usage`} className="text-muted-foreground transition hover:text-foreground">Usage</Link>
           <Link href={`/access/${token}/analytics/actions`} className="text-muted-foreground transition hover:text-foreground">Analytics</Link>
+
+          {signedIn ? (
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="rounded-md border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              >
+                Sign out
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-md border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </header>

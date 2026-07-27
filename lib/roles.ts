@@ -172,6 +172,15 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
     dashboard_sections: ['projects_overview', 'issues', 'portfolio_patterns'],
     can_write: true,
   },
+  admin: {
+    type: 'admin',
+    display_name: 'Administrator',
+    description:
+      'User administration only. Creates colleague accounts, assigns roles, and enables/disables access. Not a PMO role — no project dashboard and no agents.',
+    allowed_agents: [],
+    dashboard_sections: [],
+    can_write: false,
+  },
 };
 
 export function getRoleDefinition(roleType: RoleType): RoleDefinition {
@@ -205,6 +214,7 @@ export const ROLE_SHORT_LABELS: Record<RoleType, string> = {
   engineering_manager: 'Engineering Manager',
   construction_manager: 'Construction Manager',
   hse_manager: 'HSE Manager',
+  admin: 'Administrator',
 };
 
 export function roleLabel(roleType: RoleType): string {

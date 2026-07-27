@@ -42,6 +42,8 @@ export async function getSessionRole(): Promise<ResolvedRole | null> {
     return null;
   }
   if (!data) return null;
+  // Disabled accounts are treated as signed-out everywhere.
+  if (data.disabled) return null;
 
   return { role: data, definition: getRoleDefinition(data.role_type) };
 }
@@ -53,5 +55,18 @@ export async function getSessionRole(): Promise<ResolvedRole | null> {
 export async function requireRole(): Promise<ResolvedRole> {
   const resolved = await getSessionRole();
   if (!resolved) redirect('/login');
+  return resolved;
+}
+
+/**
+ * Like requireRole() but also requires the admin flag. Unauthenticated callers
+ * go to /login; authenticated non-admins are bounced to their dashboard. Call
+ * this in the admin layout AND at the top of every admin server action, before
+ * touching the service-role client.
+ */
+export async function requireAdmin(): Promise<ResolvedRole> {
+  const resolved = await getSessionRole();
+  if (!resolved) redirect('/login');
+  if (!resolved.role.is_admin) redirect('/access/home');
   return resolved;
 }

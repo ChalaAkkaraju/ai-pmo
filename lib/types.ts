@@ -13,14 +13,20 @@ export type RoleType =
   | 'program_manager'
   | 'engineering_manager'
   | 'construction_manager'
-  | 'hse_manager';
+  | 'hse_manager'
+  | 'admin';
 
 export interface Role {
   id: string;
-  token: string;
+  token: string | null;
   name: string;
+  username: string | null;
   role_type: RoleType;
   allowed_agents: AgentType[];
+  user_id: string | null;
+  is_admin: boolean;
+  disabled: boolean;
+  must_change_password: boolean;
   created_at: string;
 }
 

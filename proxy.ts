@@ -63,6 +63,20 @@ export async function proxy(request: NextRequest) {
       redirectUrl.search = `?next=${encodeURIComponent(pathname)}`;
       return NextResponse.redirect(redirectUrl);
     }
+
+    // Force a first-login password change before anything else. The flag lives
+    // in the auth user's app_metadata so we can gate here without a DB read.
+    if (
+      user &&
+      user.app_metadata?.must_change_password === true &&
+      pathname !== '/change-password' &&
+      !pathname.startsWith('/login')
+    ) {
+      const pwUrl = request.nextUrl.clone();
+      pwUrl.pathname = '/change-password';
+      pwUrl.search = '';
+      return NextResponse.redirect(pwUrl);
+    }
   }
 
   return response;
