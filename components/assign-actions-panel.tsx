@@ -12,10 +12,10 @@
  * action is still assignable, it just won't link to a specific project's risk.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AgentType } from '@/lib/types';
 import { roleLabel } from '@/lib/roles';
-import { AssigneeSelect, useAssignees, parseAssignee } from '@/components/assignee-select';
+import { AssigneeSelect, useAssignees, parseAssignee, matchPersonInText } from '@/components/assignee-select';
 import type { ProposedAction } from '@/lib/action-parser';
 
 type AssignState = 'idle' | 'posting' | 'done' | 'error';
@@ -25,15 +25,29 @@ export function AssignActionsPanel({
   projectCode,
   agentOutputId,
   agentType,
+  promptText,
 }: {
   actions: ProposedAction[];
   projectCode: string | null;
   agentOutputId?: string;
   agentType?: AgentType;
+  promptText?: string;
 }) {
   const [states, setStates] = useState<AssignState[]>(() => actions.map(() => 'idle'));
   const [picks, setPicks] = useState(() => actions.map((a) => 'role:' + a.assigned_to_role));
   const assignees = useAssignees();
+  const autolinked = useRef(false);
+
+  // If the request named a single person, pin the proposed action to them
+  // directly instead of defaulting to a role (deterministic, no LLM guessing).
+  useEffect(() => {
+    if (autolinked.current || assignees.length === 0) return;
+    autolinked.current = true;
+    if (actions.length === 1) {
+      const person = matchPersonInText(promptText ?? '', assignees);
+      if (person) setPicks(['user:' + person.id]);
+    }
+  }, [assignees, actions.length, promptText]);
   const [bulkPosting, setBulkPosting] = useState(false);
 
   async function assign(indices: number[]) {

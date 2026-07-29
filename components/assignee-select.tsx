@@ -90,3 +90,27 @@ export function AssigneeSelect({
     </select>
   );
 }
+
+/**
+ * Deterministically resolve typed text to a single person. Tokenises both the
+ * text and each person's name + Login ID the same way and looks for a shared
+ * word (3+ chars). Returns the unique match, or null when there is no match or
+ * it is ambiguous — so a role-level default is kept unless a name clearly wins.
+ */
+export function matchPersonInText(text: string, assignees: Assignee[]): Assignee | null {
+  if (!text) return null;
+  const words = new Set(text.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3));
+  if (words.size === 0) return null;
+  const hits: Assignee[] = [];
+  for (const a of assignees) {
+    const src = `${a.name ?? ''} ${a.username ?? ''}`.toLowerCase();
+    for (const part of src.split(/[^a-z0-9]+/)) {
+      if (part.length >= 3 && words.has(part)) {
+        hits.push(a);
+        break;
+      }
+    }
+  }
+  const ids = Array.from(new Set(hits.map((h) => h.id)));
+  return ids.length === 1 ? hits.find((h) => h.id === ids[0]) ?? null : null;
+}

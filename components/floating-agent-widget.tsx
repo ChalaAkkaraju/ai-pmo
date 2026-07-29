@@ -826,6 +826,7 @@ function InvocationCard({
                 projectCode={invocation.project_code}
                 agentOutputId={invocation.output_id}
                 agentType={resolved ?? (requested === 'auto' ? undefined : (requested as AgentType))}
+                promptText={invocation.prompt}
               />
             )}
             {proposedEntry && (
