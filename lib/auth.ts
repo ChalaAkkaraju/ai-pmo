@@ -67,6 +67,6 @@ export async function requireRole(): Promise<ResolvedRole> {
 export async function requireAdmin(): Promise<ResolvedRole> {
   const resolved = await getSessionRole();
   if (!resolved) redirect('/login');
-  if (!resolved.role.is_admin) redirect('/access/home');
+  if (!resolved.role.is_admin) redirect('/dashboard');
   return resolved;
 }

@@ -24,7 +24,7 @@ export function AnalyticsNav({ token }: { token: string }) {
   return (
     <nav className="flex flex-wrap gap-1 border-b">
       {TABS.map((t) => {
-        const href = `/access/${token}/analytics/${t.slug}`;
+        const href = `/analytics/${t.slug}`;
         const active = pathname.endsWith(`/analytics/${t.slug}`);
         return (
           <Link

@@ -635,8 +635,8 @@ export function DashboardClient({
       title: `${data.length} ${label.toLowerCase()}-severity issue${data.length === 1 ? '' : 's'}`,
       columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Issue' }, { key: 'owner', label: 'Owner' }, statusCol(issueBadge)],
       data,
-      seeAllHref: `/access/${token}/analytics/issues`,
-      rowHref: (r) => `/access/${token}/projects/${r.code}?tab=risks`,
+      seeAllHref: `/analytics/issues`,
+      rowHref: (r) => `/projects/${r.code}?tab=risks`,
     });
   }
   function openRisksDrill(klass: string) {
@@ -645,8 +645,8 @@ export function DashboardClient({
       title: `${data.length} risk${data.length === 1 ? '' : 's'} · ${klass}`,
       columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Risk' }, { key: 'owner', label: 'Owner' }, { key: 'impact', label: 'Impact' }, statusCol(riskBadge)],
       data,
-      seeAllHref: `/access/${token}/analytics/risks`,
-      rowHref: (r) => `/access/${token}/projects/${r.code}?tab=risks`,
+      seeAllHref: `/analytics/risks`,
+      rowHref: (r) => `/projects/${r.code}?tab=risks`,
     });
   }
   function openContingencyDrill(band: string) {
@@ -655,28 +655,28 @@ export function DashboardClient({
       title: `${data.length} project${data.length === 1 ? '' : 's'} · ${band} contingency used`,
       columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }],
       data,
-      rowHref: (r) => `/access/${token}/projects/${r.code}?tab=variance`,
+      rowHref: (r) => `/projects/${r.code}?tab=variance`,
     });
   }
   function openOpenHIssues() {
     const data = insights.issue_rows.filter((r) => r.severity === 'H' && (r.status === 'Open' || r.status === 'In progress'));
-    setDrill({ title: `${data.length} open high-severity issue${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Issue' }, { key: 'owner', label: 'Owner' }, statusCol(issueBadge)], data, seeAllHref: `/access/${token}/analytics/issues`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=risks` });
+    setDrill({ title: `${data.length} open high-severity issue${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Issue' }, { key: 'owner', label: 'Owner' }, statusCol(issueBadge)], data, seeAllHref: `/analytics/issues`, rowHref: (r) => `/projects/${r.code}?tab=risks` });
   }
   function openRealisedRisks() {
     const data = insights.risk_rows.filter((r) => r.status.toLowerCase().startsWith('realis'));
-    setDrill({ title: `${data.length} realised risk${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Risk' }, { key: 'klass', label: 'Class' }, { key: 'owner', label: 'Owner' }, statusCol(riskBadge)], data, seeAllHref: `/access/${token}/analytics/risks`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=risks` });
+    setDrill({ title: `${data.length} realised risk${data.length === 1 ? '' : 's'}`, columns: [{ key: 'code', label: 'Project' }, { key: 'description', label: 'Risk' }, { key: 'klass', label: 'Class' }, { key: 'owner', label: 'Owner' }, statusCol(riskBadge)], data, seeAllHref: `/analytics/risks`, rowHref: (r) => `/projects/${r.code}?tab=risks` });
   }
   function openCostOffTrack() {
     const data = insights.project_rows.filter((r) => r.cpi < 0.95).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => a.cpi - b.cpi);
-    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} cost off-track · CPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=ev` });
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} cost off-track · CPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/projects/${r.code}?tab=ev` });
   }
   function openSchedOffTrack() {
     const data = insights.project_rows.filter((r) => r.spi < 0.95).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => a.spi - b.spi);
-    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} schedule off-track · SPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=ev` });
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} schedule off-track · SPI < 0.95`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/projects/${r.code}?tab=ev` });
   }
   function openContingencyDrawn() {
     const data = insights.contingency_rows.filter((r) => r.consumedM > 0).map((r) => ({ ...r, project: `${r.name} (${r.code})`, consumed: `$${r.consumedM.toFixed(2)}M / $${r.budgetM.toFixed(1)}M` })).sort((a, b) => b.consumedM - a.consumedM);
-    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} with contingency drawn`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=variance` });
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} with contingency drawn`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'pct', label: 'Used %', numeric: true, render: (v) => `${v}%` }, { key: 'consumed', label: 'Consumed / budget' }], data, rowHref: (r) => `/projects/${r.code}?tab=variance` });
   }
   function openPatterns() {
     const data = insights.pattern_rows.filter((r) => r.supporting >= r.threshold).sort((a, b) => b.supporting - a.supporting);
@@ -684,24 +684,24 @@ export function DashboardClient({
   }
   function openChangeByDriver(label: string) {
     const data = insights.co_rows.filter((r) => r.driver === label).map((r) => ({ ...r, project: `${r.project} (${r.code})`, type: r.kind === 'open' ? 'Open trend' : 'Absorbed', exposure: `$${(r.at_risk_m + r.absorbed_m).toFixed(2)}M` })).sort((a, b) => (b.at_risk_m + b.absorbed_m) - (a.at_risk_m + a.absorbed_m));
-    setDrill({ title: `${label} \u2014 ${data.length} exposed change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'type', label: 'Type' }, { key: 'exposure', label: 'Exposure', numeric: true }], data, seeAllHref: `/access/${token}/analytics/changes`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=cos` });
+    setDrill({ title: `${label} \u2014 ${data.length} exposed change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'type', label: 'Type' }, { key: 'exposure', label: 'Exposure', numeric: true }], data, seeAllHref: `/analytics/changes`, rowHref: (r) => `/projects/${r.code}?tab=cos` });
   }
   function openChangeExposureBySegment(label: string) {
     const data = insights.co_rows.filter((r) => segmentStyle(r.segment).label === label).map((r) => ({ ...r, project: `${r.project} (${r.code})`, type: r.kind === 'open' ? 'Open trend' : 'Absorbed', exposure: `$${(r.at_risk_m + r.absorbed_m).toFixed(2)}M` })).sort((a, b) => (b.at_risk_m + b.absorbed_m) - (a.at_risk_m + a.absorbed_m));
-    setDrill({ title: `${label} \u2014 ${data.length} exposed change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'type', label: 'Type' }, { key: 'exposure', label: 'Exposure', numeric: true }], data, seeAllHref: `/access/${token}/analytics/changes`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=cos` });
+    setDrill({ title: `${label} \u2014 ${data.length} exposed change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'type', label: 'Type' }, { key: 'exposure', label: 'Exposure', numeric: true }], data, seeAllHref: `/analytics/changes`, rowHref: (r) => `/projects/${r.code}?tab=cos` });
   }
   function openRevenueAtRisk() {
     const data = insights.co_rows.filter((r) => r.kind === 'open').map((r) => ({ ...r, project: `${r.project} (${r.code})`, at_risk: `$${r.at_risk_m.toFixed(2)}M` })).sort((a, b) => b.at_risk_m - a.at_risk_m);
-    setDrill({ title: `${data.length} open trend${data.length === 1 ? '' : 's'} \u00b7 revenue at risk`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'recovery', label: 'Recovery %', numeric: true, render: (v) => `${v}%` }, { key: 'at_risk', label: 'At risk', numeric: true }], data, seeAllHref: `/access/${token}/analytics/changes`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=cos` });
+    setDrill({ title: `${data.length} open trend${data.length === 1 ? '' : 's'} \u00b7 revenue at risk`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'recovery', label: 'Recovery %', numeric: true, render: (v) => `${v}%` }, { key: 'at_risk', label: 'At risk', numeric: true }], data, seeAllHref: `/analytics/changes`, rowHref: (r) => `/projects/${r.code}?tab=cos` });
   }
   function openAbsorbed() {
     const data = insights.co_rows.filter((r) => r.kind === 'absorbed').map((r) => ({ ...r, project: `${r.project} (${r.code})`, absorbed: `$${r.absorbed_m.toFixed(2)}M` })).sort((a, b) => b.absorbed_m - a.absorbed_m);
-    setDrill({ title: `${data.length} absorbed \u00b7 unfunded change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'absorbed', label: 'Absorbed cost', numeric: true }], data, seeAllHref: `/access/${token}/analytics/changes`, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=cos` });
+    setDrill({ title: `${data.length} absorbed \u00b7 unfunded change${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'co_id', label: 'Change' }, { key: 'scope', label: 'Scope' }, { key: 'absorbed', label: 'Absorbed cost', numeric: true }], data, seeAllHref: `/analytics/changes`, rowHref: (r) => `/projects/${r.code}?tab=cos` });
   }
   function openStatusDrill(status: 'Active' | 'SC' | 'Closed') {
     const data = projects.filter((p) => p.status === status).map((p) => ({ ...p, project: `${p.name} (${p.code})` }));
     const labelMap: Record<string, string> = { Active: 'active', SC: 'in substantial completion', Closed: 'closed' };
-    setDrill({ title: `${data.length} ${labelMap[status]} project${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'client', label: 'Client' }, { key: 'current_week', label: 'Week', numeric: true }], data, rowHref: (r) => `/access/${token}/projects/${r.code}` });
+    setDrill({ title: `${data.length} ${labelMap[status]} project${data.length === 1 ? '' : 's'}`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'client', label: 'Client' }, { key: 'current_week', label: 'Week', numeric: true }], data, rowHref: (r) => `/projects/${r.code}` });
   }
   function openSegmentDrill(segment: string) {
     const data = projects.filter((p) => p.segment === segment).map((p) => ({ ...p, project: `${p.name} (${p.code})` }));
@@ -715,16 +715,16 @@ export function DashboardClient({
         { key: 'contract_value_current', label: 'Contract', numeric: true, render: (v) => fmtMoneyM(Number(v)) },
       ],
       data,
-      rowHref: (r) => `/access/${token}/projects/${r.code}`,
+      rowHref: (r) => `/projects/${r.code}`,
     });
   }
   function openBehindDrill() {
     const data = evProjectRows.filter((r) => r.spi != null && r.spi < 0.97).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => (a.spi ?? 9) - (b.spi ?? 9));
-    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} behind schedule · SPI < 0.97`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=ev` });
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} behind schedule · SPI < 0.97`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/projects/${r.code}?tab=ev` });
   }
   function openOverDrill() {
     const data = evProjectRows.filter((r) => r.cpi != null && r.cpi < 0.97).map((r) => ({ ...r, project: `${r.name} (${r.code})` })).sort((a, b) => (a.cpi ?? 9) - (b.cpi ?? 9));
-    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} over cost · CPI < 0.97`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/access/${token}/projects/${r.code}?tab=ev` });
+    setDrill({ title: `${data.length} project${data.length === 1 ? '' : 's'} over cost · CPI < 0.97`, columns: [{ key: 'project', label: 'Project' }, { key: 'segment', label: 'Segment' }, { key: 'cpi', label: 'CPI', numeric: true, render: (v) => Number(v).toFixed(2) }, { key: 'spi', label: 'SPI', numeric: true, render: (v) => Number(v).toFixed(2) }], data, rowHref: (r) => `/projects/${r.code}?tab=ev` });
   }
 
   // Always-visible global project search (separate from the segment
@@ -978,7 +978,7 @@ export function DashboardClient({
                       return (
                         <li key={p.id}>
                           <Link
-                            href={`/access/${token}/projects/${p.code}`}
+                            href={`/projects/${p.code}`}
                             className="flex items-center gap-3 px-4 py-2.5 transition hover:bg-slate-50"
                           >
                             <span className={`h-8 w-1 flex-none rounded-full ${ss.accentBar}`} />
@@ -1290,7 +1290,7 @@ export function DashboardClient({
                   const ss = segmentStyle(h.segment);
                   const cpiCls = h.cpi < 0.95 ? 'text-red-600 font-semibold' : h.cpi < 1 ? 'text-amber-600' : 'text-foreground';
                   const spiCls = h.spi < 0.95 ? 'text-red-600 font-semibold' : h.spi < 1 ? 'text-amber-600' : 'text-foreground';
-                  const href = `/access/${token}/projects/${h.code}`;
+                  const href = `/projects/${h.code}`;
                   const band = h.score >= 5 ? 'high' : h.score >= 3 ? 'med' : 'low';
                   const scoreCls = band === 'high' ? 'bg-red-600 text-white' : band === 'med' ? 'bg-amber-500 text-white' : 'bg-slate-600 text-white';
                   const accentCls = band === 'high' ? 'border-red-500' : band === 'med' ? 'border-amber-400' : 'border-slate-300';
@@ -1394,7 +1394,7 @@ export function DashboardClient({
               </>
             )}
             {' · '}
-            <Link href={`/access/${token}/usage`} className="underline-offset-2 hover:underline">
+            <Link href={`/usage`} className="underline-offset-2 hover:underline">
               View usage
             </Link>
           </p>
@@ -1508,7 +1508,7 @@ export function DashboardClient({
                           </p>
                           <div className="flex items-center gap-2">
                             <a
-                              href={`/access/${token}/report/${a.id}`}
+                              href={`/report/${a.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}

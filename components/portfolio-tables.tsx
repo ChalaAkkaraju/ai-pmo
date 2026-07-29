@@ -45,7 +45,7 @@ function HmlBadge({ v }: { v: string }) {
 function ProjectCell({ token, code, name, segment }: { token: string; code: string; name: string; segment: string }) {
   const ss = segmentStyle(segment);
   return (
-    <Link href={`/access/${token}/projects/${code}`} className="inline-flex items-center gap-1.5 hover:underline" title={name}>
+    <Link href={`/projects/${code}`} className="inline-flex items-center gap-1.5 hover:underline" title={name}>
       <span className={`h-2 w-2 flex-none rounded-full ${ss.dot}`} />
       <span className="font-mono text-xs font-medium">{code}</span>
     </Link>

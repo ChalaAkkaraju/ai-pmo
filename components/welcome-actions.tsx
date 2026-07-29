@@ -22,7 +22,7 @@ export function WelcomeActions({ token }: { token: string }) {
     } catch {
       /* ignore storage errors */
     }
-    router.push(`/access/${token}`);
+    router.push(`/dashboard`);
   }
 
   return (
@@ -36,7 +36,7 @@ export function WelcomeActions({ token }: { token: string }) {
           <Sparkles className="h-4 w-4" strokeWidth={2} /> Enter dashboard
         </button>
         <Link
-          href={`/access/${token}/about`}
+          href={`/about`}
           className="group inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-6 py-3 text-sm font-medium text-violet-700 transition hover:bg-violet-100 hover:border-violet-300"
         >
           <Compass className="h-4 w-4 transition-transform group-hover:rotate-12" strokeWidth={2} /> Take the tour

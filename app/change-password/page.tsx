@@ -17,7 +17,7 @@ export default async function ChangePasswordPage({
   const resolved = await getSessionRole();
   if (!resolved) redirect('/login');
   if (!resolved.role.must_change_password) {
-    redirect(resolved.role.is_admin ? '/admin/users' : '/access/home');
+    redirect(resolved.role.is_admin ? '/admin/users' : '/dashboard');
   }
   const { error } = await searchParams;
 

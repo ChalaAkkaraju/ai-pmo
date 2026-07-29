@@ -34,7 +34,7 @@ export default async function LoginPage({
       ) : null}
 
       <form action={signIn} className="mt-6 space-y-4">
-        <input type="hidden" name="next" value={next ?? '/access/home'} />
+        <input type="hidden" name="next" value={next ?? '/dashboard'} />
 
         <div className="space-y-1.5">
           <label htmlFor="username" className="block text-sm font-medium text-foreground">Login ID</label>

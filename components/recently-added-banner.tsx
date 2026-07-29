@@ -55,7 +55,7 @@ export function NewProjectsPopover({
           return (
             <Link
               key={p.code}
-              href={`/access/${token}/projects/${p.code}`}
+              href={`/projects/${p.code}`}
               onClick={onClose}
               className="relative block overflow-hidden rounded-md px-3 py-2 transition hover:bg-muted"
             >

@@ -58,7 +58,7 @@ export function Header({ token, resolved, signedIn = false }: { token: string; r
       <div className="container mx-auto grid h-14 max-w-screen-2xl grid-cols-[1fr_auto_1fr] items-center px-8">
         {/* Left — brand */}
         <Link
-          href={`/access/${token}`}
+          href={`/dashboard`}
           className="inline-flex items-center gap-2.5 justify-self-start transition hover:opacity-90"
         >
           <span
@@ -85,7 +85,7 @@ export function Header({ token, resolved, signedIn = false }: { token: string; r
         <div className="flex items-center gap-4 justify-self-end text-sm">
           {canCreate && (
             <Link
-              href={`/access/${token}/intake`}
+              href={`/intake`}
               className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
             >
               + New project
@@ -111,7 +111,7 @@ export function Header({ token, resolved, signedIn = false }: { token: string; r
                 {LEARN_LINKS.map((l) => (
                   <Link
                     key={l.path}
-                    href={`/access/${token}/${l.path}`}
+                    href={`/${l.path}`}
                     className="block px-3 py-1.5 text-sm text-foreground/80 transition hover:bg-muted hover:text-foreground"
                   >
                     {l.label}
@@ -121,9 +121,9 @@ export function Header({ token, resolved, signedIn = false }: { token: string; r
             </div>
           </div>
 
-          <Link href={`/access/${token}/integration`} className="text-muted-foreground transition hover:text-foreground">Integration</Link>
-          <Link href={`/access/${token}/usage`} className="text-muted-foreground transition hover:text-foreground">Usage</Link>
-          <Link href={`/access/${token}/analytics/actions`} className="text-muted-foreground transition hover:text-foreground">Analytics</Link>
+          <Link href={`/integration`} className="text-muted-foreground transition hover:text-foreground">Integration</Link>
+          <Link href={`/usage`} className="text-muted-foreground transition hover:text-foreground">Usage</Link>
+          <Link href={`/analytics/actions`} className="text-muted-foreground transition hover:text-foreground">Analytics</Link>
 
           {signedIn ? (
             <form action={signOut}>

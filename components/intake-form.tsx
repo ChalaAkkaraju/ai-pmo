@@ -140,13 +140,13 @@ export function IntakeForm({
 
   async function discardDraft() {
     if (!draftId) {
-      router.push(`/access/${token}/intake`);
+      router.push(`/intake`);
       return;
     }
     await fetch(`/api/projects/drafts?token=${encodeURIComponent(token)}&id=${encodeURIComponent(draftId)}`, {
       method: 'DELETE',
     }).catch(() => {});
-    router.push(`/access/${token}/intake`);
+    router.push(`/intake`);
   }
 
   async function submit() {
@@ -222,13 +222,13 @@ export function IntakeForm({
         </p>
         <div className="mt-6 flex items-center justify-center gap-3">
           <Link
-            href={`/access/${token}/projects/${result.code}`}
+            href={`/projects/${result.code}`}
             className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90"
           >
             Open the project →
           </Link>
           <Link
-            href={`/access/${token}/intake`}
+            href={`/intake`}
             className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted"
           >
             Create another
@@ -262,7 +262,7 @@ export function IntakeForm({
     <div className="mx-auto max-w-3xl">
       {/* header */}
       <div className="mb-6">
-        <Link href={`/access/${token}/intake`} className="text-xs text-muted-foreground transition hover:text-foreground">
+        <Link href={`/intake`} className="text-xs text-muted-foreground transition hover:text-foreground">
           ← All segments
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">

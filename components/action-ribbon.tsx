@@ -179,7 +179,7 @@ export function ActionRibbon({
           {tiles.map((t) => (
             <Link
               key={t.label}
-              href={`/access/${token}/analytics/${t.slug}`}
+              href={`/analytics/${t.slug}`}
               className="group flex min-w-[150px] flex-1 items-center justify-between gap-3 rounded-lg border bg-muted/40 px-4 py-2 transition hover:border-foreground/30 hover:bg-muted"
             >
               <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">

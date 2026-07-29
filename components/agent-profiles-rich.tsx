@@ -210,7 +210,7 @@ export function AgentProfilesRich({ token }: { token: string }) {
         </div>
       )}
 
-      <div className="mt-8"><Link href={`/access/${token}/technical`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">← Technical notes</Link></div>
+      <div className="mt-8"><Link href={`/technical`} className="rounded-md border px-4 py-2 text-sm font-medium transition hover:bg-muted">← Technical notes</Link></div>
     </div>
   );
 }

@@ -21,7 +21,7 @@ export function WelcomeGate({ token }: { token: string }) {
       if (localStorage.getItem('pmo-welcome-skip') === '1') return;
       if (sessionStorage.getItem('pmo-welcome-seen') === '1') return;
       sessionStorage.setItem('pmo-welcome-seen', '1');
-      router.replace(`/access/${token}/welcome`);
+      router.replace(`/welcome`);
     } catch {
       /* storage unavailable — just stay on the dashboard */
     }

@@ -123,7 +123,7 @@ export function AgentDetailCard({ agentType, token }: { agentType: AgentType; to
       </p>
 
       <div className="mt-4 border-t pt-3 text-right">
-        <Link href={`/access/${token}/agents`} className="text-xs font-medium text-foreground hover:underline">See all 15 agents →</Link>
+        <Link href={`/agents`} className="text-xs font-medium text-foreground hover:underline">See all 15 agents →</Link>
       </div>
     </>
   );

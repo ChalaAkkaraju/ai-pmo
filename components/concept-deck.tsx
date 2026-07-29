@@ -228,7 +228,7 @@ export function ConceptDeck({ token }: { token: string }) {
       {/* Top strip */}
       <div className="flex flex-none items-center justify-between gap-4 border-b bg-background px-6 py-2.5">
         <div className="flex items-center gap-3 text-sm">
-          <Link href={`/access/${token}`} className="text-muted-foreground hover:text-foreground">← Dashboard</Link>
+          <Link href={`/dashboard`} className="text-muted-foreground hover:text-foreground">← Dashboard</Link>
           <span className="text-muted-foreground/40">·</span>
           <span className="text-xs text-muted-foreground">AI concepts</span>
         </div>
@@ -318,7 +318,7 @@ export function ConceptDeck({ token }: { token: string }) {
                 <div className="mt-3 rounded-xl border-l-4 px-4 py-3" style={{ borderColor: c.accent, backgroundColor: `${c.accent}0d` }}>
                   <p className="text-sm font-semibold uppercase tracking-wider" style={{ color: c.accent }}>In AI PMO</p>
                   <p className="mt-1.5 text-base leading-relaxed text-foreground/85">{c.inApp}</p>
-                  {c.linkPath && <Link href={`/access/${token}/${c.linkPath}`} className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium hover:underline" style={{ color: c.accent }}>{c.linkLabel} <ArrowRight size={14} /></Link>}
+                  {c.linkPath && <Link href={`/${c.linkPath}`} className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium hover:underline" style={{ color: c.accent }}>{c.linkLabel} <ArrowRight size={14} /></Link>}
                 </div>
 
                 <p className="mt-4 text-sm text-muted-foreground"><span className="font-semibold uppercase tracking-wider text-foreground/60">Why it matters: </span>{c.why}</p>

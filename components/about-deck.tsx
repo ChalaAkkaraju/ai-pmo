@@ -188,7 +188,7 @@ export function AboutDeck({ token }: { token: string }) {
     <div className="relative flex h-[calc(100vh-3.5rem)] flex-col">
       <div className="flex flex-none items-center justify-between gap-4 border-b bg-background px-6 py-2.5">
         <div className="flex items-center gap-3 text-sm">
-          <Link href={`/access/${token}`} className="text-muted-foreground hover:text-foreground">← Dashboard</Link>
+          <Link href={`/dashboard`} className="text-muted-foreground hover:text-foreground">← Dashboard</Link>
           <span className="text-muted-foreground/40">·</span>
           <span className="text-xs text-muted-foreground">How AI PMO works</span>
         </div>
@@ -420,7 +420,7 @@ export function AboutDeck({ token }: { token: string }) {
               </div>
             ))}
           </div>
-          <Link href={`/access/${token}/agents`} className="mt-5 inline-flex rounded-full border px-4 py-1.5 text-sm font-medium transition hover:bg-muted hover:border-foreground/20">Meet the 15 agents →</Link>
+          <Link href={`/agents`} className="mt-5 inline-flex rounded-full border px-4 py-1.5 text-sm font-medium transition hover:bg-muted hover:border-foreground/20">Meet the 15 agents →</Link>
         </Slide>
 
         {/* 9 — vs SAP */}
@@ -444,7 +444,7 @@ export function AboutDeck({ token }: { token: string }) {
           <div className="mt-4 rounded-lg border-l-4 border-slate-300 bg-muted/40 px-4 py-2.5">
             <p className="text-[13px] leading-relaxed text-muted-foreground">A note on humility: SAP ships secure, audited, transactional agents to thousands of enterprises — a far heavier lift than a focused, read-only synthesis layer. This is not a claim to be faster or better than SAP; it is a different, narrower job that sits alongside it.</p>
           </div>
-          <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">Sources: SAP News (Connect 2025, Sapphire 2026), sap.com, SAP Community — as of June 2026. <Link href={`/access/${token}/technical`} className="font-medium text-sky-700 hover:underline">See the detailed agent-by-agent comparison →</Link></p>
+          <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">Sources: SAP News (Connect 2025, Sapphire 2026), sap.com, SAP Community — as of June 2026. <Link href={`/technical`} className="font-medium text-sky-700 hover:underline">See the detailed agent-by-agent comparison →</Link></p>
         </Slide>
 
         {/* 10 — Capabilities */}
@@ -461,7 +461,7 @@ export function AboutDeck({ token }: { token: string }) {
           </div>
           <p className="mt-5 text-center text-[15px] text-foreground/80">Everything above, in one place — the portfolio explained, a question away, with the next action ready to assign.</p>
           <div className="mt-5 text-center">
-            <Link href={`/access/${token}`} className="inline-flex rounded-md bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90">Enter dashboard</Link>
+            <Link href={`/dashboard`} className="inline-flex rounded-md bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90">Enter dashboard</Link>
             <p className="mt-4 text-xs text-muted-foreground">Portfolio shown is illustrative sample data.</p>
           </div>
         </Slide>

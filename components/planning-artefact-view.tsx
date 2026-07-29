@@ -291,7 +291,7 @@ export function PlanningArtefactView({ rows, artefactLabel, token, blurb, canEdi
             )}
             {!editing && (
               <a
-                href={`/access/${token}/report/${current.id}`}
+                href={`/report/${current.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"

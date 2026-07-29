@@ -171,13 +171,13 @@ export function BriefView({ token, output, project, colleague, viewerRole }: Bri
       <div className="no-print sticky top-0 z-10 border-b bg-white shadow-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-3">
           <Link
-            href={`/access/${token}`}
+            href={`/dashboard`}
             className="text-xs text-muted-foreground transition hover:text-foreground"
           >
             ← Back to dashboard
           </Link>
           <Link
-            href={`/access/${token}/report/${output.id}`}
+            href={`/report/${output.id}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:opacity-90"

@@ -34,5 +34,5 @@ export async function changePassword(formData: FormData): Promise<void> {
   await admin.from('roles').update({ must_change_password: false }).eq('user_id', user.id);
 
   const resolved = await getSessionRole();
-  redirect(resolved?.role.is_admin ? '/admin/users' : '/access/home');
+  redirect(resolved?.role.is_admin ? '/admin/users' : '/dashboard');
 }

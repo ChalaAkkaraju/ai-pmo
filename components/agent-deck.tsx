@@ -216,7 +216,7 @@ export function AgentDeck({ token, total, entries }: AgentDeckProps) {
       {/* Top strip — breadcrumb + label + counter */}
       <div className="flex flex-none items-center justify-between gap-4 border-b bg-background px-6 py-2.5">
         <div className="flex items-center gap-3 text-sm">
-          <Link href={`/access/${token}`} className="text-muted-foreground hover:text-foreground">
+          <Link href={`/dashboard`} className="text-muted-foreground hover:text-foreground">
             ← Dashboard
           </Link>
           <span className="text-muted-foreground/40">·</span>

@@ -850,7 +850,7 @@ function InvocationCard({
                     ↗ Pop out
                   </button>
                   <a
-                    href={`/access/${token}/report/${invocation.output_id}`}
+                    href={`/report/${invocation.output_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"
@@ -1180,7 +1180,7 @@ function PoppedOutBriefPanel({
         {invocation.output_id && choices.length === 0 && (
           <div className="mb-1.5 flex items-center justify-end">
             <a
-              href={`/access/${token}/report/${invocation.output_id}`}
+              href={`/report/${invocation.output_id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-900 transition hover:bg-slate-100"

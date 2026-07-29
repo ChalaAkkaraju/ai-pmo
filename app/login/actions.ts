@@ -18,7 +18,7 @@ function backToLogin(message: string, next: string): never {
 export async function signIn(formData: FormData): Promise<void> {
   const username = String(formData.get('username') ?? '').trim().toLowerCase();
   const password = String(formData.get('password') ?? '');
-  const next = String(formData.get('next') ?? '') || '/access/home';
+  const next = String(formData.get('next') ?? '') || '/dashboard';
 
   if (!username || !password) {
     backToLogin('Enter your Login ID and password.', next);

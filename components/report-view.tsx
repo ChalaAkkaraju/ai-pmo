@@ -386,7 +386,7 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-4">
           <div className="flex flex-col">
             <Link
-              href={`/access/${token}`}
+              href={`/dashboard`}
               className="text-xs text-muted-foreground transition hover:text-foreground"
             >
               ← Back to dashboard

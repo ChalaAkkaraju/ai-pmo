@@ -101,7 +101,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   // 3. Build the in-app URL Puppeteer will navigate to. The token doubles
   //    as the auth so we can hit the same page the user would see.
   const baseUrl = `${url.protocol}//${url.host}`;
-  const reportUrl = `${baseUrl}/access/${token}/report/${outputId}`;
+  const reportUrl = `${baseUrl}/report/${outputId}`;
 
   // 4. Launch Puppeteer, render the page, capture as PDF.
   let browser: Browser | null = null;
