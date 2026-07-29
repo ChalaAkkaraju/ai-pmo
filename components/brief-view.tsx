@@ -42,7 +42,6 @@ interface BriefColleague {
 }
 
 interface BriefViewProps {
-  token: string;
   output: BriefOutput;
   project: BriefProject | null;
   colleague: BriefColleague | null;
@@ -149,7 +148,7 @@ function deriveTitle(agentLabel: string, project: BriefProject | null): string {
   return `${agentLabel} — Portfolio brief`;
 }
 
-export function BriefView({ token, output, project, colleague, viewerRole }: BriefViewProps) {
+export function BriefView({ output, project, colleague, viewerRole }: BriefViewProps) {
   const { title, body } = stripLeadingH1(output.output_md);
   const briefTitle = title ?? deriveTitle(output.agent_label, project);
 

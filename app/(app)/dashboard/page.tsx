@@ -8,7 +8,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { matchRoleFromText } from '@/lib/role-match';
 import { WelcomeGate } from '@/components/welcome-gate';
 import { createSupabaseServiceClient } from '@/lib/supabase';
@@ -44,8 +44,7 @@ const ALL_SEGMENTS: ReadonlyArray<'renewables' | 'water' | 'industrial' | 'power
 ];
 
 export default async function RoleLandingPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -717,9 +716,8 @@ export default async function RoleLandingPage() {
 
   return (
     <>
-      <WelcomeGate token={token} />
+      <WelcomeGate />
       <DashboardClient
-      token={token}
       roleType={resolved.definition.type}
       actionsActive={actionsActive}
       issuesActive={issuesActive}

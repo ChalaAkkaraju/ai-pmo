@@ -71,7 +71,7 @@ function LifecycleStepper({ phase }: { phase: Phase | 'portfolio' }) {
   );
 }
 
-export function AgentDetailCard({ agentType, token }: { agentType: AgentType; token: string }) {
+export function AgentDetailCard({ agentType }: { agentType: AgentType }) {
   const entry = AGENT_CATALOG.find((a) => a.agent_type === agentType);
   if (!entry) return null;
   const s = scopeStyle(entry.scope);

@@ -7,7 +7,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,8 +40,7 @@ const SECTIONS: Section[] = [
 ];
 
 export default async function TechnicalHubPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   return (

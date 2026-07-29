@@ -35,7 +35,7 @@ const LEARN_LINKS: Array<{ path: string; label: string }> = [
   { path: 'technical', label: 'Technical notes' },
 ];
 
-export function Header({ token, resolved, signedIn = false }: { token: string; resolved: ResolvedRole; signedIn?: boolean }) {
+export function Header({ resolved, signedIn = false }: { resolved: ResolvedRole; signedIn?: boolean }) {
   const canCreate = CREATE_ROLES.includes(resolved.role.role_type);
   // On the welcome gateway (its own branding + entry buttons) the full header is
   // redundant — keep only a minimal, centred name / role so you still see who

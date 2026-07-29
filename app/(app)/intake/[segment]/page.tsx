@@ -10,7 +10,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { IntakeForm } from '@/components/intake-form';
 import type { ReferenceProject } from '@/lib/intake-config';
@@ -83,9 +83,8 @@ export default async function SegmentIntakePage({
   searchParams: Promise<{ draft?: string }>;
 }) {
   const { segment } = await params;
-  const token = 'session';
   const { draft } = await searchParams;
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
   if (!isSegment(segment)) notFound();
 
@@ -114,7 +113,6 @@ export default async function SegmentIntakePage({
   return (
     <div className="container mx-auto px-8 py-8">
       <IntakeForm
-        token={token}
         segment={segment}
         references={references}
         initialValues={draftLoad.initialValues}

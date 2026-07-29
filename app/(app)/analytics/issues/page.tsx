@@ -5,7 +5,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { BreakdownTable, Kpis, rowsFrom, tally, renameHML } from '@/components/analytics-shared';
@@ -18,8 +18,7 @@ import { fmtUsd } from '@/lib/risk-emv';
 export const dynamic = 'force-dynamic';
 
 export default async function IssuesAnalyticsPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -91,7 +90,7 @@ export default async function IssuesAnalyticsPage() {
         </div>
       </section>
 
-      <AnalyticsNav token={token} />
+      <AnalyticsNav />
 
       <Kpis
         items={[
@@ -134,7 +133,7 @@ export default async function IssuesAnalyticsPage() {
         <p className="text-xs text-muted-foreground">
           Every issue on an active project. Search, filter by segment / status / severity, sort any column, and click a project to open it.
         </p>
-        <PortfolioIssuesTable token={token} rows={activeIssueRows} />
+        <PortfolioIssuesTable rows={activeIssueRows} />
       </section>
     </div>
   );

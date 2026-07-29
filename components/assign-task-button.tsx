@@ -15,7 +15,7 @@ import type { RoleType } from '@/lib/types';
 
 type State = 'idle' | 'posting' | 'done' | 'error';
 
-export function AssignTaskButton({ token, projectCode }: { token: string; projectCode: string }) {
+export function AssignTaskButton({ projectCode }: { projectCode: string }) {
   const [open, setOpen] = useState(false);
   const [assignee, setAssignee] = useState<RoleType>('pm');
   const [description, setDescription] = useState('');
@@ -35,7 +35,6 @@ export function AssignTaskButton({ token, projectCode }: { token: string; projec
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token,
           project_code: projectCode,
           items: [{ description: description.trim(), assigned_to_role: assignee, urgency }],
         }),

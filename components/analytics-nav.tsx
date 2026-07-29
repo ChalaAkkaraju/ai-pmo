@@ -19,7 +19,7 @@ const TABS: Array<{ slug: string; label: string }> = [
   { slug: 'resources', label: 'Resources' },
 ];
 
-export function AnalyticsNav({ token }: { token: string }) {
+export function AnalyticsNav() {
   const pathname = usePathname() ?? '';
   return (
     <nav className="flex flex-wrap gap-1 border-b">

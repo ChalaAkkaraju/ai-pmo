@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { parseWbsCsv, parseCostCsv, parseTaskCsv, parseResourceCsv, parseCommitmentCsv, parseBillingCsv, parseRaCsv, parseChangeOrderCsv, parseMilestoneCsv } from '@/lib/integration/csv';
 import { FileSapAdapter } from '@/lib/integration/adapters/file-sap';
 import { FileSchedulerAdapter } from '@/lib/integration/adapters/file-scheduler';
@@ -15,7 +15,6 @@ import { ingestSapProject, ingestSchedulerProject } from '@/lib/integration/inge
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
-  token: z.string().min(6),
   projectCode: z.string().min(1),
   csv: z.string().min(1),
   type: z.enum(['wbs', 'cost', 'tasks', 'resources', 'commitment', 'billing', 'results_analysis', 'change_orders', 'milestones']).optional().default('wbs'),
@@ -27,7 +26,7 @@ export async function POST(request: NextRequest) {
   try { body = bodySchema.parse(await request.json()); }
   catch { return NextResponse.json({ error: 'Invalid request body' }, { status: 400 }); }
 
-  const resolved = await resolveRoleFromToken(body.token);
+  const resolved = await getSessionRole();
   if (!resolved) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   if (!resolved.definition.can_write) return NextResponse.json({ error: 'Your role cannot import data.' }, { status: 403 });
 

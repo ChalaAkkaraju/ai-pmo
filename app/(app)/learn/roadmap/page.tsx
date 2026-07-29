@@ -5,7 +5,7 @@
  */
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { PrintButton } from '@/components/print-button';
 
 export const dynamic = 'force-dynamic';
@@ -32,8 +32,7 @@ const PHASES: { n: number; title: string; goal: string; exit: string; status: St
 const SB: Record<Status, string> = { Built: 'bg-emerald-100 text-emerald-700', 'In progress': 'bg-amber-100 text-amber-700' };
 
 export default async function RoadmapPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   return (

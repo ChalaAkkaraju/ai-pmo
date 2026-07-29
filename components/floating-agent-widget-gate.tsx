@@ -15,7 +15,6 @@ import { FloatingAgentWidget } from '@/components/floating-agent-widget';
 import type { AgentType } from '@/lib/types';
 
 export function FloatingAgentWidgetGate(props: {
-  token: string;
   roleDisplayName: string;
   allowedAgents: AgentType[];
   canWrite: boolean;

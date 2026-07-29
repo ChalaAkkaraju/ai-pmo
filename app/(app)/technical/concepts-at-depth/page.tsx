@@ -4,7 +4,7 @@
  * reasoning models, mixture-of-experts, MCP) as a full-screen deck. Valid token only.
  */
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { TechnicalDeck } from '@/components/technical-deck';
 
 export const dynamic = 'force-dynamic';
@@ -14,8 +14,7 @@ interface PageProps {
 }
 
 export default async function ConceptsAtDepthPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
-  return <TechnicalDeck token={token} />;
+  return <TechnicalDeck />;
 }

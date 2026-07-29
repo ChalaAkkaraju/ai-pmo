@@ -13,7 +13,7 @@ import { AGENT_CATALOG } from '@/lib/agent-catalog';
 import type { AgentType } from '@/lib/types';
 import { AgentDetailCard } from '@/components/agent-detail-card';
 
-export function ProcessFlowDiagram({ token }: { token: string }) {
+export function ProcessFlowDiagram() {
   const ref = useRef<HTMLDivElement | null>(null);
   const [svg, setSvg] = useState('');
   const [agent, setAgent] = useState<string | null>(null);
@@ -63,7 +63,7 @@ export function ProcessFlowDiagram({ token }: { token: string }) {
               <X size={16} strokeWidth={2.5} />
             </button>
             <div className="max-h-[90vh] overflow-y-auto p-5">
-              <AgentDetailCard agentType={agent as AgentType} token={token} />
+              <AgentDetailCard agentType={agent as AgentType} />
             </div>
           </div>
         </div>

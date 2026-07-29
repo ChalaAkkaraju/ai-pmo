@@ -19,14 +19,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const Body = z.object({
-  token: z.string().min(1),
   output_id: z.string().uuid(),
   full_md: z.string().min(1).max(200_000),
 });
@@ -44,7 +43,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Validate the token — exact same check the report page does.
-  const resolved = await resolveRoleFromToken(parsed.token);
+  const resolved = await getSessionRole();
   if (!resolved) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }

@@ -20,7 +20,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { Browser } from 'puppeteer-core';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 
 // Force Node runtime — Puppeteer requires Node APIs and the Chromium binary.
@@ -70,16 +70,12 @@ async function launchBrowser(): Promise<Browser> {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { outputId } = await params;
   const url = new URL(request.url);
-  const token = url.searchParams.get('token');
   const filenameParam = url.searchParams.get('filename');
   const filename = sanitizeFilename(filenameParam) ?? `AI-PMO-Report-${outputId}.pdf`;
 
-  if (!token) {
-    return NextResponse.json({ error: 'Missing token query parameter' }, { status: 400 });
-  }
 
   // 1. Validate the token — exact same check the report page does.
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }

@@ -57,7 +57,6 @@ import type { AgentCatalogEntry, AgentScope } from '@/lib/agent-catalog';
 import type { AgentType } from '@/lib/types';
 
 interface AgentDeckProps {
-  token: string;
   total: number;
   entries: AgentCatalogEntry[];
 }
@@ -128,7 +127,7 @@ const PHASE_ORDER: Array<{ key: Phase | 'portfolio'; label: string }> = [
   { key: 'portfolio', label: 'Portfolio-wide' },
 ];
 
-export function AgentDeck({ token, total, entries }: AgentDeckProps) {
+export function AgentDeck({ total, entries }: AgentDeckProps) {
   // Slide 0 = overview, slide 1 = how-it-works, agents occupy slides 2..total+1.
   const HOWTO_IDX = 1;
   const slideCount = total + 2;

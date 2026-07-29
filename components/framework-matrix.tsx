@@ -121,7 +121,7 @@ function Chip({ proc, onClick }: { proc: Proc; onClick: () => void }) {
   );
 }
 
-export function FrameworkMatrix({ token }: { token: string }) {
+export function FrameworkMatrix() {
   const [sel, setSel] = useState<Selected | null>(null);
   const [agent, setAgent] = useState<AgentType | null>(null);
 
@@ -227,7 +227,7 @@ export function FrameworkMatrix({ token }: { token: string }) {
           <div className="relative my-4 w-full max-w-3xl rounded-2xl border bg-card shadow-xl" onClick={(e) => e.stopPropagation()}>
             <button type="button" onClick={() => setAgent(null)} aria-label="Close" className="absolute right-3 top-3 z-10 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted">✕</button>
             <div className="max-h-[88vh] overflow-y-auto p-5">
-              <AgentDetailCard agentType={agent} token={token} />
+              <AgentDetailCard agentType={agent} />
             </div>
           </div>
         </div>

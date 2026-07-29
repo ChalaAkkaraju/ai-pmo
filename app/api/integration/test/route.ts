@@ -4,14 +4,13 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { SapPsMockAdapter } from '@/lib/integration/adapters/sap-ps-mock';
 import { MsProjectMockAdapter } from '@/lib/integration/adapters/msproject-mock';
 
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
-  token: z.string().min(6),
   source: z.enum(['SAP_PS', 'MS_PROJECT', 'P6']).optional().default('SAP_PS'),
 });
 
@@ -23,7 +22,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message: 'Invalid request body' }, { status: 400 });
   }
 
-  const resolved = await resolveRoleFromToken(body.token);
+  const resolved = await getSessionRole();
   if (!resolved) return NextResponse.json({ ok: false, message: 'Invalid token' }, { status: 401 });
   if (body.source === 'P6') {
     return NextResponse.json({ ok: false, message: 'P6 connector not implemented yet.' }, { status: 200 });

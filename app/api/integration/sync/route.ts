@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { ingestSapProject, ingestSchedulerProject } from '@/lib/integration/ingestion-service';
 import { SapPsMockAdapter } from '@/lib/integration/adapters/sap-ps-mock';
 import { MsProjectMockAdapter } from '@/lib/integration/adapters/msproject-mock';
@@ -19,7 +19,6 @@ import { MsProjectMockAdapter } from '@/lib/integration/adapters/msproject-mock'
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
-  token: z.string().min(6),
   projectCode: z.string().min(1),
   source: z.enum(['SAP_PS', 'MS_PROJECT', 'P6']).optional().default('SAP_PS'),
   channel: z.enum(['api', 'file', 'manual']).optional().default('api'),
@@ -34,7 +33,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const resolved = await resolveRoleFromToken(body.token);
+  const resolved = await getSessionRole();
   if (!resolved) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   if (!resolved.definition.can_write) {
     return NextResponse.json({ error: 'Your role cannot run a data sync.' }, { status: 403 });

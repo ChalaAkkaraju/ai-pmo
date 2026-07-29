@@ -5,14 +5,14 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { buildSapWbsLoad } from '@/lib/integration/csv';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const sp = new URL(request.url).searchParams;
-  const resolved = await resolveRoleFromToken(sp.get('token') ?? '');
+  const resolved = await getSessionRole();
   if (!resolved) return new NextResponse('Invalid token', { status: 401 });
 
   const projectCode = sp.get('projectCode') ?? '';

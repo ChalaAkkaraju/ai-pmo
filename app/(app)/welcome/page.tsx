@@ -10,7 +10,7 @@
 import { notFound } from 'next/navigation';
 import { Sparkles, TrendingUp, Layers, ShieldCheck } from 'lucide-react';
 import { Plus_Jakarta_Sans } from 'next/font/google';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { WelcomeActions } from '@/components/welcome-actions';
 
 export const dynamic = 'force-dynamic';
@@ -42,8 +42,7 @@ const PROOF = [
 ];
 
 export default async function WelcomePage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   return (
@@ -90,7 +89,7 @@ export default async function WelcomePage() {
       </p>
 
       {/* Primary + secondary CTA (one row), with the skip control */}
-      <WelcomeActions token={token} />
+      <WelcomeActions />
 
       <p className="mt-7 text-xs text-muted-foreground">
         Portfolio shown is illustrative sample data · explore more from the <span className="font-medium text-foreground/70">Learn</span> menu · return anytime at <span className="font-mono">/welcome</span>.

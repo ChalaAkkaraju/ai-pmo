@@ -8,7 +8,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { Kpis } from '@/components/analytics-shared';
@@ -39,8 +39,7 @@ interface ProjEv extends EvMetrics {
 }
 
 export default async function EarnedValueAnalyticsPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -98,7 +97,7 @@ export default async function EarnedValueAnalyticsPage() {
         </div>
       </section>
 
-      <AnalyticsNav token={token} />
+      <AnalyticsNav />
 
       <Kpis
         items={[
@@ -158,7 +157,7 @@ export default async function EarnedValueAnalyticsPage() {
           <h2 className="text-base font-semibold">Active projects · earned value ({rows.length})</h2>
           <span className="text-xs text-muted-foreground">{overCost} over cost · {behind} behind</span>
         </div>
-        <PortfolioEvTable token={token} rows={evRows} />
+        <PortfolioEvTable rows={evRows} />
       </section>
     </div>
   );

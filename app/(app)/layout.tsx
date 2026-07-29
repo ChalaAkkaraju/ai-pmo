@@ -6,7 +6,6 @@
  */
 
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
 import { Header } from '@/components/header';
 import { getSessionRole } from '@/lib/auth';
 import { FloatingAgentWidgetGate } from '@/components/floating-agent-widget-gate';
@@ -16,20 +15,16 @@ interface AccessLayoutProps {
 }
 
 export default async function AccessLayout({ children }: AccessLayoutProps) {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
-  const session = await getSessionRole();
-
+  const resolved = await getSessionRole();
   if (!resolved) {
     notFound();
   }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header token={token} resolved={resolved} signedIn={!!session} />
+      <Header resolved={resolved} signedIn={!!resolved} />
       <main className="flex-1">{children}</main>
       <FloatingAgentWidgetGate
-        token={token}
         roleDisplayName={resolved.definition.display_name}
         allowedAgents={resolved.definition.allowed_agents}
         canWrite={resolved.definition.can_write}

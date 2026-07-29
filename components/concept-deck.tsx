@@ -164,7 +164,7 @@ function Slide({ idx, refCb, children }: { idx: number; refCb: (i: number) => (e
   );
 }
 
-export function ConceptDeck({ token }: { token: string }) {
+export function ConceptDeck() {
   const slideCount = CONCEPTS.length + 2; // overview + concepts + capstone
   const capIdx = CONCEPTS.length + 1;
   const [active, setActive] = useState(0);

@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sparkles, Compass } from 'lucide-react';
 
-export function WelcomeActions({ token }: { token: string }) {
+export function WelcomeActions() {
   const router = useRouter();
   const [skip, setSkip] = useState(false);
 

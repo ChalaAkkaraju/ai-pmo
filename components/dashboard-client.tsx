@@ -158,7 +158,6 @@ export interface WorkspaceActivity {
 }
 
 interface Props {
-  token: string;
   roleType: string;
   actionsActive: number;
   issuesActive: number;
@@ -596,7 +595,6 @@ function PortfolioEvBand({ ev, onBehindClick, onOverClick }: { ev: PortfolioEv; 
 }
 
 export function DashboardClient({
-  token,
   roleType,
   actionsActive,
   issuesActive,
@@ -1092,7 +1090,6 @@ export function DashboardClient({
 
       {/* Action ribbon — slim attention bar + popup; sits just below the portfolio HERO */}
       <ActionRibbon
-        token={token}
         roleType={roleType}
         actionsActive={actionsActive}
         issuesActive={issuesActive}

@@ -14,11 +14,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-const bodySchema = z.object({ token: z.string().min(6), projectCode: z.string().min(1) });
+const bodySchema = z.object({ projectCode: z.string().min(1) });
 
 export async function POST(request: NextRequest) {
   let body: z.infer<typeof bodySchema>;
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const resolved = await resolveRoleFromToken(body.token);
+  const resolved = await getSessionRole();
   if (!resolved) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   if (!resolved.definition.can_write) {
     return NextResponse.json({ error: 'Your role cannot book a WBS to SAP.' }, { status: 403 });

@@ -81,7 +81,6 @@ const PLANNING_TABS: Array<{ value: string; label: string; agentType: AgentType;
 ];
 
 interface ProjectTabsProps {
-  token: string;
   initialTab?: string;
   projectCode: string;
   allowedAgents: AgentType[];
@@ -125,7 +124,6 @@ interface ProjectTabsProps {
 }
 
 export function ProjectTabs({
-  token,
   initialTab,
   projectCode,
   allowedAgents,
@@ -210,11 +208,11 @@ export function ProjectTabs({
           </div>
         ) : proposedWps.length > 0 ? (
           <>
-            {canWrite && <WbsAuthoring token={token} projectCode={projectCode} proposed />}
+            {canWrite && <WbsAuthoring projectCode={projectCode} proposed />}
             <WbsCanonicalTree workPackages={proposedWps} mode="proposed" />
           </>
         ) : projectAppNative && canWrite ? (
-          <WbsAuthoring token={token} projectCode={projectCode} proposed={false} />
+          <WbsAuthoring projectCode={projectCode} proposed={false} />
         ) : (
           <WbsCanonicalTree workPackages={[]} />
         )}
@@ -223,7 +221,7 @@ export function ProjectTabs({
       <Tabs.Content value="schedule" className="space-y-6 pt-6">
         <ScheduleView tasks={tasks} workPackages={workPackages} />
         {tasks.length === 0 && (
-          <PlanningAside rows={planningByAgent['schedule_reasoner'] ?? []} label="Schedule" token={token} canEdit={canWrite} />
+          <PlanningAside rows={planningByAgent['schedule_reasoner'] ?? []} label="Schedule" canEdit={canWrite} />
         )}
       </Tabs.Content>
 
@@ -295,7 +293,7 @@ export function ProjectTabs({
       </Tabs.Content>
 
       <Tabs.Content value="planning" className="pt-6">
-        <PlanningPanel byAgent={planningByAgent} token={token} canEdit={canWrite} />
+        <PlanningPanel byAgent={planningByAgent} canEdit={canWrite} />
       </Tabs.Content>
     </Tabs.Root>
   );
@@ -443,21 +441,21 @@ function AttnRow({ label, n, onClick }: { label: string; n: number; onClick: () 
 
 /* ------------------------------------------------------ AI write-up aside */
 
-function PlanningAside({ rows, label, token, canEdit }: { rows: ArtefactRow[]; label: string; token: string; canEdit: boolean }) {
+function PlanningAside({ rows, label, canEdit }: { rows: ArtefactRow[]; label: string; canEdit: boolean }) {
   if (!rows || rows.length === 0) return null;
   return (
     <div className="rounded-lg border bg-muted/20 p-4">
       <p className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
         <span aria-hidden="true">✨</span> AI {label.toLowerCase()} write-up
       </p>
-      <PlanningArtefactView rows={rows} artefactLabel={label} token={token} canEdit={canEdit} />
+      <PlanningArtefactView rows={rows} artefactLabel={label} canEdit={canEdit} />
     </div>
   );
 }
 
 /* ---------------------------------------------------------------- Planning */
 
-function PlanningPanel({ byAgent, token, canEdit }: { byAgent: Record<string, ArtefactRow[]>; token: string; canEdit: boolean }) {
+function PlanningPanel({ byAgent, canEdit }: { byAgent: Record<string, ArtefactRow[]>; canEdit: boolean }) {
   const firstWithContent = PLANNING_TABS.find((t) => (byAgent[t.agentType]?.length ?? 0) > 0)?.value ?? PLANNING_TABS[0].value;
   const [sel, setSel] = useState(firstWithContent);
   const active = PLANNING_TABS.find((t) => t.value === sel) ?? PLANNING_TABS[0];
@@ -492,7 +490,7 @@ function PlanningPanel({ byAgent, token, canEdit }: { byAgent: Record<string, Ar
       </div>
 
       <div className={`border-l-2 pl-5 ${active.edge}`}>
-        <PlanningArtefactView rows={byAgent[active.agentType] ?? []} artefactLabel={active.label} token={token} canEdit={canEdit} />
+        <PlanningArtefactView rows={byAgent[active.agentType] ?? []} artefactLabel={active.label} canEdit={canEdit} />
       </div>
     </div>
   );

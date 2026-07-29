@@ -5,12 +5,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({
-  token: z.string().min(6),
   id: z.string().uuid(),
   status: z.enum(['resolved', 'ignored']),
 });
@@ -23,7 +22,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const resolved = await resolveRoleFromToken(body.token);
+  const resolved = await getSessionRole();
   if (!resolved) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   if (!resolved.definition.can_write) {
     return NextResponse.json({ error: 'Your role cannot resolve sync exceptions.' }, { status: 403 });

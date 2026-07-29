@@ -42,7 +42,7 @@ function HmlBadge({ v }: { v: string }) {
 }
 
 
-function ProjectCell({ token, code, name, segment }: { token: string; code: string; name: string; segment: string }) {
+function ProjectCell({ code, name, segment }: { code: string; name: string; segment: string }) {
   const ss = segmentStyle(segment);
   return (
     <Link href={`/projects/${code}`} className="inline-flex items-center gap-1.5 hover:underline" title={name}>
@@ -196,9 +196,9 @@ export interface PortfolioIssueRow {
   opened_week: number;
 }
 
-export function PortfolioIssuesTable({ token, rows }: { token: string; rows: PortfolioIssueRow[] }) {
+export function PortfolioIssuesTable({ rows }: { rows: PortfolioIssueRow[] }) {
   const columns: Col<PortfolioIssueRow>[] = [
-    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code, render: (r) => <ProjectCell token={token} code={r.project_code} name={r.project_name} segment={r.segment} /> },
+    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code, render: (r) => <ProjectCell code={r.project_code} name={r.project_name} segment={r.segment} /> },
     { key: 'issue_id', label: 'ID', mono: true, sortKey: (r) => r.issue_id },
     { key: 'description', label: 'Description', render: (r) => <span className="block max-w-md">{r.description}</span> },
     { key: 'severity', label: 'Sev', align: 'center', sortKey: (r) => hmlRank(r.severity), render: (r) => <HmlBadge v={r.severity} /> },
@@ -238,9 +238,9 @@ export interface PortfolioRiskRow {
   owner: string;
 }
 
-export function PortfolioRisksTable({ token, rows }: { token: string; rows: PortfolioRiskRow[] }) {
+export function PortfolioRisksTable({ rows }: { rows: PortfolioRiskRow[] }) {
   const columns: Col<PortfolioRiskRow>[] = [
-    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code, render: (r) => <ProjectCell token={token} code={r.project_code} name={r.project_name} segment={r.segment} /> },
+    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code, render: (r) => <ProjectCell code={r.project_code} name={r.project_name} segment={r.segment} /> },
     { key: 'risk_id', label: 'ID', mono: true, sortKey: (r) => r.risk_id },
     { key: 'description', label: 'Description', render: (r) => <span className="block max-w-md">{r.description}</span> },
     { key: 'impact', label: 'Impact', align: 'center', sortKey: (r) => hmlRank(r.impact), render: (r) => <HmlBadge v={r.impact} /> },
@@ -282,9 +282,9 @@ export interface PortfolioActionRow {
   created_at: string;
 }
 
-export function PortfolioActionsTable({ token, rows }: { token: string; rows: PortfolioActionRow[] }) {
+export function PortfolioActionsTable({ rows }: { rows: PortfolioActionRow[] }) {
   const columns: Col<PortfolioActionRow>[] = [
-    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code ?? '~', render: (r) => (r.project_code ? <ProjectCell token={token} code={r.project_code} name={r.project_name} segment={r.segment} /> : <span className="text-xs text-muted-foreground">Portfolio</span>) },
+    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code ?? '~', render: (r) => (r.project_code ? <ProjectCell code={r.project_code} name={r.project_name} segment={r.segment} /> : <span className="text-xs text-muted-foreground">Portfolio</span>) },
     { key: 'description', label: 'Description', render: (r) => <span className="block max-w-md">{r.description}</span> },
     { key: 'assigned_to_role', label: 'Assigned to', sortKey: (r) => r.assigned_to_role, render: (r) => <span className="text-xs font-medium">{roleLabel(r.assigned_to_role as RoleType)}</span> },
     { key: 'raised_by_role', label: 'Raised by', sortKey: (r) => r.raised_by_role ?? '', render: (r) => <span className="text-xs text-muted-foreground">{r.raised_by_role ? roleLabel(r.raised_by_role as RoleType) : '\u2014'}</span> },
@@ -330,9 +330,9 @@ function evTone(n: number | null): string {
   return n == null ? 'text-foreground' : n < 0.95 ? 'text-red-600' : n >= 1.0 ? 'text-emerald-700' : 'text-amber-700';
 }
 
-export function PortfolioEvTable({ token, rows }: { token: string; rows: PortfolioEvRow[] }) {
+export function PortfolioEvTable({ rows }: { rows: PortfolioEvRow[] }) {
   const columns: Col<PortfolioEvRow>[] = [
-    { key: 'code', label: 'Project', sortKey: (r) => r.code, render: (r) => <ProjectCell token={token} code={r.code} name={r.name} segment={r.segment} /> },
+    { key: 'code', label: 'Project', sortKey: (r) => r.code, render: (r) => <ProjectCell code={r.code} name={r.name} segment={r.segment} /> },
     { key: 'cpi', label: 'CPI', align: 'center', mono: true, sortKey: (r) => r.cpi ?? 99, render: (r) => <span className={evTone(r.cpi)}>{r.cpi == null ? '\u2014' : r.cpi.toFixed(2)}</span> },
     { key: 'spi', label: 'SPI', align: 'center', mono: true, sortKey: (r) => r.spi ?? 99, render: (r) => <span className={evTone(r.spi)}>{r.spi == null ? '\u2014' : r.spi.toFixed(2)}</span> },
     { key: 'cv', label: 'CV', align: 'right', mono: true, sortKey: (r) => r.cv, render: (r) => <span className={r.cv < 0 ? 'text-red-600' : 'text-emerald-700'}>{evMoney(r.cv)}</span> },
@@ -387,9 +387,9 @@ export interface PortfolioChangeOrderRow {
 const CO_DRIVER_OPTS = ['Client-directed scope', 'Site conditions', 'Design development', 'Regulatory & permits', 'Supply & escalation', 'Other'].map((d) => ({ value: d, label: d }));
 function coM(v: number): string { return `${v < 0 ? '\u2212' : ''}$${Math.abs(v).toFixed(1)}M`; }
 
-export function PortfolioChangeOrdersTable({ token, rows }: { token: string; rows: PortfolioChangeOrderRow[] }) {
+export function PortfolioChangeOrdersTable({ rows }: { rows: PortfolioChangeOrderRow[] }) {
   const columns: Col<PortfolioChangeOrderRow>[] = [
-    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code, render: (r) => <ProjectCell token={token} code={r.project_code} name={r.project_name} segment={r.segment} /> },
+    { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code, render: (r) => <ProjectCell code={r.project_code} name={r.project_name} segment={r.segment} /> },
     { key: 'co_id', label: 'CO', mono: true, sortKey: (r) => r.co_id },
     { key: 'scope', label: 'Scope', render: (r) => <span className="block max-w-md">{r.scope}</span> },
     { key: 'driver', label: 'Driver', render: (r) => <span className="text-xs text-muted-foreground">{r.driver}</span> },

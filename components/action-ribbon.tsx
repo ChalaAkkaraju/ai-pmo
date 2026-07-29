@@ -28,7 +28,6 @@ interface CountRow {
 }
 
 export function ActionRibbon({
-  token,
   roleType,
   actionsActive,
   issuesActive,
@@ -38,7 +37,6 @@ export function ActionRibbon({
   risksMine,
   recentlyAdded = [],
 }: {
-  token: string;
   roleType: string;
   actionsActive: number;
   issuesActive: number;
@@ -76,13 +74,13 @@ export function ActionRibbon({
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch(`/api/actions?scope=mine&token=${encodeURIComponent(token)}`, { cache: 'no-store' });
+      const res = await fetch(`/api/actions?scope=mine`, { cache: 'no-store' });
       const items = ((await res.json()).items ?? []) as CountRow[];
       setAssignedOpen(items.filter((a) => a.status !== 'Done').length);
     } catch {
       /* leave as-is */
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     refresh();
@@ -156,7 +154,7 @@ export function ActionRibbon({
               </span>
             </button>
             {newOpen && (
-              <NewProjectsPopover token={token} projects={recentlyAdded} onClose={() => setNewOpen(false)} />
+              <NewProjectsPopover projects={recentlyAdded} onClose={() => setNewOpen(false)} />
             )}
           </div>
         )}
@@ -213,17 +211,15 @@ export function ActionRibbon({
         </div>
       </div>
 
-      {open && <ActionsModal token={token} roleType={roleType} onClose={() => setOpen(false)} />}
+      {open && <ActionsModal roleType={roleType} onClose={() => setOpen(false)} />}
     </section>
   );
 }
 
 function ActionsModal({
-  token,
   roleType,
   onClose,
 }: {
-  token: string;
   roleType: string;
   onClose: () => void;
 }) {
@@ -264,24 +260,24 @@ function ActionsModal({
         </header>
 
         <div className="max-h-[75vh] overflow-y-auto px-5 py-4">
-          <ActionQueue token={token} roleType={roleType} />
-          <RaisedActionsPanel token={token} roleType={roleType} />
-          <EmptyHint token={token} roleType={roleType} />
+          <ActionQueue roleType={roleType} />
+          <RaisedActionsPanel roleType={roleType} />
+          <EmptyHint roleType={roleType} />
         </div>
       </div>
     </div>
   );
 }
 
-function EmptyHint({ token, roleType }: { token: string; roleType: string }) {
+function EmptyHint({ roleType }: { roleType: string }) {
   const [empty, setEmpty] = useState<boolean | null>(null);
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const [m, r] = await Promise.all([
-          fetch(`/api/actions?scope=mine&token=${encodeURIComponent(token)}`, { cache: 'no-store' }),
-          fetch(`/api/actions?scope=raised&token=${encodeURIComponent(token)}`, { cache: 'no-store' }),
+          fetch(`/api/actions?scope=mine`, { cache: 'no-store' }),
+          fetch(`/api/actions?scope=raised`, { cache: 'no-store' }),
         ]);
         const mineItems = (await m.json()).items ?? [];
         const raised = (await r.json()).items ?? [];
@@ -293,7 +289,7 @@ function EmptyHint({ token, roleType }: { token: string; roleType: string }) {
     return () => {
       alive = false;
     };
-  }, [token, roleType]);
+  }, [roleType]);
 
   if (empty !== true) return null;
   return (

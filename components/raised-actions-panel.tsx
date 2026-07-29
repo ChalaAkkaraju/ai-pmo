@@ -50,14 +50,14 @@ function roleLabel(rt: string | null): string {
 }
 
 
-export function RaisedActionsPanel({ token, roleType }: { token: string; roleType: string }) {
+export function RaisedActionsPanel({ roleType }: { roleType: string }) {
   const [items, setItems] = useState<ActionItem[] | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/actions?scope=raised&token=${encodeURIComponent(token)}`, {
+      const res = await fetch(`/api/actions?scope=raised`, {
         cache: 'no-store',
       });
       const data = await res.json();
@@ -65,7 +65,7 @@ export function RaisedActionsPanel({ token, roleType }: { token: string; roleTyp
     } catch {
       setItems([]);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     load();

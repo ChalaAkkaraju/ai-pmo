@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { FrameworkMatrix } from '@/components/framework-matrix';
 
 export const dynamic = 'force-dynamic';
@@ -16,8 +16,7 @@ interface PageProps {
 }
 
 export default async function FrameworkPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   return (
@@ -41,7 +40,7 @@ export default async function FrameworkPage() {
       </p>
 
       <div className="mt-6">
-        <FrameworkMatrix token={token} />
+        <FrameworkMatrix />
       </div>
 
       <p className="mt-5 max-w-3xl rounded-lg border bg-muted/30 px-4 py-3 text-[13px] text-muted-foreground">

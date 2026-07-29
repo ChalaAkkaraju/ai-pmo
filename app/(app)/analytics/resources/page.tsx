@@ -8,7 +8,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { selectAll } from '@/lib/select-all';
 import { AnalyticsNav } from '@/components/analytics-nav';
@@ -23,8 +23,7 @@ interface Row extends ResAssignment {
 }
 
 export default async function ResourcesAnalyticsPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -78,7 +77,7 @@ export default async function ResourcesAnalyticsPage() {
         <h1 className="text-lg font-bold tracking-tight">Portfolio analytics</h1>
         <p className="text-sm text-muted-foreground">Cross-project breakdowns. Resource view is visibility only — levelling stays in the scheduler.</p>
       </div>
-      <div className="mt-5"><AnalyticsNav token={token} /></div>
+      <div className="mt-5"><AnalyticsNav /></div>
 
       <ResourceAnalyticsClient views={views} />
 

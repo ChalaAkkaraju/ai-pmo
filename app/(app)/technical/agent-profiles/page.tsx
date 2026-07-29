@@ -6,7 +6,7 @@
  */
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { PrintButton } from '@/components/print-button';
 import { AgentProfilesRich } from '@/components/agent-profiles-rich';
 
@@ -15,8 +15,7 @@ export const dynamic = 'force-dynamic';
 interface PageProps { params: Promise<{ token: string }>; }
 
 export default async function AgentProfilesPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   return (
@@ -41,7 +40,7 @@ export default async function AgentProfilesPage() {
         source); open <span className="font-medium text-foreground">Meet the agent</span> for the full card.
       </p>
 
-      <AgentProfilesRich token={token} />
+      <AgentProfilesRich />
     </div>
   );
 }

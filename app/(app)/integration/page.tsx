@@ -6,7 +6,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import {
   IntegrationClient,
@@ -28,8 +28,7 @@ function projCode(p: JoinedProj): string | null {
 }
 
 export default async function IntegrationPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -85,7 +84,6 @@ export default async function IntegrationPage() {
 
       <div className="mt-6">
         <IntegrationClient
-          token={token}
           projects={projects}
           runs={runs}
           exceptions={exceptions}

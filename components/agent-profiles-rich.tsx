@@ -130,7 +130,7 @@ const PROFILES: Prof[] = [
     reads: 'POs · cost actuals · hours · billing', feeds: 'Variance Analyst · Change Order Reviewer · Status Reporter' },
 ];
 
-export function AgentProfilesRich({ token }: { token: string }) {
+export function AgentProfilesRich() {
   const [open, setOpen] = useState<AgentType | null>(null);
   const entryOf = (at: AgentType) => AGENT_CATALOG.find((a) => a.agent_type === at);
   const refCount = PROFILES.filter((p) => p.ref).length;
@@ -205,7 +205,7 @@ export function AgentProfilesRich({ token }: { token: string }) {
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8" onClick={() => setOpen(null)}>
           <div className="relative w-full max-w-2xl rounded-2xl border bg-background p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setOpen(null)} aria-label="Close" className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground"><X size={16} /></button>
-            <AgentDetailCard agentType={open} token={token} />
+            <AgentDetailCard agentType={open} />
           </div>
         </div>
       )}

@@ -5,7 +5,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { PrintButton } from '@/components/print-button';
 
 export const dynamic = 'force-dynamic';
@@ -51,8 +51,7 @@ const SOURCES = [
 ];
 
 export default async function ComparisonPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   return (

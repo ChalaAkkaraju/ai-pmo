@@ -34,7 +34,6 @@ export interface ArtefactRow {
 interface PlanningArtefactViewProps {
   rows: ArtefactRow[];
   artefactLabel: string;
-  token: string;
   /** Optional one-line description shown in the header band. */
   blurb?: string;
   /** Write-capable role → can review & edit the draft. */
@@ -120,7 +119,7 @@ const MD_COMPONENTS = {
 
 type EditMeta = { edited_md: string | null; edited_by_role_type: string | null; edited_at: string | null };
 
-export function PlanningArtefactView({ rows, artefactLabel, token, blurb, canEdit = false }: PlanningArtefactViewProps) {
+export function PlanningArtefactView({ rows, artefactLabel, blurb, canEdit = false }: PlanningArtefactViewProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   // Local overrides keyed by row id so saves/reverts reflect without a reload.
   const [localEdits, setLocalEdits] = useState<Record<string, EditMeta>>({});
@@ -171,7 +170,7 @@ export function PlanningArtefactView({ rows, artefactLabel, token, blurb, canEdi
       const res = await fetch('/api/agent-output', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, id: current.id, edited_md: draft }),
+        body: JSON.stringify({ id: current.id, edited_md: draft }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -200,7 +199,7 @@ export function PlanningArtefactView({ rows, artefactLabel, token, blurb, canEdi
       const res = await fetch('/api/agent-output', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, id: current.id, revert: true }),
+        body: JSON.stringify({ id: current.id, revert: true }),
       });
       const json = await res.json();
       if (!res.ok) {

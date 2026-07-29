@@ -82,14 +82,12 @@ const FILE_OBJECTS: Array<{ type: FileType; label: string; source: string }> = [
 ];
 
 export function IntegrationClient({
-  token,
   projects,
   runs,
   exceptions,
   lastSyncBySource,
   canWrite,
 }: {
-  token: string;
   projects: ProjectOption[];
   runs: SyncRunRow[];
   exceptions: SyncExceptionRow[];
@@ -111,7 +109,7 @@ export function IntegrationClient({
     try {
       const res = await fetch('/api/integration/test', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, source }),
+        body: JSON.stringify({ source }),
       });
       const j = await res.json();
       setMsg({ tone: j.ok ? 'ok' : 'warn', text: j.message ?? (j.ok ? 'Connection OK' : 'Connection failed') });
@@ -125,7 +123,7 @@ export function IntegrationClient({
     try {
       const res = await fetch('/api/integration/sync', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, projectCode, source, entity: object === 'all' ? undefined : object }),
+        body: JSON.stringify({ projectCode, source, entity: object === 'all' ? undefined : object }),
       });
       const j = await res.json();
       if (!res.ok || !j.ok) setMsg({ tone: 'err', text: j.error ?? j.message ?? 'Sync failed' });
@@ -139,7 +137,7 @@ export function IntegrationClient({
     try {
       const res = await fetch('/api/integration/exceptions', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, id, status }),
+        body: JSON.stringify({ id, status }),
       });
       if (res.ok) router.refresh();
     } catch { /* noop */ }
@@ -156,7 +154,7 @@ export function IntegrationClient({
       const csv = await file.text();
       const res = await fetch('/api/integration/upload', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, projectCode: uploadProject, csv, type }),
+        body: JSON.stringify({ projectCode: uploadProject, csv, type }),
       });
       const j = await res.json();
       if (!res.ok || !j.ok) setUploadMsg({ tone: 'err', text: j.error ?? j.message ?? 'Import failed' });
@@ -262,7 +260,7 @@ export function IntegrationClient({
                   </td>
                   <td className="px-3 py-2.5 text-center">
                     {canWrite ? (
-                      <a href={`/api/integration/export?type=${o.type}&projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100">↓ Data</a>
+                      <a href={`/api/integration/export?type=${o.type}&projectCode=${uploadProject}`} className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100">↓ Data</a>
                     ) : (<span className="text-muted-foreground">—</span>)}
                   </td>
                   <td className="px-3 py-2.5 text-center">
@@ -275,7 +273,7 @@ export function IntegrationClient({
                   </td>
                   <td className="px-3 py-2.5 text-center">
                     {o.type === 'wbs' && canWrite ? (
-                      <a href={`/api/integration/export-sap?projectCode=${uploadProject}&token=${encodeURIComponent(token)}`} className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 transition hover:bg-amber-100">↓ For SAP</a>
+                      <a href={`/api/integration/export-sap?projectCode=${uploadProject}`} className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 transition hover:bg-amber-100">↓ For SAP</a>
                     ) : (<span className="text-muted-foreground">—</span>)}
                   </td>
                 </tr>

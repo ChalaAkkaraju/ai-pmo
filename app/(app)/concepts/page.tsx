@@ -5,7 +5,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { ConceptDeck } from '@/components/concept-deck';
 
 export const dynamic = 'force-dynamic';
@@ -15,9 +15,8 @@ interface PageProps {
 }
 
 export default async function ConceptsPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
-  return <ConceptDeck token={token} />;
+  return <ConceptDeck />;
 }

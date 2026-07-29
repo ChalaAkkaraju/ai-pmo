@@ -75,14 +75,12 @@ function seededPrompt(step: AgentType, name: string, code: string): string {
 }
 
 export function SetupChecklist({
-  token: _token,
   projectCode,
   projectName,
   done,
   allowedAgents,
   defaultOpen = false,
 }: {
-  token: string;
   projectCode: string;
   projectName: string;
   done: string[];

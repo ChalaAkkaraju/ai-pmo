@@ -19,7 +19,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { ReportView } from '@/components/report-view';
 
@@ -47,8 +47,7 @@ interface PageProps {
 
 export default async function ReportPage({ params }: PageProps) {
   const { outputId } = await params;
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -92,7 +91,6 @@ export default async function ReportPage({ params }: PageProps) {
 
   return (
     <ReportView
-      token={token}
       output={{
         id: raw.id,
         agent_type: raw.agent_type,

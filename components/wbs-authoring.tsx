@@ -16,11 +16,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function WbsAuthoring({
-  token,
   projectCode,
   proposed,
 }: {
-  token: string;
   projectCode: string;
   proposed: boolean;
 }) {
@@ -35,7 +33,7 @@ export function WbsAuthoring({
       const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, projectCode }),
+        body: JSON.stringify({ projectCode }),
       });
       const json = await res.json();
       if (!res.ok) setError(json?.error ?? 'Something went wrong.');

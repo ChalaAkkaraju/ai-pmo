@@ -36,11 +36,9 @@ export function timeAgo(iso: string): string {
 }
 
 export function NewProjectsPopover({
-  token,
   projects,
   onClose,
 }: {
-  token: string;
   projects: RecentlyAddedProject[];
   onClose: () => void;
 }) {

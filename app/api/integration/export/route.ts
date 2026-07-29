@@ -6,7 +6,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { exportWbsCsv, exportCostCsv, exportCommitmentCsv, exportBillingCsv, exportRaCsv, exportTaskCsv, exportResourceCsv, exportChangeOrderCsv, exportMilestoneCsv } from '@/lib/integration/csv';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,7 @@ const EXPORTERS: Record<string, { table: string; fn: (rows: Rows) => string }> =
 
 export async function GET(request: NextRequest) {
   const sp = new URL(request.url).searchParams;
-  const resolved = await resolveRoleFromToken(sp.get('token') ?? '');
+  const resolved = await getSessionRole();
   if (!resolved) return new NextResponse('Invalid token', { status: 401 });
 
   const type = sp.get('type') ?? 'wbs';

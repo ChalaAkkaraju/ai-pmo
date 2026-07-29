@@ -14,7 +14,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export function WelcomeGate({ token }: { token: string }) {
+export function WelcomeGate() {
   const router = useRouter();
   useEffect(() => {
     try {
@@ -25,6 +25,6 @@ export function WelcomeGate({ token }: { token: string }) {
     } catch {
       /* storage unavailable — just stay on the dashboard */
     }
-  }, [router, token]);
+  }, [router]);
   return null;
 }

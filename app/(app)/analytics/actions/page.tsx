@@ -5,7 +5,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { roleLabel } from '@/lib/roles';
 import type { RoleType } from '@/lib/types';
@@ -22,8 +22,7 @@ function labelRole(rt: string | null | undefined): string {
 }
 
 export default async function ActionsAnalyticsPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -88,7 +87,7 @@ export default async function ActionsAnalyticsPage() {
         </div>
       </section>
 
-      <AnalyticsNav token={token} />
+      <AnalyticsNav />
 
       <Kpis
         items={[
@@ -111,7 +110,7 @@ export default async function ActionsAnalyticsPage() {
         <p className="text-xs text-muted-foreground">
           Every cross-agent action on an active project (plus portfolio-level ones). Search, filter by segment / status / urgency / owner, sort any column.
         </p>
-        <PortfolioActionsTable token={token} rows={activeActionRows} />
+        <PortfolioActionsTable rows={activeActionRows} />
       </section>
     </div>
   );

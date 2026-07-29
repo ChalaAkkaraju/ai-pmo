@@ -9,7 +9,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { AGENT_CATALOG } from '@/lib/agent-catalog';
 import { AgentDeck } from '@/components/agent-deck';
 
@@ -20,9 +20,8 @@ interface PageProps {
 }
 
 export default async function AgentCatalogPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
-  return <AgentDeck token={token} total={AGENT_CATALOG.length} entries={AGENT_CATALOG} />;
+  return <AgentDeck total={AGENT_CATALOG.length} entries={AGENT_CATALOG} />;
 }

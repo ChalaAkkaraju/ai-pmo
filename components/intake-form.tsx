@@ -39,14 +39,12 @@ const INPUT =
 type Result = { id: string; code: string } | null;
 
 export function IntakeForm({
-  token,
   segment,
   references = [],
   initialValues,
   initialRefCode = '',
   draftId: initialDraftId,
 }: {
-  token: string;
   segment: Segment;
   references?: ReferenceProject[];
   initialValues?: Record<string, string>;
@@ -118,7 +116,6 @@ export function IntakeForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token,
           segment,
           draft_id: draftId,
           name: values.name ?? '',
@@ -143,7 +140,7 @@ export function IntakeForm({
       router.push(`/intake`);
       return;
     }
-    await fetch(`/api/projects/drafts?token=${encodeURIComponent(token)}&id=${encodeURIComponent(draftId)}`, {
+    await fetch(`/api/projects/drafts?id=${encodeURIComponent(draftId)}`, {
       method: 'DELETE',
     }).catch(() => {});
     router.push(`/intake`);
@@ -179,7 +176,6 @@ export function IntakeForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token,
           segment,
           name: coreByKey.name,
           client: coreByKey.client,
@@ -199,7 +195,7 @@ export function IntakeForm({
       }
       // Submitted from a draft — clean it up so it stops showing in "resume".
       if (draftId) {
-        await fetch(`/api/projects/drafts?token=${encodeURIComponent(token)}&id=${encodeURIComponent(draftId)}`, {
+        await fetch(`/api/projects/drafts?id=${encodeURIComponent(draftId)}`, {
           method: 'DELETE',
         }).catch(() => {});
       }

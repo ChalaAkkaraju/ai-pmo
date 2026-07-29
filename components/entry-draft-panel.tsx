@@ -16,7 +16,7 @@ const KIND_LABEL: Record<ProposedEntry['type'], string> = { risk: 'risk', issue:
 const inputCls = 'w-full rounded-md border px-2 py-1 text-[12px] focus:outline-none focus:ring-1 focus:ring-foreground/30';
 const labelCls = 'mb-0.5 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground';
 
-export function EntryDraftPanel({ entry, token, projectCode, alreadySubmittedCode, onSubmitted }: { entry: ProposedEntry; token: string; projectCode: string | null; alreadySubmittedCode?: string | null; onSubmitted?: (code: string) => void }) {
+export function EntryDraftPanel({ entry, projectCode, alreadySubmittedCode, onSubmitted }: { entry: ProposedEntry; projectCode: string | null; alreadySubmittedCode?: string | null; onSubmitted?: (code: string) => void }) {
   const [form, setForm] = useState<ProposedEntry>(entry);
   const [state, setState] = useState<State>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export function EntryDraftPanel({ entry, token, projectCode, alreadySubmittedCod
     try {
       const res = await fetch('/api/entries', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, project_code: projectCode, entry: form }),
+        body: JSON.stringify({ project_code: projectCode, entry: form }),
       });
       const json = await res.json();
       if (!res.ok) { setError(json?.error ?? 'Could not add the entry.'); setState('error'); return; }

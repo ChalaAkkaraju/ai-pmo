@@ -13,7 +13,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { getCatalogEntry } from '@/lib/agent-catalog';
 
@@ -50,8 +50,7 @@ function relTime(iso: string): string {
 }
 
 export default async function UsagePage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();

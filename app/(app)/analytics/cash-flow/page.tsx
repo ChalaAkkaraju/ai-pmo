@@ -6,7 +6,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { selectAll } from '@/lib/select-all';
@@ -18,8 +18,7 @@ export const dynamic = 'force-dynamic';
 const SEGMENTS = ['renewables', 'water', 'industrial', 'power'];
 
 export default async function CashFlowAnalyticsPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -60,7 +59,7 @@ export default async function CashFlowAnalyticsPage() {
         </div>
       </section>
 
-      <AnalyticsNav token={token} />
+      <AnalyticsNav />
 
       {portfolio ? (
         <CashFlowExplorer portfolio={portfolio} segments={segments} />

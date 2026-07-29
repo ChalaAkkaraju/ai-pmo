@@ -112,7 +112,7 @@ function Slide({ idx, refCb, children }: { idx: number; refCb: (i: number) => (e
   );
 }
 
-export function TechnicalDeck({ token }: { token: string }) {
+export function TechnicalDeck() {
   const slideCount = CONCEPTS.length + 2;
   const capIdx = CONCEPTS.length + 1;
   const [active, setActive] = useState(0);

@@ -4,7 +4,7 @@
  */
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { PrintButton } from '@/components/print-button';
 
 export const dynamic = 'force-dynamic';
@@ -33,8 +33,7 @@ const CHANNELS = [
 const PIPELINE = ['Source system', 'Adapter (per source/channel)', 'Mapper (→ canonical, join by WBS)', 'Ingestion service (diff → idempotent upsert → stamp provenance → log)', 'Canonical model'];
 
 export default async function IntegrationPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   return (

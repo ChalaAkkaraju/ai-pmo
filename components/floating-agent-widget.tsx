@@ -253,7 +253,6 @@ function stripActionCallouts(md: string): string {
 }
 
 interface FloatingAgentWidgetProps {
-  token: string;
   roleDisplayName: string;
   allowedAgents: AgentType[];
   canWrite: boolean;
@@ -387,7 +386,6 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { al
 }
 
 export function FloatingAgentWidget({
-  token,
   roleDisplayName,
   allowedAgents,
   canWrite,
@@ -493,7 +491,6 @@ export function FloatingAgentWidget({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token,
           agent_type: agentType,
           project_code: projectCode ?? undefined,
           user_prompt: invocation.prompt,
@@ -553,7 +550,6 @@ export function FloatingAgentWidget({
       key={inv.output_id ?? `pop-${i}`}
       invocation={inv}
       index={i}
-      token={token}
       onClose={() => handleClosePopOut(i)}
       onUseAsPrompt={applyFollowUp}
       submittedCode={inv.output_id ? submittedEntries[inv.output_id] : undefined}
@@ -618,7 +614,7 @@ export function FloatingAgentWidget({
           <SuggestedPrompts allowedAgents={allowedAgents} canWrite={canWrite} projectCode={projectCode} onPick={(p) => setPrompt(p)} />
         )}
         {history.map((h, idx) => (
-          <InvocationCard key={idx} invocation={h} isLatest={idx === 0} token={token} onUseAsPrompt={applyFollowUp} onPopOut={handlePopOut} submittedCode={h.output_id ? submittedEntries[h.output_id] : undefined} onEntrySubmitted={markEntrySubmitted} />
+          <InvocationCard key={idx} invocation={h} isLatest={idx === 0} onUseAsPrompt={applyFollowUp} onPopOut={handlePopOut} submittedCode={h.output_id ? submittedEntries[h.output_id] : undefined} onEntrySubmitted={markEntrySubmitted} />
         ))}
       </div>
 
@@ -702,7 +698,6 @@ export function FloatingAgentWidget({
 function InvocationCard({
   invocation,
   isLatest,
-  token,
   onUseAsPrompt,
   onPopOut,
   submittedCode,
@@ -710,7 +705,6 @@ function InvocationCard({
 }: {
   invocation: Invocation;
   isLatest: boolean;
-  token: string;
   /** Pre-fill the parent prompt input with a follow-up message. */
   onUseAsPrompt: (text: string) => void;
   /** Snapshot this invocation into a floating side panel. */
@@ -829,14 +823,13 @@ function InvocationCard({
             {proposedActions.length > 0 && (
               <AssignActionsPanel
                 actions={proposedActions}
-                token={token}
                 projectCode={invocation.project_code}
                 agentOutputId={invocation.output_id}
                 agentType={resolved ?? (requested === 'auto' ? undefined : (requested as AgentType))}
               />
             )}
             {proposedEntry && (
-              <EntryDraftPanel entry={proposedEntry} token={token} projectCode={invocation.project_code} alreadySubmittedCode={submittedCode} onSubmitted={(c) => onEntrySubmitted(invocation.output_id, c)} />
+              <EntryDraftPanel entry={proposedEntry} projectCode={invocation.project_code} alreadySubmittedCode={submittedCode} onSubmitted={(c) => onEntrySubmitted(invocation.output_id, c)} />
             )}
             <div className="mt-2 flex items-center justify-end gap-2 border-t pt-1.5 text-[10px] text-muted-foreground">
               {invocation.output_id && choices.length === 0 && (
@@ -938,7 +931,6 @@ const RZ_HANDLES: Array<{ mode: string; style: React.CSSProperties }> = [
 function PoppedOutBriefPanel({
   invocation,
   index,
-  token,
   onClose,
   onUseAsPrompt,
   submittedCode,
@@ -946,7 +938,6 @@ function PoppedOutBriefPanel({
 }: {
   invocation: Invocation;
   index: number;
-  token: string;
   onClose: () => void;
   onUseAsPrompt: (text: string) => void;
   submittedCode?: string;
@@ -1172,7 +1163,7 @@ function PoppedOutBriefPanel({
           </article>
         )}
         {proposedEntry && (
-          <EntryDraftPanel entry={proposedEntry} token={token} projectCode={invocation.project_code} alreadySubmittedCode={submittedCode} onSubmitted={(c) => onEntrySubmitted(invocation.output_id, c)} />
+          <EntryDraftPanel entry={proposedEntry} projectCode={invocation.project_code} alreadySubmittedCode={submittedCode} onSubmitted={(c) => onEntrySubmitted(invocation.output_id, c)} />
         )}
       </div>
 

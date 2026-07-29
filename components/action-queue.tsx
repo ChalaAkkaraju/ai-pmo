@@ -80,14 +80,14 @@ interface DraftState {
   saving?: boolean;
 }
 
-export function ActionQueue({ token, roleType }: { token: string; roleType: string }) {
+export function ActionQueue({ roleType }: { roleType: string }) {
   const [items, setItems] = useState<ActionItem[] | null>(null);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const [drafts, setDrafts] = useState<Record<string, DraftState>>({});
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/actions?scope=mine&token=${encodeURIComponent(token)}`, {
+      const res = await fetch(`/api/actions?scope=mine`, {
         cache: 'no-store',
       });
       const data = await res.json();
@@ -95,7 +95,7 @@ export function ActionQueue({ token, roleType }: { token: string; roleType: stri
     } catch {
       setItems([]);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -149,7 +149,7 @@ export function ActionQueue({ token, roleType }: { token: string; roleType: stri
       await fetch('/api/actions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, id, status }),
+        body: JSON.stringify({ id, status }),
       });
     } catch {
       // Realtime UPDATE will reconcile if this failed.
@@ -168,7 +168,7 @@ export function ActionQueue({ token, roleType }: { token: string; roleType: stri
       const res = await fetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, agent_type: 'auto', user_prompt: prompt, concise: true }),
+        body: JSON.stringify({ agent_type: 'auto', user_prompt: prompt, concise: true }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -202,7 +202,7 @@ export function ActionQueue({ token, roleType }: { token: string; roleType: stri
       const res = await fetch('/api/actions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, id: item.id, response_md: text }),
+        body: JSON.stringify({ id: item.id, response_md: text }),
       });
       const data = await res.json();
       if (!res.ok || !data.item) {

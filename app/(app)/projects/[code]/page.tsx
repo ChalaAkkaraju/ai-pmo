@@ -8,7 +8,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { ProjectTabs } from '@/components/project-tabs';
 import { SetupChecklist } from '@/components/setup-checklist';
@@ -224,10 +224,9 @@ async function loadResourceLoad(
 
 export default async function ProjectDetailPage({ params, searchParams }: PageProps) {
   const { code } = await params;
-  const token = 'session';
   const { tab: initialTab } = await searchParams;
 
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -423,7 +422,6 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
       </header>
 
       <SetupChecklist
-        token={token}
         projectCode={code}
         projectName={String(project.name)}
         done={doneAgents}
@@ -433,7 +431,6 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
 
 
       <ProjectTabs
-        token={token}
         initialTab={initialTab}
         projectCode={code}
         allowedAgents={resolved.definition.allowed_agents}

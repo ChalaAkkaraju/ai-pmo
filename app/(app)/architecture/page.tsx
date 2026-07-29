@@ -7,7 +7,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { ProcessFlowDiagram } from '@/components/process-flow-diagram';
 
 export const dynamic = 'force-dynamic';
@@ -48,8 +48,7 @@ const DATE_LAYERS = [
 ];
 
 export default async function ArchitecturePage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   return (
@@ -142,7 +141,7 @@ export default async function ArchitecturePage() {
         scheduler (progress) before merging on the WBS code for synthesis &mdash; looping each reporting cycle until closeout.
       </p>
       <div className="mt-4">
-        <ProcessFlowDiagram token={token} />
+        <ProcessFlowDiagram />
       </div>
 
     </div>

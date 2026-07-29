@@ -49,7 +49,6 @@ interface ReportColleague {
 }
 
 interface ReportViewProps {
-  token: string;
   output: ReportOutput;
   project: ReportProject | null;
   colleague: ReportColleague | null;
@@ -200,7 +199,7 @@ const SEGMENT_COLORS: Record<string, string> = {
   power: 'bg-violet-100 text-violet-900',
 };
 
-export function ReportView({ token, output, project, colleague, viewerRole }: ReportViewProps) {
+export function ReportView({ output, project, colleague, viewerRole }: ReportViewProps) {
   const [detailOpen, setDetailOpen] = useState(true);
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
@@ -244,7 +243,6 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        token,
         agent_type: output.agent_type,
         project_code: project?.code,
         user_prompt: output.user_prompt ?? '',
@@ -269,7 +267,6 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              token,
               output_id: output.id,
               full_md: data.output_md,
             }),
@@ -292,7 +289,7 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
     return () => {
       cancelled = true;
     };
-  }, [output.id, output.agent_type, output.user_prompt, output.full_output_md, project, token]);
+  }, [output.id, output.agent_type, output.user_prompt, output.full_output_md, project]);
 
   // Choose source markdown: full version once it arrives, otherwise the brief
   // (so users see content immediately instead of a blank skeleton).
@@ -341,8 +338,7 @@ export function ReportView({ token, output, project, colleague, viewerRole }: Re
       const filename = buildFilename();
       const apiUrl =
         `/api/report-pdf/${output.id}` +
-        `?token=${encodeURIComponent(token)}` +
-        `&filename=${encodeURIComponent(filename)}`;
+        `?filename=${encodeURIComponent(filename)}`;
 
       const res = await fetch(apiUrl);
       if (!res.ok) {

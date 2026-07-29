@@ -125,7 +125,7 @@ function Slide({ idx, refCb, children }: { idx: number; refCb: (i: number) => (e
   );
 }
 
-export function AboutDeck({ token }: { token: string }) {
+export function AboutDeck() {
   const slideCount = SLIDES.length;
   const [active, setActive] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);

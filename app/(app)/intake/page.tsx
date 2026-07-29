@@ -8,7 +8,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { SEGMENT_STYLES, segmentStyle } from '@/lib/segment-style';
 import { segmentBlurb } from '@/lib/intake-config';
@@ -45,8 +45,7 @@ function when(iso: string): string {
 }
 
 export default async function IntakeLanding() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const canCreate = CREATE_ROLES.includes(resolved.role.role_type);

@@ -21,13 +21,11 @@ type AssignState = 'idle' | 'posting' | 'done' | 'error';
 
 export function AssignActionsPanel({
   actions,
-  token,
   projectCode,
   agentOutputId,
   agentType,
 }: {
   actions: ProposedAction[];
-  token: string;
   projectCode: string | null;
   agentOutputId?: string;
   agentType?: AgentType;
@@ -44,7 +42,6 @@ export function AssignActionsPanel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token,
           project_code: projectCode ?? undefined,
           source_type: 'risk',
           raised_by_agent_type: agentType ?? null,

@@ -5,7 +5,7 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { resolveRoleFromToken } from '@/lib/role-context';
+import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { AnalyticsNav } from '@/components/analytics-nav';
 import { Kpis, rowsFrom, tally, cap } from '@/components/analytics-shared';
@@ -20,8 +20,7 @@ const num = (v: unknown) => Number(v) || 0;
 const m = (v: number) => `${v < 0 ? '−' : ''}$${Math.abs(v).toFixed(1)}M`;
 
 export default async function ChangesAnalyticsPage() {
-  const token = 'session';
-  const resolved = await resolveRoleFromToken(token);
+  const resolved = await getSessionRole();
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
@@ -78,7 +77,7 @@ export default async function ChangesAnalyticsPage() {
         </div>
       </section>
 
-      <AnalyticsNav token={token} />
+      <AnalyticsNav />
 
       <Kpis
         items={[
@@ -110,7 +109,7 @@ export default async function ChangesAnalyticsPage() {
         <p className="text-xs text-muted-foreground">
           Every change order on an active project. Search, filter by segment / status / driver, sort any column, and click a project to open it.
         </p>
-        <PortfolioChangeOrdersTable token={token} rows={rows} />
+        <PortfolioChangeOrdersTable rows={rows} />
       </section>
     </div>
   );
