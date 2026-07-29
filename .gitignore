@@ -80,3 +80,6 @@ docs/AI-PMO-Technical-Edition.pdf
 
 # QA env copy holding QA keys (never commit)
 .env.local.qa
+
+# prod->QA data copy export (transient, may be large)
+agent-outputs-export.json

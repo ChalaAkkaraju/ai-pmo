@@ -659,7 +659,7 @@
       "revenue_impact_m": 10.305,
       "schedule_impact_days": -10,
       "margin_realized_pct": 9.25,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 58,
       "four_frame_analysis": null
@@ -1010,7 +1010,7 @@
       "revenue_impact_m": 5.199,
       "schedule_impact_days": 1,
       "margin_realized_pct": 5.74,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 34,
       "four_frame_analysis": null
@@ -1864,7 +1864,7 @@
       "revenue_impact_m": 5.209,
       "schedule_impact_days": -3,
       "margin_realized_pct": null,
-      "status": "Priced",
+      "status": "Submitted to client",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -2040,7 +2040,7 @@
       "revenue_impact_m": 1.134,
       "schedule_impact_days": 26,
       "margin_realized_pct": 6.53,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 30,
       "four_frame_analysis": null
@@ -2216,7 +2216,7 @@
       "revenue_impact_m": 1.618,
       "schedule_impact_days": -1,
       "margin_realized_pct": null,
-      "status": "Priced",
+      "status": "Submitted to client",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -2392,7 +2392,7 @@
       "revenue_impact_m": 4.7,
       "schedule_impact_days": 30,
       "margin_realized_pct": 10.74,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 16,
       "four_frame_analysis": null
@@ -3421,7 +3421,7 @@
       "revenue_impact_m": 1.979,
       "schedule_impact_days": 21,
       "margin_realized_pct": 5.34,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 110,
       "four_frame_analysis": null
@@ -3597,7 +3597,7 @@
       "revenue_impact_m": 9.857,
       "schedule_impact_days": 13,
       "margin_realized_pct": null,
-      "status": "Under analysis",
+      "status": "Quantified",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -3948,7 +3948,7 @@
       "revenue_impact_m": 4.655,
       "schedule_impact_days": 4,
       "margin_realized_pct": 9.04,
-      "status": "Executed",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 14,
       "four_frame_analysis": null
@@ -4124,7 +4124,7 @@
       "revenue_impact_m": 1.469,
       "schedule_impact_days": 13,
       "margin_realized_pct": 6.3,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 11,
       "four_frame_analysis": null
@@ -4803,7 +4803,7 @@
       "revenue_impact_m": 12.036,
       "schedule_impact_days": 23,
       "margin_realized_pct": 8.32,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 10,
       "four_frame_analysis": null
@@ -4990,7 +4990,7 @@
       "revenue_impact_m": 4.659,
       "schedule_impact_days": 0,
       "margin_realized_pct": null,
-      "status": "Priced",
+      "status": "Submitted to client",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -5166,7 +5166,7 @@
       "revenue_impact_m": 2.858,
       "schedule_impact_days": 23,
       "margin_realized_pct": 6.89,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 46,
       "four_frame_analysis": null
@@ -5834,7 +5834,7 @@
       "revenue_impact_m": 7.224,
       "schedule_impact_days": -2,
       "margin_realized_pct": 8.2,
-      "status": "Executed",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 44,
       "four_frame_analysis": null
@@ -6349,7 +6349,7 @@
       "revenue_impact_m": 8.064,
       "schedule_impact_days": 9,
       "margin_realized_pct": null,
-      "status": "Priced",
+      "status": "Submitted to client",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -6689,7 +6689,7 @@
       "revenue_impact_m": 6.219,
       "schedule_impact_days": -8,
       "margin_realized_pct": 6.66,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 29,
       "four_frame_analysis": null
@@ -7368,7 +7368,7 @@
       "revenue_impact_m": 1.862,
       "schedule_impact_days": 30,
       "margin_realized_pct": null,
-      "status": "Under analysis",
+      "status": "Quantified",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -8047,7 +8047,7 @@
       "revenue_impact_m": 2.596,
       "schedule_impact_days": 29,
       "margin_realized_pct": 5.31,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 68,
       "four_frame_analysis": null
@@ -8234,7 +8234,7 @@
       "revenue_impact_m": 9.175,
       "schedule_impact_days": 21,
       "margin_realized_pct": null,
-      "status": "Priced",
+      "status": "Submitted to client",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -8924,7 +8924,7 @@
       "revenue_impact_m": 5.779,
       "schedule_impact_days": 4,
       "margin_realized_pct": 7.43,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 58,
       "four_frame_analysis": null
@@ -9264,7 +9264,7 @@
       "revenue_impact_m": 4.031,
       "schedule_impact_days": 3,
       "margin_realized_pct": 10.79,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 18,
       "four_frame_analysis": null
@@ -9604,7 +9604,7 @@
       "revenue_impact_m": 1.888,
       "schedule_impact_days": -7,
       "margin_realized_pct": 9.67,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 17,
       "four_frame_analysis": null
@@ -9791,7 +9791,7 @@
       "revenue_impact_m": 13.562,
       "schedule_impact_days": -2,
       "margin_realized_pct": 6.03,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 50,
       "four_frame_analysis": null
@@ -9967,7 +9967,7 @@
       "revenue_impact_m": 0.227,
       "schedule_impact_days": 18,
       "margin_realized_pct": 8.78,
-      "status": "Executed",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 11,
       "four_frame_analysis": null
@@ -10143,7 +10143,7 @@
       "revenue_impact_m": 0.884,
       "schedule_impact_days": -2,
       "margin_realized_pct": 7.51,
-      "status": "Executed",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 16,
       "four_frame_analysis": null
@@ -10319,7 +10319,7 @@
       "revenue_impact_m": 12.621,
       "schedule_impact_days": 6,
       "margin_realized_pct": null,
-      "status": "Priced",
+      "status": "Submitted to client",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -10495,7 +10495,7 @@
       "revenue_impact_m": 3.967,
       "schedule_impact_days": 12,
       "margin_realized_pct": 9.14,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 12,
       "four_frame_analysis": null
@@ -10835,7 +10835,7 @@
       "revenue_impact_m": 3.57,
       "schedule_impact_days": 25,
       "margin_realized_pct": 10.11,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 11,
       "four_frame_analysis": null
@@ -11175,7 +11175,7 @@
       "revenue_impact_m": 5.112,
       "schedule_impact_days": 18,
       "margin_realized_pct": 9.5,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 17,
       "four_frame_analysis": null
@@ -11362,7 +11362,7 @@
       "revenue_impact_m": 3.408,
       "schedule_impact_days": -2,
       "margin_realized_pct": 11.81,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 59,
       "four_frame_analysis": null
@@ -12555,7 +12555,7 @@
       "revenue_impact_m": 9.751,
       "schedule_impact_days": 18,
       "margin_realized_pct": 6.54,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 51,
       "four_frame_analysis": null
@@ -12742,7 +12742,7 @@
       "revenue_impact_m": 4.448,
       "schedule_impact_days": 21,
       "margin_realized_pct": 7.86,
-      "status": "Executed",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 17,
       "four_frame_analysis": null
@@ -13093,7 +13093,7 @@
       "revenue_impact_m": 6.096,
       "schedule_impact_days": 12,
       "margin_realized_pct": 9.01,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 70,
       "four_frame_analysis": null
@@ -13772,7 +13772,7 @@
       "revenue_impact_m": 15.86,
       "schedule_impact_days": 30,
       "margin_realized_pct": null,
-      "status": "Priced",
+      "status": "Submitted to client",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -14298,7 +14298,7 @@
       "revenue_impact_m": 13.803,
       "schedule_impact_days": 12,
       "margin_realized_pct": 7.16,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 50,
       "four_frame_analysis": null
@@ -14660,7 +14660,7 @@
       "revenue_impact_m": 11.591,
       "schedule_impact_days": 9,
       "margin_realized_pct": 7.54,
-      "status": "Executed",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 22,
       "four_frame_analysis": null
@@ -15164,7 +15164,7 @@
       "revenue_impact_m": 8.971,
       "schedule_impact_days": 5,
       "margin_realized_pct": null,
-      "status": "Priced",
+      "status": "Submitted to client",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -15679,7 +15679,7 @@
       "revenue_impact_m": 1.73,
       "schedule_impact_days": -6,
       "margin_realized_pct": null,
-      "status": "Under analysis",
+      "status": "Quantified",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": null,
       "four_frame_analysis": null
@@ -16019,7 +16019,7 @@
       "revenue_impact_m": 14.207,
       "schedule_impact_days": -10,
       "margin_realized_pct": 10.41,
-      "status": "Executed",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 10,
       "four_frame_analysis": null
@@ -16195,7 +16195,7 @@
       "revenue_impact_m": 8.959,
       "schedule_impact_days": -9,
       "margin_realized_pct": 6.94,
-      "status": "Complete",
+      "status": "Approved",
       "approval_routing": "PM → Commercial Manager → Sponsor",
       "executed_week": 62,
       "four_frame_analysis": null
