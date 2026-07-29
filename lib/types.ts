@@ -196,6 +196,7 @@ export interface ActionItem {
   source_ref: string | null;
   description: string;
   assigned_to_role_type: RoleType;
+  assigned_to_user_id: string | null;
   raised_by_role_type: RoleType | null;
   raised_by_agent_type: AgentType | null;
   status: ActionStatus;

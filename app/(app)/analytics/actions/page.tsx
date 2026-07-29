@@ -26,9 +26,10 @@ export default async function ActionsAnalyticsPage() {
   if (!resolved) notFound();
 
   const supabase = createSupabaseServiceClient();
-  const [actionsRes, projectsRes] = await Promise.all([
+  const [actionsRes, projectsRes, rolesRes] = await Promise.all([
     supabase.from('action_items').select('*').limit(10000),
     supabase.from('projects').select('id, code, name, segment, status').limit(10000),
+    supabase.from('roles').select('id, name, username').limit(10000),
   ]);
   type ActionRow = {
     id: string;
@@ -37,6 +38,7 @@ export default async function ActionsAnalyticsPage() {
     status: string;
     urgency: string;
     assigned_to_role_type: string | null;
+    assigned_to_user_id: string | null;
     raised_by_role_type: string | null;
     response_md: string | null;
     created_at: string;
@@ -44,6 +46,11 @@ export default async function ActionsAnalyticsPage() {
   const actions = (actionsRes.data ?? []) as ActionRow[];
   const projects = (projectsRes.data ?? []) as Array<{ id: string; code: string; name: string; segment: string; status: string }>;
   const projById = new Map(projects.map((p) => [p.id, p]));
+  const personById = new Map(
+    ((rolesRes.data ?? []) as Array<{ id: string; name: string | null; username: string | null }>).map(
+      (r) => [r.id, r.name || r.username || 'User'],
+    ),
+  );
 
   const total = actions.length;
   const open = actions.filter((a) => a.status === 'Open').length;
@@ -68,6 +75,7 @@ export default async function ActionsAnalyticsPage() {
         segment: p?.segment ?? '',
         description: a.description,
         assigned_to_role: a.assigned_to_role_type ?? 'pm',
+        assignee_name: a.assigned_to_user_id ? personById.get(a.assigned_to_user_id) ?? null : null,
         raised_by_role: a.raised_by_role_type,
         urgency: a.urgency,
         status: a.status,

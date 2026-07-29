@@ -15,6 +15,7 @@
 import { useState } from 'react';
 import type { AgentType } from '@/lib/types';
 import { roleLabel } from '@/lib/roles';
+import { AssigneeSelect, useAssignees, parseAssignee } from '@/components/assignee-select';
 import type { ProposedAction } from '@/lib/action-parser';
 
 type AssignState = 'idle' | 'posting' | 'done' | 'error';
@@ -31,6 +32,8 @@ export function AssignActionsPanel({
   agentType?: AgentType;
 }) {
   const [states, setStates] = useState<AssignState[]>(() => actions.map(() => 'idle'));
+  const [picks, setPicks] = useState(() => actions.map((a) => 'role:' + a.assigned_to_role));
+  const assignees = useAssignees();
   const [bulkPosting, setBulkPosting] = useState(false);
 
   async function assign(indices: number[]) {
@@ -48,7 +51,7 @@ export function AssignActionsPanel({
           created_from_output_id: agentOutputId ?? undefined,
           items: toAssign.map((i) => ({
             description: actions[i].description,
-            assigned_to_role: actions[i].assigned_to_role,
+            ...parseAssignee(picks[i]),
             urgency: actions[i].urgency,
             source_ref: actions[i].source_ref,
             flagged: actions[i].flagged,
@@ -97,9 +100,12 @@ export function AssignActionsPanel({
               <div className="min-w-0">
                 <p className="text-[12px]">{a.description}</p>
                 <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 font-medium text-foreground">
-                    → {roleLabel(a.assigned_to_role)}
-                  </span>
+                  <AssigneeSelect
+                    value={picks[i]}
+                    onChange={(v) => setPicks((prev) => prev.map((p, j) => (j === i ? v : p)))}
+                    assignees={assignees}
+                    className="rounded-md border bg-background px-1.5 py-0.5 font-medium text-foreground"
+                  />
                   <span className={`rounded-full px-1.5 py-0.5 font-medium ${
                     a.urgency === 'H'
                       ? 'bg-red-100 text-red-800'

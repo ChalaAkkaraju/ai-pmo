@@ -10,14 +10,14 @@
  */
 
 import { useState } from 'react';
-import { ROLE_TYPES, roleLabel } from '@/lib/roles';
-import type { RoleType } from '@/lib/types';
+import { AssigneeSelect, useAssignees, parseAssignee, labelForValue } from '@/components/assignee-select';
 
 type State = 'idle' | 'posting' | 'done' | 'error';
 
 export function AssignTaskButton({ projectCode }: { projectCode: string }) {
   const [open, setOpen] = useState(false);
-  const [assignee, setAssignee] = useState<RoleType>('pm');
+  const [assignee, setAssignee] = useState<string>('role:pm');
+  const assignees = useAssignees();
   const [description, setDescription] = useState('');
   const [urgency, setUrgency] = useState<'L' | 'M' | 'H'>('M');
   const [state, setState] = useState<State>('idle');
@@ -36,7 +36,7 @@ export function AssignTaskButton({ projectCode }: { projectCode: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           project_code: projectCode,
-          items: [{ description: description.trim(), assigned_to_role: assignee, urgency }],
+          items: [{ description: description.trim(), ...parseAssignee(assignee), urgency }],
         }),
       });
       const json = await res.json();
@@ -55,7 +55,7 @@ export function AssignTaskButton({ projectCode }: { projectCode: string }) {
   if (state === 'done') {
     return (
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
-        <span className="font-medium text-emerald-800">✓ Task assigned to {roleLabel(assignee)}.</span>
+        <span className="font-medium text-emerald-800">✓ Task assigned to {labelForValue(assignee, assignees)}.</span>
         <span className="text-emerald-700/80">It&apos;s now in their action queue.</span>
         <button
           type="button"
@@ -118,13 +118,7 @@ export function AssignTaskButton({ projectCode }: { projectCode: string }) {
         <div className="flex flex-col gap-3 sm:w-44">
           <div>
             <label className="mb-1 block text-xs font-medium">Assign to</label>
-            <select className={inputCls} value={assignee} onChange={(e) => setAssignee(e.target.value as RoleType)}>
-              {ROLE_TYPES.map((rt) => (
-                <option key={rt} value={rt}>
-                  {roleLabel(rt)}
-                </option>
-              ))}
-            </select>
+            <AssigneeSelect value={assignee} onChange={setAssignee} assignees={assignees} className={inputCls} />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium">Urgency</label>

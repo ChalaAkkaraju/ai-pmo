@@ -22,6 +22,7 @@ export const dynamic = 'force-dynamic';
 const itemSchema = z.object({
   description: z.string().min(1),
   assigned_to_role: z.string().min(1),
+  assigned_to_user: z.string().uuid().optional().nullable(),
   urgency: z.enum(['L', 'M', 'H']).optional(),
   source_ref: z.string().optional().nullable(),
   flagged: z.boolean().optional(),
@@ -90,22 +91,45 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Resolve any specific-person assignees (roles rows) to their role_type.
+  const assigneeUserIds = body.items
+    .map((i) => i.assigned_to_user)
+    .filter((v) => !!v);
+  const roleTypeByUserId = new Map();
+  if (assigneeUserIds.length > 0) {
+    const { data: assigneeRows } = await supabase
+      .from('roles')
+      .select('id, role_type')
+      .in('id', assigneeUserIds);
+    for (const a of assigneeRows ?? []) roleTypeByUserId.set(a.id, a.role_type);
+  }
+
   const sourceType = body.source_type ?? 'risk';
   const rows = body.items.map((item) => {
-    const valid = isValidRoleType(item.assigned_to_role);
+    const targetUserId =
+      item.assigned_to_user && roleTypeByUserId.has(item.assigned_to_user)
+        ? item.assigned_to_user
+        : null;
+    const roleValid = isValidRoleType(item.assigned_to_role);
+    const roleType = targetUserId
+      ? roleTypeByUserId.get(targetUserId)
+      : roleValid
+        ? item.assigned_to_role
+        : 'pm';
     return {
       project_id: projectId,
       source_type: sourceType,
       source_id: item.source_ref ? refToRiskId.get(item.source_ref) ?? null : null,
       source_ref: item.source_ref ?? null,
       description: item.description,
-      assigned_to_role_type: valid ? item.assigned_to_role : 'pm',
+      assigned_to_role_type: roleType,
+      assigned_to_user_id: targetUserId,
       raised_by_role_type: role.role_type,
       raised_by_agent_type: body.raised_by_agent_type ?? null,
       urgency: item.urgency ?? 'M',
       status: 'Open',
       created_from_output_id: body.created_from_output_id ?? null,
-      assignment_flagged: item.flagged === true || !valid,
+      assignment_flagged: item.flagged === true || (!targetUserId && !roleValid),
     };
   });
 
@@ -143,8 +167,11 @@ export async function GET(request: NextRequest) {
     // Actions the caller's role raised — so the raiser can see responses.
     query = query.eq('raised_by_role_type', role.role_type);
   } else {
-    // Default: actions assigned to the caller's role.
-    query = query.eq('assigned_to_role_type', role.role_type);
+    // Default: actions assigned to me personally, plus role-wide actions for my
+    // role that are not pinned to a specific person.
+    query = query.or(
+      'assigned_to_user_id.eq.' + role.id + ',and(assigned_to_user_id.is.null,assigned_to_role_type.eq.' + role.role_type + ')',
+    );
   }
 
   const { data, error } = await query;

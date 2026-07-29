@@ -276,6 +276,7 @@ export interface PortfolioActionRow {
   segment: string;
   description: string;
   assigned_to_role: string;
+  assignee_name?: string | null;
   raised_by_role: string | null;
   urgency: string;
   status: string;
@@ -286,7 +287,7 @@ export function PortfolioActionsTable({ rows }: { rows: PortfolioActionRow[] }) 
   const columns: Col<PortfolioActionRow>[] = [
     { key: 'project_code', label: 'Project', sortKey: (r) => r.project_code ?? '~', render: (r) => (r.project_code ? <ProjectCell code={r.project_code} name={r.project_name} segment={r.segment} /> : <span className="text-xs text-muted-foreground">Portfolio</span>) },
     { key: 'description', label: 'Description', render: (r) => <span className="block max-w-md">{r.description}</span> },
-    { key: 'assigned_to_role', label: 'Assigned to', sortKey: (r) => r.assigned_to_role, render: (r) => <span className="text-xs font-medium">{roleLabel(r.assigned_to_role as RoleType)}</span> },
+    { key: 'assigned_to_role', label: 'Assigned to', sortKey: (r) => r.assignee_name ?? roleLabel(r.assigned_to_role as RoleType), render: (r) => (r.assignee_name ? <span className="text-xs font-medium">{r.assignee_name}</span> : <span className="text-xs font-medium text-muted-foreground">{roleLabel(r.assigned_to_role as RoleType)} · anyone</span>) },
     { key: 'raised_by_role', label: 'Raised by', sortKey: (r) => r.raised_by_role ?? '', render: (r) => <span className="text-xs text-muted-foreground">{r.raised_by_role ? roleLabel(r.raised_by_role as RoleType) : '\u2014'}</span> },
     { key: 'urgency', label: 'Urgency', align: 'center', sortKey: (r) => hmlRank(r.urgency), render: (r) => <HmlBadge v={r.urgency} /> },
     { key: 'status', label: 'Status', sortKey: (r) => r.status, render: (r) => <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${actionBadge(r.status)}`}>{r.status}</span> },
