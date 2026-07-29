@@ -38,6 +38,7 @@ interface RoleRow {
   name: string;
   role_type: string;
   user_id: string | null;
+  username: string | null;
 }
 
 function loadSeedConfig(): SeedConfig {
@@ -75,7 +76,7 @@ async function main() {
 
   const { data: roles, error } = await admin
     .from('roles')
-    .select('id, name, role_type, user_id')
+    .select('id, name, role_type, user_id, username')
     .order('role_type');
   if (error) throw new Error(`Could not read roles: ${error.message}`);
 
@@ -132,7 +133,7 @@ async function main() {
 
     const { error: linkErr } = await admin
       .from('roles')
-      .update({ user_id: userId })
+      .update({ user_id: userId, username: role.username ?? entry.email.split('@')[0].toLowerCase() })
       .eq('id', role.id);
     if (linkErr) {
       console.error(`  ✗ ${label} — link failed: ${linkErr.message}`);
