@@ -332,7 +332,7 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { al
     if (has('issue_logger')) create.push({ label: '\uFF0B Log an issue', prompt: 'Log an issue: [describe the issue and its effect]' });
     if (has('change_order_reviewer')) create.push({ label: '\uFF0B Change / trend entry', prompt: 'Add a change/trend entry: [describe the scope change]' });
   }
-  if (canWrite) create.push({ label: '\uFF0B Assign a task', prompt: 'Assign a task to [role]: [what to do] \u2014 [low/medium/high] urgency' });
+  if (canWrite) create.push({ label: '\uFF0B Assign a task', prompt: 'Assign a task to [User / role]: [what to do] \u2014 [low/medium/high] urgency' });
 
   // Ask prompts are role-aware too: built from the agents this role can use,
   // so each role sees analysis starters that match what it is allowed to do.
