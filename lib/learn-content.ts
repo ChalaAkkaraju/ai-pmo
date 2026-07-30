@@ -1,23 +1,21 @@
 /**
- * Learn-menu visibility (admin-configurable, DB-driven).
+ * Learn-menu visibility (admin-configurable, DB-driven, per role).
  *
- * Rules live in the learn_content table and are edited by admins in
- * /admin/learn. The header uses getVisibleLearnItems() to filter the dropdown;
- * each Learn page uses canViewLearnKey() to guard access so a hidden item can't
- * be reached by typing its URL. Admins always see everything.
+ * Each learn_content row carries allowed_roles — the role_types that may see
+ * the item. Admins always see everything. Admins edit these in /admin/learn
+ * (organised by role). The header filters the dropdown with
+ * getVisibleLearnItems(); each Learn page guards with canViewLearnKey() so a
+ * hidden item can't be reached by URL.
  */
 
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import type { ResolvedRole } from '@/lib/role-context';
-
-export type LearnVisibility = 'everyone' | 'admin' | 'roles';
 
 export interface LearnItem {
   key: string;
   label: string;
   path: string;
   sort_order: number;
-  visibility: LearnVisibility;
   allowed_roles: string[];
 }
 
@@ -34,8 +32,6 @@ export async function getAllLearnItems(): Promise<LearnItem[]> {
 /** Can this role see this item? Admins always can. */
 export function canView(item: LearnItem, resolved: ResolvedRole): boolean {
   if (resolved.role.is_admin) return true;
-  if (item.visibility === 'everyone') return true;
-  if (item.visibility === 'admin') return false;
   return item.allowed_roles.includes(resolved.role.role_type);
 }
 
@@ -45,11 +41,7 @@ export async function getVisibleLearnItems(resolved: ResolvedRole): Promise<Lear
   return items.filter((i) => canView(i, resolved));
 }
 
-/**
- * Guard helper for Learn pages. Returns false when the role may not view the
- * given key. Unknown keys are allowed (fail open) so a page is never bricked by
- * a missing rule row.
- */
+/** Guard helper for Learn pages. Unknown keys are allowed (fail open). */
 export async function canViewLearnKey(key: string, resolved: ResolvedRole): Promise<boolean> {
   const items = await getAllLearnItems();
   const item = items.find((i) => i.key === key);
