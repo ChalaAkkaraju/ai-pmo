@@ -20,9 +20,10 @@
 import puppeteer from 'puppeteer';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
-const TOKEN = process.env.TOKEN || 'demo-pm';
+const CAPTURE_ROLE = process.env.CAPTURE_ROLE || 'pm';
 let PROJECT = process.env.PROJECT || '';
 const OUT = path.resolve('docs/book/figures');
 const VIEWPORT = { width: 1360, height: 1000, deviceScaleFactor: 2 };
@@ -71,15 +72,34 @@ async function capture(page, el, target) {
 // all point at the access-token root). Re-injected after every navigation
 // because each page load drops previously-added styles.
 async function hideChrome(page) {
-  const t = TOKEN, e = encodeURIComponent(TOKEN);
-  await page.addStyleTag({ content:
-    `.no-print{display:none !important}\n` +
-    `a[href="/access/${t}"],a[href="/access/${t}/"],a[href="/access/${e}"],a[href="/access/${e}/"]{display:none !important}`
-  }).catch(() => {});
+  await page.addStyleTag({ content: `.no-print{display:none !important}` }).catch(() => {});
+}
+
+function loadCreds(roleType) {
+  const seed = JSON.parse(readFileSync(path.resolve('users.seed.json'), 'utf8'));
+  const e = seed[roleType];
+  if (!e || !e.password) throw new Error(`No credentials for role_type "${roleType}" in users.seed.json`);
+  const username = e.username || String(e.email || '').split('@')[0].toLowerCase();
+  return { username, password: e.password };
+}
+
+async function login(page, username, password) {
+  await page.goto(`${BASE}/login`, { waitUntil: 'networkidle0', timeout: 30000 });
+  await page.waitForSelector('#username', { timeout: 15000 });
+  await page.type('#username', username);
+  await page.type('#password', password);
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 30000 }).catch(() => {}),
+    page.click('button[type="submit"]'),
+  ]);
+  const url = page.url();
+  if (/\/login|\/change-password/.test(url)) {
+    throw new Error(`Sign-in did not reach the app (landed on ${url}). Check the ${username} credentials in users.seed.json and that the account is past its forced password change.`);
+  }
 }
 
 async function goto(page, rel) {
-  const url = `${BASE}/access/${encodeURIComponent(TOKEN)}${rel}`;
+  const url = `${BASE}${rel || '/dashboard'}`;
   await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
   await hideChrome(page);
 }
@@ -127,6 +147,11 @@ async function main() {
   const page = await browser.newPage();
   await page.setViewport(VIEWPORT);
 
+  // Sign in — identity now comes from the authenticated session, not a URL token
+  const { username, password } = loadCreds(CAPTURE_ROLE);
+  console.log('signing in as', username, `(role_type ${CAPTURE_ROLE})`);
+  await login(page, username, password);
+
   // Welcome gateway
   console.log('welcome');
   await goto(page, '/welcome');
@@ -147,7 +172,7 @@ async function main() {
   }
   if (!PROJECT) { console.log('discovering a project from the analytics tables...'); PROJECT = await discoverProject(page); }
   if (!PROJECT) {
-    console.error('\nCould not auto-discover a project. Either the TOKEN is wrong, or pin a code:');
+    console.error('\nCould not auto-discover a project. Pin a code and re-run:');
     console.error('  $env:PROJECT="<a project code, e.g. from any project URL>"; then re-run.\n');
     await browser.close();
     process.exit(1);

@@ -2,8 +2,6 @@
 
 ## EPC, earned-value and financial terms used in this book
 
-*Business Edition · Appendix*
-
 **AC — Actual Cost.** The cost actually incurred for the work performed, from the
 cost system (SAP PS).
 

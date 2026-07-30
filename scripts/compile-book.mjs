@@ -26,8 +26,6 @@ const PYTHON = ['python3', 'python'].find((c) => {
 const BUSINESS = [
   { part: 'Part I — Why AI PMO Exists', desc: 'The seam between the cost system and the schedule — and the discipline of building only what no other system owns.' },
   { doc: 'the-problem-ai-pmo-solves-concept' },
-  { doc: 'what-belongs-in-ai-pmo-scope-charter' },
-  { doc: 'epc-capability-coverage-map' },
   { part: 'Part II — The Money Story', desc: 'Six chapters that follow a contract dollar end to end: earned value, forecast, revenue, cash, margin, change.' },
   { doc: 'earned-value-in-plain-terms-concept' },
   { doc: 'forecasting-cost-revenue-to-eac-concept' },

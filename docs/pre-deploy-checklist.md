@@ -17,7 +17,7 @@ Tick each box as you go. If anything fails, note it under "Issues found" at the 
 
 - [ ] `http://localhost:3000/` renders the AI PMO landing page (✨ brand mark, "AI PMO" heading, list of access tokens for each colleague role)
 - [ ] No "PMO LLM" text anywhere on the landing page (should be fully rebranded)
-- [ ] An invalid token like `/access/totally-fake-token` redirects to a 404 / "not found" page
+- [ ] Visiting a protected page (e.g. `/dashboard`) while signed out redirects to `/login`
 - [ ] Clicking each role's access link loads the dashboard for that role without error:
   - [ ] Senior PM / PMO Director — J. Okafor (`demo-pm`)
   - [ ] Portfolio Procurement Strategist — M. Patel (`demo-procurement`)
@@ -40,7 +40,7 @@ Use the PM Director token for the deepest coverage.
 **Header & branding:**
 
 - [ ] Brand mark (✨ AI PMO + "for Project Management Office" tagline) visible top-left
-- [ ] "Agents" link in top-right navigates to `/access/<token>/agents` (test the link)
+- [ ] "Agents" link in top-right navigates to `/agents` (test the link)
 - [ ] Colleague name (e.g., "J. Okafor") and role display visible top-right
 
 **Ribbon 1 — Portfolio KPIs:**
@@ -103,7 +103,7 @@ Click into one of the Hot 5 projects (e.g., the top item).
 **Test the "↗ Show full report" button on one planning tab:**
 
 - [ ] Click "↗ Show full report" on the Charter tab
-- [ ] New tab opens to `/access/<token>/report/<output-id>`
+- [ ] New tab opens to `/report/<output-id>`
 
 ---
 
@@ -195,7 +195,7 @@ The path you most recently built — needs careful coverage.
 
 - [ ] On dashboard, expand any activity card
 - [ ] Click "↗ Show full report" in the dark strip at the top
-- [ ] New browser tab opens to `/access/<token>/report/<output-id>`
+- [ ] New browser tab opens to `/report/<output-id>`
 
 **Initial load state:**
 
@@ -241,7 +241,7 @@ The path you most recently built — needs careful coverage.
 
 ## Section 7 — Agents catalog page (5 min)
 
-- [ ] Navigate to `/access/<token>/agents`
+- [ ] Navigate to `/agents`
 - [ ] Page title: "Agents available to you"
 - [ ] Intro paragraph correctly states the count (e.g., "you can invoke 13 of 13 specialists" for PM)
 - [ ] References "the floating ✨ Ask AI Assistant button" (NOT "Ask agent")
