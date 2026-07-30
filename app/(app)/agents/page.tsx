@@ -8,7 +8,8 @@
  * widget and the /api/agent route — they're just not surfaced here.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { canViewLearnKey } from '@/lib/learn-content';
 import { getSessionRole } from '@/lib/auth';
 import { AGENT_CATALOG } from '@/lib/agent-catalog';
 import { AgentDeck } from '@/components/agent-deck';
@@ -22,6 +23,7 @@ interface PageProps {
 export default async function AgentCatalogPage() {
   const resolved = await getSessionRole();
   if (!resolved) notFound();
+  if (!(await canViewLearnKey('agents', resolved))) redirect('/dashboard');
 
   return <AgentDeck total={AGENT_CATALOG.length} entries={AGENT_CATALOG} />;
 }

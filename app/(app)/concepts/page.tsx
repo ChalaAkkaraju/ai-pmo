@@ -4,7 +4,8 @@
  * the agent deck. Education surface; valid token only.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { canViewLearnKey } from '@/lib/learn-content';
 import { getSessionRole } from '@/lib/auth';
 import { ConceptDeck } from '@/components/concept-deck';
 
@@ -17,6 +18,7 @@ interface PageProps {
 export default async function ConceptsPage() {
   const resolved = await getSessionRole();
   if (!resolved) notFound();
+  if (!(await canViewLearnKey('concepts', resolved))) redirect('/dashboard');
 
   return <ConceptDeck />;
 }

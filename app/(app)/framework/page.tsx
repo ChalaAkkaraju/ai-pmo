@@ -5,7 +5,8 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { canViewLearnKey } from '@/lib/learn-content';
 import { getSessionRole } from '@/lib/auth';
 import { FrameworkMatrix } from '@/components/framework-matrix';
 
@@ -18,6 +19,7 @@ interface PageProps {
 export default async function FrameworkPage() {
   const resolved = await getSessionRole();
   if (!resolved) notFound();
+  if (!(await canViewLearnKey('framework', resolved))) redirect('/dashboard');
 
   return (
     <div className="container mx-auto max-w-screen-xl px-6 py-8">

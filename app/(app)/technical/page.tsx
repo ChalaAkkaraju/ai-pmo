@@ -6,7 +6,8 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { canViewLearnKey } from '@/lib/learn-content';
 import { getSessionRole } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,7 @@ const SECTIONS: Section[] = [
 export default async function TechnicalHubPage() {
   const resolved = await getSessionRole();
   if (!resolved) notFound();
+  if (!(await canViewLearnKey('technical', resolved))) redirect('/dashboard');
 
   return (
     <div className="container mx-auto max-w-screen-lg px-6 py-8">

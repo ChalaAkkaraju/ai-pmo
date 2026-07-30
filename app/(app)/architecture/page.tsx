@@ -6,7 +6,8 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { canViewLearnKey } from '@/lib/learn-content';
 import { getSessionRole } from '@/lib/auth';
 import { ProcessFlowDiagram } from '@/components/process-flow-diagram';
 
@@ -50,6 +51,7 @@ const DATE_LAYERS = [
 export default async function ArchitecturePage() {
   const resolved = await getSessionRole();
   if (!resolved) notFound();
+  if (!(await canViewLearnKey('architecture', resolved))) redirect('/dashboard');
 
   return (
     <div className="container mx-auto max-w-screen-xl px-6 py-8">

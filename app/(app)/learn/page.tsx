@@ -4,7 +4,8 @@
  * is the single entry point over all of it. Valid token only.
  */
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { canViewLearnKey } from '@/lib/learn-content';
 import { getSessionRole } from '@/lib/auth';
 import { PrintButton } from '@/components/print-button';
 
@@ -63,6 +64,7 @@ const TIERS: Tier[] = [
 export default async function LearnHubPage() {
   const resolved = await getSessionRole();
   if (!resolved) notFound();
+  if (!(await canViewLearnKey('learn', resolved))) redirect('/dashboard');
 
   return (
     <div className="container mx-auto max-w-screen-lg px-6 py-8">

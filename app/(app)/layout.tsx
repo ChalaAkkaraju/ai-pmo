@@ -8,6 +8,7 @@
 import { notFound } from 'next/navigation';
 import { Header } from '@/components/header';
 import { getSessionRole } from '@/lib/auth';
+import { getVisibleLearnItems } from '@/lib/learn-content';
 import { FloatingAgentWidgetGate } from '@/components/floating-agent-widget-gate';
 
 interface AccessLayoutProps {
@@ -19,10 +20,11 @@ export default async function AccessLayout({ children }: AccessLayoutProps) {
   if (!resolved) {
     notFound();
   }
+  const learnItems = await getVisibleLearnItems(resolved);
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header resolved={resolved} signedIn={!!resolved} />
+      <Header resolved={resolved} signedIn={!!resolved} learnItems={learnItems} />
       <main className="flex-1">{children}</main>
       <FloatingAgentWidgetGate
         roleDisplayName={resolved.definition.display_name}

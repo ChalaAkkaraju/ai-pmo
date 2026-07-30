@@ -24,18 +24,7 @@ import { signOut } from '@/app/login/actions';
 
 const CREATE_ROLES = ['pm', 'engineering_manager'];
 
-const LEARN_LINKS: Array<{ path: string; label: string }> = [
-  { path: 'learn', label: 'Learn home' },
-  { path: 'about', label: 'How it works' },
-  { path: 'architecture', label: 'Architecture' },
-  { path: 'framework', label: 'PMBOK coverage' },
-  { path: 'agents', label: 'The 15 agents' },
-  { path: 'concepts', label: 'AI concepts' },
-  { path: 'learn/training', label: 'Training' },
-  { path: 'technical', label: 'Technical notes' },
-];
-
-export function Header({ resolved, signedIn = false }: { resolved: ResolvedRole; signedIn?: boolean }) {
+export function Header({ resolved, signedIn = false, learnItems }: { resolved: ResolvedRole; signedIn?: boolean; learnItems: Array<{ path: string; label: string }> }) {
   const canCreate = CREATE_ROLES.includes(resolved.role.role_type);
   // On the welcome gateway (its own branding + entry buttons) the full header is
   // redundant — keep only a minimal, centred name / role so you still see who
@@ -92,10 +81,9 @@ export function Header({ resolved, signedIn = false }: { resolved: ResolvedRole;
             </Link>
           )}
 
-          {/* Learn — CSS-only dropdown grouping the education pages.
-              group-hover keeps it open over the button AND the (descendant)
-              menu; the transparent pt-1.5 bridge removes the dead zone so the
-              menu never closes between them. focus-within handles keyboard/touch. */}
+          {/* Learn — CSS-only dropdown grouping the education pages. Hidden
+              entirely when the current role can see no Learn items. */}
+          {learnItems.length > 0 && (
           <div className="group relative">
             <button
               type="button"
@@ -108,7 +96,7 @@ export function Header({ resolved, signedIn = false }: { resolved: ResolvedRole;
             <div className="invisible absolute right-0 top-full z-50 pt-1.5 opacity-0 transition-opacity duration-100 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
               <div className="w-52 rounded-lg border bg-background py-1.5 shadow-lg">
                 <p className="px-3 pb-1 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Learn about AI PMO</p>
-                {LEARN_LINKS.map((l) => (
+                {learnItems.map((l) => (
                   <Link
                     key={l.path}
                     href={`/${l.path}`}
@@ -120,6 +108,7 @@ export function Header({ resolved, signedIn = false }: { resolved: ResolvedRole;
               </div>
             </div>
           </div>
+          )}
 
           <Link href={`/integration`} className="text-muted-foreground transition hover:text-foreground">Integration</Link>
           <Link href={`/usage`} className="text-muted-foreground transition hover:text-foreground">Usage</Link>

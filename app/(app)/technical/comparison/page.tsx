@@ -4,7 +4,8 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { canViewLearnKey } from '@/lib/learn-content';
 import { getSessionRole } from '@/lib/auth';
 import { PrintButton } from '@/components/print-button';
 
@@ -53,6 +54,7 @@ const SOURCES = [
 export default async function ComparisonPage() {
   const resolved = await getSessionRole();
   if (!resolved) notFound();
+  if (!(await canViewLearnKey('technical', resolved))) redirect('/dashboard');
 
   return (
     <div className="container mx-auto max-w-screen-lg px-6 py-8">

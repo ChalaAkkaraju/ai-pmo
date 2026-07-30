@@ -23,6 +23,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">User administration</span>
             </span>
           </Link>
+          <nav className="flex items-center gap-4 text-sm">
+            <Link href="/admin/users" className="text-muted-foreground transition hover:text-foreground">Users</Link>
+            <Link href="/admin/learn" className="text-muted-foreground transition hover:text-foreground">Learn content</Link>
+          </nav>
           <div className="flex items-center gap-4 text-sm">
             <span className="text-muted-foreground">{role.name}</span>
             <form action={signOut}>
