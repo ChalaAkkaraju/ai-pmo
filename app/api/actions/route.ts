@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 
 const itemSchema = z.object({
   description: z.string().min(1),
-  assigned_to_role: z.string().min(1),
+  assigned_to_role: z.string().min(1).optional(),
   assigned_to_user: z.string().uuid().optional().nullable(),
   urgency: z.enum(['L', 'M', 'H']).optional(),
   source_ref: z.string().optional().nullable(),
