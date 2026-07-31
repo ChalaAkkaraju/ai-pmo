@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       item.assigned_to_user && roleTypeByUserId.has(item.assigned_to_user)
         ? item.assigned_to_user
         : null;
-    const roleValid = isValidRoleType(item.assigned_to_role);
+    const roleValid = !!item.assigned_to_role && isValidRoleType(item.assigned_to_role);
     const roleType = targetUserId
       ? roleTypeByUserId.get(targetUserId)
       : roleValid
