@@ -83,3 +83,15 @@ docs/AI-PMO-Technical-Edition.pdf
 
 # prod->QA data copy export (transient, may be large)
 agent-outputs-export.json
+
+# --- throwaway debug/scratch from figure-capture troubleshooting (2026-07-31) ---
+scripts/probe-db.mjs
+scripts/probe-capture.mjs
+scripts/diag-cashflow.mjs
+scripts/capture-fix.mjs
+scripts/rebuild-book.mjs
+scripts/fix-figures.ps1
+scripts/start-and-probe.ps1
+scripts/refresh-book-qa.ps1
+docs/book/figures/_probe-cashflow.png
+docs/book/figures/_probe-ev.png
