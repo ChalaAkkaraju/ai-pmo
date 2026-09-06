@@ -22,6 +22,12 @@ import { computeResultsAnalysis } from '@/lib/results-analysis';
 import { computeLoad, type ResAssignment, type LoadResult } from '@/lib/resource-load';
 import { computeMarginBridge } from '@/lib/margin';
 import { segmentStyle, statusBadge } from '@/lib/segment-style';
+import { roleSees } from '@/lib/workspace';
+import { bucketLabel, bucketStyle, categoryLabel, fmtMoney, lifecycleLabel } from '@/lib/it-portfolio';
+import { isCommitted, stageAt } from '@/lib/stage-gates';
+import type { BenefitsReport, DecisionRecord, GateDecision, PortfolioAllocation, ProjectType, ResourceDisplacement, SanctionEvent, StageTemplate } from '@/lib/types';
+import { bodiesFor, isActionableBy, loadGovernance } from '@/lib/governance';
+import type { GatesPanelProps } from '@/components/gates-panel';
 
 // Always fetch fresh from Supabase — no Next.js data cache
 export const dynamic = 'force-dynamic';
@@ -238,6 +244,38 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     .maybeSingle();
 
   if (!project) notFound();
+  const projectType = ((project.project_type as ProjectType | undefined) ?? 'revenue');
+  if (!roleSees(resolved.role, projectType)) notFound();
+  const isIt = projectType === 'it';
+
+  // Stage-gate state (non-revenue projects): template, decisions, sanction events, bucket allocation.
+  let gates: GatesPanelProps['gates'] | undefined;
+  if (isIt) {
+    const [tplRes, decRes, seRes, allocRes, recRes, dispRes, benRes, governance] = await Promise.all([
+      project.stage_template_id ? supabase.from('stage_templates').select('*').eq('id', project.stage_template_id).maybeSingle() : Promise.resolve({ data: null }),
+      supabase.from('gate_decisions').select('*').eq('project_id', project.id).order('decided_on', { ascending: true }),
+      supabase.from('sanction_events').select('*').eq('project_id', project.id).order('created_at', { ascending: true }),
+      project.fiscal_year && project.portfolio_bucket
+        ? supabase.from('portfolio_allocations').select('*').eq('project_type', 'it').eq('fiscal_year', project.fiscal_year).eq('bucket', project.portfolio_bucket).maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase.from('decision_records').select('*').eq('project_id', project.id).order('proposed_at', { ascending: false }),
+      supabase.from('resource_displacements').select('*').eq('from_project_id', project.id).order('from_date', { ascending: false }),
+      supabase.from('benefits_reports').select('*').eq('project_id', project.id).order('period', { ascending: true }),
+      loadGovernance(supabase, 'it'),
+    ]);
+    gates = {
+      project,
+      template: (tplRes.data as StageTemplate | null) ?? null,
+      decisions: (decRes.data ?? []) as GateDecision[],
+      sanctionEvents: (seRes.data ?? []) as SanctionEvent[],
+      allocation: (allocRes.data as PortfolioAllocation | null) ?? null,
+      records: (recRes.data ?? []) as DecisionRecord[],
+      matrix: governance.matrix,
+      gov: { bodies: governance.bodies, myBodyKeys: bodiesFor(governance, resolved.role), myRoleId: resolved.role.id, myRoleType: resolved.role.role_type, myName: resolved.role.name },
+      displacements: (dispRes.data ?? []) as ResourceDisplacement[],
+      benefits: (benRes.data ?? []) as BenefitsReport[],
+    };
+  }
 
   const [issuesRes, risksRes, cosRes, varianceRes, planningRows, actionItemsRes, forecastRes] = await Promise.all([
     supabase.from('issues').select('*').eq('project_id', project.id).order('opened_week', { ascending: true }),
@@ -328,25 +366,35 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   }
 
   return (
-    <div className="container mx-auto max-w-screen-2xl px-8 py-8">
+    <div className="container mx-auto max-w-screen-2xl px-8 py-8" data-project-code={project.code} data-project-type={project.project_type ?? 'revenue'} data-project-name={project.name}>
       <nav className="mb-6 text-sm text-muted-foreground">
-        <Link href={`/dashboard`} className="hover:underline">Portfolio</Link>
+        <Link href={isIt ? '/portfolio/it' : '/dashboard'} className="hover:underline">{isIt ? 'IT portfolio' : 'Portfolio'}</Link>
         <span className="mx-2">/</span>
         <span className="text-foreground">{project.name}</span>
       </nav>
 
-      <header className="relative overflow-hidden rounded-lg border bg-card p-6">
-        <span className={`absolute left-0 top-0 h-full w-1.5 ${ss.accentBar}`} />
+      <header className={`relative overflow-hidden rounded-xl border p-6 shadow-sm ${isIt ? 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-teal-50/40' : 'bg-card'}`}>
+        <span className={`absolute left-0 top-0 h-full w-1.5 ${isIt ? bucketStyle(project.portfolio_bucket).accentBar : ss.accentBar}`} />
         <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{project.code} · {project.client}</p>
           </div>
           <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadge(project.status)}`}>
-            {project.status} · Week {project.current_week}
+            {isIt ? lifecycleLabel(project.lifecycle_status) : `${project.status} · Week ${project.current_week}`}
           </span>
         </div>
 
+        {isIt && gates ? (
+          <div className="mt-6 grid grid-cols-2 gap-3 pl-2 sm:grid-cols-3 lg:grid-cols-6">
+            <HeaderCard label="Bucket" value={bucketLabel(project.portfolio_bucket)} sub={`FY${project.fiscal_year ?? '—'}`} accent={bucketStyle(project.portfolio_bucket).hex} />
+            <HeaderCard label="Category" value={categoryLabel(project.project_category)} sub={gates.template?.name ?? 'no template'} accent="#475569" />
+            <HeaderCard label="Stage" value={(() => { const st = stageAt(gates.template, project.current_stage ?? 0); return st ? `${st.seq}. ${st.name}` : '—'; })()} sub={stageAt(gates.template, project.current_stage ?? 0)?.gate_name ?? ''} accent="#0284c7" />
+            <HeaderCard label="Requested" value={fmtMoney(project.requested_budget)} sub={project.business_case?.value_type ? String(project.business_case.value_type).replace(/_/g, ' ') : ''} accent="#4f46e5" />
+            <HeaderCard label={Number(project.approved_budget_current) > 0 && Number(project.approved_budget_current) !== Number(project.approved_budget_initial) ? 'Current budget' : 'Baseline'} value={Number(project.approved_budget_current) > 0 ? fmtMoney(project.approved_budget_current) : 'not locked'} sub={Number(project.approved_budget_current) > 0 ? (Number(project.approved_budget_current) !== Number(project.approved_budget_initial) ? `${fmtMoney(project.approved_budget_initial)} at Stage Gate 1 + ${fmtMoney(Number(project.approved_budget_current) - Number(project.approved_budget_initial))} approved changes` : 'locked at Stage Gate 1') : 'locks at Stage Gate 1'} tone={Number(project.approved_budget_current) > 0 ? 'ok' : 'neutral'} />
+            <HeaderCard label="Open H-issues" value={String(openHIssues)} sub={`${risks.length} risks · ${issues.length} issues`} tone={openHIssues > 0 ? 'warn' : 'neutral'} />
+          </div>
+        ) : (
         <div className="mt-6 grid grid-cols-2 gap-3 pl-2 sm:grid-cols-3 lg:grid-cols-6">
           <div className="rounded-md border bg-card p-3">
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Segment</p>
@@ -401,6 +449,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
             )}
           </div>
         </div>
+        )}
         {project.hard_deadline_description && (
           <div className="relative mt-5 overflow-hidden rounded-lg border-2 border-amber-400 bg-gradient-to-r from-amber-100 via-amber-50 to-white px-4 py-3 shadow-sm">
             <span className="absolute left-0 top-0 h-full w-1.5 bg-amber-500" />
@@ -421,13 +470,60 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         )}
       </header>
 
-      <SetupChecklist
-        projectCode={code}
-        projectName={String(project.name)}
-        done={doneAgents}
-        allowedAgents={resolved.definition.allowed_agents}
-        defaultOpen={isFreshProject && doneAgents.length < 6}
-      />
+      {isIt && gates && (() => {
+        const items: Array<{ tone: 'decide' | 'concur' | 'todo' | 'warn'; text: string; href: string; cta: string }> = [];
+        for (const r of gates.records) {
+          const a = isActionableBy(r, gates.gov.myBodyKeys);
+          if (a === 'decide') items.push({ tone: 'decide', text: `Decide: ${r.title} (${fmtMoney(r.amount)}) — as ${gates.gov.bodies.find((b) => b.key === r.required_body_key)?.name ?? r.required_body_key}`, href: `/projects/${encodeURIComponent(code)}?tab=gates`, cta: 'Open decision' });
+          if (a === 'concur') items.push({ tone: 'concur', text: `Concur: ${r.title} (${fmtMoney(r.amount)}) — Finance sign-off before the ${gates.gov.bodies.find((b) => b.key === r.required_body_key)?.name ?? 'body'} can decide`, href: `/projects/${encodeURIComponent(code)}?tab=gates`, cta: 'Review and concur' });
+        }
+        const canRun = ['it_pm', 'it_portfolio_manager'].includes(resolved.role.role_type);
+        const running = project.lifecycle_status === 'active' || project.lifecycle_status === 'on_hold';
+        const nextFy = ((project.fiscal_years_approved ?? []).length ? Math.max(...(project.fiscal_years_approved ?? [])) : (project.fiscal_year ?? new Date().getFullYear())) + 1;
+        const askingNext = project.fiscal_year === nextFy;
+        if (canRun && running && !askingNext && !(project.fiscal_years_approved ?? []).includes(nextFy) && new Date().getMonth() >= 6) items.push({ tone: 'todo', text: `FY${nextFy} continuation slice not yet requested — budgets are approved by year; without a request this project stops at year-end.`, href: `/projects/${encodeURIComponent(code)}?tab=overview`, cta: 'Request the slice' });
+        const hold = gates.decisions.filter((d) => d.decision === 'hold').sort((a, b) => (a.decided_on < b.decided_on ? 1 : -1))[0];
+        if (project.lifecycle_status === 'on_hold' && hold?.hold_until && new Date(hold.hold_until) < new Date()) items.push({ tone: 'warn', text: `Hold expired on ${hold.hold_until} — it must re-enter through the continuation gate or be cancelled; it does not drift.`, href: `/projects/${encodeURIComponent(code)}?tab=gates`, cta: 'Open gates' });
+        if (canRun && project.lifecycle_status === 'approved') items.push({ tone: 'todo', text: 'Envelope granted at the waterline — the discovery allowance is released; assemble the Stage Gate 1 package to lock scope, budget and the capital / expense split.', href: `/projects/${encodeURIComponent(code)}?tab=gates`, cta: 'Go to the gate' });
+        if (items.length === 0) return null;
+        const toneCls = { decide: 'border-teal-300 bg-teal-50', concur: 'border-sky-300 bg-sky-50', todo: 'border-amber-300 bg-amber-50', warn: 'border-red-300 bg-red-50' } as const;
+        const dot = { decide: 'bg-teal-600', concur: 'bg-sky-600', todo: 'bg-amber-500', warn: 'bg-red-600' } as const;
+        return (
+          <section className="mt-4 rounded-xl border-2 border-teal-400/60 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-teal-600 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-white">Action needed from you</span>
+              <span className="text-xs text-muted-foreground">{items.length} item{items.length > 1 ? 's' : ''} on this project · signed in as {resolved.role.name}, {resolved.definition.display_name}</span>
+            </div>
+            <ul className="mt-3 space-y-2">
+              {items.map((it, i) => (
+                <li key={i} className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm ${toneCls[it.tone]}`}>
+                  <span className="inline-flex items-start gap-2"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot[it.tone]}`} />{it.text}</span>
+                  <Link href={it.href} className="shrink-0 rounded-md bg-foreground px-3 py-1 text-xs font-semibold text-background transition hover:opacity-90">{it.cta} →</Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
+
+      {/* The planning artefacts belong to Discover / Define. Once an IT project
+          has passed its commit gate the checklist is historical: show it only if
+          something was actually produced, and never nag a role that cannot run it. */}
+      {(() => {
+        const itCommitted = isIt && gates ? isCommitted(gates.template, gates.decisions) : false;
+        const canRunAny = (['charter_drafter', 'stakeholder_analyst', 'wbs_builder', 'schedule_reasoner', 'budget_builder', 'communications_planner'] as const).some((a) => resolved.definition.allowed_agents.includes(a));
+        if (itCommitted && doneAgents.length === 0) return null;
+        if (!canRunAny && doneAgents.length === 0) return null;
+        return (
+          <SetupChecklist
+            projectCode={code}
+            projectName={String(project.name)}
+            done={doneAgents}
+            allowedAgents={resolved.definition.allowed_agents}
+            defaultOpen={!itCommitted && isFreshProject && doneAgents.length < 6}
+          />
+        );
+      })()}
 
 
       <ProjectTabs
@@ -460,8 +556,22 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         marginBridge={marginBridge}
         marginSyncedAt={project.baseline_captured_at ?? null}
         scheduleEnvelope={scheduleEnvelope}
+        projectType={projectType}
+        gates={gates}
         data={{ issues, risks, change_orders, variance_reports, planning_outputs, action_items }}
       />
+    </div>
+  );
+}
+
+
+function HeaderCard({ label, value, sub, tone = 'neutral', accent }: { label: string; value: string; sub?: string; tone?: 'ok' | 'warn' | 'neutral'; accent?: string }) {
+  const cls = tone === 'warn' ? 'border-amber-300 bg-amber-50/50' : tone === 'ok' ? 'border-emerald-200 bg-emerald-50/50' : 'bg-white/80';
+  return (
+    <div className={`rounded-md border p-3 ${cls}`} style={accent ? { borderTop: `3px solid ${accent}` } : undefined}>
+      <p className="text-[10px] font-medium uppercase tracking-wider" style={accent ? { color: accent } : undefined}>{label}</p>
+      <p className="mt-1 text-base font-semibold">{value}</p>
+      {sub ? <p className="mt-0.5 text-[10px] text-muted-foreground">{sub}</p> : null}
     </div>
   );
 }

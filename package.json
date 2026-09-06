@@ -2,7 +2,7 @@
   "name": "ai-pmo",
   "version": "0.1.0",
   "private": true,
-  "description": "AI PMO — methodology-aware agentic system for EPC project management. Personal learning project.",
+  "description": "AI PMO \u2014 methodology-aware agentic system for EPC project management. Personal learning project.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
     "seed:users": "tsx scripts/seed-users.ts",
-    "test:agent": "tsx scripts/test-agent.ts"
+    "test:agent": "tsx scripts/test-agent.ts",
+    "seed:it": "tsx scripts/seed-it.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.2",

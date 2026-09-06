@@ -1,5 +1,5 @@
 /**
- * Agent catalog — plain-English descriptions of each of the 13 specialists.
+ * Agent catalog — plain-English descriptions of each specialist agent.
  *
  * Used by the public /access/<token>/agents page so colleagues can browse
  * what each agent can and can't do before invoking one.
@@ -345,6 +345,133 @@ export const AGENT_CATALOG: AgentCatalogEntry[] = [
     samplePrompt: 'Give me the cost and commitment position with cost-to-date, open commitment by category, and net unbilled.',
     methodology:
       'Follows the SAP PS cost lifecycle (Budget → Commitment → Actual) and earned-vs-billed revenue (results-analysis / WIP), reconciled to the WBS.',
+  },
+  // ---- IT PMO / portfolio agents (added with the project-type extension) ----
+  {
+    agent_type: 'business_case_reviewer',
+    name: 'Business Case Reviewer',
+    purpose: 'Challenges an IT business case before it is ranked — value type, numbers, completeness.',
+    plain:
+      'IT projects are overhead, so the CFO only trusts a case that says plainly what kind of value it claims. This agent reads a submitted business case and asks the questions a sceptical reviewer would: is this a hard saving or a soft benefit dressed as one, do the budget, benefit, ROI and payback agree with each other, and is everything the commit package needs actually there? It recommends whether the case is ready to rank, needs corrections, is not ready, or belongs in the mandatory compliance lane.',
+    scope: 'project',
+    does: [
+      'Classifies the value claim (hard savings / soft benefit / risk reduction / enablement / compliance) and tests the evidence for it',
+      'Recomputes ROI and payback from budget and benefit and flags disagreements',
+      'Lists missing commit-package items (sponsor, benefits owner, category, bucket, fiscal year)',
+      'Names the assumptions that would change the ranking if wrong',
+    ],
+    doesNot: [
+      'Doesn\'t approve or reject the project — the portfolio board does that at the waterline',
+      'Doesn\'t invent benefits, owners or figures that are not in the case',
+    ],
+    samplePrompt: 'Review this business case — is the value claim honest, do the numbers hold, and is it ready to rank?',
+    methodology:
+      'Follows the IT PMO business-case standard: value-type classification, marginal-numbers check, commit-package completeness; compliance work is judged on cost-to-comply rather than ROI.',
+  },
+  {
+    agent_type: 'waterline_ranker',
+    name: 'Waterline Ranker',
+    purpose: 'Ranks IT projects within each bucket for a fiscal year and draws the waterline.',
+    plain:
+      'Each year the IT envelope is split into buckets — infrastructure, applications, security, compliance — and projects compete inside their bucket, not across buckets. This agent ranks every project in a bucket on its score, walks down the list allocating money until the bucket is spent, and draws the line. It shows what is funded, what is deferred, what sits just below the line and how far short it is, and it flags continuations — projects asking for their next-year slice — which are judged on cost-to-complete against remaining benefit rather than on their original case.',
+    scope: 'portfolio',
+    does: [
+      'Ranks within bucket on strategic score and ROI; mandatory lanes on deadline and cost-to-comply',
+      'Draws the waterline by money against the bucket allocation less reserve',
+      'Flags continuations and ranks them on the marginal case',
+      'Lists the board decisions: envelopes to approve, projects to defer, continuations to call',
+    ],
+    doesNot: [
+      'Doesn\'t compare projects across buckets or sum value across them',
+      'Doesn\'t decide the size of the envelope — it shows where the line falls given the envelope',
+    ],
+    samplePrompt: 'Rank the FY2027 IT portfolio within each bucket and show me the waterline and what sits just below it.',
+    methodology:
+      'Follows the IT PMO annual-planning process: bucketed allocation with reserve, within-bucket ranking, per-bucket waterline, continuation judged on cost-to-complete vs benefit still achievable.',
+  },
+  {
+    agent_type: 'gate_reviewer',
+    name: 'Gate Reviewer',
+    purpose: 'Assembles the gate package for the project\'s current stage gate and scores the exit criteria.',
+    plain:
+      'Every IT project runs through a stage template chosen by its category, with one commit gate (Stage Gate 1) where scope, budget and the capital-versus-expense split are locked, and later gates that decide go, hold or cancel. Before a gate meeting, this agent reads the template\'s exit criteria for the gate the project is at, scores each one against the evidence in the workspace — charter, estimate, risk register, issues, sanction events — and recommends a decision with the evidence beside it. At the commit gate it is deliberately strict; at later gates it asks whether cost-to-complete is still justified by the benefit still achievable.',
+    scope: 'project',
+    does: [
+      'Scores every exit criterion of the current gate: met / partly / not met / no evidence',
+      'Checks the estimate against the portfolio envelope and flags a return to portfolio beyond tolerance',
+      'Recommends GO / GO WITH CONDITIONS / HOLD (with trigger and time box) / RECYCLE / CANCEL / RETURN TO PORTFOLIO',
+      'States exactly what a GO would lock as the SG1 baseline sanction event',
+    ],
+    doesNot: [
+      'Doesn\'t take the decision — the gate attendees do',
+      'Doesn\'t invent criteria or evidence; missing evidence is scored as missing',
+    ],
+    samplePrompt: 'Prepare the Stage Gate 1 package for this project and score the exit criteria.',
+    methodology:
+      'Follows the stage-gate discipline (must-meet / should-meet criteria, go-hold-kill-recycle outcomes) as configured in the project\'s stage template.',
+  },
+  {
+    agent_type: 'continuation_reviewer',
+    name: 'Continuation Reviewer',
+    purpose: 'Judges a multi-year IT project\'s next-fiscal-year slice on cost-to-complete vs benefit still achievable.',
+    plain:
+      'IT budgets are approved by year, so a project that runs into next year has to be re-approved for its next slice. The honest test is not the original business case but whether the remaining spend still buys the remaining benefit — sunk cost does not count. This agent restates the baseline from the sanction events and gate history, computes cost-to-complete and the benefit still achievable, attributes any slippage to its real causes (including people pulled to revenue work), checks that the business need still exists, and recommends continue, reduce scope, defer, cancel, or re-baseline through the commit gate.',
+    scope: 'project',
+    does: [
+      'Restates the SG1 baseline, change orders, fiscal years approved and spend to date',
+      'Computes cost-to-complete and benefit still achievable, and the marginal ROI or payback',
+      'Attributes slippage to named causes, separating resource displacement',
+      'States the consequence for the bucket at next year\'s waterline',
+    ],
+    doesNot: [
+      'Doesn\'t re-underwrite the original case — it judges the marginal one',
+      'Doesn\'t invent actuals or benefits; where none are supplied it says so',
+    ],
+    samplePrompt: 'Should this project be funded for next fiscal year? Judge the remaining spend against the remaining benefit.',
+    methodology:
+      'Follows the IT PMO continuation-gate rule: cost-to-complete vs benefit still achievable, sunk cost excluded, resource displacement attributed rather than absorbed.',
+  },
+  {
+    agent_type: 'executive_briefing_writer',
+    name: 'Executive Briefing Writer',
+    purpose: 'Writes the one-page board pack across every PMO on the platform — each in its own terms, never summed.',
+    plain:
+      'Before a leadership meeting someone in the CFO\'s office assembles a summary from several PMO decks. This agent writes that page from the live data: what changed, which decisions are waiting and with whom, where buffers are thinning, and the few questions worth asking. It never adds revenue money to IT money or compares one PMO\'s indices with another\'s.',
+    scope: 'portfolio',
+    does: [
+      'Leads with what changed and what needs a decision, naming the body and the rule that routed it there',
+      'Clusters attention signals into patterns rather than listing projects; names at most five items worth a question',
+      'States each PMO\'s position in its own terms — margin sold vs forecast for revenue, envelope committed and headroom for IT',
+      'Says plainly which project types are not yet on the platform',
+    ],
+    doesNot: [
+      'Doesn\'t produce a single money total across project types, or rank one PMO\'s performance index against another\'s',
+      'Doesn\'t invent prior-period figures or benchmarks; where no comparison exists it says so',
+    ],
+    samplePrompt: 'Write this month\'s enterprise portfolio brief for the leadership meeting.',
+    methodology:
+      'Applies the cross-type layer rule from the AI PMO architecture: counts, dates, states, ratios and people movement travel across types; money and performance indices stay inside each PMO.',
+  },
+  {
+    agent_type: 'governance_health_reviewer',
+    name: 'Governance Health Reviewer',
+    purpose: 'Audits the delegation of authority itself from the decision records: is governance working as designed?',
+    plain:
+      'A governance model can look right on paper and drift in practice — a board that never says no, a Finance concurrence that becomes the bottleneck, holds that quietly expire. This agent reads the decision records, holds, continuations and displacement log and rates each control: working, watch, or not working, with the figure that proves it and the fix.',
+    scope: 'portfolio',
+    does: [
+      'Rates each control — right body, concurrence before approval, quorum, no self-approval, time-boxed holds, continuations requested, challenge rate — with a figure',
+      'Shows cycle time by body and says whether concurrence or decision is the slow step',
+      'Treats returned and rejected decisions, and holds lifted on time, as signs of health',
+      'Recommends at most five changes, each naming the rule or body it alters',
+    ],
+    doesNot: [
+      'Doesn\'t judge projects or people — bodies and roles only',
+      'Doesn\'t guess where a control has not yet been exercised; it says "not assessable yet"',
+    ],
+    samplePrompt: 'Is our delegation of authority working? Review the last 90 days of decisions.',
+    methodology:
+      'Checks the operating evidence against COBIT / PMI-style delegation-of-authority principles: decisions at the designed level, separation of proposer and decider, quorum, concurrence, time-boxed holds, and a non-zero challenge rate.',
   },
 ];
 

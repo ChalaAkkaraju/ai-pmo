@@ -319,18 +319,29 @@ const AGENT_LABELS: Record<AgentType, string> = {
   portfolio_risk_reviewer: 'Portfolio Risk Reviewer',
   status_reporter: 'Status Reporter',
   cost_controller: 'Cost Controller',
+  business_case_reviewer: 'Business Case Reviewer',
+  waterline_ranker: 'Waterline Ranker',
+  gate_reviewer: 'Gate Reviewer',
+  continuation_reviewer: 'Continuation Reviewer',
+  executive_briefing_writer: 'Executive Briefing Writer',
+  governance_health_reviewer: 'Governance Health Reviewer',
 };
 
 /** Starter prompts shown when the chat is empty — role-aware. Creation/assign
  * options surface the write actions that aren't otherwise discoverable now that
  * everything runs through the agent. Clicking one pre-fills the input to edit. */
-function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { allowedAgents: AgentType[]; canWrite: boolean; projectCode: string | null; onPick: (p: string) => void }) {
+function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, onPick }: { allowedAgents: AgentType[]; canWrite: boolean; projectCode: string | null; projectType?: string | null; onPick: (p: string) => void }) {
   const has = (a: AgentType) => allowedAgents.includes(a);
+  const isItRole = has('waterline_ranker') || has('gate_reviewer') || has('continuation_reviewer') || has('business_case_reviewer');
+  const isItProject = projectType === 'it' || (projectType == null && !!projectCode && /^NW-IT-/.test(projectCode));
   const create: Array<{ label: string; prompt: string }> = [];
   if (projectCode && canWrite) {
     if (has('risk_analyst')) create.push({ label: '\uFF0B Raise a risk', prompt: 'Log a risk: [describe the risk \u2014 cause \u2192 event \u2192 consequence]' });
     if (has('issue_logger')) create.push({ label: '\uFF0B Log an issue', prompt: 'Log an issue: [describe the issue and its effect]' });
     if (has('change_order_reviewer')) create.push({ label: '\uFF0B Change / trend entry', prompt: 'Add a change/trend entry: [describe the scope change]' });
+    if (has('continuation_reviewer')) create.push({ label: '\uFF0B Continuation request', prompt: 'Request the next-year continuation slice for this project: [amount and remaining scope]' });
+    if (has('gate_reviewer')) create.push({ label: '\uFF0B Log a displacement', prompt: 'Log a displacement: [who] was pulled to [incident / run work / project code] from [date] \u2014 [days of slip]' });
+    if (has('gate_reviewer')) create.push({ label: '\uFF0B Benefits report', prompt: 'Record realised benefits for [period]: planned [amount], realised [amount] \u2014 [why]' });
   }
   if (canWrite) create.push({ label: '\uFF0B Assign a task', prompt: 'Assign a task to [User / role]: [what to do] \u2014 [low/medium/high] urgency' });
 
@@ -348,14 +359,34 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { al
     ['stakeholder_analyst', 'Build the stakeholder register and the engagement approach.'],
     ['wbs_builder', 'Build the work breakdown structure to Level 1\u20133.'],
     ['charter_drafter', 'Draft the project charter from the intake data.'],
+    ['business_case_reviewer', 'Review this business case \u2014 is the value claim honest and is it ready to rank?'],
+    ['gate_reviewer', 'Prepare the gate package for the current gate and score the exit criteria.'],
+    ['continuation_reviewer', 'Should this project be funded for next fiscal year? Judge cost-to-complete against benefit still achievable.'],
+    ['waterline_ranker', 'Rank the IT portfolio within each bucket for the fiscal year and draw the waterline.'],
     ['communications_planner', 'Build the communications plan for this project.'],
     ['lessons_learned_synthesiser', 'What are the top firm-level lessons from this project?'],
     ['closeout_reporter', 'Draft the closeout executive summary.'],
   ];
   let ask: string[];
-  if (projectCode) {
+  if (projectCode && isItProject) {
+    const itFirst: AgentType[] = ['gate_reviewer', 'business_case_reviewer', 'continuation_reviewer', 'change_order_reviewer', 'risk_analyst', 'issue_logger', 'status_reporter'];
+    const roleAsks = itFirst.filter(has).map((a) => ASK_BY_AGENT.find(([x]) => x === a)?.[1]).filter((x): x is string => !!x);
+    ask = ['Where does this project stand \u2014 stage, gate, funding position, and what needs my attention?', ...roleAsks].slice(0, 4);
+  } else if (projectCode) {
     const roleAsks = ASK_BY_AGENT.filter(([a]) => has(a)).map(([, prm]) => prm);
     ask = ['Summarise this project\u2019s health \u2014 cost, schedule, and what needs my attention.', ...roleAsks].slice(0, 4);
+  } else if (has('executive_briefing_writer') || has('governance_health_reviewer')) {
+    ask = [];
+    if (has('executive_briefing_writer')) ask.push('Write this month\u2019s enterprise portfolio brief for the leadership meeting.');
+    if (has('governance_health_reviewer')) ask.push('Is our delegation of authority working? Review the last 90 days of decisions.');
+    if (has('executive_briefing_writer')) ask.push('Which five things should I ask about this week, and why?');
+    if (has('portfolio_risk_reviewer')) ask.push('Where is cross-cutting risk emerging across the revenue portfolio?');
+  } else if (isItRole && !has('variance_analyst')) {
+    ask = ['Which IT projects need a decision from me this week, and why?'];
+    if (has('waterline_ranker')) ask.push('Rank the IT portfolio within each bucket for next fiscal year and draw the waterline.');
+    if (has('continuation_reviewer')) ask.push('Which running projects need a continuation decision, and what does cost-to-complete say?');
+    if (has('gate_reviewer')) ask.push('Which projects are at a gate, and are their packages ready?');
+    ask = ask.slice(0, 4);
   } else {
     ask = ['Which projects need attention this week, and why? Cite the variance reports.'];
     if (has('portfolio_risk_reviewer')) ask.push('Where is cross-cutting risk emerging across the portfolio?');
@@ -403,6 +434,11 @@ export function FloatingAgentWidget({
       : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
   const pathname = usePathname();
+  const [projectType, setProjectType] = useState<string | null>(null);
+  useEffect(() => {
+    const el = document.querySelector('[data-project-type]');
+    setProjectType(el?.getAttribute('data-project-type') ?? null);
+  }, [pathname]);
   const router = useRouter();
 
   // Listen for in-page triggers (e.g. the guided setup checklist) asking us to
@@ -466,8 +502,11 @@ export function FloatingAgentWidget({
 
   if (allowedAgents.length === 0) return null;
 
-  const projectMatch = pathname?.match(/\/access\/[^/]+\/projects\/([^/?]+)/);
-  const projectCode = projectMatch?.[1] ?? null;
+  // Project context comes from the URL (both the current /projects/<code> route
+  // and the legacy /access/<token>/projects/<code> one); the page also stamps
+  // data-project-* on its root so we know the type without another fetch.
+  const projectMatch = pathname?.match(/(?:\/access\/[^/]+)?\/projects\/([^/?]+)/);
+  const projectCode = projectMatch ? decodeURIComponent(projectMatch[1]) : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -540,7 +579,7 @@ export function FloatingAgentWidget({
     }
   }
 
-  const contextLabel = projectCode ?? 'Portfolio';
+  const contextLabel = projectCode ? `${projectCode}${projectType === 'it' ? ' · IT project' : ''}` : pathname?.startsWith('/portfolio/enterprise') ? 'Enterprise · all PMOs' : pathname?.startsWith('/portfolio/it') ? 'IT portfolio' : 'Portfolio';
   const dropdownOptions: AgentTypeOrAuto[] = canWrite ? ['auto', ...allowedAgents] : [...allowedAgents];
 
   // Popped-out brief panels render alongside the widget — they persist
@@ -611,7 +650,7 @@ export function FloatingAgentWidget({
 
       <div className="flex-1 overflow-y-auto px-4 py-2" style={{ backgroundColor: 'white' }}>
         {history.length === 0 && !isInvoking && (
-          <SuggestedPrompts allowedAgents={allowedAgents} canWrite={canWrite} projectCode={projectCode} onPick={(p) => setPrompt(p)} />
+          <SuggestedPrompts allowedAgents={allowedAgents} canWrite={canWrite} projectCode={projectCode} projectType={projectType} onPick={(p) => setPrompt(p)} />
         )}
         {history.map((h, idx) => (
           <InvocationCard key={idx} invocation={h} isLatest={idx === 0} onUseAsPrompt={applyFollowUp} onPopOut={handlePopOut} submittedCode={h.output_id ? submittedEntries[h.output_id] : undefined} onEntrySubmitted={markEntrySubmitted} />
@@ -680,13 +719,25 @@ export function FloatingAgentWidget({
               {!canWrite ? ' · read-only (analytical agents)' : ''}
             </p>
           </div>
-          <button
-            type="submit"
-            disabled={isInvoking || !prompt.trim()}
-            className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-40"
-          >
-            {isInvoking ? 'Calling…' : 'Send'}
-          </button>
+          <div className="flex items-center gap-2">
+            {prompt.trim() && !isInvoking && (
+              <button
+                type="button"
+                onClick={() => setPrompt('')}
+                className="rounded-md border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                aria-label="Clear the message"
+              >
+                Clear
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={isInvoking || !prompt.trim()}
+              className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-40"
+            >
+              {isInvoking ? 'Calling…' : 'Send'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

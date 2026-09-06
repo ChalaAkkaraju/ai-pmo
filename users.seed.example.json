@@ -1,5 +1,5 @@
 {
-  "__comment": "Copy this file to users.seed.json (git-ignored) and edit. Keyed by role_type — one entry per colleague. Change every password before seeding. Emails can be any address you control; for a local demo the .local domain is fine since accounts are created pre-confirmed (no email is sent).",
+  "__comment": "Copy this file to users.seed.json (git-ignored) and edit. Keyed by role_type \u2014 one entry per colleague. Change every password before seeding. Emails can be any address you control; for a local demo the .local domain is fine since accounts are created pre-confirmed (no email is sent).",
   "pm": {
     "email": "j.okafor@demo.aipmo.local",
     "password": "change-me-pm-9f3b"
@@ -43,5 +43,33 @@
   "admin": {
     "email": "admin@demo.aipmo.local",
     "password": "change-me-admin-7x4z"
+  },
+  "it_portfolio_manager": {
+    "email": "p.raman@demo.aipmo.local",
+    "password": "change-me-itpm-4k7q"
+  },
+  "it_pm": {
+    "email": "d.osei@demo.aipmo.local",
+    "password": "change-me-itpj-9m2r"
+  },
+  "it_sponsor": {
+    "email": "e.novak@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "it_bucket_owner": {
+    "email": "s.whitaker@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "it_board_member": {
+    "email": "a.chen@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "it_finance": {
+    "email": "m.lopez@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "portfolio_executive": {
+    "email": "d.whitfield@demo.aipmo.local",
+    "password": "AIPMO2026"
   }
 }

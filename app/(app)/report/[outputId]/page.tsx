@@ -18,6 +18,7 @@
  * and no server roundtrip.
  */
 
+import { AGENT_CATALOG } from '@/lib/agent-catalog';
 import { notFound } from 'next/navigation';
 import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
@@ -25,21 +26,8 @@ import { ReportView } from '@/components/report-view';
 
 export const dynamic = 'force-dynamic';
 
-const AGENT_LABELS: Record<string, string> = {
-  charter_drafter: 'Charter Drafter',
-  stakeholder_analyst: 'Stakeholder Analyst',
-  wbs_builder: 'WBS Builder',
-  schedule_reasoner: 'Schedule Reasoner',
-  budget_builder: 'Cost Planner',
-  communications_planner: 'Communications Planner',
-  issue_logger: 'Issue Logger',
-  variance_analyst: 'Variance Analyst',
-  change_order_reviewer: 'Change Order Reviewer',
-  risk_analyst: 'Risk Analyst',
-  lessons_learned_synthesiser: 'Lessons-Learned Synthesiser',
-  closeout_reporter: 'Closeout Reporter',
-  portfolio_risk_reviewer: 'Portfolio Risk Reviewer',
-};
+// Display names come from the catalog so every agent (revenue, IT, executive) prints a proper label.
+const AGENT_LABELS: Record<string, string> = Object.fromEntries(AGENT_CATALOG.map((a) => [a.agent_type, a.name]));
 
 interface PageProps {
   params: Promise<{ outputId: string }>;

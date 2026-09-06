@@ -51,6 +51,18 @@ const AGENT_DESCRIPTIONS: Record<AgentType, string> = {
     'Writes a one-page weekly status report (RAG status, progress, cost/schedule, risks, asks) tailored to the audience — internal team, sponsor, or client.',
   cost_controller:
     'Controls the SAP PS cost lifecycle: open PO commitment, cost-to-date, cost by element (labour/materials/subcontract/travel), labour productivity, and billed-vs-earned revenue with net unbilled (WIP).',
+  business_case_reviewer:
+    'IT / non-revenue projects: challenges a submitted business case before ranking — value type (hard savings / soft benefit / risk / enablement / compliance), recomputes ROI and payback, lists missing commit-package items.',
+  waterline_ranker:
+    'IT portfolio: ranks projects within each bucket for a fiscal year, draws the waterline against the bucket allocation and reserve, flags continuations and what sits just below the line.',
+  gate_reviewer:
+    'Stage gates: assembles the gate package for the project\'s current gate from its stage template, scores every exit criterion with evidence, recommends GO / GO WITH CONDITIONS / HOLD / RECYCLE / CANCEL / RETURN TO PORTFOLIO. Also records a resource displacement ("log a displacement", "X was pulled to NW-REN-…") or a benefits report ("record realised benefits for Q1") through a confirm card. Strict at the commit gate (Stage Gate 1).',
+  continuation_reviewer:
+    'IT annual re-approval: judges a multi-year project\'s next-fiscal-year slice on cost-to-complete vs benefit still achievable, attributes slippage (incl. resource displacement), recommends continue / reduce / defer / cancel / re-baseline. Also records or updates the next-year continuation request ("request $900k for FY2027", "update the continuation request") through a confirm card.',
+  executive_briefing_writer:
+    'Enterprise / all PMOs: writes the one-page board pack across Revenue, IT (and later Capital, R&D) — what changed, what needs a decision and from whom, where buffers are thin, the few questions to ask. Each PMO in its own terms; never sums money across types.',
+  governance_health_reviewer:
+    'Enterprise / all PMOs: audits the governance itself from the decision records — cycle times per body, quorum discipline, returned / rejected ratio, holds expiring without action, continuations unrequested, self-approval. Answers "is the delegation of authority working?".',
 };
 
 let cachedClient: OpenAI | null = null;

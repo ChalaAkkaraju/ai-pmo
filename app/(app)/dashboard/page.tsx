@@ -7,8 +7,9 @@
  *   theme card is selected.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getSessionRole } from '@/lib/auth';
+import { homePathFor, roleSees } from '@/lib/workspace';
 import { matchRoleFromText } from '@/lib/role-match';
 import { WelcomeGate } from '@/components/welcome-gate';
 import { createSupabaseServiceClient } from '@/lib/supabase';
@@ -46,6 +47,8 @@ const ALL_SEGMENTS: ReadonlyArray<'renewables' | 'water' | 'industrial' | 'power
 export default async function RoleLandingPage() {
   const resolved = await getSessionRole();
   if (!resolved) notFound();
+  // The revenue dashboard is revenue-only; IT-scoped roles land on their own workspace.
+  if (!roleSees(resolved.role, 'revenue')) redirect(homePathFor(resolved.role));
 
   const supabase = createSupabaseServiceClient();
 
@@ -54,6 +57,7 @@ export default async function RoleLandingPage() {
       supabase
         .from('projects')
         .select('id, code, name, client, segment, status, current_week, contract_value_current, approved_budget_current, contingency, hard_deadline_description, created_via, created_at')
+        .eq('project_type', 'revenue')
         .order('code', { ascending: true }),
       supabase.from('risks').select('project_id, status, impact, cross_cutting_class, owner, description, emv_usd, residual_emv_usd'),
       supabase.from('issues').select('project_id, severity, status, category, owner, description'),

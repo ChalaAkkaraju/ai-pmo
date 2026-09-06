@@ -38,6 +38,12 @@ const AGENT_PROMPT_FILES: Record<AgentType, string> = {
   portfolio_risk_reviewer: 'portfolio_risk_reviewer.md',
   status_reporter: 'status_reporter.md',
   cost_controller: 'cost_controller.md',
+  business_case_reviewer: 'business_case_reviewer.md',
+  waterline_ranker: 'waterline_ranker.md',
+  gate_reviewer: 'gate_reviewer.md',
+  continuation_reviewer: 'continuation_reviewer.md',
+  executive_briefing_writer: 'executive_briefing_writer.md',
+  governance_health_reviewer: 'governance_health_reviewer.md',
 };
 
 /**
@@ -145,6 +151,112 @@ export async function loadReferenceGrounding(
  * determines which subset matters; we pass everything and let the LLM filter.
  */
 import { loadStructuredFacts } from './project-facts';
+import { rankFiscalYear, bucketLabel, categoryLabel, valueTypeLabel, fmtMoney } from './it-portfolio';
+import type { PortfolioAllocation, Project as ProjectRow, StageTemplate, GateDecision, SanctionEvent } from './types';
+
+/**
+ * Stage-gate / portfolio grounding for a NON-REVENUE project (IT today;
+ * capital and R&D reuse it). Rendered as markdown so the agent prompts
+ * (Gate Reviewer, Continuation Reviewer, Business Case Reviewer) can cite the
+ * template criteria, decisions and sanction events verbatim.
+ */
+export async function loadGateState(supabase: SupabaseClient, project: Record<string, unknown>): Promise<string | null> {
+  const p = project as unknown as ProjectRow;
+  if (!p.project_type || p.project_type === 'revenue') return null;
+  const [tplRes, decRes, seRes, allocRes] = await Promise.all([
+    p.stage_template_id ? supabase.from('stage_templates').select('*').eq('id', p.stage_template_id).maybeSingle() : Promise.resolve({ data: null }),
+    supabase.from('gate_decisions').select('*').eq('project_id', p.id).order('decided_on', { ascending: true }),
+    supabase.from('sanction_events').select('*').eq('project_id', p.id).order('created_at', { ascending: true }),
+    p.fiscal_year && p.portfolio_bucket
+      ? supabase.from('portfolio_allocations').select('*').eq('project_type', p.project_type).eq('fiscal_year', p.fiscal_year).eq('bucket', p.portfolio_bucket).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const template = (tplRes.data as StageTemplate | null) ?? null;
+  const decisions = (decRes.data ?? []) as GateDecision[];
+  const events = (seRes.data ?? []) as SanctionEvent[];
+  const allocation = (allocRes.data as PortfolioAllocation | null) ?? null;
+  const bc = p.business_case;
+  const current = template?.stages.find((st) => st.seq === (p.current_stage ?? 0)) ?? null;
+
+  const lines: string[] = [];
+  lines.push(`# Portfolio & gate state — ${p.code} (project type: ${p.project_type})`);
+  lines.push('');
+  lines.push(`- **Bucket:** ${bucketLabel(p.portfolio_bucket)} · **Category:** ${categoryLabel(p.project_category)} · **Fiscal year submitted:** ${p.fiscal_year ?? '—'} · **Approved for:** ${(p.fiscal_years_approved ?? []).join(', ') || 'none yet'}`);
+  lines.push(`- **Lifecycle:** ${p.lifecycle_status} · **Sponsor:** ${p.client} · **Continuation of:** ${p.continuation_of_id ? 'yes (earlier fiscal year)' : 'no'}`);
+  lines.push(`- **Requested budget:** ${fmtMoney(p.requested_budget)} · **Locked baseline (approved_budget_current):** ${Number(p.approved_budget_current) > 0 ? fmtMoney(p.approved_budget_current) : 'not locked'}`);
+  if (allocation) lines.push(`- **Bucket envelope FY${allocation.fiscal_year}:** allocated ${fmtMoney(allocation.allocated_amount)}, reserve ${fmtMoney(allocation.reserve_amount)}${allocation.is_mandatory_lane ? ' (mandatory lane — rank on cost-to-comply)' : ''}`);
+  if (bc) {
+    lines.push('');
+    lines.push('## Business case (current)');
+    lines.push(`- Value type: ${valueTypeLabel(bc.value_type)}${bc.is_mandatory ? ' (mandatory)' : ''}`);
+    lines.push(`- Benefit: ${bc.benefit_summary}`);
+    lines.push(`- Annual benefit: ${bc.annual_benefit != null ? fmtMoney(bc.annual_benefit) : 'not stated'} · 3-yr ROI: ${bc.roi_pct ?? '—'}% · Payback: ${bc.payback_months ?? '—'} months · Strategic score: ${bc.strategic_score ?? '—'}/100`);
+    lines.push(`- Benefits owner: ${bc.benefits_owner ?? 'NOT NAMED'} · Expected capital share: ${bc.capex_share_pct ?? '—'}%`);
+  }
+  if (template) {
+    lines.push('');
+    lines.push(`## Stage template: ${template.name}`);
+    lines.push(`Current stage: ${current ? `${current.seq}. ${current.name} — gate "${current.gate_name}"${current.is_commit ? ' (COMMIT GATE)' : ''}` : 'unknown'}`);
+    for (const st of template.stages) {
+      lines.push(`- Stage ${st.seq} ${st.name} → ${st.gate_name}${st.is_commit ? ' [commit]' : ''}; attendees: ${st.attendees.join(', ')}; exit criteria: ${st.exit_criteria.map((c) => `"${c}"`).join('; ')}`);
+    }
+  }
+  lines.push('');
+  lines.push(`## Gate decisions (${decisions.length})`);
+  if (decisions.length === 0) lines.push('None recorded.');
+  for (const d of decisions) {
+    const mm = d.criteria_scores?.must_meet ?? [];
+    lines.push(`- ${d.decided_on} · stage ${d.stage_seq} "${d.gate_name}" → ${d.decision.toUpperCase()} by ${d.decided_by ?? '—'}${mm.length ? ` · criteria met ${mm.filter((m) => m.met).length}/${mm.length}` : ''}${d.notes ? ` · notes: ${d.notes}` : ''}`);
+  }
+  lines.push('');
+  lines.push(`## Sanction events (${events.length}) — what was authorised`);
+  if (events.length === 0) lines.push('None yet.');
+  for (const e of events) {
+    lines.push(`- ${e.kind} v${e.version}: ${fmtMoney(e.amount)}${e.fiscal_year ? ` (FY${e.fiscal_year})` : ''} by ${e.authorised_by ?? '—'} on ${e.authorised_on ?? '—'}${e.notes ? ` — ${e.notes}` : ''}`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * IT portfolio grounding for portfolio-scope calls by IT roles (Waterline
+ * Ranker and friends): allocations and the within-bucket ranking for the
+ * fiscal year, as markdown tables the agent can reproduce.
+ */
+export async function loadItPortfolioState(supabase: SupabaseClient, fiscalYear?: number): Promise<string | null> {
+  const [projRes, allocRes] = await Promise.all([
+    supabase.from('projects').select('id, code, name, client, project_category, portfolio_bucket, fiscal_year, fiscal_years_approved, lifecycle_status, requested_budget, business_case, continuation_of_id, current_stage, approved_budget_current').eq('project_type', 'it').order('code'),
+    supabase.from('portfolio_allocations').select('*').eq('project_type', 'it'),
+  ]);
+  const projects = (projRes.data ?? []) as ProjectRow[];
+  const allocations = (allocRes.data ?? []) as PortfolioAllocation[];
+  if (projects.length === 0 && allocations.length === 0) return null;
+  const years = Array.from(new Set([...allocations.map((a) => a.fiscal_year), ...projects.map((p) => p.fiscal_year).filter((y): y is number => typeof y === 'number')])).sort();
+  const fy = fiscalYear && years.includes(fiscalYear) ? fiscalYear : years[years.length - 1];
+  const ranking = rankFiscalYear(projects, allocations, fy);
+  const lines: string[] = [];
+  lines.push(`# IT portfolio data — LIVE and AUTHORITATIVE · FY${fy} (other years on record: ${years.join(', ')})`);
+  lines.push('');
+  lines.push('Money is in whole currency units. Rank within bucket only. The app\'s own ranking (score = 0.5 × strategic + 0.5 × 3-yr ROI capped at 300% and scaled to 0-100, +2 for hard savings / enablement; mandatory lanes by payback then cost; continuations first) is shown as a starting point — apply the Waterline Ranker rules and explain any departure.');
+  for (const b of ranking) {
+    lines.push('');
+    lines.push(`## Bucket: ${b.label}${b.allocation?.is_mandatory_lane ? ' (mandatory lane)' : ''} — allocated ${fmtMoney(b.allocation?.allocated_amount ?? 0)}, reserve ${fmtMoney(b.allocation?.reserve_amount ?? 0)}, fundable ${fmtMoney(b.fundable)}, requested ${fmtMoney(b.requested)}`);
+    lines.push('| rank | code | name | category | continuation | value type | strategic | 3-yr ROI % | payback mo | score | requested | cumulative | app waterline | lifecycle | sponsor |');
+    lines.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+    for (const r of b.rows) {
+      const bc = r.project.business_case;
+      const sponsor = (projects.find((p) => p.code === r.project.code) as ProjectRow | undefined)?.client ?? '';
+      lines.push(`| ${r.rank} | ${r.project.code} | ${r.project.name} | ${categoryLabel(r.project.project_category)} | ${r.is_continuation ? 'yes' : 'no'} | ${valueTypeLabel(bc?.value_type)} | ${bc?.strategic_score ?? '—'} | ${bc?.roi_pct ?? '—'} | ${bc?.payback_months ?? '—'} | ${r.score} | ${r.amount} | ${r.cumulative} | ${r.funded ? 'above' : 'BELOW'} | ${r.project.lifecycle_status} | ${sponsor} |`);
+    }
+    if (b.first_below) lines.push(`First below the line: ${b.first_below.project.code}, short by ${fmtMoney(b.shortfall)}. Remaining above the line: ${fmtMoney(b.remaining)}.`);
+  }
+  const running = projects.filter((p) => p.lifecycle_status === 'active' || p.lifecycle_status === 'on_hold');
+  if (running.length) {
+    lines.push('');
+    lines.push('## Running projects (delivery) — baseline and approved years');
+    for (const p of running) lines.push(`- ${p.code} ${p.name}: ${bucketLabel(p.portfolio_bucket)}, ${categoryLabel(p.project_category)}, stage ${p.current_stage ?? '—'}, baseline ${Number(p.approved_budget_current) > 0 ? fmtMoney(p.approved_budget_current) : 'not locked'}, approved for ${(p.fiscal_years_approved ?? []).join(', ') || 'none'}, lifecycle ${p.lifecycle_status}`);
+  }
+  return lines.join('\n');
+}
 
 export async function loadProjectState(
   supabase: SupabaseClient,
@@ -157,6 +269,8 @@ export async function loadProjectState(
   variance_reports: Array<Record<string, unknown>>;
   reference?: ReferenceGrounding | null;
   structured_facts?: string | null;
+  /** Stage-gate / portfolio grounding for non-revenue projects (markdown). */
+  gate_state?: string | null;
 }> {
   const { data: project } = await supabase
     .from('projects')
@@ -200,6 +314,7 @@ export async function loadProjectState(
   }
 
   const structured_facts = await loadStructuredFacts(supabase, (project as { id: string }).id, project as Record<string, unknown>);
+  const gate_state = await loadGateState(supabase, project as Record<string, unknown>);
 
   return {
     project,
@@ -209,6 +324,7 @@ export async function loadProjectState(
     variance_reports: variancesRes.data ?? [],
     reference,
     structured_facts,
+    gate_state,
   };
 }
 
@@ -225,7 +341,7 @@ export interface PortfolioState {
 }
 
 export async function loadPortfolioState(supabase: SupabaseClient): Promise<PortfolioState | null> {
-  const { data: projects } = await supabase.from('projects').select('id, code, name, segment, status').limit(10000);
+  const { data: projects } = await supabase.from('projects').select('id, code, name, segment, status').eq('project_type', 'revenue').limit(10000);
   if (!projects || projects.length === 0) return null;
   const active = (projects as Array<{ id: string; code: string; name: string; segment: string; status: string }>).filter((p) => p.status === 'Active');
   if (active.length === 0) return null;
@@ -283,6 +399,8 @@ export function assembleUserMessage(params: {
   projectState: Awaited<ReturnType<typeof loadProjectState>>;
   /** Portfolio grounding for portfolio-scope calls (no single project). */
   portfolioState?: PortfolioState | null;
+  /** IT portfolio grounding (markdown) for portfolio-scope calls by IT roles. */
+  itPortfolioState?: string | null;
   /** When true, append a strict response-format constraint for chat-panel use. */
   concise?: boolean;
 }): string {
@@ -313,7 +431,7 @@ Constraints:
 
 EXCEPTION — machine-readable actions block: if your role defines one (the Risk Analyst's \`\`\`actions JSON block), you MUST still append it as the very last thing in your response, after the bullets. It is stripped out before the reader sees it and powers one-click "Assign" buttons, so quick mode does NOT suppress it. When you recommend a mitigation action that another role should own, include it in that block with the right \`assigned_to_role\` and, where the register in context has a matching risk ID, the \`source_ref\`.
 
-EXCEPTION — create requests (raise an entry): if the user asks to LOG / RAISE / ADD / CAPTURE a risk, issue, or change / trend entry, you MUST still append your role's pmo-entry block (the fenced JSON block your role instructions describe) at the end of your response — followed, ONLY when the "suggested hand-off" in your role instructions applies, by one trailing \`\`\`actions block (pmo-entry block first, actions block last). It is stripped from the visible text and renders as an editable confirm card, so quick mode does NOT suppress it. A bare "log an issue" or "raise a risk" is a CREATE request, NOT a vague question — do NOT use the "The question is vague — you mean:" shape for it. Write at most one short sentence, then the block, using short placeholders like "[describe the issue]" for any field you genuinely cannot infer from context.
+EXCEPTION — create requests (raise an entry): if the user asks to LOG / RAISE / ADD / CAPTURE / RECORD / REQUEST / UPDATE a risk, issue, change / trend entry, continuation request, resource displacement or benefits report, you MUST still append your role's pmo-entry block (the fenced JSON block your role instructions describe) at the end of your response — followed, ONLY when the "suggested hand-off" in your role instructions applies, by one trailing \`\`\`actions block (pmo-entry block first, actions block last). It is stripped from the visible text and renders as an editable confirm card, so quick mode does NOT suppress it. A bare "log an issue" or "raise a risk" is a CREATE request, NOT a vague question — do NOT use the "The question is vague — you mean:" shape for it. Write at most one short sentence, then the block, using short placeholders like "[describe the issue]" for any field you genuinely cannot infer from context.
 
 DELEGATE MODE — assigning a task to a colleague: if the user asks to ASSIGN / DELEGATE / HAND OFF / "ask <role> to …" a task (rather than asking you to analyse something), do not write analysis. Reply with ONE short sentence, then append a machine-readable actions block as the very last thing — it renders as an editable "Assign actions" confirm card (stripped from the visible text), so the user reviews and confirms before it is queued:
 
@@ -361,6 +479,9 @@ Rules for the vague-question shape:
   // Section 2b: Portfolio data — LIVE and authoritative, when no single project
   // is in scope. Placed after the worked example so the agent answers factual
   // portfolio questions from real data, not the (fictional) example.
+  if (!params.projectState.project && params.itPortfolioState) {
+    sections.push(params.itPortfolioState);
+  }
   if (!params.projectState.project && params.portfolioState) {
     const ps = params.portfolioState;
     sections.push(
@@ -379,8 +500,17 @@ Rules for the vague-question shape:
   // Section 3: Project state — only if a project context is provided
   if (params.projectState.project) {
     const p = params.projectState.project as Record<string, unknown>;
+    const nonRevenue = typeof p.project_type === 'string' && p.project_type !== 'revenue';
     sections.push(
-      `# Active project: ${p.name} (${p.code})
+      nonRevenue
+        ? `# Active project: ${p.name} (${p.code}) — ${String(p.project_type).toUpperCase()} project (overhead / non-revenue: no customer contract, no margin; value is a business case)
+
+- **Sponsor:** ${p.client}
+- **Lifecycle:** ${p.lifecycle_status} · **Delivery status:** ${p.status}
+- **Requested budget:** $${Number(p.requested_budget ?? 0).toLocaleString()}
+- **Locked baseline:** ${Number(p.approved_budget_current) > 0 ? `$${Number(p.approved_budget_current).toLocaleString()}` : 'not yet locked (locks at the commit gate)'}
+- **Hard deadline:** ${p.hard_deadline_description ?? 'none specified'}`
+        : `# Active project: ${p.name} (${p.code})
 
 - **Client:** ${p.client}
 - **Segment:** ${p.segment}
@@ -390,6 +520,10 @@ Rules for the vague-question shape:
 - **Contingency:** $${Number(p.contingency).toLocaleString()}
 - **Hard deadline:** ${p.hard_deadline_description ?? 'none specified'}`,
     );
+
+    if (params.projectState.gate_state) {
+      sections.push(params.projectState.gate_state);
+    }
 
     if (params.projectState.structured_facts) {
       sections.push(params.projectState.structured_facts);

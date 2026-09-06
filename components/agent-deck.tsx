@@ -51,6 +51,12 @@ import {
   ChevronRight,
   Sparkles,
   Layers,
+  Scale,
+  BarChart3,
+  Milestone,
+  RefreshCw,
+  Presentation,
+  ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import type { AgentCatalogEntry, AgentScope } from '@/lib/agent-catalog';
@@ -89,6 +95,12 @@ const AGENT_ICON: Record<AgentType, LucideIcon> = {
   portfolio_risk_reviewer: LayoutGrid,
   status_reporter: Newspaper,
   cost_controller: Receipt,
+  business_case_reviewer: Scale,
+  waterline_ranker: BarChart3,
+  gate_reviewer: Milestone,
+  continuation_reviewer: RefreshCw,
+  executive_briefing_writer: Presentation,
+  governance_health_reviewer: ShieldCheck,
 };
 
 /** Project lifecycle phases (PMBOK process groups). */
@@ -115,6 +127,12 @@ const AGENT_PHASE: Record<AgentType, Phase | 'portfolio'> = {
   portfolio_risk_reviewer: 'portfolio',
   status_reporter: 'Monitoring',
   cost_controller: 'Monitoring',
+  business_case_reviewer: 'Initiation',
+  waterline_ranker: 'portfolio',
+  gate_reviewer: 'Monitoring',
+  continuation_reviewer: 'portfolio',
+  executive_briefing_writer: 'portfolio',
+  governance_health_reviewer: 'portfolio',
 };
 
 /** Ordered lifecycle groups for the landing-slide map. */

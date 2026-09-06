@@ -14,7 +14,43 @@ export type RoleType =
   | 'engineering_manager'
   | 'construction_manager'
   | 'hse_manager'
-  | 'admin';
+  | 'admin'
+  | 'it_portfolio_manager'
+  | 'it_pm'
+  | 'it_sponsor'
+  | 'it_bucket_owner'
+  | 'it_board_member'
+  | 'it_finance'
+  | 'portfolio_executive';
+
+/**
+ * Project population (migration 0045). Revenue = customer-facing EPC projects
+ * (the original product); it / capital / rnd are the PMOs added on the shared
+ * canonical model. Workspaces differ per type; storage does not.
+ */
+export type ProjectType = 'revenue' | 'it' | 'capital' | 'rnd';
+export const ALL_PROJECT_TYPES: ProjectType[] = ['revenue', 'it', 'capital', 'rnd'];
+
+/** One level below project_type. IT categories pick the stage template. */
+export type ItCategory = 'design_development' | 'deployment' | 'maintenance_upgrade';
+
+/** Portfolio lifecycle, distinct from delivery `status`. */
+export type LifecycleStatus = 'proposed' | 'approved' | 'deferred' | 'active' | 'on_hold' | 'cancelled' | 'closed';
+
+/** What kind of value a non-revenue business case claims. */
+export type ValueType = 'hard_savings' | 'soft_benefit' | 'risk_reduction' | 'enablement' | 'compliance';
+
+export interface BusinessCase {
+  value_type: ValueType;
+  benefit_summary: string;
+  annual_benefit?: number | null;
+  roi_pct?: number | null;
+  payback_months?: number | null;
+  strategic_score?: number | null; // 0-100
+  benefits_owner?: string | null;
+  capex_share_pct?: number | null; // share of requested budget expected to capitalise
+  is_mandatory?: boolean;
+}
 
 export interface Role {
   id: string;
@@ -24,6 +60,8 @@ export interface Role {
   role_type: RoleType;
   allowed_agents: AgentType[];
   user_id: string | null;
+  /** Workspaces this role may see (migration 0045); null = role-type default. */
+  project_types: ProjectType[] | null;
   is_admin: boolean;
   disabled: boolean;
   must_change_password: boolean;
@@ -43,11 +81,233 @@ export interface Project {
   approved_budget_initial: number;
   approved_budget_current: number;
   contingency: number;
-  segment: Segment;
+  /** Delivery context for revenue projects; null for other project types. */
+  segment: Segment | null;
   status: ProjectStatus;
   current_week: number;
   hard_deadline_description: string | null;
   created_at: string;
+  // ---- shared-model columns (migration 0045); defaults keep revenue unchanged
+  project_type: ProjectType;
+  project_category: string | null;
+  portfolio_bucket: string | null;
+  fiscal_year: number | null;
+  fiscal_years_approved: number[];
+  lifecycle_status: LifecycleStatus;
+  stage_template_id: string | null;
+  current_stage: number | null;
+  continuation_of_id: string | null;
+  business_case: BusinessCase | null;
+  requested_budget: number | null;
+}
+
+/** One stage in a stage template (stage_templates.stages[]). */
+export interface StageDef {
+  seq: number;
+  key: string;
+  name: string;
+  gate_name: string;
+  /** The commit gate: scope, budget and accounting treatment lock here. */
+  is_commit: boolean;
+  exit_criteria: string[];
+  attendees: string[];
+}
+
+export interface StageTemplate {
+  id: string;
+  project_type: ProjectType;
+  category: string;
+  name: string;
+  description: string | null;
+  stages: StageDef[];
+  created_at: string;
+}
+
+export type GateDecisionOutcome = 'go' | 'hold' | 'kill' | 'recycle' | 'defer' | 'resume';
+
+export interface GateDecision {
+  id: string;
+  project_id: string;
+  stage_seq: number;
+  gate_name: string;
+  decision: GateDecisionOutcome;
+  decided_on: string;
+  decided_by: string | null;
+  decided_by_role_type: RoleType | null;
+  criteria_scores: { must_meet?: Array<{ criterion: string; met: boolean }>; should_meet?: Array<{ criterion: string; score: number }> } | null;
+  case_snapshot: Partial<BusinessCase> & { budget?: number } | null;
+  notes: string | null;
+  source_system: string;
+  external_id: string | null;
+  created_by_output_id: string | null;
+  decision_record_id?: string | null;
+  hold_until?: string | null;
+  created_at: string;
+}
+
+export interface PortfolioAllocation {
+  id: string;
+  project_type: ProjectType;
+  fiscal_year: number;
+  bucket: string;
+  allocated_amount: number;
+  reserve_amount: number;
+  is_mandatory_lane: boolean;
+  priority: number | null;
+  notes: string | null;
+  status?: 'draft' | 'proposed' | 'approved';
+  decision_record_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SanctionKind =
+  | 'contract_value'
+  | 'waterline_envelope'
+  | 'sg1_baseline'
+  | 'continuation'
+  | 'afe'
+  | 'supplementary_afe'
+  | 'gate_budget';
+
+/** A dated, versioned record of what was authorised (the unifying abstraction). */
+export interface SanctionEvent {
+  id: string;
+  project_id: string;
+  kind: SanctionKind;
+  version: number;
+  amount: number;
+  fiscal_year: number | null;
+  authorised_by: string | null;
+  authorised_on: string | null;
+  document_ref: string | null;
+  notes: string | null;
+  source_system: string;
+  external_id: string | null;
+  decision_record_id?: string | null;
+  authorised_by_body?: string | null;
+  created_at: string;
+}
+
+export type FundingSource = 'customer' | 'project_contingency' | 'bucket_reserve' | 'displacement' | 'supplementary_afe';
+
+// ---- governance (migration 0046) -------------------------------------------
+
+export type DecisionKind =
+  | 'envelope_allocation'
+  | 'waterline_approval'
+  | 'continuation'
+  | 'commit_baseline'
+  | 'change_order'
+  | 'reserve_draw'
+  | 'hold'
+  | 'cancel';
+
+export interface DecisionBody {
+  id: string;
+  project_type: ProjectType;
+  /** investment_board | cio | bucket_owner:<bucket> | sponsor | finance | architecture */
+  key: string;
+  name: string;
+  description: string | null;
+  quorum: number;
+  member_role_type: RoleType | null;
+  created_at: string;
+}
+
+export interface DecisionBodyMember {
+  id: string;
+  body_id: string;
+  role_id: string;
+  is_chair: boolean;
+  is_voting: boolean;
+  created_at: string;
+}
+
+export interface AuthorityRule {
+  id: string;
+  project_type: ProjectType;
+  decision_kind: DecisionKind;
+  funding_source: FundingSource | null;
+  post_commit: boolean | null;
+  min_amount: number;
+  max_amount: number | null;
+  required_body_key: string;
+  required_concurrences: string[];
+  notes: string | null;
+  created_at: string;
+}
+
+export type DecisionStatus = 'proposed' | 'approved' | 'rejected' | 'returned' | 'withdrawn';
+
+export interface Concurrence {
+  body_key: string;
+  outcome: 'concur' | 'object';
+  by_name: string;
+  by_role_id: string | null;
+  at: string;
+  notes?: string | null;
+}
+
+/** A funding / governance decision: proposed by the PMO, decided by the authorised body. */
+export interface DecisionRecord {
+  id: string;
+  project_type: ProjectType;
+  decision_kind: DecisionKind;
+  project_id: string | null;
+  fiscal_year: number | null;
+  amount: number | null;
+  title: string;
+  proposal: Record<string, unknown>;
+  proposed_by_role_id: string | null;
+  proposed_by_name: string | null;
+  proposed_at: string;
+  required_body_key: string;
+  required_concurrences: string[];
+  concurrences: Concurrence[];
+  status: DecisionStatus;
+  decided_body_key: string | null;
+  decided_by_role_id: string | null;
+  decided_by_name: string | null;
+  decided_at: string | null;
+  attendees: string[];
+  conditions: string | null;
+  minutes: string | null;
+  resulting_sanction_event_id: string | null;
+  resulting_gate_decision_id: string | null;
+  created_at: string;
+}
+
+export type DisplacementReason = 'incident_run' | 'higher_priority_project' | 'audit_compliance' | 'revenue_priority' | 'revenue_ld_exposure' | 'incident' | 'other';
+
+/** A shared person moved from one project type's work to another's — recorded, not absorbed. */
+export interface ResourceDisplacement {
+  id: string;
+  from_project_id: string;
+  to_project_id: string | null;
+  to_project_code: string | null;
+  resource_name: string;
+  skill: string | null;
+  from_date: string;
+  to_date: string | null;
+  fte: number;
+  schedule_impact_days: number | null;
+  reason: DisplacementReason;
+  notes: string | null;
+  logged_by_role_id: string | null;
+  logged_by_name: string | null;
+  created_at: string;
+}
+
+export interface BenefitsReport {
+  id: string;
+  project_id: string;
+  period: string;
+  planned_benefit: number;
+  realised_benefit: number;
+  commentary: string | null;
+  reported_by: string | null;
+  reported_at: string;
 }
 
 export type IssueSeverity = 'L' | 'M' | 'H';
@@ -131,6 +391,8 @@ export interface ChangeOrder {
   } | null;
   source_issue_id?: string | null;
   source_risk_id?: string | null;
+  /** Where the money comes from (null on legacy revenue rows = customer). */
+  funding_source?: FundingSource | null;
   created_at: string;
 }
 
@@ -164,7 +426,14 @@ export type AgentType =
   | 'closeout_reporter'
   | 'portfolio_risk_reviewer'
   | 'status_reporter'
-  | 'cost_controller';
+  | 'cost_controller'
+  // IT / portfolio agents (migration 0045)
+  | 'business_case_reviewer'
+  | 'waterline_ranker'
+  | 'gate_reviewer'
+  | 'continuation_reviewer'
+  | 'executive_briefing_writer'
+  | 'governance_health_reviewer';
 
 export interface AgentOutput {
   id: string;

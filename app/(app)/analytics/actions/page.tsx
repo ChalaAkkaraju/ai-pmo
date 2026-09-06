@@ -28,7 +28,7 @@ export default async function ActionsAnalyticsPage() {
   const supabase = createSupabaseServiceClient();
   const [actionsRes, projectsRes, rolesRes] = await Promise.all([
     supabase.from('action_items').select('*').limit(10000),
-    supabase.from('projects').select('id, code, name, segment, status').limit(10000),
+    supabase.from('projects').select('id, code, name, segment, status').eq('project_type', 'revenue').limit(10000),
     supabase.from('roles').select('id, name, username').limit(10000),
   ]);
   type ActionRow = {
