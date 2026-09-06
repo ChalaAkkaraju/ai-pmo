@@ -46,6 +46,13 @@ const BUSINESS = [
   { doc: 'the-ai-agents-concept' },
   { part: 'Part V — Justification & Governance', desc: 'Why these formulas: the standards behind every number, so each figure survives an audit.' },
   { doc: 'why-these-formulas-standards-concept' },
+  { part: 'Part VI — Beyond Revenue: The IT Portfolio', desc: 'A second kind of project on the same platform: the funding clock, the delivery clock, who decides what, the workspace by role, and the agents that reason over it.' },
+  { doc: 'it-portfolio-why-concept' },
+  { doc: 'it-funding-clock-concept' },
+  { doc: 'it-delivery-clock-concept' },
+  { doc: 'it-delegation-of-authority-concept' },
+  { doc: 'it-workspace-and-roles-concept' },
+  { doc: 'it-agents-concept' },
   { part: 'Appendices', desc: 'Reference material.' },
   { doc: 'glossary' },
 ];
@@ -114,8 +121,12 @@ async function build(name, fmFile, order) {
       if (it.desc) out += `\n::: {custom-style="PartDescription"}\n${it.desc}\n:::\n`;
       continue;
     }
-    const p = it.parent ? path.join(PARENT, `${it.doc}.md`) : path.join(DOCS, `${it.doc}.md`);
-    if (!existsSync(p)) { console.log('  MISSING:', p); continue; }
+    // Parent design docs live one level up; the AI explainers moved to learning/explainers.
+    const candidates = it.parent
+      ? [path.join(PARENT, `${it.doc}.md`), path.join(PARENT, 'learning', 'explainers', `${it.doc}.md`), path.join(PARENT, 'learning', 'concepts', `${it.doc}.md`)]
+      : [path.join(DOCS, `${it.doc}.md`)];
+    const p = candidates.find((c) => existsSync(c));
+    if (!p) { console.log('  MISSING:', candidates[0]); continue; }
     out += '\n\n' + shiftHeadings(await readFile(p, 'utf8'));
   }
   // Colophon — its own closing page, in the quiet PartDescription voice.
