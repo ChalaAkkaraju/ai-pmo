@@ -43,6 +43,11 @@ correcting SPI's end-of-project drift.
 **EVM — Earned Value Management.** The standard cost/schedule performance
 discipline (ANSI/EIA-748, PMBOK).
 
+**Guided setup.** The six-step checklist on a new project's page that walks the
+planning artefacts in dependency order — charter, stakeholder analysis, WBS,
+schedule, budget, communications plan — each step opening the assistant pre-filled
+and ticking off once the artefact exists.
+
 **IFRS 15.** The accounting standard governing revenue recognition from customer
 contracts.
 
@@ -52,6 +57,10 @@ contracts.
 
 **Peak funding requirement.** The maximum cash a project ties up at once — the
 trough of the net cash position.
+
+**Planning artefact.** An AI-drafted planning document held against the project
+with provenance — charter, stakeholder analysis, WBS, schedule narrative, budget,
+communications plan, lessons learned, closeout — editable, with the draft preserved.
 
 **POC — Percentage of Completion.** Progress measure; cost-based POC = actual cost
 ÷ expected cost, used for revenue recognition.
