@@ -466,8 +466,8 @@ export function FloatingAgentWidget({
 
   if (allowedAgents.length === 0) return null;
 
-  const projectMatch = pathname?.match(/\/access\/[^/]+\/projects\/([^/?]+)/);
-  const projectCode = projectMatch?.[1] ?? null;
+  const projectMatch = pathname?.match(/(?:\/access\/[^/]+)?\/projects\/([^/?]+)/);
+  const projectCode = projectMatch ? decodeURIComponent(projectMatch[1]) : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
