@@ -166,9 +166,24 @@ export async function POST(request: NextRequest) {
 
   // Compute budgets: leaf = weight × BAC; phase = sum of its leaf budgets.
   const bac = Number(project.approved_budget_current) || 0;
+  // The model's leaf weights rarely sum to exactly 1.0 (e.g. 1.01), which would
+  // put the WBS over or under the approved budget. Normalise them so the leaves
+  // always sum to 100%, keeping their relative sizes (equal split if the model
+  // gave no usable weights), and put the cent rounding remainder on the largest
+  // leaf so the total equals the approved budget exactly.
+  const leaves = nodes.filter((n) => n.parent);
+  const w = (n: WbsNode) => (typeof n.weight === 'number' && n.weight > 0 ? n.weight : 0);
+  const weightSum = leaves.reduce((s, n) => s + w(n), 0);
+  const share = (n: WbsNode) => (weightSum > 0 ? w(n) / weightSum : 1 / (leaves.length || 1));
   const leafBudget = new Map<string, number>();
-  for (const n of nodes) {
-    if (n.parent) leafBudget.set(n.code, Math.round((n.weight ?? 0) * bac * 100) / 100);
+  for (const n of leaves) leafBudget.set(n.code, Math.round(share(n) * bac * 100) / 100);
+  if (leaves.length > 0) {
+    const allocated = [...leafBudget.values()].reduce((s, v) => s + v, 0);
+    const diff = Math.round((bac - allocated) * 100) / 100;
+    if (diff !== 0) {
+      const largest = leaves.reduce((a, b) => ((leafBudget.get(b.code) ?? 0) > (leafBudget.get(a.code) ?? 0) ? b : a));
+      leafBudget.set(largest.code, Math.round(((leafBudget.get(largest.code) ?? 0) + diff) * 100) / 100);
+    }
   }
   const phaseBudget = new Map<string, number>();
   for (const n of nodes) {
