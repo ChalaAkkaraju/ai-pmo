@@ -10,7 +10,7 @@ import { eacMovement, type ForecastPoint } from '@/lib/forecast';
 const M = (v: number) => `${v < 0 ? '−' : ''}$${Math.abs(v / 1_000_000).toFixed(1)}M`;
 const sM = (v: number) => `${v < 0 ? '−' : '+'}$${Math.abs(v / 1_000_000).toFixed(1)}M`;
 const pct = (v: number | null) => (v == null ? '—' : `${v.toFixed(1)}%`);
-const mlabel = (s: string) => new Date(s).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+const mlabel = (s: string) => new Date(s).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', year: '2-digit' });
 
 function Cell({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'ok' | 'warn' | 'bad' }) {
   const t = tone === 'ok' ? 'text-emerald-700' : tone === 'warn' ? 'text-amber-600' : tone === 'bad' ? 'text-red-600' : 'text-foreground';
@@ -78,7 +78,7 @@ export function ForecastTrend({ points }: { points: ForecastPoint[] }) {
             <text x={ml - 6} y={mt + ih - g * ih + 3} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="end">{`$${((lo + (hi - lo) * g) / 1_000_000).toFixed(0)}M`}</text>
           </g>
         ))}
-        {points.map((p, i) => (<text key={p.period} x={x(i)} y={H - 8} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="middle">{new Date(p.period).toLocaleDateString(undefined, { month: 'short' })}</text>))}
+        {points.map((p, i) => (<text key={p.period} x={x(i)} y={H - 8} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="middle">{new Date(p.period).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short' })}</text>))}
         <path d={bandPath} fill={bandFill} fillOpacity="0.1" stroke="none" />
         <path d={poly((p) => p.bac)} fill="none" stroke="#888780" strokeWidth="1.2" strokeDasharray="4 3" strokeOpacity="0.6" />
         <path d={poly((p) => p.contract)} fill="none" stroke="#378ADD" strokeWidth="2" strokeLinejoin="round" />
@@ -123,7 +123,7 @@ export function ForecastTrend({ points }: { points: ForecastPoint[] }) {
           <text x={ml - 6} y={mt2 + 8} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="end">{`$${(rmax / 1_000_000).toFixed(0)}M`}</text>
           <path d={poly2((p) => p.recognised)} fill="none" stroke="#639922" strokeWidth="2" strokeLinejoin="round" />
           <path d={poly2((p) => p.billed)} fill="none" stroke="#1D9E75" strokeWidth="1.6" strokeDasharray="4 3" strokeLinejoin="round" />
-          {points.map((p, i) => (<text key={p.period} x={x(i)} y={H2 - 5} fontSize="9" fill="currentColor" fillOpacity="0.5" textAnchor="middle">{new Date(p.period).toLocaleDateString(undefined, { month: 'short' })}</text>))}
+          {points.map((p, i) => (<text key={p.period} x={x(i)} y={H2 - 5} fontSize="9" fill="currentColor" fillOpacity="0.5" textAnchor="middle">{new Date(p.period).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short' })}</text>))}
         </svg>
         <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
           <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground"><span className="inline-block h-0.5 w-4" style={{ background: '#639922' }} />Recognised</span>
@@ -134,7 +134,7 @@ export function ForecastTrend({ points }: { points: ForecastPoint[] }) {
 
       {mv && (
         <p className="mt-3 border-t pt-2 text-xs text-muted-foreground">
-          EAC moved <span className={`font-medium ${mv.total > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>{sM(mv.total)}</span> at the {new Date(mv.to).toLocaleDateString(undefined, { month: 'short' })} close — {sM(mv.scope)} from approved scope, {sM(mv.performance)} from cost performance.
+          EAC moved <span className={`font-medium ${mv.total > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>{sM(mv.total)}</span> at the {new Date(mv.to).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short' })} close — {sM(mv.scope)} from approved scope, {sM(mv.performance)} from cost performance.
         </p>
       )}
     </div>
