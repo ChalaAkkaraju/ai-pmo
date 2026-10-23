@@ -82,10 +82,39 @@ function parseWbs(text: string): WbsNode[] | null {
   }
 }
 
-async function authorWithModel(project: Record<string, unknown>): Promise<WbsNode[]> {
+// The WBS drafted in guided setup (WBS Builder agent) is the source of truth
+// for the structure, so the Structure tab matches the Planning document instead
+// of being a second, different WBS. Prefer the PM's edit, then the long-form
+// output, then the concise one. Returns null if no draft exists yet.
+const MAX_DRAFT_CHARS = 16000;
+async function loadDraftedWbs(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  projectId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from('agent_outputs')
+    .select('*')
+    .eq('project_id', projectId)
+    .eq('agent_type', 'wbs_builder')
+    .order('invoked_at', { ascending: false })
+    .limit(1);
+  const row = (data?.[0] ?? null) as Record<string, unknown> | null;
+  if (!row) return null;
+  const pick = [row.edited_md, row.full_output_md, row.output_md].find(
+    (v) => typeof v === 'string' && v.trim().length > 0,
+  ) as string | undefined;
+  return pick ? pick.slice(0, MAX_DRAFT_CHARS) : null;
+}
+
+async function authorWithModel(project: Record<string, unknown>, draft: string | null): Promise<WbsNode[]> {
+  const structureRule = draft
+    ? 'A drafted WBS document is provided and is the SOURCE: keep its phases and work packages, their names and their order. ' +
+      'Do not invent new phases or drop drafted ones. Use at most 8 top-level phases and at most 6 leaves per phase; ' +
+      'if the draft is deeper, roll lower levels up into their Level-2 work package. '
+    : 'Rules: exactly 4-6 top-level phases (parent=null); each phase has 1-3 deliverable leaf elements; ';
   const system =
     'You are a senior SAP PS project-controls architect. Author a deliverable-based Work Breakdown Structure for ONE project. ' +
-    'Rules: exactly 4-6 top-level phases (parent=null); each phase has 1-3 deliverable leaf elements; ' +
+    structureRule +
     'use a numeric coding mask (phases "1","2",…; leaves "1.1","1.2",…); mark 1-2 cost-heavy leaves as billing elements; ' +
     'assign each leaf a responsible role from this set only: pm, engineering_manager, construction_manager, procurement, commercial, project_controls, hse_manager. ' +
     'Give each LEAF a weight (fraction of total budget); all leaf weights MUST sum to 1.0. Phases have weight 0. ' +
@@ -93,7 +122,10 @@ async function authorWithModel(project: Record<string, unknown>): Promise<WbsNod
   const user =
     `Project: ${project.name}\nSegment: ${project.segment}\nClient: ${project.client ?? '—'}\n` +
     `Contract value: ${project.contract_value_current}\nApproved budget: ${project.approved_budget_current}\n` +
-    `Hard deadline: ${project.hard_deadline_description ?? 'none'}\n\nAuthor the WBS now as a JSON array.`;
+    `Hard deadline: ${project.hard_deadline_description ?? 'none'}\n\n` +
+    (draft
+      ? `Drafted WBS document (convert this structure, do not redesign it):\n<<<\n${draft}\n>>>\n\nConvert it to the JSON array now.`
+      : 'Author the WBS now as a JSON array.');
   const res = await invokeModel({ systemPrompt: system, userMessage: user });
   return parseWbs(res.output_md) ?? fallbackWbs(String(project.segment));
 }
@@ -124,18 +156,34 @@ export async function POST(request: NextRequest) {
   }
 
   // Author (model, with deterministic fallback).
+  const draft = await loadDraftedWbs(supabase, project.id);
   let nodes: WbsNode[];
   try {
-    nodes = await authorWithModel(project as Record<string, unknown>);
+    nodes = await authorWithModel(project as Record<string, unknown>, draft);
   } catch {
     nodes = fallbackWbs(String(project.segment));
   }
 
   // Compute budgets: leaf = weight × BAC; phase = sum of its leaf budgets.
   const bac = Number(project.approved_budget_current) || 0;
+  // The model's leaf weights rarely sum to exactly 1.0 (e.g. 1.01), which would
+  // put the WBS over or under the approved budget. Normalise them so the leaves
+  // always sum to 100%, keeping their relative sizes (equal split if the model
+  // gave no usable weights), and put the cent rounding remainder on the largest
+  // leaf so the total equals the approved budget exactly.
+  const leaves = nodes.filter((n) => n.parent);
+  const w = (n: WbsNode) => (typeof n.weight === 'number' && n.weight > 0 ? n.weight : 0);
+  const weightSum = leaves.reduce((s, n) => s + w(n), 0);
+  const share = (n: WbsNode) => (weightSum > 0 ? w(n) / weightSum : 1 / (leaves.length || 1));
   const leafBudget = new Map<string, number>();
-  for (const n of nodes) {
-    if (n.parent) leafBudget.set(n.code, Math.round((n.weight ?? 0) * bac * 100) / 100);
+  for (const n of leaves) leafBudget.set(n.code, Math.round(share(n) * bac * 100) / 100);
+  if (leaves.length > 0) {
+    const allocated = [...leafBudget.values()].reduce((s, v) => s + v, 0);
+    const diff = Math.round((bac - allocated) * 100) / 100;
+    if (diff !== 0) {
+      const largest = leaves.reduce((a, b) => ((leafBudget.get(b.code) ?? 0) > (leafBudget.get(a.code) ?? 0) ? b : a));
+      leafBudget.set(largest.code, Math.round(((leafBudget.get(largest.code) ?? 0) + diff) * 100) / 100);
+    }
   }
   const phaseBudget = new Map<string, number>();
   for (const n of nodes) {
@@ -161,5 +209,5 @@ export async function POST(request: NextRequest) {
   const { error } = await supabase.from('work_packages').insert(rows);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true, count: rows.length });
+  return NextResponse.json({ ok: true, count: rows.length, source: draft ? 'drafted_wbs' : 'project_facts' });
 }

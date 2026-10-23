@@ -52,9 +52,10 @@ export function WbsAuthoring({
           <div className="min-w-0">
             <p className="text-sm font-semibold">No WBS yet — author one with AI</p>
             <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-              This project isn&apos;t in SAP yet. Instead of cloning a fixed template, let the assistant
-              propose a deliverable-based WBS from the project scope. You review and edit it, then book it
-              into SAP PS — where it becomes the system of record.
+              This project isn&apos;t in SAP yet. Instead of cloning a fixed template, the assistant turns the
+              WBS you drafted in guided setup into a structured, budgeted WBS (or proposes one from the project
+              scope if there is no draft yet). You review it, then book it into SAP PS — where it becomes the
+              system of record.
             </p>
             <button
               type="button"

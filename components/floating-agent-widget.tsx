@@ -327,11 +327,26 @@ const AGENT_LABELS: Record<AgentType, string> = {
   governance_health_reviewer: 'Governance Health Reviewer',
 };
 
+/** Pick n items in a seeded random order. Seed 0 = the pool's own order, so the
+ * first (server) render is stable; a real seed comes in after mount. */
+function rotate<T>(items: T[], n: number, seed: number): T[] {
+  if (seed === 0 || items.length <= n) return items.slice(0, n);
+  let x = Math.floor(seed * 2147483646) + 1;
+  const rand = () => { x = (x * 48271) % 2147483647; return x / 2147483647; };
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a.slice(0, n);
+}
+
 /** Starter prompts shown when the chat is empty — role-aware. Creation/assign
  * options surface the write actions that aren't otherwise discoverable now that
  * everything runs through the agent. Clicking one pre-fills the input to edit. */
 function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, onPick }: { allowedAgents: AgentType[]; canWrite: boolean; projectCode: string | null; projectType?: string | null; onPick: (p: string) => void }) {
   const has = (a: AgentType) => allowedAgents.includes(a);
+  // Rotate the starter questions: each context has a pool; four are shown at
+  // random each time the panel opens, and "More prompts" reshuffles.
+  const [seed, setSeed] = useState(0);
+  useEffect(() => { setSeed(Math.random()); }, []);
   const isItRole = has('waterline_ranker') || has('gate_reviewer') || has('continuation_reviewer') || has('business_case_reviewer');
   const isItProject = projectType === 'it' || (projectType == null && !!projectCode && /^NW-IT-/.test(projectCode));
   const create: Array<{ label: string; prompt: string }> = [];
@@ -371,27 +386,39 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, o
   if (projectCode && isItProject) {
     const itFirst: AgentType[] = ['gate_reviewer', 'business_case_reviewer', 'continuation_reviewer', 'change_order_reviewer', 'risk_analyst', 'issue_logger', 'status_reporter'];
     const roleAsks = itFirst.filter(has).map((a) => ASK_BY_AGENT.find(([x]) => x === a)?.[1]).filter((x): x is string => !!x);
-    ask = ['Where does this project stand \u2014 stage, gate, funding position, and what needs my attention?', ...roleAsks].slice(0, 4);
+    ask = ['Where does this project stand \u2014 stage, gate, funding position, and what needs my attention?', ...roleAsks];
   } else if (projectCode) {
     const roleAsks = ASK_BY_AGENT.filter(([a]) => has(a)).map(([, prm]) => prm);
-    ask = ['Summarise this project\u2019s health \u2014 cost, schedule, and what needs my attention.', ...roleAsks].slice(0, 4);
+    ask = ['Summarise this project\u2019s health \u2014 cost, schedule, and what needs my attention.', ...roleAsks];
   } else if (has('executive_briefing_writer') || has('governance_health_reviewer')) {
     ask = [];
     if (has('executive_briefing_writer')) ask.push('Write this month\u2019s enterprise portfolio brief for the leadership meeting.');
     if (has('governance_health_reviewer')) ask.push('Is our delegation of authority working? Review the last 90 days of decisions.');
     if (has('executive_briefing_writer')) ask.push('Which five things should I ask about this week, and why?');
     if (has('portfolio_risk_reviewer')) ask.push('Where is cross-cutting risk emerging across the revenue portfolio?');
+    if (has('executive_briefing_writer')) ask.push('Which PMO is furthest from its plan this quarter, as a ratio, and what is driving it?');
+    if (has('governance_health_reviewer')) ask.push('Where are decisions waiting longest, and at which body?');
   } else if (isItRole && !has('variance_analyst')) {
     ask = ['Which IT projects need a decision from me this week, and why?'];
     if (has('waterline_ranker')) ask.push('Rank the IT portfolio within each bucket for next fiscal year and draw the waterline.');
     if (has('continuation_reviewer')) ask.push('Which running projects need a continuation decision, and what does cost-to-complete say?');
     if (has('gate_reviewer')) ask.push('Which projects are at a gate, and are their packages ready?');
-    ask = ask.slice(0, 4);
+    ask.push('Which holds are about to expire, and what should happen to each?');
+    ask.push('Which buckets are over-subscribed for next fiscal year, and what falls below the line?');
+    ask.push('Where is delivery slipping because people were displaced to other work?');
+    if (has('gate_reviewer')) ask.push('Which closed projects realised less benefit than their business case promised?');
   } else {
     ask = ['Which projects need attention this week, and why? Cite the variance reports.'];
     if (has('portfolio_risk_reviewer')) ask.push('Where is cross-cutting risk emerging across the portfolio?');
     if (has('cost_controller') || has('variance_analyst')) ask.push('Which projects are trending over cost or behind schedule?');
+    ask.push('Where is margin eroding fastest against what we sold, and why?');
+    ask.push('Which projects have drawn the most contingency, and is the draw justified?');
+    ask.push('Which open high-severity issues are overdue, and who owns them?');
+    ask.push('Which hard deadlines are at risk in the next 90 days?');
+    ask.push('Summarise the portfolio for the leadership meeting in five bullets.');
   }
+
+  const shown = rotate(ask, 4, seed);
 
   return (
     <div className="px-1 py-1.5">
@@ -407,11 +434,16 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, o
       )}
       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ask agent</p>
       <div className="flex flex-col gap-1.5">
-        {ask.map((a) => (
+        {shown.map((a) => (
           <button key={a} type="button" onClick={() => onPick(a)} className="text-left rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100">{a}</button>
         ))}
       </div>
-      <p className="mt-2 px-0.5 text-[10px] text-muted-foreground">Pick one to pre-fill, edit, then Send.</p>
+      <div className="mt-2 flex items-center justify-between gap-2 px-0.5">
+        <p className="text-[10px] text-muted-foreground">Pick one to pre-fill, edit, then Send.</p>
+        {ask.length > shown.length && (
+          <button type="button" onClick={() => setSeed(Math.random())} className="text-[10px] font-medium text-sky-700 transition hover:text-sky-900 hover:underline">{'\u21bb'} More prompts</button>
+        )}
+      </div>
     </div>
   );
 }
@@ -452,6 +484,10 @@ export function FloatingAgentWidget({
         setAgentType(detail.agentType as AgentTypeOrAuto);
       }
       if (typeof detail.prompt === 'string') setPrompt(detail.prompt);
+      // A guided-setup step starts a fresh conversation: drop the previous
+      // step's answer (it is already saved to the project) so the panel shows
+      // only the new step's prompt.
+      setHistory([]);
       setIsOpen(true);
     }
     window.addEventListener('pmo:ask-agent', onAsk as EventListener);

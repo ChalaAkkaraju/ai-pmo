@@ -9,7 +9,7 @@ import { useState } from 'react';
 import type { CashAgg } from '@/lib/cash-flow';
 
 const M = (v: number) => `${v < 0 ? '−' : ''}$${Math.abs(v / 1_000_000).toFixed(1)}M`;
-const mlabel = (s: string) => new Date(s).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+const mlabel = (s: string) => new Date(s).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', year: '2-digit' });
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export interface SegEntry { segment: string; agg: CashAgg; projects: Array<{ code: string; name: string; agg: CashAgg }>; }
@@ -42,7 +42,7 @@ function CurveChart({ agg }: { agg: CashAgg }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Cumulative cash in versus out">
       {[0, 0.5, 1].map((g) => (<g key={g}><line x1={ml} y1={mt + ih - g * ih} x2={W - mr} y2={mt + ih - g * ih} stroke="currentColor" strokeOpacity="0.1" /><text x={ml - 6} y={mt + ih - g * ih + 3} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="end">{`$${((yMax * g) / 1_000_000).toFixed(0)}M`}</text></g>))}
-      {agg.periods.map((p, i) => (i % step === 0 || i === n - 1) && <text key={p} x={x(i)} y={H - 8} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="middle">{new Date(p).toLocaleDateString(undefined, { month: 'short' })}</text>)}
+      {agg.periods.map((p, i) => (i % step === 0 || i === n - 1) && <text key={p} x={x(i)} y={H - 8} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="middle">{new Date(p).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short' })}</text>)}
       {lh < n - 1 && <line x1={x(lh)} y1={mt} x2={x(lh)} y2={mt + ih} stroke="#ef4444" strokeOpacity="0.4" strokeDasharray="2 2" />}
       <path d={band} fill="#ef4444" fillOpacity="0.08" />
       <path d={seg(0, lh, agg.cashOutCum)} fill="none" stroke="#ef4444" strokeWidth="2" />

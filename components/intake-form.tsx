@@ -31,6 +31,9 @@ import {
   REFERENCE_SKIP_KEYS,
   type IntakeField,
   type ReferenceProject,
+  parseMoney,
+  formatMoneyPreview,
+  MONEY_SANITY_MIN,
 } from '@/lib/intake-config';
 
 const INPUT =
@@ -152,6 +155,23 @@ export function IntakeForm({
       setError('Please fill the required fields (marked *) before creating the project.');
       return;
     }
+    // Money fields: must parse, and must not look like a units slip (725 meant $725M).
+    for (const section of sections) {
+      for (const f of section.fields) {
+        if (f.type !== 'money') continue;
+        const raw = values[f.key];
+        if (!raw?.trim()) continue;
+        const n = parseMoney(raw);
+        if (n === null) {
+          setError(`${f.label}: "${raw}" is not an amount. Use dollars, or a shorthand like 725M or 1.2B.`);
+          return;
+        }
+        if (n > 0 && n < MONEY_SANITY_MIN) {
+          setError(`${f.label} is only ${formatMoneyPreview(n)}. Amounts are in dollars — did you mean ${raw.trim()}M (${formatMoneyPreview(n * 1e6)})?`);
+          return;
+        }
+      }
+    }
     setError(null);
     setSubmitting(true);
 
@@ -170,6 +190,7 @@ export function IntakeForm({
     if (refCode) intake.reference_project_code = refCode;
 
     const num = (v?: string) => (v && v.trim() ? Number(v) : 0);
+    const money = (v?: string) => parseMoney(v) ?? 0;
 
     try {
       const res = await fetch('/api/projects', {
@@ -179,9 +200,9 @@ export function IntakeForm({
           segment,
           name: coreByKey.name,
           client: coreByKey.client,
-          contract_value: num(coreByKey.contract_value),
-          approved_budget: num(coreByKey.approved_budget),
-          contingency: num(coreByKey.contingency),
+          contract_value: money(coreByKey.contract_value),
+          approved_budget: money(coreByKey.approved_budget),
+          contingency: money(coreByKey.contingency),
           start_week: Math.trunc(num(coreByKey.start_week)),
           hard_deadline: coreByKey.hard_deadline ?? null,
           intake,
@@ -456,7 +477,19 @@ function Field({
     );
   }
 
-  const inputType = field.type === 'date' ? 'date' : field.type === 'number' || field.type === 'money' ? 'number' : 'text';
+  // Money is a text input so shorthand like "725M" can be typed; it is parsed on submit.
+  const inputType = field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : 'text';
+  const moneyValue = field.type === 'money' && value.trim() ? parseMoney(value) : null;
+  const moneyPreview =
+    field.type !== 'money' || !value.trim() ? null : moneyValue === null ? (
+      <p className="mt-1 text-[11px] text-red-600">Not an amount — use dollars, or e.g. 725M / 1.2B.</p>
+    ) : moneyValue > 0 && moneyValue < MONEY_SANITY_MIN ? (
+      <p className="mt-1 text-[11px] font-medium text-amber-700">
+        = {formatMoneyPreview(moneyValue)} — amounts are in dollars. Did you mean {value.trim()}M?
+      </p>
+    ) : (
+      <p className="mt-1 text-[11px] font-medium text-emerald-700">= {formatMoneyPreview(moneyValue)}</p>
+    );
   return (
     <div className={wrap}>
       {label}
@@ -466,12 +499,14 @@ function Field({
         )}
         <input
           type={inputType}
-          inputMode={field.type === 'money' || field.type === 'number' ? 'decimal' : undefined}
+          inputMode={field.type === 'number' ? 'decimal' : undefined}
+          placeholder={field.type === 'money' ? 'e.g. 725M' : undefined}
           className={`${INPUT} ${field.type === 'money' ? 'pl-7' : ''}`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
       </div>
+      {moneyPreview}
       {hint}
       {suggestion && suggestion !== value && (
         <p className="mt-1 text-[11px] text-muted-foreground">

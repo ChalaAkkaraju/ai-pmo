@@ -10,6 +10,36 @@
 
 import type { Segment } from './types';
 
+/**
+ * Parse a money amount typed on the intake form into whole dollars.
+ * Accepts plain numbers with optional $ and commas ("725,000,000") and
+ * shorthand suffixes: k / thousand, m / mm / million, b / bn / billion
+ * ("725M", "1.2b", "500k"). Returns null if the text is not a valid amount.
+ */
+export function parseMoney(raw: string | undefined | null): number | null {
+  if (raw == null) return null;
+  const s = raw.trim().toLowerCase().replace(/[$,\s]/g, '');
+  if (!s) return null;
+  const m = s.match(/^(\d+(?:\.\d+)?|\.\d+)(k|thousand|m|mm|mn|million|b|bn|billion)?$/);
+  if (!m) return null;
+  const mult: Record<string, number> = {
+    k: 1e3, thousand: 1e3, m: 1e6, mm: 1e6, mn: 1e6, million: 1e6, b: 1e9, bn: 1e9, billion: 1e9,
+  };
+  const n = Number(m[1]) * (m[2] ? mult[m[2]] : 1);
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+}
+
+/** Below this, a project amount is almost certainly a units slip (725 meant $725M). */
+export const MONEY_SANITY_MIN = 10_000;
+
+/** "$725.00M", "$1.20B", "$500.0K", "$725" — for the live preview under money fields. */
+export function formatMoneyPreview(n: number): string {
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
+  return `$${n.toLocaleString()}`;
+}
+
 export type FieldType = 'text' | 'number' | 'money' | 'select' | 'date' | 'textarea';
 
 export type CoreKey =
@@ -74,9 +104,9 @@ const IDENTITY: IntakeSection = {
 const COMMERCIAL: IntakeSection = {
   title: '2. Commercial terms',
   fields: [
-    { key: 'contract_value', label: 'Contract value (total)', type: 'money', required: true, core: 'contract_value', hint: 'Total signed contract price' },
-    { key: 'approved_budget', label: 'Approved budget', type: 'money', required: true, core: 'approved_budget', hint: 'Internal approved delivery budget' },
-    { key: 'contingency', label: 'Contingency', type: 'money', core: 'contingency', hint: 'Amount held as contingency' },
+    { key: 'contract_value', label: 'Contract value (total)', type: 'money', required: true, core: 'contract_value', hint: 'Total signed contract price, in dollars — type 800M for $800 million' },
+    { key: 'approved_budget', label: 'Approved budget', type: 'money', required: true, core: 'approved_budget', hint: 'Internal approved delivery budget, in dollars — type 725M for $725 million' },
+    { key: 'contingency', label: 'Contingency', type: 'money', core: 'contingency', hint: 'Amount held as contingency, in dollars — type 75M for $75 million' },
     { key: 'currency', label: 'Currency', type: 'select', options: CURRENCIES },
     { key: 'contract_type', label: 'Contract type', type: 'select', options: CONTRACT_TYPES, hint: 'Commercial model' },
     { key: 'payment_terms', label: 'Payment / milestone terms', type: 'textarea', wide: true, hint: 'Payment schedule basis; retention %' },
