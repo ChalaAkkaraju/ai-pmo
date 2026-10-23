@@ -291,6 +291,9 @@ function defaultPlaceholderFor(roleDisplayName: string, projectCode: string | nu
     return 'e.g. "Identify the two risks that deserve the most management attention through the warranty tail."';
   }
   const name = roleDisplayName.toLowerCase();
+  if (name.includes('r&d')) {
+    return 'e.g. "Which programmes\u2019 business cases have drifted since commit, and what should we do about them?"';
+  }
   if (name.includes('sponsor')) {
     return 'e.g. "Give me a 1-page executive briefing on portfolio health — what needs my attention?"';
   }
@@ -335,14 +338,18 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, o
   const has = (a: AgentType) => allowedAgents.includes(a);
   const isItRole = has('waterline_ranker') || has('gate_reviewer') || has('continuation_reviewer') || has('business_case_reviewer');
   const isItProject = projectType === 'it' || (projectType == null && !!projectCode && /^NW-IT-/.test(projectCode));
+  // R&D roles share the gate / business-case agents with IT, so they are told
+  // apart by the agent only R&D has: the Business Case Reconciler.
+  const isRndRole = has('business_case_reconciler');
+  const isRndProject = projectType === 'rnd' || (projectType == null && !!projectCode && /^NW-RD-/.test(projectCode));
   const create: Array<{ label: string; prompt: string }> = [];
   if (projectCode && canWrite) {
     if (has('risk_analyst')) create.push({ label: '\uFF0B Raise a risk', prompt: 'Log a risk: [describe the risk \u2014 cause \u2192 event \u2192 consequence]' });
     if (has('issue_logger')) create.push({ label: '\uFF0B Log an issue', prompt: 'Log an issue: [describe the issue and its effect]' });
     if (has('change_order_reviewer')) create.push({ label: '\uFF0B Change / trend entry', prompt: 'Add a change/trend entry: [describe the scope change]' });
-    if (has('continuation_reviewer')) create.push({ label: '\uFF0B Continuation request', prompt: 'Request the next-year continuation slice for this project: [amount and remaining scope]' });
-    if (has('gate_reviewer')) create.push({ label: '\uFF0B Log a displacement', prompt: 'Log a displacement: [who] was pulled to [incident / run work / project code] from [date] \u2014 [days of slip]' });
-    if (has('gate_reviewer')) create.push({ label: '\uFF0B Benefits report', prompt: 'Record realised benefits for [period]: planned [amount], realised [amount] \u2014 [why]' });
+    if (isItProject && has('continuation_reviewer')) create.push({ label: '\uFF0B Continuation request', prompt: 'Request the next-year continuation slice for this project: [amount and remaining scope]' });
+    if (isItProject && has('gate_reviewer')) create.push({ label: '\uFF0B Log a displacement', prompt: 'Log a displacement: [who] was pulled to [incident / run work / project code] from [date] \u2014 [days of slip]' });
+    if (isItProject && has('gate_reviewer')) create.push({ label: '\uFF0B Benefits report', prompt: 'Record realised benefits for [period]: planned [amount], realised [amount] \u2014 [why]' });
   }
   if (canWrite) create.push({ label: '\uFF0B Assign a task', prompt: 'Assign a task to [User / role]: [what to do] \u2014 [low/medium/high] urgency' });
 
@@ -369,7 +376,20 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, o
     ['closeout_reporter', 'Draft the closeout executive summary.'],
   ];
   let ask: string[];
-  if (projectCode && isItProject) {
+  if (projectCode && isRndProject) {
+    ask = ['Where does this programme stand \u2014 stage, money released at the last gate, burn against that gate budget, and what needs my attention?'];
+    if (has('business_case_reconciler')) ask.push('Does the business case approved at the last gate still hold? Compare the versions and show what drifted.');
+    if (has('gate_reviewer')) ask.push('Prepare the package for the next gate and score the exit criteria.');
+    if (has('risk_analyst')) ask.push('What are the top risks to this programme reaching launch, and why?');
+    if (has('cost_controller')) ask.push('How much of the money released at the last gate is spent, and will it last to the next gate?');
+    ask = ask.slice(0, 4);
+  } else if (!projectCode && isRndRole) {
+    ask = ['Which R&D programmes need a gate decision from me this week, and why?'];
+    if (has('business_case_reconciler')) ask.push('Which programmes\u2019 business cases have drifted most since they were committed?');
+    ask.push('Rank the R&D pipeline on expected commercial value \u2014 what should we fund next, and what should we stop?');
+    ask.push('Are we killing programmes early and cheaply enough? Review the recent terminations.');
+    ask = ask.slice(0, 4);
+  } else if (projectCode && isItProject) {
     const itFirst: AgentType[] = ['gate_reviewer', 'business_case_reviewer', 'continuation_reviewer', 'change_order_reviewer', 'risk_analyst', 'issue_logger', 'status_reporter'];
     const roleAsks = itFirst.filter(has).map((a) => ASK_BY_AGENT.find(([x]) => x === a)?.[1]).filter((x): x is string => !!x);
     ask = ['Where does this project stand \u2014 stage, gate, funding position, and what needs my attention?', ...roleAsks].slice(0, 4);
@@ -584,7 +604,7 @@ export function FloatingAgentWidget({
     }
   }
 
-  const contextLabel = projectCode ? `${projectCode}${projectType === 'it' ? ' · IT project' : ''}` : pathname?.startsWith('/portfolio/enterprise') ? 'Enterprise · all PMOs' : pathname?.startsWith('/portfolio/it') ? 'IT portfolio' : 'Portfolio';
+  const contextLabel = projectCode ? `${projectCode}${projectType === 'it' ? ' · IT project' : projectType === 'rnd' ? ' · R&D programme' : ''}` : pathname?.startsWith('/portfolio/enterprise') ? 'Enterprise · all PMOs' : pathname?.startsWith('/portfolio/it') ? 'IT portfolio' : pathname?.startsWith('/portfolio/rnd') ? 'R&D portfolio' : 'Portfolio';
   const dropdownOptions: AgentTypeOrAuto[] = canWrite ? ['auto', ...allowedAgents] : [...allowedAgents];
 
   // Popped-out brief panels render alongside the widget — they persist

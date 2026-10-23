@@ -47,7 +47,7 @@ async function main() {
   if (error) throw error;
   await admin.from('roles').update({ must_change_password: false }).eq('user_id', userId);
 
-  console.log(`Password reset for ${email}. Sign in at http://localhost:3000/login`);
+  console.log(`Password reset for ${email}. Sign in on your local site (localhost:3100-3103)`);
 }
 
 main().catch((e) => {
