@@ -12,7 +12,8 @@
     "seed": "tsx scripts/seed.ts",
     "seed:users": "tsx scripts/seed-users.ts",
     "test:agent": "tsx scripts/test-agent.ts",
-    "seed:it": "tsx scripts/seed-it.ts"
+    "seed:it": "tsx scripts/seed-it.ts",
+    "seed:rnd": "tsx scripts/seed-rnd.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.2",

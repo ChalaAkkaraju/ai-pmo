@@ -129,6 +129,7 @@ export async function loadEnterpriseView(sb: SupabaseClient): Promise<Enterprise
 
   // ---- IT ------------------------------------------------------------------
   const it = projects.filter((p) => p.project_type === 'it');
+  const rnd = projects.filter((p) => p.project_type === 'rnd');
   const itMix = ['proposed', 'approved', 'active', 'on_hold', 'deferred', 'closed', 'cancelled'].map((k) => ({ key: k, label: k === 'on_hold' ? 'On hold' : k[0].toUpperCase() + k.slice(1), n: it.filter((p) => p.lifecycle_status === k).length, cls: MIX_CLS[k] })).filter((m) => m.n > 0);
   const openRecs = ((recRes.data ?? []) as Array<{ project_id: string | null; project_type: ProjectType; decision_kind: string; title: string; status: string; required_body_key: string; decided_body_key: string | null; decided_at: string | null; proposed_at: string; amount: number | null; minutes: string | null }>);
   for (const r of openRecs.filter((r) => r.status === 'proposed')) {
@@ -208,6 +209,22 @@ export async function loadEnterpriseView(sb: SupabaseClient): Promise<Enterprise
     reserveDrawnPct: reserve > 0 ? (reserveDraws / reserve) * 100 : null,
   };
 
+  // R&D mix by where the money stands, not by gate number: the three templates
+  // have different gate counts, so a gate-numbered mix would not be comparable
+  // across them. Terminations are shown as their own band because in R&D they
+  // are an outcome of the process, not an absence of one.
+  const rndPre = rnd.filter((p) => ['proposed', 'approved', 'deferred'].includes(p.lifecycle_status ?? '')).length;
+  const rndRunning = rnd.filter((p) => ['active', 'on_hold'].includes(p.lifecycle_status ?? '')).length;
+  const rndLaunched = rnd.filter((p) => p.lifecycle_status === 'closed').length;
+  const rndTerminated = rnd.filter((p) => p.lifecycle_status === 'terminated').length;
+  const rndMix = [
+    { key: 'pre', label: 'Pre-commit', n: rndPre, cls: 'bg-slate-400' },
+    { key: 'dev', label: 'In development', n: rndRunning, cls: 'bg-violet-500' },
+    { key: 'launched', label: 'Launched', n: rndLaunched, cls: 'bg-emerald-500' },
+    { key: 'terminated', label: 'Terminated at gate', n: rndTerminated, cls: 'bg-red-300' },
+  ];
+  const rndKillRate = rnd.length ? Math.round((rndTerminated / rnd.length) * 1000) / 10 : null;
+
   const types: TypeSummary[] = [
     { type: 'revenue', label: 'Revenue', live: true, total: rev.length, mix: revMix, attention: attention.filter((a) => a.type === 'revenue').length, inScope: revActive.length, inScopeLabel: 'active projects', headline: revRated ? `${Math.round((revHealthy / revRated) * 100)}%` : '—', headlineSub: `of ${revRated} rated active projects on cost and schedule`, href: '/dashboard' },
     { type: 'it', label: 'IT', live: true, total: it.length, mix: itMix, attention: attention.filter((a) => a.type === 'it').length, inScope: it.length, inScopeLabel: 'projects', headline: itRunning.length ? `${Math.round((itOnTrack / itRunning.length) * 100)}%` : '—', headlineSub: `of ${itRunning.length} committed projects running (not held)`, href: '/portfolio/it' },
@@ -215,9 +232,7 @@ export async function loadEnterpriseView(sb: SupabaseClient): Promise<Enterprise
     { type: 'capital', label: 'Capital', live: false, phase: 'Phase 2', total: 22, mix: [
       { key: 'study', label: 'FEL 1–2 study', n: 6, cls: 'bg-slate-400' }, { key: 'feed', label: 'FEED', n: 4, cls: 'bg-blue-500' }, { key: 'sanctioned', label: 'Sanctioned', n: 9, cls: 'bg-emerald-500' }, { key: 'commissioning', label: 'Commissioning', n: 3, cls: 'bg-sky-400' },
     ], attention: 4, inScope: 22, inScopeLabel: 'projects', headline: '82%', headlineSub: 'of sanctioned projects within AFE tolerance (illustrative)', href: '#' },
-    { type: 'rnd', label: 'R&D / NPI', live: false, phase: 'Phase 3', total: 31, mix: [
-      { key: 'g1', label: 'Gate 1–2', n: 12, cls: 'bg-slate-400' }, { key: 'g3', label: 'Gate 3 development', n: 11, cls: 'bg-violet-500' }, { key: 'g4', label: 'Gate 4 launch', n: 5, cls: 'bg-emerald-500' }, { key: 'killed', label: 'Killed this year', n: 3, cls: 'bg-red-300' },
-    ], attention: 5, inScope: 31, inScopeLabel: 'projects', headline: '71%', headlineSub: 'of gates held on their planned date (illustrative)', href: '#' },
+    { type: 'rnd', label: 'R&D / NPI', live: true, total: rnd.length, mix: rndMix, attention: attention.filter((a) => a.type === 'rnd').length, inScope: rnd.length, inScopeLabel: 'programmes', headline: rndKillRate === null ? '—' : `${rndKillRate}%`, headlineSub: rndKillRate === null ? 'no programmes in scope' : `terminated at a gate — in R&D a healthy rate, not a failure count`, href: '/portfolio/rnd' },
   ];
   const toneRank = { bad: 0, warn: 1, info: 2 } as const;
   attention.sort((a, b) => toneRank[a.tone] - toneRank[b.tone] || (a.since ?? '') .localeCompare(b.since ?? ''));

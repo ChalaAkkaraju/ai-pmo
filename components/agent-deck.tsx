@@ -55,6 +55,7 @@ import {
   BarChart3,
   Milestone,
   RefreshCw,
+  GitCompare,
   Presentation,
   ShieldCheck,
   type LucideIcon,
@@ -101,6 +102,7 @@ const AGENT_ICON: Record<AgentType, LucideIcon> = {
   continuation_reviewer: RefreshCw,
   executive_briefing_writer: Presentation,
   governance_health_reviewer: ShieldCheck,
+  business_case_reconciler: GitCompare,
 };
 
 /** Project lifecycle phases (PMBOK process groups). */
@@ -133,6 +135,7 @@ const AGENT_PHASE: Record<AgentType, Phase | 'portfolio'> = {
   continuation_reviewer: 'portfolio',
   executive_briefing_writer: 'portfolio',
   governance_health_reviewer: 'portfolio',
+  business_case_reconciler: 'Monitoring',
 };
 
 /** Ordered lifecycle groups for the landing-slide map. */

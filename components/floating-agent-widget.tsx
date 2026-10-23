@@ -325,6 +325,7 @@ const AGENT_LABELS: Record<AgentType, string> = {
   continuation_reviewer: 'Continuation Reviewer',
   executive_briefing_writer: 'Executive Briefing Writer',
   governance_health_reviewer: 'Governance Health Reviewer',
+  business_case_reconciler: 'Business Case Reconciler',
 };
 
 /** Starter prompts shown when the chat is empty — role-aware. Creation/assign
@@ -452,6 +453,10 @@ export function FloatingAgentWidget({
         setAgentType(detail.agentType as AgentTypeOrAuto);
       }
       if (typeof detail.prompt === 'string') setPrompt(detail.prompt);
+      // A guided-setup step starts a fresh conversation: drop the previous
+      // step's answer (it is already saved to the project) so the panel shows
+      // only the new step's prompt.
+      setHistory([]);
       setIsOpen(true);
     }
     window.addEventListener('pmo:ask-agent', onAsk as EventListener);

@@ -63,6 +63,8 @@ const AGENT_DESCRIPTIONS: Record<AgentType, string> = {
     'Enterprise / all PMOs: writes the one-page board pack across Revenue, IT (and later Capital, R&D) — what changed, what needs a decision and from whom, where buffers are thin, the few questions to ask. Each PMO in its own terms; never sums money across types.',
   governance_health_reviewer:
     'Enterprise / all PMOs: audits the governance itself from the decision records — cycle times per body, quorum discipline, returned / rejected ratio, holds expiring without action, continuations unrequested, self-approval. Answers "is the delegation of authority working?".',
+  business_case_reconciler:
+    'R&D / NPI: compares the business case as it stands against the version approved at the commit gate — NPV, peak sales, launch date, development cost, and the technical and commercial success probabilities — and says whether the programme would still be funded on today\'s numbers. Asked BETWEEN gates, which is the point: the same question at the next gate arrives after the money is spent.',
 };
 
 let cachedClient: OpenAI | null = null;

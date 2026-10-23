@@ -22,14 +22,17 @@ import { usePathname } from 'next/navigation';
 import type { ResolvedRole } from '@/lib/role-context';
 import { signOut } from '@/app/login/actions';
 import { canRoleCreateProjectType } from '@/lib/roles';
-import { homePathFor, isItRole, roleSees } from '@/lib/workspace';
+import { homePathFor, isItRole, isRndRole, roleSees } from '@/lib/workspace';
 
 export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 }: { resolved: ResolvedRole; signedIn?: boolean; learnItems: Array<{ path: string; label: string }>; inboxCount?: number }) {
   const canCreate = canRoleCreateProjectType(resolved.role.role_type, 'revenue');
   const canCreateIt = canRoleCreateProjectType(resolved.role.role_type, 'it');
+  const canCreateRnd = canRoleCreateProjectType(resolved.role.role_type, 'rnd');
   const seesIt = roleSees(resolved.role, 'it');
+  const seesRnd = roleSees(resolved.role, 'rnd');
   const seesRevenue = roleSees(resolved.role, 'revenue');
   const itHome = isItRole(resolved.role);
+  const rndHome = isRndRole(resolved.role);
   const execHome = resolved.role.role_type === 'portfolio_executive';
   const homePath = homePathFor(resolved.role);
   // On the welcome gateway (its own branding + entry buttons) the full header is
@@ -65,7 +68,7 @@ export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 
           <span className="flex flex-col leading-tight">
             <span className="text-base font-bold tracking-tight text-foreground">AI PMO</span>
             <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              {execHome ? 'Enterprise view · all PMOs' : itHome ? 'IT PMO workspace' : 'for Project Management Office'}
+              {execHome ? 'Enterprise view · all PMOs' : itHome ? 'IT PMO workspace' : rndHome ? 'R&D / NPI workspace' : 'for Project Management Office'}
             </span>
           </span>
         </Link>
@@ -94,12 +97,27 @@ export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 
               + Submit IT project
             </Link>
           )}
+          {canCreateRnd && (
+            <Link
+              href={`/intake/rnd`}
+              className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
+            >
+              + Submit R&amp;D programme
+            </Link>
+          )}
           {seesIt && seesRevenue && (
             <>
               {execHome && <Link href={`/dashboard`} className="text-muted-foreground transition hover:text-foreground">Revenue</Link>}
               <Link href={`/portfolio/it`} className="text-muted-foreground transition hover:text-foreground">IT portfolio</Link>
+              {seesRnd && <Link href={`/portfolio/rnd`} className="text-muted-foreground transition hover:text-foreground">R&amp;D portfolio</Link>}
               <Link href={`/portfolio/enterprise`} className="text-muted-foreground transition hover:text-foreground">Enterprise</Link>
             </>
+          )}
+          {seesRnd && !execHome && !seesIt && (
+            <Link href={`/portfolio/rnd#decisions`} title="Decisions waiting for you" className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${inboxCount > 0 ? 'bg-violet-600 text-white hover:bg-violet-700' : 'border text-muted-foreground hover:text-foreground'}`}>
+              For you
+              <span className={`rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${inboxCount > 0 ? 'bg-white/20' : 'bg-muted'}`}>{inboxCount}</span>
+            </Link>
           )}
           {seesIt && !execHome && (
             <Link href={`/portfolio/it#decisions`} title="Decisions waiting for you" className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${inboxCount > 0 ? 'bg-teal-600 text-white hover:bg-teal-700' : 'border text-muted-foreground hover:text-foreground'}`}>

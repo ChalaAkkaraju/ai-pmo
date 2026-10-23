@@ -259,6 +259,92 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
     dashboard_sections: ['projects_overview'],
     can_write: false,
   },
+
+  // --- R&D / NPI (migration 0050) -------------------------------------------
+  // The cast is deliberately smaller than IT's equivalent: in R&D the gate
+  // board does the work a bucket owner and a CIO split between them in IT,
+  // because the funding decision and the gate decision are the same event.
+  rnd_portfolio_manager: {
+    type: 'rnd_portfolio_manager',
+    display_name: 'R&D Portfolio Manager',
+    description:
+      'Runs the R&D PMO: the annual envelope across buckets, pipeline balance across horizons, case review before each gate, and the health of the gate process itself — including whether the early screens are killing anything. Sees R&D programmes only.',
+    allowed_agents: [
+      'business_case_reviewer',
+      'business_case_reconciler',
+      'gate_reviewer',
+      'continuation_reviewer',
+      'portfolio_risk_reviewer',
+      'status_reporter',
+      'lessons_learned_synthesiser',
+    ],
+    dashboard_sections: ['projects_overview', 'risks', 'issues', 'portfolio_patterns', 'lessons_learned'],
+    can_write: true,
+  },
+  rnd_pm: {
+    type: 'rnd_pm',
+    display_name: 'R&D Programme Lead',
+    description:
+      'Runs a development programme between gates: plan, spend against the budget the last gate released, technical risk, and the gate pack. Prepares the case re-underwriting but does not decide it.',
+    allowed_agents: [
+      'charter_drafter',
+      'stakeholder_analyst',
+      'wbs_builder',
+      'schedule_reasoner',
+      'budget_builder',
+      'communications_planner',
+      'risk_analyst',
+      'issue_logger',
+      'status_reporter',
+      'gate_reviewer',
+      'business_case_reconciler',
+    ],
+    dashboard_sections: ['projects_overview', 'risks', 'issues', 'variance_reports'],
+    can_write: true,
+  },
+  rnd_sponsor: {
+    type: 'rnd_sponsor',
+    display_name: 'Business Sponsor (R&D)',
+    description:
+      'The commercial owner of the product. Owns the market half of the case — peak sales, launch date, commercial success probability — and decides inside the committed budget. Cannot approve their own gate funding.',
+    allowed_agents: ['business_case_reviewer', 'business_case_reconciler', 'gate_reviewer', 'status_reporter', 'risk_analyst'],
+    dashboard_sections: ['projects_overview', 'risks'],
+    can_write: true,
+  },
+  rnd_gatekeeper: {
+    type: 'rnd_gatekeeper',
+    display_name: 'Gatekeeper (R&D)',
+    description:
+      'Chairs the gate board. Decides go / kill / hold / recycle against the published criteria for that gate and releases the next stage budget. A kill here is a result, not a failure.',
+    allowed_agents: [
+      'gate_reviewer',
+      'business_case_reviewer',
+      'business_case_reconciler',
+      'continuation_reviewer',
+      'portfolio_risk_reviewer',
+      'status_reporter',
+    ],
+    dashboard_sections: ['projects_overview', 'risks', 'issues', 'portfolio_patterns'],
+    can_write: true,
+  },
+  rnd_board_member: {
+    type: 'rnd_board_member',
+    display_name: 'R&D Portfolio Board',
+    description:
+      'Sits on the portfolio review board: the annual envelope, pipeline balance, and anything above the gate board delegation — including a post-commit kill, which writes off capitalised development cost.',
+    allowed_agents: ['gate_reviewer', 'business_case_reviewer', 'business_case_reconciler', 'portfolio_risk_reviewer', 'status_reporter'],
+    dashboard_sections: ['projects_overview', 'portfolio_patterns'],
+    can_write: true,
+  },
+  rnd_finance: {
+    type: 'rnd_finance',
+    display_name: 'Finance (R&D)',
+    description:
+      'Concurrence, not approval. Checks the case numbers before a gate and owns the IAS 38 question at the commit gate: research is expensed, development capitalises only once feasibility is demonstrated, and that determination is made here.',
+    allowed_agents: ['business_case_reviewer', 'business_case_reconciler', 'gate_reviewer', 'cost_controller', 'continuation_reviewer'],
+    dashboard_sections: ['projects_overview', 'variance_reports'],
+    can_write: true,
+  },
   admin: {
     type: 'admin',
     display_name: 'Administrator',
@@ -309,6 +395,12 @@ export const ROLE_SHORT_LABELS: Record<RoleType, string> = {
   it_board_member: 'IT Board / CIO',
   it_finance: 'Finance (IT)',
   portfolio_executive: 'Executive',
+  rnd_portfolio_manager: 'R&D Portfolio Manager',
+  rnd_pm: 'R&D Programme Lead',
+  rnd_sponsor: 'Business Sponsor (R&D)',
+  rnd_gatekeeper: 'Gatekeeper (R&D)',
+  rnd_board_member: 'R&D Board',
+  rnd_finance: 'Finance (R&D)',
 };
 
 /**
@@ -335,12 +427,22 @@ export const DEFAULT_ROLE_PROJECT_TYPES: Record<RoleType, ProjectType[]> = {
   it_board_member: ['it'],
   it_finance: ['it'],
   portfolio_executive: ['revenue', 'it', 'capital', 'rnd'],
+  rnd_portfolio_manager: ['rnd'],
+  rnd_pm: ['rnd'],
+  rnd_sponsor: ['rnd'],
+  rnd_gatekeeper: ['rnd'],
+  rnd_board_member: ['rnd'],
+  rnd_finance: ['rnd'],
 };
 
 /** Roles that may create a project of the given type. */
 export function canRoleCreateProjectType(roleType: RoleType, projectType: ProjectType): boolean {
   if (projectType === 'revenue') return roleType === 'pm' || roleType === 'engineering_manager';
   if (projectType === 'it') return roleType === 'it_portfolio_manager' || roleType === 'it_pm' || roleType === 'it_sponsor';
+  // R&D ideas come from anywhere, but only the PMO, a programme lead or the
+  // business sponsor can open one on the platform — an idea with no owner is
+  // what clogs a pipeline.
+  if (projectType === 'rnd') return roleType === 'rnd_portfolio_manager' || roleType === 'rnd_pm' || roleType === 'rnd_sponsor';
   return false;
 }
 

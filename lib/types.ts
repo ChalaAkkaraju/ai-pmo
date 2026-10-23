@@ -21,7 +21,14 @@ export type RoleType =
   | 'it_bucket_owner'
   | 'it_board_member'
   | 'it_finance'
-  | 'portfolio_executive';
+  | 'portfolio_executive'
+  // R&D / NPI cast (migration 0050)
+  | 'rnd_portfolio_manager'
+  | 'rnd_pm'
+  | 'rnd_sponsor'
+  | 'rnd_gatekeeper'
+  | 'rnd_board_member'
+  | 'rnd_finance';
 
 /**
  * Project population (migration 0045). Revenue = customer-facing EPC projects
@@ -34,8 +41,26 @@ export const ALL_PROJECT_TYPES: ProjectType[] = ['revenue', 'it', 'capital', 'rn
 /** One level below project_type. IT categories pick the stage template. */
 export type ItCategory = 'design_development' | 'deployment' | 'maintenance_upgrade';
 
+/**
+ * R&D categories (migration 0050). new_product runs the full five gates;
+ * derivative collapses the early screens because the market is already known;
+ * platform_research is judged on feasibility and knowledge, not NPV.
+ */
+export type RndCategory = 'new_product' | 'derivative' | 'platform_research';
+
 /** Portfolio lifecycle, distinct from delivery `status`. */
-export type LifecycleStatus = 'proposed' | 'approved' | 'deferred' | 'active' | 'on_hold' | 'cancelled' | 'closed';
+/**
+ * Portfolio lifecycle, distinct from delivery `status`.
+ *
+ * 'terminated' (0050) is a kill AT a gate, on the evidence, by the gate body --
+ * deliberately not the same thing as 'cancelled', which is abandonment outside
+ * the process. In a healthy R&D pipeline terminations are frequent and early,
+ * and reading them as failures is the single most common way stage-gate
+ * reporting goes wrong.
+ */
+export type LifecycleStatus =
+  | 'proposed' | 'approved' | 'deferred' | 'active' | 'on_hold'
+  | 'cancelled' | 'closed' | 'terminated';
 
 /** What kind of value a non-revenue business case claims. */
 export type ValueType = 'hard_savings' | 'soft_benefit' | 'risk_reduction' | 'enablement' | 'compliance';
@@ -107,6 +132,12 @@ export interface StageDef {
   key: string;
   name: string;
   gate_name: string;
+  /**
+   * Target duration for the stage, in days (R&D templates, migration 0050).
+   * A declared target, not an observed one -- lib/rnd.ts shows it beside the
+   * portfolio median so a slow stage and a wrong benchmark stay distinguishable.
+   */
+  benchmark_days?: number;
   /** The commit gate: scope, budget and accounting treatment lock here. */
   is_commit: boolean;
   exit_criteria: string[];
@@ -142,6 +173,42 @@ export interface GateDecision {
   created_by_output_id: string | null;
   decision_record_id?: string | null;
   hold_until?: string | null;
+  created_at: string;
+}
+
+/**
+ * A business case as underwritten at one point in time (migration 0050).
+ *
+ * R&D re-opens the numbers at every gate, so the case is a time series, not a
+ * record -- the structural twin of forecast_snapshots. version 1 is the case as
+ * first written; gate_stage_seq says which gate re-underwrote each later one.
+ * Drift between versions is the signal, and nothing here is derived on write:
+ * ECV and drift are computed live in lib/rnd.ts.
+ */
+export interface BusinessCaseVersion {
+  id: string;
+  project_id: string;
+  version: number;
+  /** Gate this version was written at; null = the original, pre-gate case. */
+  gate_stage_seq: number | null;
+  authored_on: string;
+  authored_by: string | null;
+  npv: number | null;
+  irr_pct: number | null;
+  payback_months: number | null;
+  peak_annual_sales: number | null;
+  launch_date: string | null;
+  development_cost_estimate: number | null;
+  launch_cost: number | null;
+  /** 0-100. Held apart because a sure thing nobody wants and a moonshot with a
+   *  guaranteed market fail in completely different ways. */
+  technical_success_pct: number | null;
+  commercial_success_pct: number | null;
+  currency: string;
+  is_current: boolean;
+  notes: string | null;
+  source_system: string;
+  external_id: string | null;
   created_at: string;
 }
 
@@ -433,7 +500,9 @@ export type AgentType =
   | 'gate_reviewer'
   | 'continuation_reviewer'
   | 'executive_briefing_writer'
-  | 'governance_health_reviewer';
+  | 'governance_health_reviewer'
+  // R&D agents (migration 0050)
+  | 'business_case_reconciler';
 
 export interface AgentOutput {
   id: string;

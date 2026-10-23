@@ -61,6 +61,8 @@ export const LIFECYCLE_LABELS: Record<LifecycleStatus, string> = {
   on_hold: 'On hold',
   cancelled: 'Cancelled',
   closed: 'Closed',
+  // 0050: a kill AT a gate, distinct from abandonment outside the process.
+  terminated: 'Terminated at gate',
 };
 
 export function bucketLabel(b: string | null | undefined): string {

@@ -473,6 +473,29 @@ export const AGENT_CATALOG: AgentCatalogEntry[] = [
     methodology:
       'Checks the operating evidence against COBIT / PMI-style delegation-of-authority principles: decisions at the designed level, separation of proposer and decider, quorum, concurrence, time-boxed holds, and a non-zero challenge rate.',
   },
+  {
+    agent_type: 'business_case_reconciler',
+    name: 'Business Case Reconciler',
+    purpose: 'Asks between gates whether the case you funded at the commit gate still holds.',
+    plain:
+      'R&D rewrites its business case at every gate, so by the time a programme reaches the next gate the numbers it was funded on may be months out of date. This agent compares the case as it stands today against the version approved at the commit gate — value, peak sales, launch date, cost, and the odds of technical and commercial success — and tells you whether the programme would still be funded on today\'s numbers. The point is the timing: the same question gets asked at the next gate, but by then the money has been spent.',
+    scope: 'project',
+    does: [
+      'Compares every line of the current case against the version approved at commit, with the delta and whether it is favourable',
+      'Recomputes expected commercial value both ways and shows the arithmetic',
+      'Separates movement caused by new evidence from movement caused by delay or people being pulled away',
+      'Lists what is now knowable that was not knowable at commit, tied to the line each fact moved',
+      'Recommends one of: case holds, holds with conditions, re-underwrite now, or bring the gate forward',
+    ],
+    doesNot: [
+      'Doesn\'t decide the gate — it prepares the judgement the gate board makes',
+      'Doesn\'t measure spend against the gate budget (that is gate-to-gate burn, a separate measure)',
+      'Doesn\'t fill in a figure the case is silent on',
+    ],
+    samplePrompt: 'Does the case we approved at Gate 3 still hold? Reconcile it against where we are now.',
+    methodology:
+      'Applies Cooper\'s expected-commercial-value form — [(NPV x P(commercial)) - launch cost] x P(technical) - development cost — across the versioned business case, anchored on the commit-gate version because movement before commitment is the early stages working as designed.',
+  },
 ];
 
 /** Lookup helper. */

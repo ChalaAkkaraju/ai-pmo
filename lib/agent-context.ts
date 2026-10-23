@@ -44,6 +44,7 @@ const AGENT_PROMPT_FILES: Record<AgentType, string> = {
   continuation_reviewer: 'continuation_reviewer.md',
   executive_briefing_writer: 'executive_briefing_writer.md',
   governance_health_reviewer: 'governance_health_reviewer.md',
+  business_case_reconciler: 'business_case_reconciler.md',
 };
 
 /**
