@@ -31,7 +31,7 @@ function weeks(n: number | null): string {
   return `${n < 0 ? '−' : '+'}${Math.abs(n).toFixed(1)} wk`;
 }
 function shortDate(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }) : '—';
+  return iso ? new Date(iso).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric', year: '2-digit' }) : '—';
 }
 
 export function EarnedValueCard({

@@ -8,7 +8,7 @@ import { deriveCashFlow, type CashFlow } from '@/lib/cash-flow';
 import type { ForecastPoint } from '@/lib/forecast';
 
 const M = (v: number) => `${v < 0 ? '−' : ''}$${Math.abs(v / 1_000_000).toFixed(1)}M`;
-const mlabel = (s: string) => new Date(s).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+const mlabel = (s: string) => new Date(s).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', year: '2-digit' });
 
 function Cell({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: 'ok' | 'warn' | 'bad' }) {
   const t = tone === 'ok' ? 'text-emerald-700' : tone === 'warn' ? 'text-amber-600' : tone === 'bad' ? 'text-red-600' : 'text-foreground';
@@ -55,7 +55,7 @@ export function CashFlow({ points, finishIso }: { points: ForecastPoint[]; finis
             <text x={ml - 6} y={mt + ih - g * ih + 3} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="end">{`$${((yMax * g) / 1_000_000).toFixed(0)}M`}</text>
           </g>
         ))}
-        {s.map((p, i) => (i % Math.ceil(s.length / 6) === 0 || i === s.length - 1) && <text key={p.period} x={x(i)} y={H - 8} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="middle">{new Date(p.period).toLocaleDateString(undefined, { month: 'short' })}</text>)}
+        {s.map((p, i) => (i % Math.ceil(s.length / 6) === 0 || i === s.length - 1) && <text key={p.period} x={x(i)} y={H - 8} fontSize="9" fill="currentColor" fillOpacity="0.55" textAnchor="middle">{new Date(p.period).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short' })}</text>)}
         {lastHist >= 0 && lastHist < s.length - 1 && <line x1={x(lastHist)} y1={mt} x2={x(lastHist)} y2={mt + ih} stroke="#ef4444" strokeOpacity="0.4" strokeDasharray="2 2" />}
         <path d={band} fill="#ef4444" fillOpacity="0.08" stroke="none" />
         <path d={seg(0, lastHist, (p) => p.cashOutCum)} fill="none" stroke="#ef4444" strokeWidth="2" />

@@ -38,7 +38,7 @@ function ms(d: string | null): number {
 }
 function shortDate(d: string | null): string {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+  return new Date(d).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', year: '2-digit' });
 }
 
 export function ScheduleView({ tasks, workPackages }: { tasks: Task[]; workPackages: Phase[] }) {
