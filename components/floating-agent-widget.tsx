@@ -321,11 +321,26 @@ const AGENT_LABELS: Record<AgentType, string> = {
   cost_controller: 'Cost Controller',
 };
 
+/** Pick n items in a seeded random order. Seed 0 = the pool's own order, so the
+ * first (server) render is stable; a real seed comes in after mount. */
+function rotate<T>(items: T[], n: number, seed: number): T[] {
+  if (seed === 0 || items.length <= n) return items.slice(0, n);
+  let x = Math.floor(seed * 2147483646) + 1;
+  const rand = () => { x = (x * 48271) % 2147483647; return x / 2147483647; };
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a.slice(0, n);
+}
+
 /** Starter prompts shown when the chat is empty — role-aware. Creation/assign
  * options surface the write actions that aren't otherwise discoverable now that
  * everything runs through the agent. Clicking one pre-fills the input to edit. */
 function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { allowedAgents: AgentType[]; canWrite: boolean; projectCode: string | null; onPick: (p: string) => void }) {
   const has = (a: AgentType) => allowedAgents.includes(a);
+  // Rotate the starter questions: each context has a pool; four are shown at
+  // random each time the panel opens, and "More prompts" reshuffles.
+  const [seed, setSeed] = useState(0);
+  useEffect(() => { setSeed(Math.random()); }, []);
   const create: Array<{ label: string; prompt: string }> = [];
   if (projectCode && canWrite) {
     if (has('risk_analyst')) create.push({ label: '\uFF0B Raise a risk', prompt: 'Log a risk: [describe the risk \u2014 cause \u2192 event \u2192 consequence]' });
@@ -355,12 +370,19 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { al
   let ask: string[];
   if (projectCode) {
     const roleAsks = ASK_BY_AGENT.filter(([a]) => has(a)).map(([, prm]) => prm);
-    ask = ['Summarise this project\u2019s health \u2014 cost, schedule, and what needs my attention.', ...roleAsks].slice(0, 4);
+    ask = ['Summarise this project\u2019s health \u2014 cost, schedule, and what needs my attention.', ...roleAsks];
   } else {
     ask = ['Which projects need attention this week, and why? Cite the variance reports.'];
     if (has('portfolio_risk_reviewer')) ask.push('Where is cross-cutting risk emerging across the portfolio?');
     if (has('cost_controller') || has('variance_analyst')) ask.push('Which projects are trending over cost or behind schedule?');
+    ask.push('Where is margin eroding fastest against what we sold, and why?');
+    ask.push('Which projects have drawn the most contingency, and is the draw justified?');
+    ask.push('Which open high-severity issues are overdue, and who owns them?');
+    ask.push('Which hard deadlines are at risk in the next 90 days?');
+    ask.push('Summarise the portfolio for the leadership meeting in five bullets.');
   }
+
+  const shown = rotate(ask, 4, seed);
 
   return (
     <div className="px-1 py-1.5">
@@ -376,11 +398,16 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { al
       )}
       <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ask agent</p>
       <div className="flex flex-col gap-1.5">
-        {ask.map((a) => (
+        {shown.map((a) => (
           <button key={a} type="button" onClick={() => onPick(a)} className="text-left rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-[12px] text-sky-900 transition hover:border-sky-400 hover:bg-sky-100">{a}</button>
         ))}
       </div>
-      <p className="mt-2 px-0.5 text-[10px] text-muted-foreground">Pick one to pre-fill, edit, then Send.</p>
+      <div className="mt-2 flex items-center justify-between gap-2 px-0.5">
+        <p className="text-[10px] text-muted-foreground">Pick one to pre-fill, edit, then Send.</p>
+        {ask.length > shown.length && (
+          <button type="button" onClick={() => setSeed(Math.random())} className="text-[10px] font-medium text-sky-700 transition hover:text-sky-900 hover:underline">{'\u21bb'} More prompts</button>
+        )}
+      </div>
     </div>
   );
 }
