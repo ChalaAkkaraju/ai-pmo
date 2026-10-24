@@ -21,11 +21,20 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ResolvedRole } from '@/lib/role-context';
 import { signOut } from '@/app/login/actions';
+import { canRoleCreateProjectType } from '@/lib/roles';
+import { homePathFor, isItRole, isRndRole, roleSees } from '@/lib/workspace';
 
-const CREATE_ROLES = ['pm', 'engineering_manager'];
-
-export function Header({ resolved, signedIn = false, learnItems }: { resolved: ResolvedRole; signedIn?: boolean; learnItems: Array<{ path: string; label: string }> }) {
-  const canCreate = CREATE_ROLES.includes(resolved.role.role_type);
+export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 }: { resolved: ResolvedRole; signedIn?: boolean; learnItems: Array<{ path: string; label: string }>; inboxCount?: number }) {
+  const canCreate = canRoleCreateProjectType(resolved.role.role_type, 'revenue');
+  const canCreateIt = canRoleCreateProjectType(resolved.role.role_type, 'it');
+  const canCreateRnd = canRoleCreateProjectType(resolved.role.role_type, 'rnd');
+  const seesIt = roleSees(resolved.role, 'it');
+  const seesRnd = roleSees(resolved.role, 'rnd');
+  const seesRevenue = roleSees(resolved.role, 'revenue');
+  const itHome = isItRole(resolved.role);
+  const rndHome = isRndRole(resolved.role);
+  const execHome = resolved.role.role_type === 'portfolio_executive';
+  const homePath = homePathFor(resolved.role);
   // On the welcome gateway (its own branding + entry buttons) the full header is
   // redundant — keep only a minimal, centred name / role so you still see who
   // you're signed in as.
@@ -47,7 +56,7 @@ export function Header({ resolved, signedIn = false, learnItems }: { resolved: R
       <div className="container mx-auto grid h-14 max-w-screen-2xl grid-cols-[1fr_auto_1fr] items-center px-8">
         {/* Left — brand */}
         <Link
-          href={`/dashboard`}
+          href={homePath}
           className="inline-flex items-center gap-2.5 justify-self-start transition hover:opacity-90"
         >
           <span
@@ -59,7 +68,7 @@ export function Header({ resolved, signedIn = false, learnItems }: { resolved: R
           <span className="flex flex-col leading-tight">
             <span className="text-base font-bold tracking-tight text-foreground">AI PMO</span>
             <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              for Project Management Office
+              {execHome ? 'Enterprise view · all PMOs' : itHome ? 'IT PMO workspace' : rndHome ? 'R&D / NPI workspace' : 'for Project Management Office'}
             </span>
           </span>
         </Link>
@@ -78,6 +87,42 @@ export function Header({ resolved, signedIn = false, learnItems }: { resolved: R
               className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
             >
               + New project
+            </Link>
+          )}
+          {canCreateIt && (
+            <Link
+              href={`/intake/it`}
+              className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
+            >
+              + Submit IT project
+            </Link>
+          )}
+          {canCreateRnd && (
+            <Link
+              href={`/intake/rnd`}
+              className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
+            >
+              + Submit R&amp;D programme
+            </Link>
+          )}
+          {seesIt && seesRevenue && (
+            <>
+              {execHome && <Link href={`/dashboard`} className="text-muted-foreground transition hover:text-foreground">Revenue</Link>}
+              <Link href={`/portfolio/it`} className="text-muted-foreground transition hover:text-foreground">IT portfolio</Link>
+              {seesRnd && <Link href={`/portfolio/rnd`} className="text-muted-foreground transition hover:text-foreground">R&amp;D portfolio</Link>}
+              <Link href={`/portfolio/enterprise`} className="text-muted-foreground transition hover:text-foreground">Enterprise</Link>
+            </>
+          )}
+          {seesRnd && !execHome && !seesIt && (
+            <Link href={`/portfolio/rnd#decisions`} title="Decisions waiting for you" className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${inboxCount > 0 ? 'bg-violet-600 text-white hover:bg-violet-700' : 'border text-muted-foreground hover:text-foreground'}`}>
+              For you
+              <span className={`rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${inboxCount > 0 ? 'bg-white/20' : 'bg-muted'}`}>{inboxCount}</span>
+            </Link>
+          )}
+          {seesIt && !execHome && (
+            <Link href={`/portfolio/it#decisions`} title="Decisions waiting for you" className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${inboxCount > 0 ? 'bg-teal-600 text-white hover:bg-teal-700' : 'border text-muted-foreground hover:text-foreground'}`}>
+              For you
+              <span className={`rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${inboxCount > 0 ? 'bg-white/20' : 'bg-muted'}`}>{inboxCount}</span>
             </Link>
           )}
 
@@ -112,7 +157,7 @@ export function Header({ resolved, signedIn = false, learnItems }: { resolved: R
 
           <Link href={`/integration`} className="text-muted-foreground transition hover:text-foreground">Integration</Link>
           <Link href={`/usage`} className="text-muted-foreground transition hover:text-foreground">Usage</Link>
-          <Link href={`/analytics/actions`} className="text-muted-foreground transition hover:text-foreground">Analytics</Link>
+          {seesRevenue && <Link href={`/analytics/actions`} className="text-muted-foreground transition hover:text-foreground">Analytics</Link>}
 
           {signedIn ? (
             <form action={signOut}>

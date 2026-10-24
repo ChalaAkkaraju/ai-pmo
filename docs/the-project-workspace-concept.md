@@ -44,7 +44,34 @@ The registers and their synthesis:
 
 ## Planning
 
-The AI-authored planning artefacts for the project — charter, schedule analysis, budget basis, communications and the rest — each editable with provenance, produced by the planning agents.
+The **Planning** tab holds the AI-authored planning artefacts for the project — charter, stakeholder analysis, budget basis, communications plan, and later the lessons learned and closeout report — each editable with provenance, produced by the planning agents. An inner selector switches between them, with a count on each showing how many drafts exist.
+
+## Guided setup — standing up a new project
+
+![Guided setup on a new project — three artefacts drafted, the Schedule ready to run, the Budget locked until the Schedule lands, and the Communications Plan open because its only prerequisite is the Stakeholder Analysis.](book/figures/29-project-guided-setup.png)
+
+For a project that has just been created, the question is not *"where are the artefacts?"* but *"in what order do I make them?"* That is what the **guided setup** answers. On a new project — one raised through the intake form, or one still at week zero — the project page opens with a panel headed **Guided setup — build the planning artefacts**: the six planning artefacts as a checklist in dependency order, with a running count of how many are done. On an established project the same panel sits collapsed behind a *Show steps* button, and once all six are drafted its header simply reads *All planning artefacts drafted*.
+
+The order is PMBOK's own planning logic. Each step names the agent that produces it and the artefacts it builds on:
+
+| Step | Artefact | Produced by | Unlocked when |
+|---|---|---|---|
+| 1 | **Project Charter** — purpose, objectives, scope, success criteria, governance | Charter Drafter | Always available |
+| 2 | **Stakeholder Analysis** — stakeholders, influence/interest, engagement approach | Stakeholder Analyst | Charter drafted |
+| 3 | **Work Breakdown Structure** — scope decomposed into phases and work packages | WBS Builder | Charter drafted |
+| 4 | **Schedule** — critical path, milestones, sequencing, float, schedule risks | Schedule Reasoner | WBS drafted |
+| 5 | **Budget / Cost Breakdown** — budget allocated across the work, with contingency and reserve | Cost Planner | WBS and Schedule drafted |
+| 6 | **Communications Plan** — audiences, cadence, channels, escalation, reporting | Communications Planner | Stakeholder Analysis drafted |
+
+Each step is in one of four states, and the panel shows which. **Drafted** (a green tick): an artefact of that type already exists for the project. **Ready**: its prerequisites are drafted and your role is allowed to run that agent, so the step carries a *Draft with …* button. **Locked**: a prerequisite is missing, and the step says which one — *Complete Schedule Reasoner first*. And occasionally a step that is ready but not for you: it names the agent a colleague with the right role needs to run.
+
+Pressing *Draft with Schedule Reasoner* does not run anything by itself. It opens the Ask AI Assistant already switched to that specialist and pre-filled with a prompt seeded from the project — its name and code, the instruction to work from the intake data sheet, and a pointer to what has already been drafted (*"based on the WBS already drafted"*). You read the prompt, change what you want, and press **Send**. The human stays in the loop at exactly the point that matters: the instruction.
+
+When the draft lands it is saved as a planning artefact of that type, and the step ticks itself off. The tick is driven by the artefact existing, not by the button having been pressed — so an artefact produced by asking the assistant directly, without the checklist, ticks the step just the same, and a step with no artefact stays open however many times it was attempted. Each artefact appears where it belongs: the charter, stakeholder analysis, budget and communications plan under the **Planning** tab; the WBS on the **Structure** tab, where its AI-authored branches carry provenance and can be reviewed and booked to SAP PS; the schedule narrative alongside the timeline on the **Schedule** tab. All of them are editable, with the AI draft preserved and the human correction recorded. A further run adds another draft alongside the first rather than replacing it.
+
+> **Why it matters.** A new project manager gets the complete planning set in an afternoon, in the right order, each artefact grounded on the ones before it — and the PMO gets charters, WBSs and budgets that are built the same way on every project. The checklist is the agents' *planning* half made into a route rather than a menu.
+
+On the IT side the same panel exists, but it is hidden on committed IT projects that never used it, so that a running IT project's page stays about gates and money (see *The IT Workspace, Role by Role*).
 
 ## Why a single workspace
 

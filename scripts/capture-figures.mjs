@@ -49,6 +49,7 @@ const CAPTIONS = {
   '17-project-variance.png':           ['A13', 'Project variance analysis.'],
   '18-project-structure.png':          ['B3',  'Project structure — canonical WBS tree with provenance.'],
   '19-project-schedule.png':           ['A5',  'Project schedule — timeline and milestones.'],
+  '29-project-guided-setup.png':       ['A19', 'Guided setup — the six planning artefacts as a dependency-ordered checklist on a new project.'],
 };
 
 async function settle(page, ms = 700) { await new Promise((r) => setTimeout(r, ms)); }
@@ -217,6 +218,20 @@ async function main() {
     }, label);
     await shoot(page, ACTIVE_PANEL, file);
   }
+
+  // Guided setup checklist — sits above the tabs on the project page; expand it if collapsed
+  console.log('guided setup');
+  await goto(page, `${proj}?tab=overview`);
+  await page.waitForSelector(ACTIVE_PANEL, { timeout: 8000 }).catch(() => {});
+  await page.evaluate(() => {
+    const h = [...document.querySelectorAll('h2')].find((x) => /Guided setup/.test(x.textContent || ''));
+    const sec = h && h.closest('section');
+    if (!sec) return;
+    sec.setAttribute('data-figure', 'guided-setup');
+    const btn = sec.querySelector('button[aria-expanded="false"]');
+    if (btn) btn.click();
+  });
+  await shoot(page, 'section[data-figure="guided-setup"]', '29-project-guided-setup.png');
 
   await browser.close();
 

@@ -63,15 +63,15 @@ export const SEGMENT_STYLES: Record<Segment, SegmentStyle> = {
 };
 
 /** Safe lookup with fallback to a neutral grey style. */
-export function segmentStyle(segment: string): SegmentStyle {
+export function segmentStyle(segment: string | null | undefined): SegmentStyle {
   return (
-    SEGMENT_STYLES[segment as Segment] ?? {
+    SEGMENT_STYLES[(segment ?? '') as Segment] ?? {
       badge: 'bg-gray-100 text-gray-700 border border-gray-200',
       dot: 'bg-gray-400',
       accentBar: 'bg-gray-400',
       tintedCardHover: 'hover:bg-gray-50/50',
       hex: '#9ca3af',
-      label: segment,
+      label: segment ?? '—',
     }
   );
 }

@@ -9,8 +9,9 @@
 
 import { redirect } from 'next/navigation';
 import { getSessionRole } from '@/lib/auth';
+import { homePathFor } from '@/lib/workspace';
 
 export default async function RootPage() {
   const resolved = await getSessionRole();
-  redirect(resolved ? '/dashboard' : '/login');
+  redirect(resolved ? homePathFor(resolved.role) : '/login');
 }

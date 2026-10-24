@@ -20,7 +20,7 @@
 
 import { z } from 'zod';
 
-export type EntryKind = 'risk' | 'issue' | 'change';
+export type EntryKind = 'risk' | 'issue' | 'change' | 'continuation_request' | 'displacement' | 'benefit_report';
 
 const LMH = z.enum(['L', 'M', 'H']);
 
@@ -54,9 +54,41 @@ const changeSchema = z.object({
   revenue_impact_m: z.coerce.number().optional().default(0),
   schedule_impact_days: z.coerce.number().optional().default(0),
   status: z.enum(['Identified', 'Quantified', 'Submitted to client', 'In negotiation', 'Approved', 'Absorbed', 'Withdrawn']).optional().default('Identified'),
+  /** IT projects only: which pot pays — routes the approval (sponsor / bucket owner / CIO / board). */
+  funding_source: z.enum(['project_contingency', 'bucket_reserve', 'displacement']).optional().nullable().default(null),
 });
 
-const entrySchema = z.discriminatedUnion('type', [riskSchema, issueSchema, changeSchema]);
+// ---- IT PMO records (raised through the assistant, confirmed by the user) ----
+
+const continuationSchema = z.object({
+  type: z.literal('continuation_request'),
+  fiscal_year: z.coerce.number().int(),
+  requested_budget: z.coerce.number().nonnegative(),
+  note: z.string().optional().default(''),
+});
+
+const displacementSchema = z.object({
+  type: z.literal('displacement'),
+  resource_name: z.string().min(1),
+  skill: z.string().optional().default(''),
+  to_project_code: z.string().optional().default(''),
+  from_date: z.string().min(4),
+  to_date: z.string().optional().nullable().default(null),
+  fte: z.coerce.number().positive().optional().default(1),
+  schedule_impact_days: z.coerce.number().int().optional().default(0),
+  reason: z.enum(['incident_run', 'higher_priority_project', 'audit_compliance', 'revenue_priority', 'other']).optional().default('higher_priority_project'),
+  notes: z.string().optional().default(''),
+});
+
+const benefitSchema = z.object({
+  type: z.literal('benefit_report'),
+  period: z.string().min(4),
+  planned_benefit: z.coerce.number().nonnegative(),
+  realised_benefit: z.coerce.number().nonnegative(),
+  commentary: z.string().optional().default(''),
+});
+
+const entrySchema = z.discriminatedUnion('type', [riskSchema, issueSchema, changeSchema, continuationSchema, displacementSchema, benefitSchema]);
 
 export type ProposedEntry = z.infer<typeof entrySchema>;
 

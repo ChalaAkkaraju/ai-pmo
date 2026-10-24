@@ -58,6 +58,12 @@ const VALID_AGENT_TYPES: AgentType[] = [
   'portfolio_risk_reviewer',
   'status_reporter',
   'cost_controller',
+  'business_case_reviewer',
+  'waterline_ranker',
+  'gate_reviewer',
+  'continuation_reviewer',
+  'executive_briefing_writer',
+  'governance_health_reviewer',
 ];
 
 // 'auto' triggers the agent router (lib/agent-router.ts) which picks a

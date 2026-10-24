@@ -11,6 +11,7 @@
  * Called from app/api/agent/route.ts and from scripts/test-agent.ts.
  */
 
+import { loadEnterpriseState } from './cross-type';
 import { createSupabaseServiceClient } from './supabase';
 import { canRoleInvokeAgent, ROLE_DEFINITIONS } from './roles';
 import {
@@ -18,6 +19,7 @@ import {
   loadAgentPrompt,
   loadProjectState,
   loadPortfolioState,
+  loadItPortfolioState,
   loadWorkedExample,
 } from './agent-context';
 import { invokeModel } from './openrouter';
@@ -147,6 +149,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     variance_reports: [] as Array<Record<string, unknown>>,
   };
   let portfolioState = null as Awaited<ReturnType<typeof loadPortfolioState>>;
+  let itPortfolioState: string | null = null;
   if (input.project_code) {
     projectState = await loadProjectState(supabase, input.project_code);
     if (!projectState.project) {
@@ -157,8 +160,23 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       };
     }
   } else {
-    // Portfolio-scope call — ground with real portfolio data.
-    portfolioState = await loadPortfolioState(supabase);
+    // Portfolio-scope call — ground with real portfolio data. IT-scoped roles
+    // (and the IT portfolio agents) get the IT portfolio; revenue roles the
+    // revenue rollup. Never both — the two must not be summed.
+    const scope = (input.role as { project_types?: string[] }).project_types ?? [];
+    const itScoped = scope.includes('it') && !scope.includes('revenue');
+    const itAgent = ['waterline_ranker', 'business_case_reviewer', 'continuation_reviewer', 'gate_reviewer'].includes(String(input.agent_type));
+    const execAgent = ['executive_briefing_writer', 'governance_health_reviewer'].includes(String(input.agent_type));
+    const execRole = (input.role as { role_type?: string }).role_type === 'portfolio_executive';
+    if (execAgent || (execRole && !itAgent)) {
+      // Cross-type grounding: every PMO in its own terms, plus governance health. Never summed across types.
+      itPortfolioState = await loadEnterpriseState(supabase);
+    } else if (itScoped || itAgent) {
+      const fyMatch = /\bFY\s?(20\d{2})\b/i.exec(input.user_prompt) ?? /\b(20\d{2})\b/.exec(input.user_prompt);
+      itPortfolioState = await loadItPortfolioState(supabase, fyMatch ? Number(fyMatch[1]) : undefined);
+    } else {
+      portfolioState = await loadPortfolioState(supabase);
+    }
   }
 
   // ---- 7. Assemble user message ----
@@ -167,6 +185,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     workedExample,
     projectState,
     portfolioState,
+    itPortfolioState,
     concise: input.concise === true,
   });
 

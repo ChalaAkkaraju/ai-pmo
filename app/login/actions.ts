@@ -9,6 +9,7 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase';
 import { getSessionRole } from '@/lib/auth';
+import { homePathFor } from '@/lib/workspace';
 
 function backToLogin(message: string, next: string): never {
   const qs = new URLSearchParams({ error: message, next });
@@ -18,7 +19,7 @@ function backToLogin(message: string, next: string): never {
 export async function signIn(formData: FormData): Promise<void> {
   const username = String(formData.get('username') ?? '').trim().toLowerCase();
   const password = String(formData.get('password') ?? '');
-  const next = String(formData.get('next') ?? '') || '/dashboard';
+  const next = String(formData.get('next') ?? '').trim() || '/';
 
   if (!username || !password) {
     backToLogin('Enter your Login ID and password.', next);
@@ -62,7 +63,9 @@ export async function signIn(formData: FormData): Promise<void> {
   }
   if (resolved.role.must_change_password) redirect('/change-password');
   if (resolved.role.is_admin) redirect('/admin/users');
-  redirect(next);
+  // No explicit destination → each role's own home (revenue dashboard, IT portfolio, enterprise view).
+  const explicitNext = String(formData.get('next') ?? '').trim();
+  redirect(explicitNext || homePathFor(resolved.role));
 }
 
 export async function signOut(): Promise<void> {

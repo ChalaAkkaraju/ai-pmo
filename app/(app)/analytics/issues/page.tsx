@@ -24,7 +24,7 @@ export default async function IssuesAnalyticsPage() {
   const supabase = createSupabaseServiceClient();
   const [issuesRes, projectsRes] = await Promise.all([
     supabase.from('issues').select('issue_id, project_id, description, category, severity, status, owner, opened_week, closed_week, sla_weeks, cost_impact_usd, schedule_impact_days, escalated, root_cause').limit(10000),
-    supabase.from('projects').select('id, code, name, segment, status, current_week').limit(10000),
+    supabase.from('projects').select('id, code, name, segment, status, current_week').eq('project_type', 'revenue').limit(10000),
   ]);
   const issues = (issuesRes.data ?? []) as Array<{ issue_id: string; project_id: string; description: string; category: string; severity: string; status: string; owner: string | null; opened_week: number; closed_week: number | null; sla_weeks: number | null; cost_impact_usd: number | string | null; schedule_impact_days: number | null; escalated: boolean | null; root_cause: string | null }>;
   const projects = (projectsRes.data ?? []) as Array<{ id: string; code: string; name: string; segment: string; status: string; current_week: number }>;
