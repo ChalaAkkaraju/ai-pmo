@@ -30,7 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </nav>
           <div className="flex items-center gap-4 text-sm">
             {actor?.demo_switcher || role.demo_switcher
-              ? <RoleSwitcher currentId={role.id} currentName={role.name} currentLabel={definition.display_name} actorName={actor?.name ?? null} />
+              ? <RoleSwitcher currentId={role.id} currentName={role.name} currentLabel={definition.display_name} actorName={actor?.name ?? null} align="right" />
               : <span className="text-muted-foreground">{role.name}</span>}
             <form action={signOut}>
               <button type="submit" className="rounded-md border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground">Sign out</button>
