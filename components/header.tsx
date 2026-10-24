@@ -21,10 +21,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ResolvedRole } from '@/lib/role-context';
 import { signOut } from '@/app/login/actions';
+import { RoleSwitcher } from './role-switcher';
 import { canRoleCreateProjectType } from '@/lib/roles';
 import { homePathFor, isCapitalRole, isItRole, isRndRole, roleSees } from '@/lib/workspace';
 
 export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 }: { resolved: ResolvedRole; signedIn?: boolean; learnItems: Array<{ path: string; label: string }>; inboxCount?: number }) {
+  // Demo switcher (0052): the signed-in account may act as any role.
+  const canSwitch = Boolean(resolved.actor?.demo_switcher || resolved.role.demo_switcher);
   const canCreate = canRoleCreateProjectType(resolved.role.role_type, 'revenue');
   const canCreateIt = canRoleCreateProjectType(resolved.role.role_type, 'it');
   const canCreateRnd = canRoleCreateProjectType(resolved.role.role_type, 'rnd');
@@ -76,11 +79,17 @@ export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 
           </span>
         </Link>
 
-        {/* Center — who you are */}
+        {/* Center — who you are (a role menu for the demo switcher account) */}
+        {canSwitch ? (
+          <div className="justify-self-center">
+            <RoleSwitcher currentId={resolved.role.id} currentName={resolved.role.name} currentLabel={resolved.definition.display_name} actorName={resolved.actor?.name ?? null} />
+          </div>
+        ) : (
         <div className="flex flex-col items-center justify-self-center leading-tight">
           <span className="text-sm font-semibold text-foreground">{resolved.role.name}</span>
           <span className="text-[11px] text-muted-foreground">{resolved.definition.display_name}</span>
         </div>
+        )}
 
         {/* Right — nav */}
         <div className="flex items-center gap-4 justify-self-end text-sm">

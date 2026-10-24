@@ -7,8 +7,9 @@
  */
 
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase';
-import { getSessionRole } from '@/lib/auth';
+import { ACTING_COOKIE, getSessionRole } from '@/lib/auth';
 import { homePathFor } from '@/lib/workspace';
 
 function backToLogin(message: string, next: string): never {
@@ -71,5 +72,7 @@ export async function signIn(formData: FormData): Promise<void> {
 export async function signOut(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
+  // Forget any demo role choice, so the next sign-in starts from the address default.
+  (await cookies()).delete(ACTING_COOKIE);
   redirect('/login');
 }

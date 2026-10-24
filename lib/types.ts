@@ -103,6 +103,8 @@ export interface Role {
   is_admin: boolean;
   disabled: boolean;
   must_change_password: boolean;
+  /** Migration 0052: may act as any other role (demo role switcher). */
+  demo_switcher?: boolean;
   created_at: string;
 }
 
