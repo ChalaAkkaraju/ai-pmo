@@ -92,7 +92,7 @@ export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 
         )}
 
         {/* Right — nav */}
-        <div className="flex items-center gap-4 justify-self-end text-sm">
+        <div className="flex items-center gap-x-3 justify-self-end whitespace-nowrap text-sm">
           {canCreate && (
             <Link
               href={`/intake`}
