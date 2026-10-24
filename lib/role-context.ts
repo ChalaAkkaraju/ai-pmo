@@ -14,4 +14,6 @@ export interface ResolvedRole {
   role: Role;
   /** Display name + agent permissions + dashboard sections, from lib/roles.ts. */
   definition: ReturnType<typeof getRoleDefinition>;
+  /** Set when a demo switcher is acting as `role`: the role actually signed in. */
+  actor?: Role;
 }

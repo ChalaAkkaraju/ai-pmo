@@ -30,12 +30,18 @@ export function isRndRole(role: Role): boolean {
   return role.role_type.startsWith('rnd_');
 }
 
+/** Roles whose home is the capital workspace. */
+export function isCapitalRole(role: Role): boolean {
+  return role.role_type.startsWith('capital_');
+}
+
 /** Where the role's "home" dashboard lives. */
 export function homePathFor(role: Role): string {
   if (role.role_type === 'admin') return '/admin';
   if (role.role_type === 'portfolio_executive') return '/portfolio/enterprise';
   if (isItRole(role)) return '/portfolio/it';
   if (isRndRole(role)) return '/portfolio/rnd';
+  if (isCapitalRole(role)) return '/portfolio/capital';
   return '/dashboard';
 }
 

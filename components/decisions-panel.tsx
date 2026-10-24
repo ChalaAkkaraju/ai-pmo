@@ -24,6 +24,7 @@ export interface GovernanceView {
 const KIND_LABELS: Record<string, string> = {
   envelope_allocation: 'Envelope allocation', waterline_approval: 'Waterline approval', continuation: 'Continuation', commit_baseline: 'Commit baseline (SG1)',
   change_order: 'Change order', reserve_draw: 'Reserve draw', hold: 'Hold', cancel: 'Cancel',
+  gate_decision: 'Gate release', afe_approval: 'AFE sanction', supplementary_afe: 'Supplementary AFE',
 };
 
 export function bodyLabel(bodies: DecisionBody[], key: string): string {
@@ -108,14 +109,17 @@ export function DecisionsPanel({ records, gov, projectCodes, projectStatus, titl
 const KIND_TILE: Record<string, string> = {
   envelope_allocation: 'bg-slate-100 text-slate-900', waterline_approval: 'bg-teal-100 text-teal-950', continuation: 'bg-sky-100 text-sky-950', commit_baseline: 'bg-indigo-100 text-indigo-950',
   change_order: 'bg-amber-100 text-amber-950', reserve_draw: 'bg-amber-100 text-amber-950', hold: 'bg-orange-100 text-orange-950', cancel: 'bg-red-100 text-red-950',
+  gate_decision: 'bg-sky-100 text-sky-950', afe_approval: 'bg-indigo-100 text-indigo-950', supplementary_afe: 'bg-rose-100 text-rose-950',
 };
 const KIND_BAR: Record<string, string> = {
   envelope_allocation: 'border-l-slate-400', waterline_approval: 'border-l-teal-500', continuation: 'border-l-sky-500', commit_baseline: 'border-l-indigo-500',
   change_order: 'border-l-amber-500', reserve_draw: 'border-l-amber-500', hold: 'border-l-orange-500', cancel: 'border-l-red-500',
+  gate_decision: 'border-l-sky-500', afe_approval: 'border-l-indigo-500', supplementary_afe: 'border-l-rose-500',
 };
 const KIND_CHIP: Record<string, string> = {
   envelope_allocation: 'bg-slate-100 text-slate-800', waterline_approval: 'bg-teal-100 text-teal-900', continuation: 'bg-sky-100 text-sky-900', commit_baseline: 'bg-indigo-100 text-indigo-900',
   change_order: 'bg-amber-100 text-amber-900', reserve_draw: 'bg-amber-100 text-amber-900', hold: 'bg-orange-100 text-orange-900', cancel: 'bg-red-100 text-red-900',
+  gate_decision: 'bg-sky-100 text-sky-900', afe_approval: 'bg-indigo-100 text-indigo-900', supplementary_afe: 'bg-rose-100 text-rose-900',
 };
 
 function DecisionCard({ r, gov, code, showProject, mine, projectStatus }: { r: DecisionRecord; gov: GovernanceView; code: string | null; showProject: boolean; mine: boolean; projectStatus?: Record<string, string> }) {
@@ -244,7 +248,7 @@ function ProposalSummary({ r, projectStatus }: { r: DecisionRecord; projectStatu
         </ul>
       ) : (
         <dl className="mt-1.5 grid gap-x-4 gap-y-1 sm:grid-cols-2">
-          {r.amount != null && <div className="flex justify-between gap-2"><dt className="text-muted-foreground">{r.decision_kind === 'commit_baseline' ? 'Baseline to lock' : 'Amount'}</dt><dd className="font-medium tabular-nums">{fmtMoney(r.amount)}</dd></div>}
+          {r.amount != null && <div className="flex justify-between gap-2"><dt className="text-muted-foreground">{r.decision_kind === 'commit_baseline' ? 'Baseline to lock' : r.decision_kind === 'afe_approval' ? 'AFE amount' : r.decision_kind === 'supplementary_afe' ? 'Revised total AFE' : 'Amount'}</dt><dd className="font-medium tabular-nums">{fmtMoney(r.amount)}</dd></div>}
           {typeof p.capex_share_pct === 'number' && <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Capital share</dt><dd className="font-medium tabular-nums">{p.capex_share_pct}% <span className="font-normal text-muted-foreground">({100 - p.capex_share_pct}% expensed)</span></dd></div>}
           {(() => { const cs = (p.criteria_scores as { must_meet?: Array<{ criterion: string; met: boolean }> } | null)?.must_meet; if (!cs?.length) return null; const met = cs.filter((c) => c.met).length; return <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Exit criteria claimed</dt><dd className={`font-medium tabular-nums ${met < cs.length ? 'text-amber-700' : 'text-emerald-700'}`}>{met}/{cs.length}{met < cs.length ? ` — unmet: ${cs.filter((c) => !c.met).map((c) => c.criterion).join(', ')}` : ''}</dd></div>; })()}
           {Object.entries(p).filter(([k, v]) => !['decisions', 'seed_ref', 'bucket', 'change_order_id', 'allocations', 'capex_share_pct', 'stage_seq', 'criteria_scores'].includes(k) && (typeof v === 'string' || typeof v === 'number')).map(([k, v]) => (

@@ -68,10 +68,24 @@ export interface ItFinancials {
   reserveDrawnPct: number | null;
 }
 
+export interface CapitalFinancials {
+  fiscalYear: number;
+  envelope: number;            // Σ allocated across the four categories
+  sanctioned: number;          // appropriated (AFE + supplementaries) on projects in this plan year
+  inFel: number;               // estimates of requests still in front-end loading
+  unallocated: number;
+  sanctionedPct: number | null;
+  withinTolerancePct: number | null;
+  supplementaryOpen: number;
+  supplementaryOpenAmount: number;
+  inServiceThisYear: number;
+}
+
 export interface EnterpriseView {
   fiscalYear: number;
   revenueFin: RevenueFinancials;
   itFin: ItFinancials;
+  capitalFin: CapitalFinancials;
   types: TypeSummary[];
   attention: AttentionItem[];
   movements: MovementRow[];
@@ -225,18 +239,54 @@ export async function loadEnterpriseView(sb: SupabaseClient): Promise<Enterprise
   ];
   const rndKillRate = rnd.length ? Math.round((rndTerminated / rnd.length) * 1000) / 10 : null;
 
+  // Capital mix by where the money stands: in front-end loading (no AFE yet),
+  // executing against an AFE, in service / closed, and cancelled. The headline
+  // is the share of sanctioned projects whose forecast is inside the
+  // supplementary tolerance — the capital PMO's own test, not CPI or margin.
+  const cap = projects.filter((p) => p.project_type === 'capital');
+  const capCase = (p: P) => (p.business_case ?? {}) as { eac?: number | null };
+  const capFel = cap.filter((p) => ['proposed', 'approved', 'deferred'].includes(p.lifecycle_status ?? '') && !(Number(p.approved_budget_current) > 0)).length;
+  const capExec = cap.filter((p) => ['active', 'on_hold'].includes(p.lifecycle_status ?? '') || (Number(p.approved_budget_current) > 0 && !['closed', 'cancelled'].includes(p.lifecycle_status ?? ''))).length;
+  const capClosed = cap.filter((p) => p.lifecycle_status === 'closed').length;
+  const capCancelled = cap.filter((p) => p.lifecycle_status === 'cancelled').length;
+  const capSanctioned = cap.filter((p) => Number(p.approved_budget_current) > 0 && p.lifecycle_status !== 'cancelled');
+  const capOver = capSanctioned.filter((p) => Number(capCase(p).eac ?? 0) > Number(p.approved_budget_current) * 1.1);
+  for (const p of capOver) attention.push({ type: 'capital', code: p.code, name: p.name, signal: 'Forecast over AFE tolerance', detail: `EAC ${Math.round(((Number(capCase(p).eac) - Number(p.approved_budget_current)) / Number(p.approved_budget_current)) * 100)}% over the AFE`, since: null, tone: 'bad', href: href(p.code) });
+  const capMix = [
+    { key: 'fel', label: 'In FEL (pre-AFE)', n: capFel, cls: 'bg-slate-400' },
+    { key: 'exec', label: 'Executing on AFE', n: capExec, cls: 'bg-blue-500' },
+    { key: 'closed', label: 'In service / closed', n: capClosed, cls: 'bg-emerald-500' },
+    { key: 'cancelled', label: 'Cancelled', n: capCancelled, cls: 'bg-red-300' },
+  ].filter((m) => m.n > 0);
+
   const types: TypeSummary[] = [
     { type: 'revenue', label: 'Revenue', live: true, total: rev.length, mix: revMix, attention: attention.filter((a) => a.type === 'revenue').length, inScope: revActive.length, inScopeLabel: 'active projects', headline: revRated ? `${Math.round((revHealthy / revRated) * 100)}%` : '—', headlineSub: `of ${revRated} rated active projects on cost and schedule`, href: '/dashboard' },
     { type: 'it', label: 'IT', live: true, total: it.length, mix: itMix, attention: attention.filter((a) => a.type === 'it').length, inScope: it.length, inScopeLabel: 'projects', headline: itRunning.length ? `${Math.round((itOnTrack / itRunning.length) * 100)}%` : '—', headlineSub: `of ${itRunning.length} committed projects running (not held)`, href: '/portfolio/it' },
-    // Illustrative placeholders until Phases 2 and 3 land — flagged as demo data in the UI.
-    { type: 'capital', label: 'Capital', live: false, phase: 'Phase 2', total: 22, mix: [
-      { key: 'study', label: 'FEL 1–2 study', n: 6, cls: 'bg-slate-400' }, { key: 'feed', label: 'FEED', n: 4, cls: 'bg-blue-500' }, { key: 'sanctioned', label: 'Sanctioned', n: 9, cls: 'bg-emerald-500' }, { key: 'commissioning', label: 'Commissioning', n: 3, cls: 'bg-sky-400' },
-    ], attention: 4, inScope: 22, inScopeLabel: 'projects', headline: '82%', headlineSub: 'of sanctioned projects within AFE tolerance (illustrative)', href: '#' },
+    { type: 'capital', label: 'Capital', live: true, total: cap.length, mix: capMix, attention: attention.filter((a) => a.type === 'capital').length, inScope: cap.length, inScopeLabel: 'projects', headline: capSanctioned.length ? `${Math.round(((capSanctioned.length - capOver.length) / capSanctioned.length) * 100)}%` : '—', headlineSub: `of ${capSanctioned.length} sanctioned projects forecast within AFE tolerance (10%)`, href: '/portfolio/capital' },
     { type: 'rnd', label: 'R&D / NPI', live: true, total: rnd.length, mix: rndMix, attention: attention.filter((a) => a.type === 'rnd').length, inScope: rnd.length, inScopeLabel: 'programmes', headline: rndKillRate === null ? '—' : `${rndKillRate}%`, headlineSub: rndKillRate === null ? 'no programmes in scope' : `terminated at a gate — in R&D a healthy rate, not a failure count`, href: '/portfolio/rnd' },
   ];
+  // ---- Capital — funding position, own terms ---------------------------------
+  const capAllocs = ((allocRes.data ?? []) as Array<{ project_type: string; fiscal_year: number; bucket: string; allocated_amount: number; reserve_amount: number }>).filter((a) => a.project_type === 'capital');
+  const capYears = Array.from(new Set(capAllocs.map((a) => a.fiscal_year))).sort();
+  const capFy = capYears.filter((y) => y <= today.getFullYear()).slice(-1)[0] ?? capYears[0] ?? today.getFullYear();
+  const capEnvelope = capAllocs.filter((a) => a.fiscal_year === capFy).reduce((n, a) => n + Number(a.allocated_amount), 0);
+  const capPlan = cap.filter((p) => p.fiscal_year === capFy && p.lifecycle_status !== 'cancelled');
+  const capSanctionedAmt = capPlan.filter((p) => Number(p.approved_budget_current) > 0).reduce((n, p) => n + Number(p.approved_budget_current), 0);
+  const capFelAmt = capPlan.filter((p) => !(Number(p.approved_budget_current) > 0)).reduce((n, p) => n + Number(p.requested_budget ?? 0), 0);
+  const capSupp = openRecs.filter((r) => r.project_type === 'capital' && r.status === 'proposed' && r.decision_kind === 'supplementary_afe');
+  const capitalFin: CapitalFinancials = {
+    fiscalYear: capFy, envelope: capEnvelope, sanctioned: capSanctionedAmt, inFel: capFelAmt,
+    unallocated: Math.max(0, capEnvelope - capSanctionedAmt - capFelAmt),
+    sanctionedPct: capEnvelope > 0 ? (capSanctionedAmt / capEnvelope) * 100 : null,
+    withinTolerancePct: capSanctioned.length ? ((capSanctioned.length - capOver.length) / capSanctioned.length) * 100 : null,
+    supplementaryOpen: capSupp.length,
+    supplementaryOpenAmount: capSupp.reduce((n, r) => { const pp = (r as { amount: number | null }).amount; return n + Number(pp ?? 0); }, 0),
+    inServiceThisYear: cap.filter((p) => { const d = (p.business_case as { in_service_date?: string | null } | null)?.in_service_date; return !!d && d.slice(0, 4) === String(today.getFullYear()); }).length,
+  };
+
   const toneRank = { bad: 0, warn: 1, info: 2 } as const;
   attention.sort((a, b) => toneRank[a.tone] - toneRank[b.tone] || (a.since ?? '') .localeCompare(b.since ?? ''));
-  return { fiscalYear, revenueFin, itFin, types, attention, movements, movementMatrix: Array.from(mm.values()), exposures, recentDecisions };
+  return { fiscalYear, revenueFin, itFin, capitalFin, types, attention, movements, movementMatrix: Array.from(mm.values()), exposures, recentDecisions };
 }
 
 // ---- Governance health — how the delegation of authority is behaving ---------
@@ -329,7 +379,7 @@ export async function loadEnterpriseState(sb: SupabaseClient): Promise<string> {
   const L: string[] = [];
   L.push(`# Enterprise portfolio data — LIVE and AUTHORITATIVE · as of ${new Date().toISOString().slice(0, 10)} · next fiscal year FY${v.fiscalYear}`);
   L.push('');
-  L.push('RULE OF THIS LAYER: state each PMO in its own terms. Never add, rank or compare money or performance indices across project types. Capital and R&D / NPI are NOT live — any figures shown for them in the app are illustrative placeholders; say "not yet on the platform" for them.');
+  L.push('RULE OF THIS LAYER: state each PMO in its own terms. Never add, rank or compare money or performance indices across project types. All four PMOs (Revenue, IT, Capital, R&D / NPI) are live on the platform; a PMO marked not live is not yet on it — say so rather than inventing figures.');
   L.push('');
   L.push('## PMOs on the platform');
   for (const t of v.types) {
@@ -344,6 +394,10 @@ export async function loadEnterpriseState(sb: SupabaseClient): Promise<string> {
   L.push(`## IT — funding position FY${v.itFin.fiscalYear} (own terms)`);
   const f = v.itFin;
   L.push(`- envelope ${m(f.envelope)} · reserve ${m(f.reserve)} · committed at SG1 ${m(f.committed)} (${p(f.committedPct, 0)} of envelope) · approved awaiting commit ${m(f.approvedUncommitted)} · unallocated ${m(f.unallocated)} · capital share of committed ${p(f.capexSharePct, 0)} · reserve drawn ${p(f.reserveDrawnPct, 0)}`);
+  L.push('');
+  const cf = v.capitalFin;
+  L.push(`## Capital — funding position FY${cf.fiscalYear} capital plan (own terms)`);
+  L.push(`- envelope ${m(cf.envelope)} · sanctioned under AFE ${m(cf.sanctioned)} (${p(cf.sanctionedPct, 0)} of envelope) · still in front-end loading ${m(cf.inFel)} · unallocated ${m(cf.unallocated)} · sanctioned projects within AFE tolerance ${p(cf.withinTolerancePct, 0)} · supplementary AFEs open ${cf.supplementaryOpen} (revised totals ${m(cf.supplementaryOpenAmount)}) · going into service this year ${cf.inServiceThisYear}`);
   L.push('');
   L.push('## What needs attention — counts by signal');
   for (const t of v.types.filter((x) => x.live)) {

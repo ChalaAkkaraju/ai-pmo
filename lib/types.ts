@@ -28,7 +28,13 @@ export type RoleType =
   | 'rnd_sponsor'
   | 'rnd_gatekeeper'
   | 'rnd_board_member'
-  | 'rnd_finance';
+  | 'rnd_finance'
+  // Capital cast (migration 0051)
+  | 'capital_portfolio_manager'
+  | 'capital_pm'
+  | 'capital_sponsor'
+  | 'capital_committee_member'
+  | 'capital_finance';
 
 /**
  * Project population (migration 0045). Revenue = customer-facing EPC projects
@@ -47,6 +53,13 @@ export type ItCategory = 'design_development' | 'deployment' | 'maintenance_upgr
  * platform_research is judged on feasibility and knowledge, not NPV.
  */
 export type RndCategory = 'new_product' | 'derivative' | 'platform_research';
+
+/**
+ * Capital categories (migration 0051). major runs full front-end loading
+ * (FEL1 -> FEL2 -> FEL3, AFE at the end of FEL3); minor collapses FEL into a
+ * single Define stage for small, well-understood work.
+ */
+export type CapitalCategory = 'major' | 'minor';
 
 /** Portfolio lifecycle, distinct from delivery `status`. */
 /**
@@ -90,6 +103,8 @@ export interface Role {
   is_admin: boolean;
   disabled: boolean;
   must_change_password: boolean;
+  /** Migration 0052: may act as any other role (demo role switcher). */
+  demo_switcher?: boolean;
   created_at: string;
 }
 
@@ -268,7 +283,12 @@ export type DecisionKind =
   | 'change_order'
   | 'reserve_draw'
   | 'hold'
-  | 'cancel';
+  | 'cancel'
+  // R&D (0050) and capital (0051): a non-commit gate that releases a stage / study budget
+  | 'gate_decision'
+  // Capital (0051)
+  | 'afe_approval'
+  | 'supplementary_afe';
 
 export interface DecisionBody {
   id: string;
@@ -502,7 +522,11 @@ export type AgentType =
   | 'executive_briefing_writer'
   | 'governance_health_reviewer'
   // R&D agents (migration 0050)
-  | 'business_case_reconciler';
+  | 'business_case_reconciler'
+  // Capital agents (migration 0051)
+  | 'settlement_readiness_reviewer'
+  | 'afe_reviewer'
+  | 'supplementary_afe_reviewer';
 
 export interface AgentOutput {
   id: string;

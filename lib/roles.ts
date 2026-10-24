@@ -345,6 +345,55 @@ export const ROLE_DEFINITIONS: Record<RoleType, RoleDefinition> = {
     dashboard_sections: ['projects_overview', 'variance_reports'],
     can_write: true,
   },
+  // --- Capital (migration 0051) ---------------------------------------------
+  // Capital spend builds an asset, so Finance here owns the fixed-asset
+  // question (capex or opex, which asset, when it starts depreciating) and the
+  // plant manager — the owner of the asset — is the sponsor.
+  capital_portfolio_manager: {
+    type: 'capital_portfolio_manager',
+    display_name: 'Capital Portfolio Manager',
+    description:
+      'Runs the capital PMO: the annual envelope by category, the AFE pipeline and front-end loading discipline, the asset chain from appropriation to capitalisation, and settlement readiness ahead of every in-service date. Sees capital projects only.',
+    allowed_agents: ['afe_reviewer', 'settlement_readiness_reviewer', 'supplementary_afe_reviewer', 'gate_reviewer', 'portfolio_risk_reviewer', 'status_reporter', 'lessons_learned_synthesiser'],
+    dashboard_sections: ['projects_overview', 'risks', 'issues', 'portfolio_patterns', 'lessons_learned'],
+    can_write: true,
+  },
+  capital_pm: {
+    type: 'capital_pm',
+    display_name: 'Capital Project Manager',
+    description:
+      'Delivers a capital project through FEL and execution: estimate maturity, the AFE package, forecast against the AFE, and the handover that puts the asset in service. Raises a supplementary AFE when the forecast breaks tolerance; does not approve it.',
+    allowed_agents: ['charter_drafter', 'stakeholder_analyst', 'wbs_builder', 'schedule_reasoner', 'budget_builder', 'communications_planner', 'risk_analyst', 'issue_logger', 'status_reporter', 'variance_analyst', 'gate_reviewer', 'afe_reviewer', 'supplementary_afe_reviewer', 'settlement_readiness_reviewer', 'closeout_reporter'],
+    dashboard_sections: ['projects_overview', 'risks', 'issues', 'variance_reports'],
+    can_write: true,
+  },
+  capital_sponsor: {
+    type: 'capital_sponsor',
+    display_name: 'Plant Manager (Capital Sponsor)',
+    description:
+      'Owns the site and the asset being built. Sanctions AFEs up to $1M and small FEL study budgets, and holds or stops projects before the AFE. Above that the plant manager sponsors but does not decide.',
+    allowed_agents: ['afe_reviewer', 'supplementary_afe_reviewer', 'gate_reviewer', 'status_reporter', 'risk_analyst'],
+    dashboard_sections: ['projects_overview', 'risks'],
+    can_write: true,
+  },
+  capital_committee_member: {
+    type: 'capital_committee_member',
+    display_name: 'Capital Committee',
+    description:
+      'Chairs the capital committee and holds the business-unit delegation: AFEs between $1M and $10M as BU head, and above $10M with the committee. Sets the annual envelope by category and decides post-AFE cancellations, which write off the AuC balance.',
+    allowed_agents: ['afe_reviewer', 'supplementary_afe_reviewer', 'gate_reviewer', 'portfolio_risk_reviewer', 'status_reporter'],
+    dashboard_sections: ['projects_overview', 'portfolio_patterns'],
+    can_write: true,
+  },
+  capital_finance: {
+    type: 'capital_finance',
+    display_name: 'Finance (Fixed Assets)',
+    description:
+      'Concurrence, not approval. Confirms the capex / opex classification and the settlement basis on every AFE and supplementary, owns the settlement rules and the fixed-asset register, and concurs on the write-off when a project is cancelled after its AFE.',
+    allowed_agents: ['settlement_readiness_reviewer', 'afe_reviewer', 'supplementary_afe_reviewer', 'cost_controller', 'gate_reviewer'],
+    dashboard_sections: ['projects_overview', 'variance_reports'],
+    can_write: true,
+  },
   admin: {
     type: 'admin',
     display_name: 'Administrator',
@@ -401,6 +450,11 @@ export const ROLE_SHORT_LABELS: Record<RoleType, string> = {
   rnd_gatekeeper: 'Gatekeeper (R&D)',
   rnd_board_member: 'R&D Board',
   rnd_finance: 'Finance (R&D)',
+  capital_portfolio_manager: 'Capital Portfolio Manager',
+  capital_pm: 'Capital PM',
+  capital_sponsor: 'Plant Manager',
+  capital_committee_member: 'Capital Committee',
+  capital_finance: 'Finance (Fixed Assets)',
 };
 
 /**
@@ -433,6 +487,11 @@ export const DEFAULT_ROLE_PROJECT_TYPES: Record<RoleType, ProjectType[]> = {
   rnd_gatekeeper: ['rnd'],
   rnd_board_member: ['rnd'],
   rnd_finance: ['rnd'],
+  capital_portfolio_manager: ['capital'],
+  capital_pm: ['capital'],
+  capital_sponsor: ['capital'],
+  capital_committee_member: ['capital'],
+  capital_finance: ['capital'],
 };
 
 /** Roles that may create a project of the given type. */
@@ -443,6 +502,9 @@ export function canRoleCreateProjectType(roleType: RoleType, projectType: Projec
   // business sponsor can open one on the platform — an idea with no owner is
   // what clogs a pipeline.
   if (projectType === 'rnd') return roleType === 'rnd_portfolio_manager' || roleType === 'rnd_pm' || roleType === 'rnd_sponsor';
+  // A capital request needs an owner for the asset: the PMO, a capital PM or
+  // the plant manager whose site it is.
+  if (projectType === 'capital') return roleType === 'capital_portfolio_manager' || roleType === 'capital_pm' || roleType === 'capital_sponsor';
   return false;
 }
 

@@ -24,7 +24,7 @@ export default async function AccessLayout({ children }: AccessLayoutProps) {
     notFound();
   }
   const learnItems = await getVisibleLearnItems(resolved);
-  const inboxCount = roleSees(resolved.role, 'it') ? (await loadMyInbox(createSupabaseServiceClient(), resolved.role)).records.length : 0;
+  const inboxCount = (['it', 'rnd', 'capital'] as const).some((t) => roleSees(resolved.role, t)) && resolved.role.role_type !== 'portfolio_executive' ? (await loadMyInbox(createSupabaseServiceClient(), resolved.role)).records.length : 0;
 
   return (
     <div className="min-h-screen flex flex-col">

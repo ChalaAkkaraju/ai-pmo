@@ -329,6 +329,9 @@ const AGENT_LABELS: Record<AgentType, string> = {
   executive_briefing_writer: 'Executive Briefing Writer',
   governance_health_reviewer: 'Governance Health Reviewer',
   business_case_reconciler: 'Business Case Reconciler',
+  settlement_readiness_reviewer: 'Settlement Readiness Reviewer',
+  afe_reviewer: 'AFE Reviewer',
+  supplementary_afe_reviewer: 'Supplementary AFE Reviewer',
 };
 
 /** Pick n items in a seeded random order. Seed 0 = the pool's own order, so the
@@ -357,6 +360,9 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, o
   // apart by the agent only R&D has: the Business Case Reconciler.
   const isRndRole = has('business_case_reconciler');
   const isRndProject = projectType === 'rnd' || (projectType == null && !!projectCode && /^NW-RD-/.test(projectCode));
+  // Capital roles are told apart the same way: by the agents only capital has.
+  const isCapitalRole = has('afe_reviewer') || has('settlement_readiness_reviewer');
+  const isCapitalProject = projectType === 'capital' || (projectType == null && !!projectCode && /^NW-CAP-/.test(projectCode));
   const create: Array<{ label: string; prompt: string }> = [];
   if (projectCode && canWrite) {
     if (has('risk_analyst')) create.push({ label: '\uFF0B Raise a risk', prompt: 'Log a risk: [describe the risk \u2014 cause \u2192 event \u2192 consequence]' });
@@ -391,7 +397,25 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, o
     ['closeout_reporter', 'Draft the closeout executive summary.'],
   ];
   let ask: string[];
-  if (projectCode && isRndProject) {
+  if (projectCode && isCapitalProject) {
+    ask = ['Where does this project stand \u2014 FEL stage, AFE, forecast against it, and what needs my attention?'];
+    if (has('settlement_readiness_reviewer')) ask.push('Is this project ready to settle and capitalise at its in-service date? List what blocks it.');
+    if (has('afe_reviewer')) ask.push('Review the AFE package \u2014 is the estimate mature enough, and is the capex classification right?');
+    if (has('supplementary_afe_reviewer')) ask.push('Does the forecast need a supplementary AFE, and who has to approve it at the revised total?');
+    if (has('risk_analyst')) ask.push('What are the top risks to the in-service date, and why?');
+    if (has('gate_reviewer')) ask.push('Prepare the package for the next FEL gate and score the exit criteria.');
+    ask.push('Walk me through the asset chain \u2014 appropriated, committed, actual, settled, capitalised. Where is it stuck?');
+    ask.push('Summarise this project for the capital committee in five bullets.');
+  } else if (!projectCode && isCapitalRole) {
+    ask = ['Which capital decisions are waiting for me, and what should I look at before deciding?'];
+    if (has('supplementary_afe_reviewer')) ask.push('Which projects are forecast more than 10% over their AFE without a supplementary raised?');
+    if (has('settlement_readiness_reviewer')) ask.push('Which projects will miss capitalisation this year if nothing changes, and why?');
+    ask.push('How much of this year\u2019s capital envelope is sanctioned, and how much is still in front-end loading?');
+    ask.push('Which assets are in service but still sitting in AuC?');
+    ask.push('Which in-service dates have slipped into next fiscal year?');
+    if (has('afe_reviewer')) ask.push('Which AFE requests are coming up, and are their estimates at the right class for sanction?');
+    ask.push('Where is spend being expensed rather than capitalised, against what the AFE assumed?');
+  } else if (projectCode && isRndProject) {
     ask = ['Where does this programme stand \u2014 stage, money released at the last gate, burn against that gate budget, and what needs my attention?'];
     if (has('business_case_reconciler')) ask.push('Does the business case approved at the last gate still hold? Compare the versions and show what drifted.');
     if (has('gate_reviewer')) ask.push('Prepare the package for the next gate and score the exit criteria.');
@@ -639,7 +663,7 @@ export function FloatingAgentWidget({
     }
   }
 
-  const contextLabel = projectCode ? `${projectCode}${projectType === 'it' ? ' · IT project' : projectType === 'rnd' ? ' · R&D programme' : ''}` : pathname?.startsWith('/portfolio/enterprise') ? 'Enterprise · all PMOs' : pathname?.startsWith('/portfolio/it') ? 'IT portfolio' : pathname?.startsWith('/portfolio/rnd') ? 'R&D portfolio' : 'Portfolio';
+  const contextLabel = projectCode ? `${projectCode}${projectType === 'it' ? ' · IT project' : projectType === 'rnd' ? ' · R&D programme' : projectType === 'capital' ? ' · Capital project' : ''}` : pathname?.startsWith('/portfolio/enterprise') ? 'Enterprise · all PMOs' : pathname?.startsWith('/portfolio/it') ? 'IT portfolio' : pathname?.startsWith('/portfolio/rnd') ? 'R&D portfolio' : pathname?.startsWith('/portfolio/capital') ? 'Capital portfolio' : 'Portfolio';
   const dropdownOptions: AgentTypeOrAuto[] = canWrite ? ['auto', ...allowedAgents] : [...allowedAgents];
 
   // Popped-out brief panels render alongside the widget — they persist

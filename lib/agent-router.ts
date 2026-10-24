@@ -65,6 +65,12 @@ const AGENT_DESCRIPTIONS: Record<AgentType, string> = {
     'Enterprise / all PMOs: audits the governance itself from the decision records — cycle times per body, quorum discipline, returned / rejected ratio, holds expiring without action, continuations unrequested, self-approval. Answers "is the delegation of authority working?".',
   business_case_reconciler:
     'R&D / NPI: compares the business case as it stands against the version approved at the commit gate — NPV, peak sales, launch date, development cost, and the technical and commercial success probabilities — and says whether the programme would still be funded on today\'s numbers. Asked BETWEEN gates, which is the point: the same question at the next gate arrives after the money is spent.',
+  settlement_readiness_reviewer:
+    'Capital: checks whether a capital project (or the capital portfolio) is ready to settle and capitalise — settlement rules on every WBS carrying cost, rules totalling 100%, asset records before handover, in-service dates slipping across a year end, AuC ageing after in-service, expensed share against the AFE assumption. Answers "will this asset make it onto the register this year?".',
+  afe_reviewer:
+    'Capital: reviews an AFE (authorisation for expenditure) package at FEL3 before sanction — estimate class and contingency, the capex / opex classification, NPV / IRR on the definitive estimate, in-service date and settlement basis — and names the approving body for the amount. Also reviews FEL1 / FEL2 study-budget requests.',
+  supplementary_afe_reviewer:
+    'Capital: judges whether a forecast overrun needs a supplementary AFE (more than 10% over appropriated), sizes it on the revised total, says which body must approve it when the revised total crosses a threshold, and separates scope growth from estimate error and escalation. Also: "are we over our AFE", "do we need more money approved".',
 };
 
 let cachedClient: OpenAI | null = null;

@@ -21,13 +21,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ResolvedRole } from '@/lib/role-context';
 import { signOut } from '@/app/login/actions';
+import { RoleSwitcher } from './role-switcher';
 import { canRoleCreateProjectType } from '@/lib/roles';
-import { homePathFor, isItRole, isRndRole, roleSees } from '@/lib/workspace';
+import { homePathFor, isCapitalRole, isItRole, isRndRole, roleSees } from '@/lib/workspace';
 
 export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 }: { resolved: ResolvedRole; signedIn?: boolean; learnItems: Array<{ path: string; label: string }>; inboxCount?: number }) {
+  // Demo switcher (0052): the signed-in account may act as any role.
+  const canSwitch = Boolean(resolved.actor?.demo_switcher || resolved.role.demo_switcher);
   const canCreate = canRoleCreateProjectType(resolved.role.role_type, 'revenue');
   const canCreateIt = canRoleCreateProjectType(resolved.role.role_type, 'it');
   const canCreateRnd = canRoleCreateProjectType(resolved.role.role_type, 'rnd');
+  const canCreateCapital = canRoleCreateProjectType(resolved.role.role_type, 'capital');
+  const seesCapital = roleSees(resolved.role, 'capital');
+  const capitalHome = isCapitalRole(resolved.role);
   const seesIt = roleSees(resolved.role, 'it');
   const seesRnd = roleSees(resolved.role, 'rnd');
   const seesRevenue = roleSees(resolved.role, 'revenue');
@@ -68,16 +74,22 @@ export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 
           <span className="flex flex-col leading-tight">
             <span className="text-base font-bold tracking-tight text-foreground">AI PMO</span>
             <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              {execHome ? 'Enterprise view · all PMOs' : itHome ? 'IT PMO workspace' : rndHome ? 'R&D / NPI workspace' : 'for Project Management Office'}
+              {execHome ? 'Enterprise view · all PMOs' : itHome ? 'IT PMO workspace' : rndHome ? 'R&D / NPI workspace' : capitalHome ? 'Capital workspace' : 'for Project Management Office'}
             </span>
           </span>
         </Link>
 
-        {/* Center — who you are */}
+        {/* Center — who you are (a role menu for the demo switcher account) */}
+        {canSwitch ? (
+          <div className="justify-self-center">
+            <RoleSwitcher currentId={resolved.role.id} currentName={resolved.role.name} currentLabel={resolved.definition.display_name} actorName={resolved.actor?.name ?? null} />
+          </div>
+        ) : (
         <div className="flex flex-col items-center justify-self-center leading-tight">
           <span className="text-sm font-semibold text-foreground">{resolved.role.name}</span>
           <span className="text-[11px] text-muted-foreground">{resolved.definition.display_name}</span>
         </div>
+        )}
 
         {/* Right — nav */}
         <div className="flex items-center gap-4 justify-self-end text-sm">
@@ -105,16 +117,31 @@ export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 
               + Submit R&amp;D programme
             </Link>
           )}
+          {canCreateCapital && (
+            <Link
+              href={`/intake/capital`}
+              className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90"
+            >
+              + Submit capital project
+            </Link>
+          )}
           {seesIt && seesRevenue && (
             <>
               {execHome && <Link href={`/dashboard`} className="text-muted-foreground transition hover:text-foreground">Revenue</Link>}
               <Link href={`/portfolio/it`} className="text-muted-foreground transition hover:text-foreground">IT portfolio</Link>
               {seesRnd && <Link href={`/portfolio/rnd`} className="text-muted-foreground transition hover:text-foreground">R&amp;D portfolio</Link>}
+              {seesCapital && <Link href={`/portfolio/capital`} className="text-muted-foreground transition hover:text-foreground">Capital portfolio</Link>}
               <Link href={`/portfolio/enterprise`} className="text-muted-foreground transition hover:text-foreground">Enterprise</Link>
             </>
           )}
           {seesRnd && !execHome && !seesIt && (
             <Link href={`/portfolio/rnd#decisions`} title="Decisions waiting for you" className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${inboxCount > 0 ? 'bg-violet-600 text-white hover:bg-violet-700' : 'border text-muted-foreground hover:text-foreground'}`}>
+              For you
+              <span className={`rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${inboxCount > 0 ? 'bg-white/20' : 'bg-muted'}`}>{inboxCount}</span>
+            </Link>
+          )}
+          {seesCapital && !execHome && !seesIt && !seesRnd && (
+            <Link href={`/portfolio/capital#decisions`} title="Decisions waiting for you" className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${inboxCount > 0 ? 'bg-blue-600 text-white hover:bg-blue-700' : 'border text-muted-foreground hover:text-foreground'}`}>
               For you
               <span className={`rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${inboxCount > 0 ? 'bg-white/20' : 'bg-muted'}`}>{inboxCount}</span>
             </Link>
