@@ -56,6 +56,9 @@ import {
   Milestone,
   RefreshCw,
   GitCompare,
+  Landmark,
+  FileSignature,
+  Coins,
   Presentation,
   ShieldCheck,
   type LucideIcon,
@@ -103,6 +106,9 @@ const AGENT_ICON: Record<AgentType, LucideIcon> = {
   executive_briefing_writer: Presentation,
   governance_health_reviewer: ShieldCheck,
   business_case_reconciler: GitCompare,
+  settlement_readiness_reviewer: Landmark,
+  afe_reviewer: FileSignature,
+  supplementary_afe_reviewer: Coins,
 };
 
 /** Project lifecycle phases (PMBOK process groups). */
@@ -136,6 +142,9 @@ const AGENT_PHASE: Record<AgentType, Phase | 'portfolio'> = {
   executive_briefing_writer: 'portfolio',
   governance_health_reviewer: 'portfolio',
   business_case_reconciler: 'Monitoring',
+  settlement_readiness_reviewer: 'Closeout',
+  afe_reviewer: 'Initiation',
+  supplementary_afe_reviewer: 'Monitoring',
 };
 
 /** Ordered lifecycle groups for the landing-slide map. */

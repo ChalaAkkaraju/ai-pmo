@@ -83,7 +83,7 @@ export default async function EnterprisePortfolioPage() {
           <div>
             <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Projects under governance</p>
             <p className="mt-1 text-6xl font-bold tracking-tight tabular-nums">{totalProjects}</p>
-            <p className="mt-2 text-base text-muted-foreground">{live.length} of 4 PMOs live on the platform · {open.length} items need someone&rsquo;s attention today · Capital and R&D / NPI shown with illustrative demo data</p>
+            <p className="mt-2 text-base text-muted-foreground">{live.length} of 4 PMOs live on the platform · {open.length} items need someone&rsquo;s attention today {live.length < 4 ? ' · PMOs not yet live shown with illustrative demo data' : ''}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {view.types.map((t) => <span key={t.type} className={`rounded-full px-3 py-1 text-xs font-semibold ${t.live ? 'text-white' : 'border border-dashed text-muted-foreground'}`} style={t.live ? { backgroundColor: TYPE_STYLE[t.type].hex } : undefined}>{t.label}{t.live ? '' : ` · ${t.phase}`}</span>)}
@@ -247,24 +247,26 @@ export default async function EnterprisePortfolioPage() {
               <Link href="/portfolio/it" className="mt-3 inline-block pl-2 text-xs font-medium hover:underline">IT funding position →</Link>
             </div>
           ); })()}
-          {/* Illustrative Phase 2 / Phase 3 cards — demo data, clearly flagged */}
-          <div className="relative overflow-hidden rounded-xl border border-dashed border-amber-300 bg-amber-50/20 p-5">
-            <span className={`absolute left-0 top-0 h-full w-1.5 ${TYPE_STYLE.capital.bar} opacity-50`} />
-            <div className="flex items-baseline justify-between pl-2"><span className="text-sm font-semibold" style={{ color: TYPE_STYLE.capital.hex }}>Capital · FY{view.fiscalYear} capital plan</span><span className="rounded bg-amber-100 px-1.5 py-px text-[10px] font-medium text-amber-900">Phase 2 · demo data</span></div>
-            <div className="mt-4 grid grid-cols-2 gap-4 pl-2">
-              <div><p className="text-xs uppercase tracking-wider text-muted-foreground">Plan sanctioned</p><p className="text-4xl font-semibold tabular-nums">64%</p><p className="text-[11px] text-muted-foreground">$38.4M of $60.0M under full-funds AFE</p></div>
-              <div><p className="text-xs uppercase tracking-wider text-muted-foreground">Spend vs re-phased plan</p><p className="text-4xl font-semibold tabular-nums">−6%</p><p className="text-[11px] text-muted-foreground">YTD cash behind the re-phased plan</p></div>
+          {(() => { const c = view.capitalFin; const seg = (n: number) => `${c.envelope > 0 ? Math.min(100, (n / c.envelope) * 100) : 0}%`; return (
+            <div className="relative overflow-hidden rounded-xl border bg-card p-5">
+              <span className={`absolute left-0 top-0 h-full w-1.5 ${TYPE_STYLE.capital.bar}`} />
+              <div className="flex items-baseline justify-between pl-2"><span className="text-sm font-semibold" style={{ color: TYPE_STYLE.capital.hex }}>Capital · FY{c.fiscalYear} capital plan</span><span className="text-[11px] text-muted-foreground">envelope {money(c.envelope)}</span></div>
+              <div className="mt-4 grid grid-cols-2 gap-4 pl-2">
+                <div><p className="text-xs uppercase tracking-wider text-muted-foreground">Plan sanctioned</p><p className="text-4xl font-semibold tabular-nums">{pct(c.sanctionedPct, 0)}</p><p className="text-[11px] text-muted-foreground">{money(c.sanctioned)} of {money(c.envelope)} under AFE</p></div>
+                <div><p className="text-xs uppercase tracking-wider text-muted-foreground">Within AFE tolerance</p><p className="text-4xl font-semibold tabular-nums">{pct(c.withinTolerancePct, 0)}</p><p className="text-[11px] text-muted-foreground">of sanctioned projects, forecast ≤ 10% over AFE</p></div>
+              </div>
+              <div className="mt-4 pl-2">
+                <div className="flex h-5 w-full overflow-hidden rounded-md bg-muted"><div className="bg-amber-500" style={{ width: seg(c.sanctioned) }} title="Sanctioned" /><div className="bg-amber-300" style={{ width: seg(c.inFel) }} title="In FEL" /><div className="bg-emerald-200" style={{ width: seg(c.unallocated) }} title="Unallocated" /></div>
+                <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground"><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Sanctioned {money(c.sanctioned)}</span><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-300" />In front-end loading {money(c.inFel)}</span><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />Unallocated {money(c.unallocated)}</span></div>
+              </div>
+              <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 pl-2 text-sm">
+                <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Supplementary AFEs open</dt><dd className="font-medium tabular-nums">{c.supplementaryOpen}</dd></div>
+                <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Into service this year</dt><dd className="font-medium tabular-nums">{c.inServiceThisYear} project{c.inServiceThisYear === 1 ? '' : 's'}</dd></div>
+              </dl>
+              <Link href="/portfolio/capital" className="mt-3 inline-block pl-2 text-xs font-medium hover:underline">Capital asset chain →</Link>
             </div>
-            <div className="mt-4 pl-2">
-              <div className="flex h-5 w-full overflow-hidden rounded-md bg-muted"><div className="bg-amber-500" style={{ width: '64%' }} /><div className="bg-amber-300" style={{ width: '21%' }} /><div className="bg-emerald-200" style={{ width: '15%' }} /></div>
-              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground"><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Sanctioned $38.4M</span><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-300" />Study / FEED tranches $12.6M</span><span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-200" />Unsanctioned $9.0M</span></div>
-            </div>
-            <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 pl-2 text-sm">
-              <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Supplementary AFEs open</dt><dd className="font-medium tabular-nums">2 · $1.9M</dd></div>
-              <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Commissioning this year</dt><dd className="font-medium tabular-nums">3 projects</dd></div>
-            </dl>
-            <p className="mt-3 pl-2 text-[11px] text-amber-900">Illustrative figures to show the shape of the Capital view; live from EcoSys and SAP PS in Phase 2.</p>
-          </div>
+          ); })()}
+          {/* Illustrative Phase 3 card — demo data, clearly flagged */}
           <div className="relative overflow-hidden rounded-xl border border-dashed border-amber-300 bg-amber-50/20 p-5">
             <span className={`absolute left-0 top-0 h-full w-1.5 ${TYPE_STYLE.rnd.bar} opacity-50`} />
             <div className="flex items-baseline justify-between pl-2"><span className="text-sm font-semibold" style={{ color: TYPE_STYLE.rnd.hex }}>R&D / NPI · FY{view.fiscalYear} pipeline</span><span className="rounded bg-amber-100 px-1.5 py-px text-[10px] font-medium text-amber-900">Phase 3 · demo data</span></div>

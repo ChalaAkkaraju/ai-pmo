@@ -12,6 +12,7 @@
  * them into a single user message string.
  */
 
+import { capitalProjectMarkdown, capitalProjectView, loadCapitalProjectData } from './capital';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -45,6 +46,9 @@ const AGENT_PROMPT_FILES: Record<AgentType, string> = {
   executive_briefing_writer: 'executive_briefing_writer.md',
   governance_health_reviewer: 'governance_health_reviewer.md',
   business_case_reconciler: 'business_case_reconciler.md',
+  settlement_readiness_reviewer: 'settlement_readiness_reviewer.md',
+  afe_reviewer: 'afe_reviewer.md',
+  supplementary_afe_reviewer: 'supplementary_afe_reviewer.md',
 };
 
 /**
@@ -315,7 +319,14 @@ export async function loadProjectState(
   }
 
   const structured_facts = await loadStructuredFacts(supabase, (project as { id: string }).id, project as Record<string, unknown>);
-  const gate_state = await loadGateState(supabase, project as Record<string, unknown>);
+  let gate_state = await loadGateState(supabase, project as Record<string, unknown>);
+  // Capital projects: append the asset chain, WBS settlement rules and readiness findings.
+  if ((project as { project_type?: string }).project_type === 'capital') {
+    const cp = project as { id: string; code: string; name: string; lifecycle_status: string | null; current_stage: number | null; stage_template_id: string | null; business_case: unknown };
+    const d = await loadCapitalProjectData(supabase, cp);
+    const md = capitalProjectMarkdown(cp, d, capitalProjectView(cp, d));
+    gate_state = gate_state ? `${gate_state}\n\n${md}` : md;
+  }
 
   return {
     project,
@@ -404,7 +415,10 @@ export function assembleUserMessage(params: {
   itPortfolioState?: string | null;
   /** When true, append a strict response-format constraint for chat-panel use. */
   concise?: boolean;
+  /** Role types an action may be assigned to — the caller's own workspace. Defaults to the revenue cast. */
+  assignableRoles?: string[];
 }): string {
+  const assignable = (params.assignableRoles && params.assignableRoles.length ? params.assignableRoles : ['pm', 'procurement', 'risk', 'sponsor', 'commercial', 'project_controls', 'program_manager', 'engineering_manager', 'construction_manager', 'hse_manager']).join(' | ');
   const sections: string[] = [];
 
   // Section 1: User's actual prompt (what they typed)
@@ -430,7 +444,7 @@ Constraints:
 - NO redacted-placeholder tables — if you don't know something, say so in one bullet
 - Hedging belongs inside the bullets, not as a separate section
 
-EXCEPTION — machine-readable actions block: if your role defines one (the Risk Analyst's \`\`\`actions JSON block), you MUST still append it as the very last thing in your response, after the bullets. It is stripped out before the reader sees it and powers one-click "Assign" buttons, so quick mode does NOT suppress it. When you recommend a mitigation action that another role should own, include it in that block with the right \`assigned_to_role\` and, where the register in context has a matching risk ID, the \`source_ref\`.
+EXCEPTION — machine-readable actions block: if your role defines one (the Risk Analyst's \`\`\`actions JSON block), you MUST still append it as the very last thing in your response, after the bullets. It is stripped out before the reader sees it and powers one-click "Assign" buttons, so quick mode does NOT suppress it. When you recommend a mitigation action that another role should own, include it in that block with the right \`assigned_to_role\` (one of: ${assignable}) and, where the register in context has a matching risk ID, the \`source_ref\`.
 
 EXCEPTION — create requests (raise an entry): if the user asks to LOG / RAISE / ADD / CAPTURE / RECORD / REQUEST / UPDATE a risk, issue, change / trend entry, continuation request, resource displacement or benefits report, you MUST still append your role's pmo-entry block (the fenced JSON block your role instructions describe) at the end of your response — followed, ONLY when the "suggested hand-off" in your role instructions applies, by one trailing \`\`\`actions block (pmo-entry block first, actions block last). It is stripped from the visible text and renders as an editable confirm card, so quick mode does NOT suppress it. A bare "log an issue" or "raise a risk" is a CREATE request, NOT a vague question — do NOT use the "The question is vague — you mean:" shape for it. Write at most one short sentence, then the block, using short placeholders like "[describe the issue]" for any field you genuinely cannot infer from context.
 
@@ -438,7 +452,7 @@ DELEGATE MODE — assigning a task to a colleague: if the user asks to ASSIGN / 
 
 \`\`\`actions
 [
-  { "description": "<the task in one clear sentence>", "assigned_to_role": "<one of: pm | procurement | risk | sponsor | commercial | project_controls | program_manager | engineering_manager | construction_manager | hse_manager>", "urgency": "L|M|H", "source_ref": null }
+  { "description": "<the task in one clear sentence>", "assigned_to_role": "<one of: ${assignable}>", "urgency": "L|M|H", "source_ref": null }
 ]
 \`\`\`
 

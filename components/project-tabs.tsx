@@ -20,7 +20,7 @@
  * Tabs are controlled so the Overview can link straight into a deeper tab.
  */
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { IssuesTable } from './issues-table';
 import { IssueHealthPanel } from './issue-health-panel';
@@ -121,6 +121,8 @@ interface ProjectTabsProps {
   projectType?: ProjectType;
   /** Stage-gate state for non-revenue projects (template, decisions, sanction events). */
   gates?: GatesPanelProps['gates'];
+  /** Capital projects (0051): the Overview tab content — FEL track, AFE, asset chain, settlement readiness. */
+  capitalOverview?: ReactNode;
   data: {
     issues: Array<Record<string, unknown>>;
     risks: Array<Record<string, unknown>>;
@@ -163,9 +165,14 @@ export function ProjectTabs({
   scheduleEnvelope,
   projectType = 'revenue',
   gates,
+  capitalOverview,
   data,
 }: ProjectTabsProps) {
   const isIt = projectType === 'it';
+  // Capital has no earned value against a contract, no revenue recognition and no weekly variance reports:
+  // its money lives in the asset chain on the Overview tab.
+  const isCapital = projectType === 'capital' && !!capitalOverview;
+  const showRevenueTabs = !isIt && !isCapital;
   const [tab, setTab] = useState(['overview', 'gates', 'structure', 'schedule', 'ev', 'cost', 'resources', 'risks', 'cos', 'variance', 'planning'].includes(initialTab ?? '') ? (initialTab as string) : 'overview');
 
   const planningByAgent: Record<string, ArtefactRow[]> = {};
@@ -184,13 +191,13 @@ export function ProjectTabs({
         {isIt && gates && <TabTrigger value="gates" label="Gates" count={gates.decisions.length} highlight />}
         <TabTrigger value="structure" label="Structure" count={workPackages.length} />
         <TabTrigger value="schedule" label="Schedule" count={tasks.length} />
-        {!isIt && <TabTrigger value="ev" label="Earned value" highlight />}
-        {!isIt && <TabTrigger value="cost" label="Cost" />}
-        <TabTrigger value="resources" label="Resources" count={resourceLoad.roles.length} />
+        {showRevenueTabs && <TabTrigger value="ev" label="Earned value" highlight />}
+        {showRevenueTabs && <TabTrigger value="cost" label="Cost" />}
+        {!isCapital && <TabTrigger value="resources" label="Resources" count={resourceLoad.roles.length} />}
         <span className="mx-2 self-center text-muted-foreground/40">|</span>
         <TabTrigger value="risks" label="Risks & issues" count={data.risks.length + data.issues.length} />
         <TabTrigger value="cos" label={isIt ? 'Change orders' : 'Changes & trends'} count={data.change_orders.length} />
-        {!isIt && <TabTrigger value="variance" label="Variance" count={data.variance_reports.length} />}
+        {showRevenueTabs && <TabTrigger value="variance" label="Variance" count={data.variance_reports.length} />}
         <TabTrigger value="planning" label="Planning" count={planningCount} dimWhenEmpty />
       </Tabs.List>
 
@@ -201,7 +208,7 @@ export function ProjectTabs({
       )}
 
       <Tabs.Content value="overview" className="pt-6">
-        {isIt && gates ? (
+        {isCapital ? capitalOverview : isIt && gates ? (
           <ItOverviewPanel gates={gates} risks={data.risks} issues={data.issues} actions={data.action_items ?? []} changeOrders={data.change_orders} go={setTab} projectCode={projectCode} canWrite={canWrite} />
         ) : (
         <OverviewPanel

@@ -16,7 +16,8 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AuthorityRule, DecisionBody, DecisionBodyMember, DecisionKind, DecisionRecord, FundingSource, Project, Role, StageTemplate } from './types';
+import type { AuthorityRule, DecisionBody, DecisionBodyMember, DecisionKind, DecisionRecord, FundingSource, Project, ProjectType, Role, StageTemplate } from './types';
+import { scopedTypes } from './workspace';
 import { commitStage, isCommitted, nextStage, stageAt } from './stage-gates';
 
 export interface Governance {
@@ -94,7 +95,7 @@ export function concurrencesSatisfied(rec: Pick<DecisionRecord, 'required_concur
 // ---------------------------------------------------------------------------
 
 export interface ProposalInput {
-  project_type: 'it';
+  project_type: Exclude<ProjectType, 'revenue'>;
   kind: DecisionKind;
   project?: Pick<Project, 'id' | 'code' | 'portfolio_bucket'> | null;
   bucket?: string | null;
@@ -314,6 +315,93 @@ async function applyEffect(sb: SupabaseClient, rec: DecisionRecord, actor: Role)
     return { gate_decision_id: (gd as { id: string } | null)?.id };
   }
 
+  // ---- a non-commit gate that releases a stage / FEL study budget (R&D 0050, capital 0051)
+  if (rec.decision_kind === 'gate_decision') {
+    if (!rec.project_id) return { error: 'gate_decision needs a project' };
+    const { data: project } = await sb.from('projects').select('*').eq('id', rec.project_id).maybeSingle<Project>();
+    if (!project || !project.stage_template_id) return { error: 'project or template missing' };
+    const { data: template } = await sb.from('stage_templates').select('*').eq('id', project.stage_template_id).maybeSingle<StageTemplate>();
+    const seq = typeof p.stage_seq === 'number' ? p.stage_seq : (project.current_stage ?? 0);
+    const stage = stageAt(template, seq);
+    if (!template || !stage) return { error: 'unknown stage' };
+    const { data: gd, error: gErr } = await sb.from('gate_decisions').insert({
+      project_id: project.id, stage_seq: stage.seq, gate_name: stage.gate_name, decision: 'go', decided_on: today,
+      decided_by: rec.decided_by_name ?? actor.name, decided_by_role_type: actor.role_type, criteria_scores: (p.criteria_scores as Record<string, unknown> | null) ?? null,
+      notes: rec.conditions ?? (p.notes as string | null) ?? null, source_system: 'APP', decision_record_id: rec.id,
+    }).select('id').maybeSingle();
+    if (gErr) return { error: gErr.message };
+    let seId: string | undefined;
+    if (Number(rec.amount ?? 0) > 0) {
+      const version = await nextVersion(sb, project.id, 'gate_budget');
+      const { data: se, error: seErr } = await sb.from('sanction_events').insert({
+        project_id: project.id, kind: 'gate_budget', version, amount: rec.amount, fiscal_year: project.fiscal_year, authorised_by: rec.decided_by_name ?? actor.name, authorised_by_body: rec.required_body_key,
+        authorised_on: today, decision_record_id: rec.id, source_system: 'APP', notes: `${stage.gate_name}: ${rec.project_type === 'capital' ? 'study budget released for the next FEL stage' : 'next-stage budget released'}`,
+      }).select('id').maybeSingle();
+      if (seErr) return { error: seErr.message };
+      seId = (se as { id: string } | null)?.id;
+    }
+    const next = nextStage(template, stage.seq);
+    const { error } = await sb.from('projects').update({ current_stage: next ? next.seq : stage.seq, lifecycle_status: project.lifecycle_status === 'proposed' || project.lifecycle_status === 'deferred' ? 'approved' : project.lifecycle_status }).eq('id', project.id);
+    if (error) return { error: error.message };
+    return { sanction_event_id: seId, gate_decision_id: (gd as { id: string } | null)?.id };
+  }
+
+  // ---- capital: the AFE, sanctioned at the commit gate (end of FEL3)
+  if (rec.decision_kind === 'afe_approval') {
+    if (!rec.project_id) return { error: 'afe_approval needs a project' };
+    const { data: project } = await sb.from('projects').select('*').eq('id', rec.project_id).maybeSingle<Project>();
+    if (!project || !project.stage_template_id) return { error: 'project or template missing' };
+    const { data: template } = await sb.from('stage_templates').select('*').eq('id', project.stage_template_id).maybeSingle<StageTemplate>();
+    const stage = commitStage(template);
+    if (!template || !stage) return { error: 'no commit stage on template' };
+    const amount = Number(rec.amount ?? project.requested_budget ?? 0);
+    const { data: gd, error: gErr } = await sb.from('gate_decisions').insert({
+      project_id: project.id, stage_seq: stage.seq, gate_name: stage.gate_name, decision: 'go', decided_on: today,
+      decided_by: rec.decided_by_name ?? actor.name, decided_by_role_type: actor.role_type, criteria_scores: (p.criteria_scores as Record<string, unknown> | null) ?? null,
+      case_snapshot: { ...(project.business_case ?? {}), budget: amount }, notes: rec.conditions ?? (p.notes as string | null) ?? null,
+      source_system: 'APP', decision_record_id: rec.id,
+    }).select('id').maybeSingle();
+    if (gErr) return { error: gErr.message };
+    const version = await nextVersion(sb, project.id, 'afe');
+    const { data: se, error: seErr } = await sb.from('sanction_events').insert({
+      project_id: project.id, kind: 'afe', version, amount, fiscal_year: project.fiscal_year, authorised_by: rec.decided_by_name ?? actor.name, authorised_by_body: rec.required_body_key,
+      authorised_on: today, decision_record_id: rec.id, source_system: 'APP', document_ref: (p.document_ref as string | null) ?? null,
+      notes: `AFE sanctioned at ${stage.gate_name}${p.capex_verdict ? ` · capex test: ${p.capex_verdict}` : ''}`,
+    }).select('id').maybeSingle();
+    if (seErr) return { error: seErr.message };
+    const next = nextStage(template, stage.seq);
+    const bc = (project.business_case ?? {}) as Record<string, unknown>;
+    const years = Array.from(new Set([...(project.fiscal_years_approved ?? []), ...(project.fiscal_year ? [project.fiscal_year] : [])])).sort();
+    const { error } = await sb.from('projects').update({
+      approved_budget_initial: amount, approved_budget_current: amount, current_stage: next ? next.seq : stage.seq, lifecycle_status: 'active', fiscal_years_approved: years,
+      // The forecast starts at the sanctioned amount, and the in-service date as sanctioned becomes the one slippage is measured against.
+      business_case: { ...bc, eac: bc.eac ?? amount, planned_in_service_date: bc.planned_in_service_date ?? bc.in_service_date ?? null },
+    }).eq('id', project.id);
+    if (error) return { error: error.message };
+    return { sanction_event_id: (se as { id: string } | null)?.id, gate_decision_id: (gd as { id: string } | null)?.id };
+  }
+
+  // ---- capital: an increase to an approved AFE. rec.amount is the REVISED total (that is what routes it);
+  //      the sanction event records the increment.
+  if (rec.decision_kind === 'supplementary_afe') {
+    if (!rec.project_id) return { error: 'supplementary_afe needs a project' };
+    const { data: project } = await sb.from('projects').select('approved_budget_current').eq('id', rec.project_id).maybeSingle();
+    const prior = Number((project as { approved_budget_current: number } | null)?.approved_budget_current ?? 0);
+    const revised = Number(rec.amount ?? 0);
+    const increment = Number(p.increment_amount ?? revised - prior);
+    if (!(increment > 0)) return { error: 'A supplementary AFE must increase the appropriation' };
+    const version = await nextVersion(sb, rec.project_id, 'supplementary_afe');
+    const { data: se, error: seErr } = await sb.from('sanction_events').insert({
+      project_id: rec.project_id, kind: 'supplementary_afe', version, amount: increment, fiscal_year: rec.fiscal_year, authorised_by: rec.decided_by_name ?? actor.name, authorised_by_body: rec.required_body_key,
+      authorised_on: today, decision_record_id: rec.id, source_system: 'APP',
+      notes: `Supplementary AFE +${Math.round(increment).toLocaleString('en-US')} → revised total ${Math.round(prior + increment).toLocaleString('en-US')}${p.reason ? ` · ${String(p.reason)}` : ''}`,
+    }).select('id').maybeSingle();
+    if (seErr) return { error: seErr.message };
+    const { error } = await sb.from('projects').update({ approved_budget_current: prior + increment }).eq('id', rec.project_id);
+    if (error) return { error: error.message };
+    return { sanction_event_id: (se as { id: string } | null)?.id };
+  }
+
   if (rec.decision_kind === 'reserve_draw') {
     if (!rec.project_id) return {};
     const version = await nextVersion(sb, rec.project_id, 'continuation');
@@ -348,13 +436,21 @@ export function isActionableBy(rec: DecisionRecord, myBodyKeys: string[]): 'deci
   return null;
 }
 
-/** Open IT decisions that need this role, newest first — for header badges and project banners. */
+/** Open decisions that need this role, across every governed workspace it can see — for header badges and project banners. */
 export async function loadMyInbox(sb: SupabaseClient, role: Role): Promise<{ records: Array<DecisionRecord & { action: 'decide' | 'concur' }>; codes: Record<string, string> }> {
-  const g = await loadGovernance(sb, 'it');
-  const mine = bodiesFor(g, role);
-  if (mine.length === 0) return { records: [], codes: {} };
-  const { data } = await sb.from('decision_records').select('*').eq('project_type', 'it').eq('status', 'proposed').order('proposed_at', { ascending: false }).limit(200);
-  const records = ((data ?? []) as DecisionRecord[]).map((r) => ({ ...r, action: isActionableBy(r, mine) })).filter((r): r is DecisionRecord & { action: 'decide' | 'concur' } => r.action !== null);
+  const types = scopedTypes(role).filter((t) => t !== 'revenue');
+  const records: Array<DecisionRecord & { action: 'decide' | 'concur' }> = [];
+  for (const t of types) {
+    const g = await loadGovernance(sb, t);
+    const mine = bodiesFor(g, role);
+    if (mine.length === 0) continue;
+    const { data } = await sb.from('decision_records').select('*').eq('project_type', t).eq('status', 'proposed').order('proposed_at', { ascending: false }).limit(200);
+    for (const r of (data ?? []) as DecisionRecord[]) {
+      const action = isActionableBy(r, mine);
+      if (action) records.push({ ...r, action });
+    }
+  }
+  records.sort((a, b) => (a.proposed_at < b.proposed_at ? 1 : -1));
   const ids = Array.from(new Set(records.map((r) => r.project_id).filter((x): x is string => !!x)));
   const codes: Record<string, string> = {};
   if (ids.length) {

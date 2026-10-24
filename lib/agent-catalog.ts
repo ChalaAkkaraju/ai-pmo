@@ -496,6 +496,75 @@ export const AGENT_CATALOG: AgentCatalogEntry[] = [
     methodology:
       'Applies Cooper\'s expected-commercial-value form — [(NPV x P(commercial)) - launch cost] x P(technical) - development cost — across the versioned business case, anchored on the commit-gate version because movement before commitment is the early stages working as designed.',
   },
+  {
+    agent_type: 'afe_reviewer',
+    name: 'AFE Reviewer',
+    purpose: 'Tells the approving body whether a capital AFE package is ready to sanction.',
+    plain:
+      'Before a capital project gets its full budget — the AFE — someone has to check the estimate is mature enough, the spend really is capital and not maintenance, the economics still work on the final number, and the in-service date is real. This agent does that check against the FEL3 exit criteria and names who has to sign at that amount.',
+    scope: 'project',
+    does: [
+      'Names the approving body from the amount: plant manager, business-unit head or capital committee',
+      'Checks the estimate class against what FEL3 requires',
+      'Tests the capex / opex classification and the share expected to be expensed',
+      'Scores every FEL3 exit criterion with the evidence',
+      'Recommends sanction, sanction with conditions, return to FEL3, or stop',
+    ],
+    doesNot: [
+      "Doesn't sanction the AFE — the body does",
+      "Doesn't set settlement rules (Finance does)",
+      "Doesn't invent an estimate the package is silent on",
+    ],
+    samplePrompt: 'Review the AFE package for this project — is it ready to sanction, and who has to sign?',
+    methodology:
+      'Applies front-end loading (FEL1 Appraise → FEL2 Select → FEL3 Define) with AACE estimate classes, and the IAS 16 capitalisation test: new asset, extended life, or added capacity capitalises; like-for-like repair is expensed.',
+  },
+  {
+    agent_type: 'supplementary_afe_reviewer',
+    name: 'Supplementary AFE Reviewer',
+    purpose: 'Decides whether a forecast overrun needs a supplementary AFE, and who must approve it.',
+    plain:
+      'When a capital project is forecast to cost more than 10% above what was approved, more money has to be approved before it is spent. This agent checks the forecast against the approval, sizes the request, and — because the request is judged on the new total — tells you when it now needs a more senior approver than the original did.',
+    scope: 'project',
+    does: [
+      'Tests the forecast against the appropriation and the 10% tolerance',
+      'Sizes the supplementary and routes it on the revised total',
+      'Splits the overrun into scope growth, estimate error, escalation and schedule',
+      'Checks whether commitments already exceed what was approved',
+      'Across the portfolio, lists every project over tolerance with no supplementary raised',
+    ],
+    doesNot: [
+      "Doesn't approve the supplementary",
+      "Doesn't re-estimate the project — it works from the forecast supplied",
+      "Doesn't treat scope growth as an overrun when it is really a new project",
+    ],
+    samplePrompt: 'Are we more than 10% over our AFE, and if so who has to approve the supplementary?',
+    methodology:
+      'Applies the supplementary-AFE rule used across process industries: a tolerance band on the appropriation, and routing on the revised total so the delegation of authority cannot be bypassed by approving a large project in small pieces.',
+  },
+  {
+    agent_type: 'settlement_readiness_reviewer',
+    name: 'Settlement Readiness Reviewer',
+    purpose: 'Checks whether a capital asset will make it onto the fixed-asset register on time.',
+    plain:
+      'Money spent on a capital project sits in "assets under construction" until the asset goes into service, when it is moved onto the fixed-asset register and starts depreciating. That move only works if every piece of the project has a settlement rule and the asset records exist — and Finance usually discovers the gaps at year end. This agent finds them now, ahead of the in-service date.',
+    scope: 'project',
+    does: [
+      'Walks the chain: appropriated, committed, actual, settled to AuC, capitalised',
+      'Names every WBS element carrying cost with no settlement rule, or rules not totalling 100%',
+      'Flags in-service dates slipping into the next fiscal year, and assets running but still in AuC',
+      'Compares the expensed share with what the AFE assumed',
+      'Gives every action an owner — Finance, the PM or the approving body',
+    ],
+    doesNot: [
+      "Doesn't post or recompute settlements — SAP does",
+      "Doesn't size a supplementary (the Supplementary AFE Reviewer does)",
+      "Doesn't change asset classes or useful lives",
+    ],
+    samplePrompt: 'Is this project ready to settle and capitalise at its in-service date? What blocks it?',
+    methodology:
+      'Follows the SAP PS settlement model (WBS → AuC → fixed asset, by settlement rule) and IAS 16 depreciation start at available-for-use, checking readiness continuously rather than at period close.',
+  },
 ];
 
 /** Lookup helper. */

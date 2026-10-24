@@ -28,6 +28,8 @@ import { isCommitted, stageAt } from '@/lib/stage-gates';
 import type { BenefitsReport, DecisionRecord, GateDecision, PortfolioAllocation, ProjectType, ResourceDisplacement, SanctionEvent, StageTemplate } from '@/lib/types';
 import { bodiesFor, isActionableBy, loadGovernance } from '@/lib/governance';
 import type { GatesPanelProps } from '@/components/gates-panel';
+import { CapitalProjectPanel } from '@/components/capital-project-panel';
+import { asCapitalCase, capitalBucketLabel, capitalBucketStyle, capitalCategoryLabel, capitalProjectView, fmtDate, fmtMoneyCap, loadCapitalProjectData, SUPPLEMENTARY_TOLERANCE_PCT } from '@/lib/capital';
 
 // Always fetch fresh from Supabase — no Next.js data cache
 export const dynamic = 'force-dynamic';
@@ -247,6 +249,28 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   const projectType = ((project.project_type as ProjectType | undefined) ?? 'revenue');
   if (!roleSees(resolved.role, projectType)) notFound();
   const isIt = projectType === 'it';
+  const isCapital = projectType === 'capital';
+
+  // Capital: front-end loading, the AFE, the asset chain and settlement readiness.
+  let capital: null | {
+    d: Awaited<ReturnType<typeof loadCapitalProjectData>>;
+    v: ReturnType<typeof capitalProjectView>;
+    records: DecisionRecord[];
+    gov: { bodies: Awaited<ReturnType<typeof loadGovernance>>['bodies']; myBodyKeys: string[]; myRoleId: string; myRoleType: string; myName: string };
+  } = null;
+  if (isCapital) {
+    const [d, recRes, governance] = await Promise.all([
+      loadCapitalProjectData(supabase, { id: project.id, stage_template_id: project.stage_template_id ?? null }),
+      supabase.from('decision_records').select('*').eq('project_id', project.id).order('proposed_at', { ascending: false }),
+      loadGovernance(supabase, 'capital'),
+    ]);
+    capital = {
+      d, v: capitalProjectView(project, d), records: (recRes.data ?? []) as DecisionRecord[],
+      gov: { bodies: governance.bodies, myBodyKeys: bodiesFor(governance, resolved.role), myRoleId: resolved.role.id, myRoleType: resolved.role.role_type, myName: resolved.role.name },
+    };
+  }
+  const capCase = asCapitalCase(project.business_case);
+  const homeLink = isIt ? { href: '/portfolio/it', label: 'IT portfolio' } : isCapital ? { href: '/portfolio/capital', label: 'Capital portfolio' } : projectType === 'rnd' ? { href: '/portfolio/rnd', label: 'R&D portfolio' } : { href: '/dashboard', label: 'Portfolio' };
 
   // Stage-gate state (non-revenue projects): template, decisions, sanction events, bucket allocation.
   let gates: GatesPanelProps['gates'] | undefined;
@@ -368,24 +392,33 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
   return (
     <div className="container mx-auto max-w-screen-2xl px-8 py-8" data-project-code={project.code} data-project-type={project.project_type ?? 'revenue'} data-project-name={project.name}>
       <nav className="mb-6 text-sm text-muted-foreground">
-        <Link href={isIt ? '/portfolio/it' : '/dashboard'} className="hover:underline">{isIt ? 'IT portfolio' : 'Portfolio'}</Link>
+        <Link href={homeLink.href} className="hover:underline">{homeLink.label}</Link>
         <span className="mx-2">/</span>
         <span className="text-foreground">{project.name}</span>
       </nav>
 
-      <header className={`relative overflow-hidden rounded-xl border p-6 shadow-sm ${isIt ? 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-teal-50/40' : 'bg-card'}`}>
-        <span className={`absolute left-0 top-0 h-full w-1.5 ${isIt ? bucketStyle(project.portfolio_bucket).accentBar : ss.accentBar}`} />
+      <header className={`relative overflow-hidden rounded-xl border p-6 shadow-sm ${isIt ? 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-teal-50/40' : isCapital ? 'border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50/40' : 'bg-card'}`}>
+        <span className={`absolute left-0 top-0 h-full w-1.5 ${isIt ? bucketStyle(project.portfolio_bucket).accentBar : isCapital ? capitalBucketStyle(project.portfolio_bucket).accentBar : ss.accentBar}`} />
         <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{project.code} · {project.client}</p>
           </div>
           <span className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadge(project.status)}`}>
-            {isIt ? lifecycleLabel(project.lifecycle_status) : `${project.status} · Week ${project.current_week}`}
+            {isIt || isCapital ? lifecycleLabel(project.lifecycle_status) : `${project.status} · Week ${project.current_week}`}
           </span>
         </div>
 
-        {isIt && gates ? (
+        {isCapital && capital ? (
+          <div className="mt-6 grid grid-cols-2 gap-3 pl-2 sm:grid-cols-3 lg:grid-cols-6">
+            <HeaderCard label="Category" value={capitalBucketLabel(project.portfolio_bucket)} sub={`${capitalCategoryLabel(project.project_category)} · FY${project.fiscal_year ?? '—'}`} accent={capitalBucketStyle(project.portfolio_bucket).hex} />
+            <HeaderCard label="Stage" value={capital.v.stageName ?? '—'} sub={capital.v.gateName ?? ''} accent="#2563eb" />
+            <HeaderCard label={capital.v.committed ? 'Appropriated' : 'Estimate'} value={capital.v.committed ? fmtMoneyCap(capital.v.chain.appropriated) : fmtMoneyCap(project.requested_budget)} sub={capital.v.committed ? (capital.v.chain.supplementary > 0 ? `AFE ${fmtMoneyCap(capital.v.chain.afe_original)} + ${fmtMoneyCap(capital.v.chain.supplementary)} supplementary` : 'AFE sanctioned') : `${fmtMoneyCap(capital.v.studyReleased)} study money released`} tone={capital.v.committed ? 'ok' : 'neutral'} />
+            <HeaderCard label="EAC vs AFE" value={capital.v.committed ? fmtMoneyCap(capCase.eac) : '—'} sub={capital.v.committed && capital.v.trigger.over_pct !== null ? `${capital.v.trigger.over_pct > 0 ? '+' : ''}${capital.v.trigger.over_pct}% · tolerance ${SUPPLEMENTARY_TOLERANCE_PCT}%` : 'tested once the AFE exists'} tone={capital.v.trigger.needed ? 'warn' : 'neutral'} />
+            <HeaderCard label="In service" value={fmtDate(capCase.in_service_date)} sub={capCase.planned_in_service_date && capCase.planned_in_service_date !== capCase.in_service_date ? `AFE assumed ${fmtDate(capCase.planned_in_service_date)}` : capCase.site ?? ''} tone={capCase.planned_in_service_date && capCase.in_service_date && capCase.in_service_date.slice(0, 4) > capCase.planned_in_service_date.slice(0, 4) ? 'warn' : 'neutral'} />
+            <HeaderCard label="Settlement readiness" value={capital.v.findings.some((f) => f.severity === 'block') ? 'Blocked' : capital.v.findings.length ? `${capital.v.findings.length} to fix` : 'Clean'} sub={`${fmtMoneyCap(capital.v.chain.capitalised)} capitalised · ${fmtMoneyCap(capital.v.chain.auc_balance)} in AuC`} tone={capital.v.findings.some((f) => f.severity === 'block') ? 'warn' : capital.v.findings.length ? 'neutral' : 'ok'} />
+          </div>
+        ) : isIt && gates ? (
           <div className="mt-6 grid grid-cols-2 gap-3 pl-2 sm:grid-cols-3 lg:grid-cols-6">
             <HeaderCard label="Bucket" value={bucketLabel(project.portfolio_bucket)} sub={`FY${project.fiscal_year ?? '—'}`} accent={bucketStyle(project.portfolio_bucket).hex} />
             <HeaderCard label="Category" value={categoryLabel(project.project_category)} sub={gates.template?.name ?? 'no template'} accent="#475569" />
@@ -470,6 +503,38 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         )}
       </header>
 
+      {isCapital && capital && (() => {
+        const items: Array<{ tone: 'decide' | 'concur' | 'todo' | 'warn'; text: string }> = [];
+        for (const r of capital.records) {
+          const a = isActionableBy(r, capital.gov.myBodyKeys);
+          const bodyName = capital.gov.bodies.find((b) => b.key === r.required_body_key)?.name ?? r.required_body_key;
+          if (a === 'decide') items.push({ tone: 'decide', text: `Decide: ${r.title} — as ${bodyName}` });
+          if (a === 'concur') items.push({ tone: 'concur', text: `Concur: ${r.title} — Finance sign-off on classification and settlement before the ${bodyName.toLowerCase()} can decide` });
+        }
+        const raises = ['capital_pm', 'capital_portfolio_manager', 'capital_sponsor'].includes(resolved.role.role_type);
+        if (raises && capital.v.trigger.needed && !capital.d.openSupplementary) items.push({ tone: 'warn', text: `Forecast is ${capital.v.trigger.over_pct}% over the AFE — raise a supplementary before spending past it.${capital.v.trigger.crosses_authority ? ` The revised total goes to the ${capital.v.trigger.authority_revised.toLowerCase()}.` : ''}` });
+        if (raises && capital.v.isCommitStage && !capital.v.committed && !capital.records.some((r) => r.status === 'proposed' && r.decision_kind === 'afe_approval')) items.push({ tone: 'todo', text: `At ${capital.v.stageName ?? 'the commit stage'} — the AFE package is due: definitive estimate, in-service date, and the settlement basis agreed with Finance.` });
+        if (items.length === 0) return null;
+        const toneCls = { decide: 'border-blue-300 bg-blue-50', concur: 'border-sky-300 bg-sky-50', todo: 'border-amber-300 bg-amber-50', warn: 'border-red-300 bg-red-50' } as const;
+        const dot = { decide: 'bg-blue-600', concur: 'bg-sky-600', todo: 'bg-amber-500', warn: 'bg-red-600' } as const;
+        return (
+          <section className="mt-4 rounded-xl border-2 border-blue-400/60 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-blue-600 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-white">Action needed from you</span>
+              <span className="text-xs text-muted-foreground">{items.length} item{items.length > 1 ? 's' : ''} on this project · signed in as {resolved.role.name}, {resolved.definition.display_name}</span>
+            </div>
+            <ul className="mt-3 space-y-2">
+              {items.map((it, i) => (
+                <li key={i} className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm ${toneCls[it.tone]}`}>
+                  <span className="inline-flex items-start gap-2"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot[it.tone]}`} />{it.text}</span>
+                  <a href="#decisions" className="shrink-0 rounded-md bg-foreground px-3 py-1 text-xs font-semibold text-background transition hover:opacity-90">Open →</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
+
       {isIt && gates && (() => {
         const items: Array<{ tone: 'decide' | 'concur' | 'todo' | 'warn'; text: string; href: string; cta: string }> = [];
         for (const r of gates.records) {
@@ -510,7 +575,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
           has passed its commit gate the checklist is historical: show it only if
           something was actually produced, and never nag a role that cannot run it. */}
       {(() => {
-        const itCommitted = isIt && gates ? isCommitted(gates.template, gates.decisions) : false;
+        const itCommitted = isIt && gates ? isCommitted(gates.template, gates.decisions) : isCapital && capital ? capital.v.committed : false;
         const canRunAny = (['charter_drafter', 'stakeholder_analyst', 'wbs_builder', 'schedule_reasoner', 'budget_builder', 'communications_planner'] as const).some((a) => resolved.definition.allowed_agents.includes(a));
         if (itCommitted && doneAgents.length === 0) return null;
         if (!canRunAny && doneAgents.length === 0) return null;
@@ -558,6 +623,13 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         scheduleEnvelope={scheduleEnvelope}
         projectType={projectType}
         gates={gates}
+        capitalOverview={isCapital && capital ? (
+          <CapitalProjectPanel
+            project={{ code: project.code, name: project.name, lifecycle_status: project.lifecycle_status ?? null, requested_budget: project.requested_budget ?? null, approved_budget_current: project.approved_budget_current ?? null, business_case: project.business_case, current_stage: project.current_stage ?? null }}
+            d={capital.d} v={capital.v} records={capital.records} gov={capital.gov}
+            canPropose={['capital_pm', 'capital_portfolio_manager', 'capital_sponsor'].includes(resolved.role.role_type)}
+          />
+        ) : undefined}
         data={{ issues, risks, change_orders, variance_reports, planning_outputs, action_items }}
       />
     </div>

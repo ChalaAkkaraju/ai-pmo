@@ -64,6 +64,10 @@ const VALID_AGENT_TYPES: AgentType[] = [
   'continuation_reviewer',
   'executive_briefing_writer',
   'governance_health_reviewer',
+  'business_case_reconciler',
+  'settlement_readiness_reviewer',
+  'afe_reviewer',
+  'supplementary_afe_reviewer',
 ];
 
 // 'auto' triggers the agent router (lib/agent-router.ts) which picks a

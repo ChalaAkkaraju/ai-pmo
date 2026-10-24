@@ -59,6 +59,9 @@ const LABEL: Record<AgentType, string> = {
   executive_briefing_writer: 'Executive Briefing Writer',
   governance_health_reviewer: 'Governance Health Reviewer',
   business_case_reconciler: 'Business Case Reconciler',
+  settlement_readiness_reviewer: 'Settlement Readiness Reviewer',
+  afe_reviewer: 'AFE Reviewer',
+  supplementary_afe_reviewer: 'Supplementary AFE Reviewer',
 };
 
 function seededPrompt(step: AgentType, name: string, code: string): string {
