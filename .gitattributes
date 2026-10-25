@@ -1,0 +1,18 @@
+# Normalize all text files to LF in the repo AND on checkout.
+# Ends the CRLF/LF phantom-diff noise (Windows autocrlf vs LF blobs / the Cowork bridge).
+* text=auto eol=lf
+
+# Never touch binaries (git auto-detects, but be explicit for committed assets).
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.docx binary
+*.dotx binary
+*.xlsx binary
+*.pptx binary
+*.woff binary
+*.woff2 binary

@@ -2,7 +2,7 @@
   "name": "ai-pmo",
   "version": "0.1.0",
   "private": true,
-  "description": "AI PMO — methodology-aware agentic system for EPC project management. Personal learning project.",
+  "description": "AI PMO \u2014 methodology-aware agentic system for EPC project management. Personal learning project.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +11,10 @@
     "type-check": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
     "seed:users": "tsx scripts/seed-users.ts",
-    "test:agent": "tsx scripts/test-agent.ts"
+    "test:agent": "tsx scripts/test-agent.ts",
+    "seed:it": "tsx scripts/seed-it.ts",
+    "seed:rnd": "tsx scripts/seed-rnd.ts",
+    "seed:capital": "tsx scripts/seed-capital.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.2",
@@ -20,20 +23,20 @@
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.2",
     "@sparticuz/chromium": "^131.0.0",
-    "@supabase/ssr": "^0.10.3",
+    "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.45.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "dotenv": "^16.4.5",
-    "lucide-react": "^0.451.0",
+    "dotenv": "^17.4.2",
+    "lucide-react": "^1.28.0",
     "next": "^16.2.6",
     "openai": "^4.73.0",
     "pg": "^8.21.0",
-    "puppeteer-core": "^24.9.0",
     "puppeteer": "^25.1.0",
+    "puppeteer-core": "^24.9.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-markdown": "^9.0.1",
+    "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.0",
     "tailwind-merge": "^2.5.3",
     "tailwindcss-animate": "^1.0.7",
@@ -48,16 +51,10 @@
     "eslint": "^9.18.0",
     "eslint-config-next": "^16.2.6",
     "postcss": "^8.4.47",
+    "supabase": "^2.110.0",
     "tailwindcss": "^3.4.13",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3"
   },
-  "packageManager": "pnpm@11.3.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp",
-      "unrs-resolver"
-    ]
-  }
+  "packageManager": "pnpm@11.18.0"
 }

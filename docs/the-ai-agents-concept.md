@@ -36,6 +36,8 @@ Each agent does a few things well and deliberately *not* others, so it never str
 
 Every agent is grounded in a standard — PMBOK knowledge areas for the planning and control agents, Earned Value Management for variance, a four-frame commercial analysis for change orders, IFRS-15 and results-analysis for revenue. The methods are not improvised; they are the reason the answers are defensible.
 
+The first six — Charter Drafter through Communications Planner — are the **planning agents**. On a new project they are also offered as a **guided setup** checklist that runs them in dependency order, each step opening the assistant pre-filled and ticking itself off when the artefact lands; see *The Project Workspace*.
+
 ## Two ways an agent helps: reading and writing
 
 Most of what you ask is **read-and-synthesise**: summarise the variance, surface the top risks, explain where the critical path runs. The agent reads the project's data and gives you a grounded answer — fast, between the formal monthly reviews.

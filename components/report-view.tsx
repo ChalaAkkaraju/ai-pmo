@@ -374,7 +374,7 @@ export function ReportView({ output, project, colleague, viewerRole }: ReportVie
 
   return (
     <div
-      className="report-root min-h-screen bg-slate-100 print:bg-white"
+      className="report-root min-h-screen bg-slate-100 print:min-h-0 print:bg-white"
       data-report-ready={reportReady ? 'true' : 'false'}
     >
       {/* Action bar — visible on screen, hidden in print. Sized to draw the eye. */}
@@ -630,6 +630,7 @@ export function ReportView({ output, project, colleague, viewerRole }: ReportVie
             @media print {
               .no-print { display: none !important; }
               body { background: white !important; }
+              html, body, .report-root { min-height: 0 !important; height: auto !important; }
               .report-sheet {
                 box-shadow: none !important;
                 border: 0 !important;
@@ -637,10 +638,16 @@ export function ReportView({ output, project, colleague, viewerRole }: ReportVie
               }
               @page {
                 size: A4;
-                margin: 18mm 16mm;
+                margin: 14mm 14mm;
               }
+              /* Slightly denser type in print so a typical brief holds to two pages. */
+              .report-sheet .prose { font-size: 0.8125rem; line-height: 1.5; }
+              .report-sheet .prose h2 { margin-top: 1.25em; margin-bottom: 0.5em; }
+              .report-sheet .prose h3 { margin-top: 1em; margin-bottom: 0.4em; }
+              .report-sheet .prose table { margin-top: 0.5em; margin-bottom: 0.75em; }
+              .report-footer { margin-top: 1.25rem !important; page-break-inside: avoid; }
               h1, h2, h3 { page-break-after: avoid; }
-              p, li, blockquote { page-break-inside: avoid; }
+              li, blockquote, tr { page-break-inside: avoid; }
             }
           `,
         }}

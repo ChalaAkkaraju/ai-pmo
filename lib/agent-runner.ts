@@ -11,6 +11,9 @@
  * Called from app/api/agent/route.ts and from scripts/test-agent.ts.
  */
 
+import { DEFAULT_ROLE_PROJECT_TYPES } from './roles';
+import { loadCapitalPortfolioState } from './capital';
+import { loadEnterpriseState } from './cross-type';
 import { createSupabaseServiceClient } from './supabase';
 import { canRoleInvokeAgent, ROLE_DEFINITIONS } from './roles';
 import {
@@ -18,6 +21,7 @@ import {
   loadAgentPrompt,
   loadProjectState,
   loadPortfolioState,
+  loadItPortfolioState,
   loadWorkedExample,
 } from './agent-context';
 import { invokeModel } from './openrouter';
@@ -147,6 +151,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     variance_reports: [] as Array<Record<string, unknown>>,
   };
   let portfolioState = null as Awaited<ReturnType<typeof loadPortfolioState>>;
+  let itPortfolioState: string | null = null;
   if (input.project_code) {
     projectState = await loadProjectState(supabase, input.project_code);
     if (!projectState.project) {
@@ -157,16 +162,45 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       };
     }
   } else {
-    // Portfolio-scope call — ground with real portfolio data.
-    portfolioState = await loadPortfolioState(supabase);
+    // Portfolio-scope call — ground with real portfolio data. IT-scoped roles
+    // (and the IT portfolio agents) get the IT portfolio; revenue roles the
+    // revenue rollup. Never both — the two must not be summed.
+    const scope = (input.role as { project_types?: string[] }).project_types ?? [];
+    const itScoped = scope.includes('it') && !scope.includes('revenue');
+    const itAgent = ['waterline_ranker', 'business_case_reviewer', 'continuation_reviewer', 'gate_reviewer'].includes(String(input.agent_type));
+    const execAgent = ['executive_briefing_writer', 'governance_health_reviewer'].includes(String(input.agent_type));
+    const execRole = (input.role as { role_type?: string }).role_type === 'portfolio_executive';
+    const capitalScoped = scope.includes('capital') && !scope.includes('revenue') && !scope.includes('it');
+    const capitalAgent = ['afe_reviewer', 'supplementary_afe_reviewer', 'settlement_readiness_reviewer'].includes(String(input.agent_type));
+    if (capitalScoped || (capitalAgent && !execRole)) {
+      // Capital roles get the capital portfolio: envelope, AFEs, the asset chain and readiness — never IT or revenue data.
+      const fyMatch = /\bFY\s?(20\d{2})\b/i.exec(input.user_prompt);
+      itPortfolioState = await loadCapitalPortfolioState(supabase, fyMatch ? Number(fyMatch[1]) : undefined);
+    } else if (execAgent || (execRole && !itAgent)) {
+      // Cross-type grounding: every PMO in its own terms, plus governance health. Never summed across types.
+      itPortfolioState = await loadEnterpriseState(supabase);
+    } else if (itScoped || itAgent) {
+      const fyMatch = /\bFY\s?(20\d{2})\b/i.exec(input.user_prompt) ?? /\b(20\d{2})\b/.exec(input.user_prompt);
+      itPortfolioState = await loadItPortfolioState(supabase, fyMatch ? Number(fyMatch[1]) : undefined);
+    } else {
+      portfolioState = await loadPortfolioState(supabase);
+    }
   }
 
   // ---- 7. Assemble user message ----
+  // Actions may only be assigned within the caller's own workspace: a capital
+  // finding goes to the capital PM or Finance, never to a revenue role.
+  const callerScope = ((input.role as { project_types?: string[] | null }).project_types ?? []) as string[];
+  const assignableRoles = callerScope.length && !callerScope.includes('revenue')
+    ? (Object.entries(DEFAULT_ROLE_PROJECT_TYPES) as Array<[string, string[]]>).filter(([rt, types]) => rt !== 'admin' && rt !== 'portfolio_executive' && types.some((t) => callerScope.includes(t))).map(([rt]) => rt)
+    : undefined;
   const userMessage = assembleUserMessage({
+    assignableRoles,
     userPrompt: input.user_prompt,
     workedExample,
     projectState,
     portfolioState,
+    itPortfolioState,
     concise: input.concise === true,
   });
 

@@ -29,6 +29,8 @@ async function main() {
   await run('node', ['scripts/capture-figures.mjs']);
   console.log('\n  capturing role-specific dashboards...');
   await run('node', ['scripts/capture-roles.mjs']);
+  console.log('\n  capturing the IT workspace (Part VI)...');
+  await run('node', ['scripts/capture-it-figures.mjs']);
 
   // 2) Rebuild chapter .docx from .md
   console.log('\n=== 2/3 · Rebuilding chapter .docx (pandoc) ===');

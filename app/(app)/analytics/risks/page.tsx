@@ -23,7 +23,7 @@ export default async function RisksAnalyticsPage() {
   const supabase = createSupabaseServiceClient();
   const [risksRes, projectsRes] = await Promise.all([
     supabase.from('risks').select('risk_id, project_id, description, impact, probability, score, status, owner, cross_cutting_class, emv_usd, residual_emv_usd, cost_impact_usd, risk_type').limit(10000),
-    supabase.from('projects').select('id, code, name, segment, status').limit(10000),
+    supabase.from('projects').select('id, code, name, segment, status').eq('project_type', 'revenue').limit(10000),
   ]);
   const risks = (risksRes.data ?? []) as Array<{ risk_id: string; project_id: string; description: string; impact: string; probability: string; score: number; status: string; owner: string | null; cross_cutting_class: string; emv_usd: number | null; residual_emv_usd: number | null; cost_impact_usd: number | null; risk_type: string | null }>;
   const projects = (projectsRes.data ?? []) as Array<{ id: string; code: string; name: string; segment: string; status: string }>;

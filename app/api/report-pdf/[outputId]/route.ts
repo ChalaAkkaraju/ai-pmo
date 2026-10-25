@@ -94,8 +94,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Report not found' }, { status: 404 });
   }
 
-  // 3. Build the in-app URL Puppeteer will navigate to. The token doubles
-  //    as the auth so we can hit the same page the user would see.
+  // 3. Build the in-app URL Puppeteer will navigate to. Access is session-based,
+  //    so the headless browser must carry the caller's auth cookies (below) —
+  //    otherwise the proxy redirects it to /login and we print the sign-in page.
   const baseUrl = `${url.protocol}//${url.host}`;
   const reportUrl = `${baseUrl}/report/${outputId}`;
 
@@ -121,6 +122,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     page.on('pageerror', (err: unknown) => {
       console.log('[report-pdf:browser:pageerror]', (err as Error).message);
     });
+
+    // Forward the signed-in user's cookies so the report renders as them.
+    const cookies = request.cookies.getAll().map((c) => ({ name: c.name, value: c.value, url: baseUrl }));
+    if (cookies.length) await page.setCookie(...cookies);
 
     console.log(`[report-pdf] navigating to ${reportUrl}`);
 
@@ -157,7 +162,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true, // honor background colors (letterhead box, callouts)
-      margin: { top: '18mm', bottom: '18mm', left: '16mm', right: '16mm' },
+      margin: { top: '14mm', bottom: '14mm', left: '14mm', right: '14mm' },
       preferCSSPageSize: false,
     });
 

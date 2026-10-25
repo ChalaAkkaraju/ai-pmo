@@ -69,3 +69,7 @@ After the pmo-entry block, decide who the entry's natural owner is. If that owne
   { "description": "<one concrete task on the entry just raised>", "assigned_to_role": "<one of: pm | procurement | risk | sponsor | commercial | project_controls | program_manager | engineering_manager | construction_manager | hse_manager>", "urgency": "L|M|H", "source_ref": null }
 ]
 ```
+
+## IT projects — funding source
+
+When the project is an IT (non-revenue) project, add `"funding_source"` to the pmo-entry block: `"project_contingency"` when the change fits inside the project's own contingency (the sponsor decides), `"bucket_reserve"` when it needs the bucket's reserve (bucket owner up to the delegation limit, else the CIO), or `"displacement"` when funding it would push another project below the waterline (the investment board decides). Say in one sentence which pot you chose and why.

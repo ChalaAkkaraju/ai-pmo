@@ -18,7 +18,10 @@ The book follows a deliberate arc. It opens with the problem AI PMO exists to so
 the product in its lane. It then walks the **money story** end to end: earned value,
 forecasting, revenue recognition, cash flow, margin, and change. From there it turns
 to risk, issues and performance; to how the intelligence is made legible; and
-finally to the standards and governance that keep every number defensible.
+to the standards and governance that keep every number defensible. A final part
+leaves the customer contract behind and follows the company's *own* money: the
+**IT portfolio**, with its annual funding cycle, its stage gates and its delegation
+of authority — the first of the overhead project types the platform now supports.
 
 A note on the figures: worked examples use a synthetic demonstration portfolio, not
 any real project or organisation.

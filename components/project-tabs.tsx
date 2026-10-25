@@ -20,7 +20,7 @@
  * Tabs are controlled so the Overview can link straight into a deeper tab.
  */
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { IssuesTable } from './issues-table';
 import { IssueHealthPanel } from './issue-health-panel';
@@ -60,6 +60,10 @@ import { LabourByWbs } from './labour-by-wbs';
 import { ResourceLoadPanel } from './resource-load-view';
 import { MarginBridgeCard } from './margin-bridge';
 import { PlanningArtefactView, type ArtefactRow } from './planning-artefact-view';
+import { GatesPanel, type GatesPanelProps } from './gates-panel';
+import { ItOverviewPanel } from './it-overview-panel';
+import { ItChangeOrdersPanel } from './it-governance-panels';
+import type { ProjectType } from '@/lib/types';
 import type { EvMetrics, EvCurve, EvBranch, EarnedScheduleMetrics } from '@/lib/earned-value';
 import type { ForecastPoint } from '@/lib/forecast';
 import type { CommitmentSummary, PoRow, LabourProductivity } from '@/lib/cost-commitment';
@@ -113,6 +117,12 @@ interface ProjectTabsProps {
   marginBridge: MarginBridge;
   marginSyncedAt: string | null;
   scheduleEnvelope: { forecastFinish: string | null; targetFinish: string | null; breachDays: number | null };
+  /** Project population (migration 0045). Non-revenue types get a Gates tab and lose the contract-coupled tabs. */
+  projectType?: ProjectType;
+  /** Stage-gate state for non-revenue projects (template, decisions, sanction events). */
+  gates?: GatesPanelProps['gates'];
+  /** Capital projects (0051): the Overview tab content — FEL track, AFE, asset chain, settlement readiness. */
+  capitalOverview?: ReactNode;
   data: {
     issues: Array<Record<string, unknown>>;
     risks: Array<Record<string, unknown>>;
@@ -153,9 +163,17 @@ export function ProjectTabs({
   marginBridge,
   marginSyncedAt,
   scheduleEnvelope,
+  projectType = 'revenue',
+  gates,
+  capitalOverview,
   data,
 }: ProjectTabsProps) {
-  const [tab, setTab] = useState(['overview', 'structure', 'schedule', 'ev', 'cost', 'resources', 'risks', 'cos', 'variance', 'planning'].includes(initialTab ?? '') ? (initialTab as string) : 'overview');
+  const isIt = projectType === 'it';
+  // Capital has no earned value against a contract, no revenue recognition and no weekly variance reports:
+  // its money lives in the asset chain on the Overview tab.
+  const isCapital = projectType === 'capital' && !!capitalOverview;
+  const showRevenueTabs = !isIt && !isCapital;
+  const [tab, setTab] = useState(['overview', 'gates', 'structure', 'schedule', 'ev', 'cost', 'resources', 'risks', 'cos', 'variance', 'planning'].includes(initialTab ?? '') ? (initialTab as string) : 'overview');
 
   const planningByAgent: Record<string, ArtefactRow[]> = {};
   for (const row of data.planning_outputs ?? []) {
@@ -170,19 +188,29 @@ export function ProjectTabs({
     <Tabs.Root value={tab} onValueChange={setTab} className="mt-8">
       <Tabs.List className="flex flex-wrap items-center gap-x-1 gap-y-2 border-b">
         <TabTrigger value="overview" label="Overview" />
+        {isIt && gates && <TabTrigger value="gates" label="Gates" count={gates.decisions.length} highlight />}
         <TabTrigger value="structure" label="Structure" count={workPackages.length} />
         <TabTrigger value="schedule" label="Schedule" count={tasks.length} />
-        <TabTrigger value="ev" label="Earned value" highlight />
-        <TabTrigger value="cost" label="Cost" />
-        <TabTrigger value="resources" label="Resources" count={resourceLoad.roles.length} />
+        {showRevenueTabs && <TabTrigger value="ev" label="Earned value" highlight />}
+        {showRevenueTabs && <TabTrigger value="cost" label="Cost" />}
+        {!isCapital && <TabTrigger value="resources" label="Resources" count={resourceLoad.roles.length} />}
         <span className="mx-2 self-center text-muted-foreground/40">|</span>
         <TabTrigger value="risks" label="Risks & issues" count={data.risks.length + data.issues.length} />
-        <TabTrigger value="cos" label="Changes & trends" count={data.change_orders.length} />
-        <TabTrigger value="variance" label="Variance" count={data.variance_reports.length} />
+        <TabTrigger value="cos" label={isIt ? 'Change orders' : 'Changes & trends'} count={data.change_orders.length} />
+        {showRevenueTabs && <TabTrigger value="variance" label="Variance" count={data.variance_reports.length} />}
         <TabTrigger value="planning" label="Planning" count={planningCount} dimWhenEmpty />
       </Tabs.List>
 
+      {isIt && gates && (
+        <Tabs.Content value="gates" className="pt-6">
+          <GatesPanel projectCode={projectCode} gates={gates} canWrite={canWrite} />
+        </Tabs.Content>
+      )}
+
       <Tabs.Content value="overview" className="pt-6">
+        {isCapital ? capitalOverview : isIt && gates ? (
+          <ItOverviewPanel gates={gates} risks={data.risks} issues={data.issues} actions={data.action_items ?? []} changeOrders={data.change_orders} go={setTab} projectCode={projectCode} canWrite={canWrite} />
+        ) : (
         <OverviewPanel
           metrics={evMetrics}
           status={projectStatus}
@@ -195,6 +223,7 @@ export function ProjectTabs({
           scheduleEnvelope={scheduleEnvelope}
           go={setTab}
         />
+        )}
       </Tabs.Content>
 
       <Tabs.Content value="structure" className="space-y-6 pt-6">
@@ -283,8 +312,14 @@ export function ProjectTabs({
       </Tabs.Content>
 
       <Tabs.Content value="cos" className="pt-6">
-        <ChangeOrdersPanel rows={data.change_orders} soldContract={marginBridge.soldContract} baseMarginPct={marginBridge.soldMarginPct} />
-        <ChangeOrdersTable rows={data.change_orders} />
+        {isIt && gates ? (
+          <ItChangeOrdersPanel projectCode={projectCode} bucket={gates.project.portfolio_bucket} changeOrders={data.change_orders} matrix={gates.matrix} bodies={gates.gov.bodies} canWrite={canWrite} records={gates.records} myRoleId={gates.gov.myRoleId} />
+        ) : (
+          <>
+            <ChangeOrdersPanel rows={data.change_orders} soldContract={marginBridge.soldContract} baseMarginPct={marginBridge.soldMarginPct} />
+            <ChangeOrdersTable rows={data.change_orders} />
+          </>
+        )}
       </Tabs.Content>
 
       <Tabs.Content value="variance" className="space-y-6 pt-6">

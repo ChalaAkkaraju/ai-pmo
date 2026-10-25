@@ -291,6 +291,9 @@ function defaultPlaceholderFor(roleDisplayName: string, projectCode: string | nu
     return 'e.g. "Identify the two risks that deserve the most management attention through the warranty tail."';
   }
   const name = roleDisplayName.toLowerCase();
+  if (name.includes('r&d')) {
+    return 'e.g. "Which programmes\u2019 business cases have drifted since commit, and what should we do about them?"';
+  }
   if (name.includes('sponsor')) {
     return 'e.g. "Give me a 1-page executive briefing on portfolio health — what needs my attention?"';
   }
@@ -319,6 +322,16 @@ const AGENT_LABELS: Record<AgentType, string> = {
   portfolio_risk_reviewer: 'Portfolio Risk Reviewer',
   status_reporter: 'Status Reporter',
   cost_controller: 'Cost Controller',
+  business_case_reviewer: 'Business Case Reviewer',
+  waterline_ranker: 'Waterline Ranker',
+  gate_reviewer: 'Gate Reviewer',
+  continuation_reviewer: 'Continuation Reviewer',
+  executive_briefing_writer: 'Executive Briefing Writer',
+  governance_health_reviewer: 'Governance Health Reviewer',
+  business_case_reconciler: 'Business Case Reconciler',
+  settlement_readiness_reviewer: 'Settlement Readiness Reviewer',
+  afe_reviewer: 'AFE Reviewer',
+  supplementary_afe_reviewer: 'Supplementary AFE Reviewer',
 };
 
 /** Pick n items in a seeded random order. Seed 0 = the pool's own order, so the
@@ -335,17 +348,29 @@ function rotate<T>(items: T[], n: number, seed: number): T[] {
 /** Starter prompts shown when the chat is empty — role-aware. Creation/assign
  * options surface the write actions that aren't otherwise discoverable now that
  * everything runs through the agent. Clicking one pre-fills the input to edit. */
-function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { allowedAgents: AgentType[]; canWrite: boolean; projectCode: string | null; onPick: (p: string) => void }) {
+function SuggestedPrompts({ allowedAgents, canWrite, projectCode, projectType, onPick }: { allowedAgents: AgentType[]; canWrite: boolean; projectCode: string | null; projectType?: string | null; onPick: (p: string) => void }) {
   const has = (a: AgentType) => allowedAgents.includes(a);
   // Rotate the starter questions: each context has a pool; four are shown at
   // random each time the panel opens, and "More prompts" reshuffles.
   const [seed, setSeed] = useState(0);
   useEffect(() => { setSeed(Math.random()); }, []);
+  const isItRole = has('waterline_ranker') || has('gate_reviewer') || has('continuation_reviewer') || has('business_case_reviewer');
+  const isItProject = projectType === 'it' || (projectType == null && !!projectCode && /^NW-IT-/.test(projectCode));
+  // R&D roles share the gate / business-case agents with IT, so they are told
+  // apart by the agent only R&D has: the Business Case Reconciler.
+  const isRndRole = has('business_case_reconciler');
+  const isRndProject = projectType === 'rnd' || (projectType == null && !!projectCode && /^NW-RD-/.test(projectCode));
+  // Capital roles are told apart the same way: by the agents only capital has.
+  const isCapitalRole = has('afe_reviewer') || has('settlement_readiness_reviewer');
+  const isCapitalProject = projectType === 'capital' || (projectType == null && !!projectCode && /^NW-CAP-/.test(projectCode));
   const create: Array<{ label: string; prompt: string }> = [];
   if (projectCode && canWrite) {
     if (has('risk_analyst')) create.push({ label: '\uFF0B Raise a risk', prompt: 'Log a risk: [describe the risk \u2014 cause \u2192 event \u2192 consequence]' });
     if (has('issue_logger')) create.push({ label: '\uFF0B Log an issue', prompt: 'Log an issue: [describe the issue and its effect]' });
     if (has('change_order_reviewer')) create.push({ label: '\uFF0B Change / trend entry', prompt: 'Add a change/trend entry: [describe the scope change]' });
+    if (isItProject && has('continuation_reviewer')) create.push({ label: '\uFF0B Continuation request', prompt: 'Request the next-year continuation slice for this project: [amount and remaining scope]' });
+    if (isItProject && has('gate_reviewer')) create.push({ label: '\uFF0B Log a displacement', prompt: 'Log a displacement: [who] was pulled to [incident / run work / project code] from [date] \u2014 [days of slip]' });
+    if (isItProject && has('gate_reviewer')) create.push({ label: '\uFF0B Benefits report', prompt: 'Record realised benefits for [period]: planned [amount], realised [amount] \u2014 [why]' });
   }
   if (canWrite) create.push({ label: '\uFF0B Assign a task', prompt: 'Assign a task to [User / role]: [what to do] \u2014 [low/medium/high] urgency' });
 
@@ -363,14 +388,73 @@ function SuggestedPrompts({ allowedAgents, canWrite, projectCode, onPick }: { al
     ['stakeholder_analyst', 'Build the stakeholder register and the engagement approach.'],
     ['wbs_builder', 'Build the work breakdown structure to Level 1\u20133.'],
     ['charter_drafter', 'Draft the project charter from the intake data.'],
+    ['business_case_reviewer', 'Review this business case \u2014 is the value claim honest and is it ready to rank?'],
+    ['gate_reviewer', 'Prepare the gate package for the current gate and score the exit criteria.'],
+    ['continuation_reviewer', 'Should this project be funded for next fiscal year? Judge cost-to-complete against benefit still achievable.'],
+    ['waterline_ranker', 'Rank the IT portfolio within each bucket for the fiscal year and draw the waterline.'],
     ['communications_planner', 'Build the communications plan for this project.'],
     ['lessons_learned_synthesiser', 'What are the top firm-level lessons from this project?'],
     ['closeout_reporter', 'Draft the closeout executive summary.'],
   ];
   let ask: string[];
-  if (projectCode) {
+  if (projectCode && isCapitalProject) {
+    ask = ['Where does this project stand \u2014 FEL stage, AFE, forecast against it, and what needs my attention?'];
+    if (has('settlement_readiness_reviewer')) ask.push('Is this project ready to settle and capitalise at its in-service date? List what blocks it.');
+    if (has('afe_reviewer')) ask.push('Review the AFE package \u2014 is the estimate mature enough, and is the capex classification right?');
+    if (has('supplementary_afe_reviewer')) ask.push('Does the forecast need a supplementary AFE, and who has to approve it at the revised total?');
+    if (has('risk_analyst')) ask.push('What are the top risks to the in-service date, and why?');
+    if (has('gate_reviewer')) ask.push('Prepare the package for the next FEL gate and score the exit criteria.');
+    ask.push('Walk me through the asset chain \u2014 appropriated, committed, actual, settled, capitalised. Where is it stuck?');
+    ask.push('Summarise this project for the capital committee in five bullets.');
+  } else if (!projectCode && isCapitalRole) {
+    ask = ['Which capital decisions are waiting for me, and what should I look at before deciding?'];
+    if (has('supplementary_afe_reviewer')) ask.push('Which projects are forecast more than 10% over their AFE without a supplementary raised?');
+    if (has('settlement_readiness_reviewer')) ask.push('Which projects will miss capitalisation this year if nothing changes, and why?');
+    ask.push('How much of this year\u2019s capital envelope is sanctioned, and how much is still in front-end loading?');
+    ask.push('Which assets are in service but still sitting in AuC?');
+    ask.push('Which in-service dates have slipped into next fiscal year?');
+    if (has('afe_reviewer')) ask.push('Which AFE requests are coming up, and are their estimates at the right class for sanction?');
+    ask.push('Where is spend being expensed rather than capitalised, against what the AFE assumed?');
+  } else if (projectCode && isRndProject) {
+    ask = ['Where does this programme stand \u2014 stage, money released at the last gate, burn against that gate budget, and what needs my attention?'];
+    if (has('business_case_reconciler')) ask.push('Does the business case approved at the last gate still hold? Compare the versions and show what drifted.');
+    if (has('gate_reviewer')) ask.push('Prepare the package for the next gate and score the exit criteria.');
+    if (has('risk_analyst')) ask.push('What are the top risks to this programme reaching launch, and why?');
+    if (has('cost_controller')) ask.push('How much of the money released at the last gate is spent, and will it last to the next gate?');
+    ask.push('How has the launch date moved since commit, and why?');
+    ask.push('Summarise this programme for the gate board in five bullets.');
+  } else if (!projectCode && isRndRole) {
+    ask = ['Which R&D programmes need a gate decision from me this week, and why?'];
+    if (has('business_case_reconciler')) ask.push('Which programmes\u2019 business cases have drifted most since they were committed?');
+    ask.push('Rank the R&D pipeline on expected commercial value \u2014 what should we fund next, and what should we stop?');
+    ask.push('Are we killing programmes early and cheaply enough? Review the recent terminations.');
+    ask.push('Which programmes have slipped their launch date, even though they are inside budget?');
+    ask.push('How much money has been released at gates but not yet spent across the pipeline?');
+    ask.push('Which programmes are running past the benchmark cycle time for their stage?');
+  } else if (projectCode && isItProject) {
+    const itFirst: AgentType[] = ['gate_reviewer', 'business_case_reviewer', 'continuation_reviewer', 'change_order_reviewer', 'risk_analyst', 'issue_logger', 'status_reporter'];
+    const roleAsks = itFirst.filter(has).map((a) => ASK_BY_AGENT.find(([x]) => x === a)?.[1]).filter((x): x is string => !!x);
+    ask = ['Where does this project stand \u2014 stage, gate, funding position, and what needs my attention?', ...roleAsks];
+  } else if (projectCode) {
     const roleAsks = ASK_BY_AGENT.filter(([a]) => has(a)).map(([, prm]) => prm);
     ask = ['Summarise this project\u2019s health \u2014 cost, schedule, and what needs my attention.', ...roleAsks];
+  } else if (has('executive_briefing_writer') || has('governance_health_reviewer')) {
+    ask = [];
+    if (has('executive_briefing_writer')) ask.push('Write this month\u2019s enterprise portfolio brief for the leadership meeting.');
+    if (has('governance_health_reviewer')) ask.push('Is our delegation of authority working? Review the last 90 days of decisions.');
+    if (has('executive_briefing_writer')) ask.push('Which five things should I ask about this week, and why?');
+    if (has('portfolio_risk_reviewer')) ask.push('Where is cross-cutting risk emerging across the revenue portfolio?');
+    if (has('executive_briefing_writer')) ask.push('Which PMO is furthest from its plan this quarter, as a ratio, and what is driving it?');
+    if (has('governance_health_reviewer')) ask.push('Where are decisions waiting longest, and at which body?');
+  } else if (isItRole && !has('variance_analyst')) {
+    ask = ['Which IT projects need a decision from me this week, and why?'];
+    if (has('waterline_ranker')) ask.push('Rank the IT portfolio within each bucket for next fiscal year and draw the waterline.');
+    if (has('continuation_reviewer')) ask.push('Which running projects need a continuation decision, and what does cost-to-complete say?');
+    if (has('gate_reviewer')) ask.push('Which projects are at a gate, and are their packages ready?');
+    ask.push('Which holds are about to expire, and what should happen to each?');
+    ask.push('Which buckets are over-subscribed for next fiscal year, and what falls below the line?');
+    ask.push('Where is delivery slipping because people were displaced to other work?');
+    if (has('gate_reviewer')) ask.push('Which closed projects realised less benefit than their business case promised?');
   } else {
     ask = ['Which projects need attention this week, and why? Cite the variance reports.'];
     if (has('portfolio_risk_reviewer')) ask.push('Where is cross-cutting risk emerging across the portfolio?');
@@ -430,6 +514,11 @@ export function FloatingAgentWidget({
       : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
   const pathname = usePathname();
+  const [projectType, setProjectType] = useState<string | null>(null);
+  useEffect(() => {
+    const el = document.querySelector('[data-project-type]');
+    setProjectType(el?.getAttribute('data-project-type') ?? null);
+  }, [pathname]);
   const router = useRouter();
 
   // Listen for in-page triggers (e.g. the guided setup checklist) asking us to
@@ -497,6 +586,9 @@ export function FloatingAgentWidget({
 
   if (allowedAgents.length === 0) return null;
 
+  // Project context comes from the URL (both the current /projects/<code> route
+  // and the legacy /access/<token>/projects/<code> one); the page also stamps
+  // data-project-* on its root so we know the type without another fetch.
   const projectMatch = pathname?.match(/(?:\/access\/[^/]+)?\/projects\/([^/?]+)/);
   const projectCode = projectMatch ? decodeURIComponent(projectMatch[1]) : null;
 
@@ -571,7 +663,7 @@ export function FloatingAgentWidget({
     }
   }
 
-  const contextLabel = projectCode ?? 'Portfolio';
+  const contextLabel = projectCode ? `${projectCode}${projectType === 'it' ? ' · IT project' : projectType === 'rnd' ? ' · R&D programme' : projectType === 'capital' ? ' · Capital project' : ''}` : pathname?.startsWith('/portfolio/enterprise') ? 'Enterprise · all PMOs' : pathname?.startsWith('/portfolio/it') ? 'IT portfolio' : pathname?.startsWith('/portfolio/rnd') ? 'R&D portfolio' : pathname?.startsWith('/portfolio/capital') ? 'Capital portfolio' : 'Portfolio';
   const dropdownOptions: AgentTypeOrAuto[] = canWrite ? ['auto', ...allowedAgents] : [...allowedAgents];
 
   // Popped-out brief panels render alongside the widget — they persist
@@ -642,7 +734,7 @@ export function FloatingAgentWidget({
 
       <div className="flex-1 overflow-y-auto px-4 py-2" style={{ backgroundColor: 'white' }}>
         {history.length === 0 && !isInvoking && (
-          <SuggestedPrompts allowedAgents={allowedAgents} canWrite={canWrite} projectCode={projectCode} onPick={(p) => setPrompt(p)} />
+          <SuggestedPrompts allowedAgents={allowedAgents} canWrite={canWrite} projectCode={projectCode} projectType={projectType} onPick={(p) => setPrompt(p)} />
         )}
         {history.map((h, idx) => (
           <InvocationCard key={idx} invocation={h} isLatest={idx === 0} onUseAsPrompt={applyFollowUp} onPopOut={handlePopOut} submittedCode={h.output_id ? submittedEntries[h.output_id] : undefined} onEntrySubmitted={markEntrySubmitted} />
@@ -711,13 +803,25 @@ export function FloatingAgentWidget({
               {!canWrite ? ' · read-only (analytical agents)' : ''}
             </p>
           </div>
-          <button
-            type="submit"
-            disabled={isInvoking || !prompt.trim()}
-            className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-40"
-          >
-            {isInvoking ? 'Calling…' : 'Send'}
-          </button>
+          <div className="flex items-center gap-2">
+            {prompt.trim() && !isInvoking && (
+              <button
+                type="button"
+                onClick={() => setPrompt('')}
+                className="rounded-md border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                aria-label="Clear the message"
+              >
+                Clear
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={isInvoking || !prompt.trim()}
+              className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition hover:opacity-90 disabled:opacity-40"
+            >
+              {isInvoking ? 'Calling…' : 'Send'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

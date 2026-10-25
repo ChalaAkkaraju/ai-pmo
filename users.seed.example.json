@@ -1,5 +1,5 @@
 {
-  "__comment": "Copy this file to users.seed.json (git-ignored) and edit. Keyed by role_type — one entry per colleague. Change every password before seeding. Emails can be any address you control; for a local demo the .local domain is fine since accounts are created pre-confirmed (no email is sent).",
+  "__comment": "Copy this file to users.seed.json (git-ignored) and edit. Keyed by role_type \u2014 one entry per colleague. Change every password before seeding. Emails can be any address you control; for a local demo the .local domain is fine since accounts are created pre-confirmed (no email is sent).",
   "pm": {
     "email": "j.okafor@demo.aipmo.local",
     "password": "change-me-pm-9f3b"
@@ -43,5 +43,77 @@
   "admin": {
     "email": "admin@demo.aipmo.local",
     "password": "change-me-admin-7x4z"
+  },
+  "it_portfolio_manager": {
+    "email": "p.raman@demo.aipmo.local",
+    "password": "change-me-itpm-4k7q"
+  },
+  "it_pm": {
+    "email": "d.osei@demo.aipmo.local",
+    "password": "change-me-itpj-9m2r"
+  },
+  "it_sponsor": {
+    "email": "e.novak@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "it_bucket_owner": {
+    "email": "s.whitaker@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "it_board_member": {
+    "email": "a.chen@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "it_finance": {
+    "email": "m.lopez@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "portfolio_executive": {
+    "email": "d.whitfield@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "rnd_portfolio_manager": {
+    "email": "i.halvorsen@demo.aipmo.local",
+    "password": "change-me-rndpf-7q2v"
+  },
+  "rnd_pm": {
+    "email": "t.ferreira@demo.aipmo.local",
+    "password": "change-me-rndpm-3w8n"
+  },
+  "rnd_sponsor": {
+    "email": "m.bell@demo.aipmo.local",
+    "password": "change-me-rndsp-5r4c"
+  },
+  "rnd_gatekeeper": {
+    "email": "y.tanaka@demo.aipmo.local",
+    "password": "change-me-rndgk-9t6h"
+  },
+  "rnd_board_member": {
+    "email": "n.kowalski@demo.aipmo.local",
+    "password": "change-me-rndbd-2m5j"
+  },
+  "rnd_finance": {
+    "email": "a.rahman@demo.aipmo.local",
+    "password": "change-me-rndfi-8k1d"
+  },
+  "capital_portfolio_manager": {
+    "email": "o.haddad@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "capital_pm": {
+    "email": "r.kim@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "capital_sponsor": {
+    "email": "l.moreno@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "capital_committee_member": {
+    "email": "h.brooks@demo.aipmo.local",
+    "password": "AIPMO2026"
+  },
+  "capital_finance": {
+    "email": "v.nguyen@demo.aipmo.local",
+    "password": "AIPMO2026"
   }
 }
