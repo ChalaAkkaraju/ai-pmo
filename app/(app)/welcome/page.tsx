@@ -13,6 +13,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google';
 import { getSessionRole } from '@/lib/auth';
 import { WelcomeActions } from '@/components/welcome-actions';
 import { WorkspaceLauncher, type LaunchCard } from '@/components/workspace-launcher';
+import { WORKSPACES } from '@/lib/welcome-content';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { scopedTypes } from '@/lib/workspace';
 import type { Role } from '@/lib/types';
@@ -65,23 +66,11 @@ export default async function WelcomePage() {
   const first = (rt: string) => roles.find((r) => r.role_type === rt) ?? null;
   const revenueOwn = !/^(it_|rnd_|capital_)/.test(own.role_type) && !['portfolio_executive', 'admin'].includes(own.role_type);
   const revPersona = revenueOwn ? { id: 'self', name: own.name } : first('pm');
-  const all: LaunchCard[] = [
-    { key: 'enterprise', title: 'Enterprise', question: 'What needs a decision this week — across every PMO?',
-      highlights: ['One attention list for all four PMOs', 'Who decides what, and how fast they do it', 'The board pack, drafted by the executive agent'],
-      measures: ['Decisions open', 'Governance health', 'Ratios'], roleId: first('portfolio_executive')?.id ?? null, href: '/portfolio/enterprise' },
-    { key: 'revenue', title: 'Revenue', question: 'Will we deliver each contract at the margin we sold?',
-      highlights: ['ERP cost and scheduler progress joined into earned value', 'Margin bridge from sold to forecast', 'Risks, issues and changes on every project'],
-      measures: ['Earned value', 'CPI / SPI', 'Margin'], roleId: revPersona?.id ?? null, href: '/dashboard' },
-    { key: 'it', title: 'IT', question: 'Which projects get funded this year — and do they deliver?',
-      highlights: ['Bucket envelopes ranked to a waterline', 'Scope, budget and capex split locked at Stage Gate 1', 'Benefits realised against the case'],
-      measures: ['Waterline', 'Gate status', 'Benefits'], roleId: first('it_portfolio_manager')?.id ?? null, href: '/portfolio/it' },
-    { key: 'rnd', title: 'R&D / NPI', question: 'Does the business case we funded still hold?',
-      highlights: ['Money released gate by gate, not all at once', 'Case drift checked between gates, not at them', 'Kills graded — early and cheap is a win'],
-      measures: ['Expected value', 'Cycle time', 'Kill quality'], roleId: first('rnd_portfolio_manager')?.id ?? null, href: '/portfolio/rnd' },
-    { key: 'capital', title: 'Capital', question: 'Will this spend become an asset on the register — on time?',
-      highlights: ['Front-end loading to the AFE at FEL3', 'Forecast vs AFE, with the supplementary trigger', 'Settlement readiness before in-service'],
-      measures: ['AFE vs forecast', 'Asset chain', 'Settlement'], roleId: first('capital_portfolio_manager')?.id ?? null, href: '/portfolio/capital' },
-  ];
+  const roleFor: Record<string, string | null> = {
+    enterprise: first('portfolio_executive')?.id ?? null, revenue: revPersona?.id ?? null, it: first('it_portfolio_manager')?.id ?? null,
+    rnd: first('rnd_portfolio_manager')?.id ?? null, capital: first('capital_portfolio_manager')?.id ?? null,
+  };
+  const all: LaunchCard[] = WORKSPACES.map((w) => ({ ...w, roleId: roleFor[w.key] }));
   const reach = scopedTypes(resolved.role) as string[];
   const cards = canSwitch ? all : all.filter((c) => (c.key === 'enterprise' ? resolved.role.role_type === 'portfolio_executive' : reach.includes(c.key)));
   const showLauncher = cards.length >= 2;
