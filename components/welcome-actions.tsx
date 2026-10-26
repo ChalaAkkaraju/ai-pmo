@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sparkles, Compass } from 'lucide-react';
 
-export function WelcomeActions() {
+export function WelcomeActions({ hideEnter = false }: { hideEnter?: boolean } = {}) {
   const router = useRouter();
   const [skip, setSkip] = useState(false);
 
@@ -27,14 +27,14 @@ export function WelcomeActions() {
 
   return (
     <div className="mt-7 flex flex-col items-center gap-3">
-      <div className="grid w-full max-w-md grid-cols-2 gap-3">
-        <button
+      <div className={`grid w-full gap-3 ${hideEnter ? 'max-w-[14rem] grid-cols-1' : 'max-w-md grid-cols-2'}`}>
+        {!hideEnter && <button
           type="button"
           onClick={enter}
           className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 px-6 py-3 text-sm font-medium text-white shadow-sm shadow-violet-500/20 transition hover:from-violet-400 hover:to-indigo-400"
         >
           <Sparkles className="h-4 w-4" strokeWidth={2} /> Enter dashboard
-        </button>
+        </button>}
         <Link
           href={`/about`}
           className="group inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-6 py-3 text-sm font-medium text-violet-700 transition hover:bg-violet-100 hover:border-violet-300"
