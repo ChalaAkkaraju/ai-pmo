@@ -8,6 +8,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ProjectType } from './types';
 import { PROJECT_TYPE_LABELS } from './workspace';
+import { caseDrift, cycleTimes, gateToGateBurn } from './rnd';
+import { commitStage } from './stage-gates';
+import type { BusinessCaseVersion, GateDecision, SanctionEvent, StageTemplate } from './types';
 
 export interface TypeSummary {
   type: ProjectType;
@@ -223,6 +226,48 @@ export async function loadEnterpriseView(sb: SupabaseClient): Promise<Enterprise
     reserveDrawnPct: reserve > 0 ? (reserveDraws / reserve) * 100 : null,
   };
 
+  // ---- R&D attention: the same signals the R&D workspace raises ------------
+  // (stage running past its benchmark, spend over the money the last gate
+  // released, a case gone underwater or drifted against us since commit, and
+  // holds) — so the enterprise view and the R&D PMO never disagree.
+  const rndLive = rnd.filter((p) => !['terminated', 'cancelled', 'closed'].includes(p.lifecycle_status ?? ''));
+  if (rndLive.length) {
+    const ids = rndLive.map((p) => p.id);
+    const [tplR, gdR, seR, costR, cvR, tplIdR] = await Promise.all([
+      sb.from('stage_templates').select('*').eq('project_type', 'rnd'),
+      sb.from('gate_decisions').select('*').in('project_id', ids),
+      sb.from('sanction_events').select('*').in('project_id', ids).eq('kind', 'gate_budget'),
+      sb.from('cost_actuals').select('project_id, period, actual_cost').in('project_id', ids),
+      sb.from('business_case_versions').select('*').in('project_id', ids),
+      sb.from('projects').select('id, stage_template_id').in('id', ids),
+    ]);
+    const tpls = (tplR.data ?? []) as StageTemplate[];
+    const tplOf = new Map(((tplIdR.data ?? []) as Array<{ id: string; stage_template_id: string | null }>).map((r) => [r.id, tpls.find((t) => t.id === r.stage_template_id) ?? null]));
+    const by = <T extends { project_id: string }>(rows: T[]) => { const m = new Map<string, T[]>(); for (const r of rows) (m.get(r.project_id) ?? m.set(r.project_id, []).get(r.project_id)!).push(r); return m; };
+    const gdBy = by((gdR.data ?? []) as GateDecision[]);
+    const seBy = by((seR.data ?? []) as SanctionEvent[]);
+    const costBy = by((costR.data ?? []) as Array<{ project_id: string; period: string; actual_cost: number }>);
+    const cvBy = by((cvR.data ?? []) as BusinessCaseVersion[]);
+    for (const p of rndLive) {
+      const tpl = tplOf.get(p.id) ?? null;
+      const g = gdBy.get(p.id) ?? [];
+      const cv = (cvBy.get(p.id) ?? []).slice().sort((a, b) => a.version - b.version);
+      const spend = (costBy.get(p.id) ?? []).map((c) => ({ posting_date: c.period, amount: Number(c.actual_cost) }));
+      const burn = gateToGateBurn(g, seBy.get(p.id) ?? [], spend);
+      if (burn.over) attention.push({ type: 'rnd', code: p.code, name: p.name, signal: 'Over gate budget', detail: `${burn.pct ?? '—'}% of the money ${burn.since_gate ?? 'the last gate'} released`, since: burn.since_date, tone: 'warn', href: href(p.code) });
+      const slow = cycleTimes(tpl, g, cv[0]?.authored_on ?? null).find((c) => c.in_progress && c.delta_days !== null && c.delta_days > 0);
+      if (slow) attention.push({ type: 'rnd', code: p.code, name: p.name, signal: 'Stage running long', detail: `${slow.name}: ${slow.delta_days} days past its ${slow.benchmark_days}-day target`, since: null, tone: 'warn', href: href(p.code) });
+      const commit = commitStage(tpl);
+      const committed = Boolean(commit && g.some((d) => d.stage_seq === commit.seq && d.decision === 'go'));
+      if (committed) {
+        const d = caseDrift(cv, commit?.seq ?? null);
+        if (d.underwater) attention.push({ type: 'rnd', code: p.code, name: p.name, signal: 'Case underwater since commit', detail: d.summary, since: null, tone: 'bad', href: href(p.code) });
+        else if (d.commit_version && d.current_version && d.commit_version.id !== d.current_version.id && d.lines.some((l) => l.adverse)) attention.push({ type: 'rnd', code: p.code, name: p.name, signal: 'Case drifted since commit', detail: d.lines.filter((l) => l.adverse).map((l) => l.metric).join(', '), since: null, tone: 'warn', href: href(p.code) });
+      }
+      if (p.lifecycle_status === 'on_hold') attention.push({ type: 'rnd', code: p.code, name: p.name, signal: 'On hold', detail: 'programme held at a gate', since: null, tone: 'warn', href: href(p.code) });
+    }
+  }
+
   // R&D mix by where the money stands, not by gate number: the three templates
   // have different gate counts, so a gate-numbered mix would not be comparable
   // across them. Terminations are shown as their own band because in R&D they
@@ -260,10 +305,10 @@ export async function loadEnterpriseView(sb: SupabaseClient): Promise<Enterprise
   ].filter((m) => m.n > 0);
 
   const types: TypeSummary[] = [
-    { type: 'revenue', label: 'Revenue', live: true, total: rev.length, mix: revMix, attention: attention.filter((a) => a.type === 'revenue').length, inScope: revActive.length, inScopeLabel: 'active projects', headline: revRated ? `${Math.round((revHealthy / revRated) * 100)}%` : '—', headlineSub: `of ${revRated} rated active projects on cost and schedule`, href: '/dashboard' },
-    { type: 'it', label: 'IT', live: true, total: it.length, mix: itMix, attention: attention.filter((a) => a.type === 'it').length, inScope: it.length, inScopeLabel: 'projects', headline: itRunning.length ? `${Math.round((itOnTrack / itRunning.length) * 100)}%` : '—', headlineSub: `of ${itRunning.length} committed projects running (not held)`, href: '/portfolio/it' },
-    { type: 'capital', label: 'Capital', live: true, total: cap.length, mix: capMix, attention: attention.filter((a) => a.type === 'capital').length, inScope: cap.length, inScopeLabel: 'projects', headline: capSanctioned.length ? `${Math.round(((capSanctioned.length - capOver.length) / capSanctioned.length) * 100)}%` : '—', headlineSub: `of ${capSanctioned.length} sanctioned projects forecast within AFE tolerance (10%)`, href: '/portfolio/capital' },
-    { type: 'rnd', label: 'R&D / NPI', live: true, total: rnd.length, mix: rndMix, attention: attention.filter((a) => a.type === 'rnd').length, inScope: rnd.length, inScopeLabel: 'programmes', headline: rndKillRate === null ? '—' : `${rndKillRate}%`, headlineSub: rndKillRate === null ? 'no programmes in scope' : `terminated at a gate — in R&D a healthy rate, not a failure count`, href: '/portfolio/rnd' },
+    { type: 'revenue', label: 'Revenue', live: true, total: rev.length, mix: revMix, attention: new Set(attention.filter((a) => a.type === 'revenue').map((a) => a.code)).size, inScope: revActive.length, inScopeLabel: 'active projects', headline: revRated ? `${Math.round((revHealthy / revRated) * 100)}%` : '—', headlineSub: `of ${revRated} rated active projects on cost and schedule`, href: '/dashboard' },
+    { type: 'it', label: 'IT', live: true, total: it.length, mix: itMix, attention: new Set(attention.filter((a) => a.type === 'it').map((a) => a.code)).size, inScope: it.length, inScopeLabel: 'projects', headline: itRunning.length ? `${Math.round((itOnTrack / itRunning.length) * 100)}%` : '—', headlineSub: `of ${itRunning.length} committed projects running (not held)`, href: '/portfolio/it' },
+    { type: 'capital', label: 'Capital', live: true, total: cap.length, mix: capMix, attention: new Set(attention.filter((a) => a.type === 'capital').map((a) => a.code)).size, inScope: cap.length, inScopeLabel: 'projects', headline: capSanctioned.length ? `${Math.round(((capSanctioned.length - capOver.length) / capSanctioned.length) * 100)}%` : '—', headlineSub: `of ${capSanctioned.length} sanctioned projects forecast within AFE tolerance (10%)`, href: '/portfolio/capital' },
+    { type: 'rnd', label: 'R&D / NPI', live: true, total: rnd.length, mix: rndMix, attention: new Set(attention.filter((a) => a.type === 'rnd').map((a) => a.code)).size, inScope: rnd.length, inScopeLabel: 'programmes', headline: rndKillRate === null ? '—' : `${rndKillRate}%`, headlineSub: rndKillRate === null ? 'no programmes in scope' : `terminated at a gate — in R&D a healthy rate, not a failure count`, href: '/portfolio/rnd' },
   ];
   // ---- Capital — funding position, own terms ---------------------------------
   const capAllocs = ((allocRes.data ?? []) as Array<{ project_type: string; fiscal_year: number; bucket: string; allocated_amount: number; reserve_amount: number }>).filter((a) => a.project_type === 'capital');
@@ -320,7 +365,7 @@ const days = (a: string, b: string) => Math.max(0, (new Date(b).getTime() - new 
 export async function loadGovernanceHealth(sb: SupabaseClient, windowDays = 90): Promise<GovernanceHealth> {
   const since = new Date(Date.now() - windowDays * 86400000).toISOString();
   const [recRes, bodyRes, gdRes, projRes, dispRes] = await Promise.all([
-    sb.from('decision_records').select('id, decision_kind, status, required_body_key, decided_body_key, proposed_at, decided_at, proposed_by_role_id, decided_by_role_id, proposed_by_name, decided_by_name, title, amount, minutes, project_id, attendees, concurrences').gte('proposed_at', since).order('proposed_at', { ascending: false }),
+    sb.from('decision_records').select('id, decision_kind, status, required_body_key, decided_body_key, proposed_at, decided_at, proposed_by_role_id, decided_by_role_id, proposed_by_name, decided_by_name, title, amount, minutes, project_id, attendees, concurrences').or(`proposed_at.gte.${since},decided_at.gte.${since}`).order('proposed_at', { ascending: false }),
     sb.from('decision_bodies').select('key, name, quorum'),
     sb.from('gate_decisions').select('project_id, decision, hold_until, decided_on').eq('decision', 'hold').order('decided_on', { ascending: false }),
     sb.from('projects').select('id, lifecycle_status, fiscal_year, fiscal_years_approved, project_type').neq('project_type', 'revenue'),
