@@ -41,21 +41,8 @@ export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 
   const rndHome = isRndRole(resolved.role);
   const execHome = resolved.role.role_type === 'portfolio_executive';
   const homePath = homePathFor(resolved.role);
-  // On the welcome gateway (its own branding + entry buttons) the full header is
-  // redundant — keep only a minimal, centred name / role so you still see who
-  // you're signed in as.
-  if (/\/welcome$/.test(usePathname() ?? '')) {
-    return (
-      <header className="no-print">
-        <div className="container mx-auto flex h-12 max-w-screen-2xl items-center justify-center px-8 leading-tight">
-          <div className="flex flex-col items-center">
-            <span className="text-sm font-semibold text-foreground">{resolved.role.name}</span>
-            <span className="text-[11px] text-muted-foreground">{resolved.definition.display_name}</span>
-          </div>
-        </div>
-      </header>
-    );
-  }
+  // The welcome screen is a full-page launcher with its own branding: no header.
+  if (/\/welcome$/.test(usePathname() ?? '')) return null;
 
   return (
     <header className="no-print border-b bg-background">
