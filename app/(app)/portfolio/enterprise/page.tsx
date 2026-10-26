@@ -7,10 +7,10 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { scopedTypes } from '@/lib/workspace';
+import { scopedTypes, homePathFor } from '@/lib/workspace';
 import { loadEnterpriseView } from '@/lib/cross-type';
 import type { ProjectType } from '@/lib/types';
 import { AskAgentButton } from '@/components/ask-agent-button';
@@ -52,7 +52,9 @@ function TypeChip({ t }: { t: ProjectType }) {
 export default async function EnterprisePortfolioPage() {
   const resolved = await getSessionRole();
   // The cross-type view is for roles that span more than one project type (admin, portfolio executives).
-  if (!resolved || scopedTypes(resolved.role).length < 2) notFound();
+  if (!resolved) notFound();
+  // A role that can't see this workspace goes to its own home instead of a 404.
+  if (scopedTypes(resolved.role).length < 2) redirect(homePathFor(resolved.role));
   const view = await loadEnterpriseView(createSupabaseServiceClient());
   const open = view.attention;
   const awaiting = open.filter((a) => a.signal.startsWith('Awaiting')).length;
