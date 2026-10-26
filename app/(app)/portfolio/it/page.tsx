@@ -4,11 +4,11 @@
  * position. Visible to roles scoped to the 'it' project type.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { roleSees } from '@/lib/workspace';
+import { roleSees, homePathFor } from '@/lib/workspace';
 import { bucketStyle, fmtMoney } from '@/lib/it-portfolio';
 import { canRoleCreateProjectType } from '@/lib/roles';
 import { ItPortfolioClient } from '@/components/it-portfolio-client';
@@ -30,7 +30,9 @@ function bodyColour(key: string): string {
 
 export default async function ItPortfolioPage({ searchParams }: { searchParams: Promise<{ fy?: string }> }) {
   const resolved = await getSessionRole();
-  if (!resolved || !roleSees(resolved.role, 'it')) notFound();
+  if (!resolved) notFound();
+  // A role that can't see this workspace goes to its own home instead of a 404.
+  if (!roleSees(resolved.role, 'it')) redirect(homePathFor(resolved.role));
   const { fy } = await searchParams;
 
   const supabase = createSupabaseServiceClient();
