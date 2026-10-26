@@ -12,7 +12,8 @@
  * demo_switcher = true, the resolved role is the one it is ACTING AS —
  * chosen in the header (cookie `aipmo_acting_role`, per address) or, when
  * nothing is chosen, defaulted from the address: it-*  → IT Portfolio Manager,
- * rnd-* → R&D Portfolio Manager, capital-* → Capital Portfolio Manager. The
+ * rnd-* → R&D Portfolio Manager, capital-* → Capital Portfolio Manager (local ports
+ * behave like the main address). The
  * real signed-in role is returned as `actor`.
  */
 
@@ -33,10 +34,6 @@ export function hostDefaultRoleType(host: string | null | undefined): RoleType |
   if (/^it[-.]/.test(h)) return 'it_portfolio_manager';
   if (/^rnd[-.]/.test(h)) return 'rnd_portfolio_manager';
   if (/^capital[-.]/.test(h)) return 'capital_portfolio_manager';
-  // Local four-site setup: one port per workspace.
-  if (/^(localhost|127\.0\.0\.1):3101$/.test(h)) return 'it_portfolio_manager';
-  if (/^(localhost|127\.0\.0\.1):3102$/.test(h)) return 'rnd_portfolio_manager';
-  if (/^(localhost|127\.0\.0\.1):3103$/.test(h)) return 'capital_portfolio_manager';
   return null;
 }
 

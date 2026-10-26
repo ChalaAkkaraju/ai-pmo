@@ -35,7 +35,7 @@ const STYLE: Record<LaunchCard['key'], { hex: string; soft: string; Icon: Lucide
   capital: { hex: '#d97706', soft: '#fffbeb', Icon: Factory },
 };
 
-export function WorkspaceLauncher({ cards, canSwitch }: { cards: LaunchCard[]; canSwitch: boolean }) {
+export function WorkspaceLauncher({ cards, canSwitch, onSelect }: { cards: LaunchCard[]; canSwitch: boolean; /** Signed-out page: open the sign-in pop-up instead of navigating. */ onSelect?: (c: LaunchCard) => void }) {
   const [busy, setBusy] = useState<string | null>(null);
 
   // Coming back with the browser's Back button restores this page from the
@@ -48,6 +48,7 @@ export function WorkspaceLauncher({ cards, canSwitch }: { cards: LaunchCard[]; c
   }, []);
 
   async function open(c: LaunchCard) {
+    if (onSelect) { onSelect(c); return; }
     setBusy(c.key);
     try { sessionStorage.setItem('pmo-welcome-seen', '1'); } catch { /* ignore */ }
     if (canSwitch && c.roleId) {
