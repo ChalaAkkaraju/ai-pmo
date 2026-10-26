@@ -112,15 +112,6 @@ export function Header({ resolved, signedIn = false, learnItems, inboxCount = 0 
               + Submit capital project
             </Link>
           )}
-          {seesIt && seesRevenue && (
-            <>
-              {execHome && <Link href={`/dashboard`} className="text-muted-foreground transition hover:text-foreground">Revenue</Link>}
-              <Link href={`/portfolio/it`} className="text-muted-foreground transition hover:text-foreground">IT portfolio</Link>
-              {seesRnd && <Link href={`/portfolio/rnd`} className="text-muted-foreground transition hover:text-foreground">R&amp;D portfolio</Link>}
-              {seesCapital && <Link href={`/portfolio/capital`} className="text-muted-foreground transition hover:text-foreground">Capital portfolio</Link>}
-              <Link href={`/portfolio/enterprise`} className="text-muted-foreground transition hover:text-foreground">Enterprise</Link>
-            </>
-          )}
           {seesRnd && !execHome && !seesIt && (
             <Link href={`/portfolio/rnd#decisions`} title="Decisions waiting for you" className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${inboxCount > 0 ? 'bg-violet-600 text-white hover:bg-violet-700' : 'border text-muted-foreground hover:text-foreground'}`}>
               For you

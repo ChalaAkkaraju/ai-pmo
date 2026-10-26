@@ -14,6 +14,7 @@ import { getSessionRole } from '@/lib/auth';
 import { WelcomeActions } from '@/components/welcome-actions';
 import { WorkspaceLauncher, type LaunchCard } from '@/components/workspace-launcher';
 import { WORKSPACES } from '@/lib/welcome-content';
+import { signOut } from '@/app/login/actions';
 import { createSupabaseServiceClient } from '@/lib/supabase';
 import { scopedTypes } from '@/lib/workspace';
 import type { Role } from '@/lib/types';
@@ -77,6 +78,11 @@ export default async function WelcomePage() {
 
   return (
     <div className={`${display.className} relative flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center overflow-hidden px-8 py-10 text-center`}>
+      {/* Already signed in: no header here, so offer the one action that matters — sign out. */}
+      <form action={signOut} className="absolute right-6 top-5 z-10">
+        <button type="submit" className="rounded-lg border bg-white/80 px-4 py-2 text-sm font-semibold text-foreground shadow-sm backdrop-blur transition hover:bg-white">Sign out</button>
+      </form>
+
       {/* Soft colour glow behind the hero */}
       <div
         aria-hidden

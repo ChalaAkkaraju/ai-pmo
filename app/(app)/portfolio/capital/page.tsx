@@ -15,11 +15,11 @@
  *                         date.
  */
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { roleSees } from '@/lib/workspace';
+import { roleSees, homePathFor } from '@/lib/workspace';
 import { canRoleCreateProjectType } from '@/lib/roles';
 import { bodiesFor, loadGovernance } from '@/lib/governance';
 import { ItPortfolioTabs } from '@/components/it-portfolio-tabs';
@@ -45,7 +45,9 @@ const SEV = {
 
 export default async function CapitalPortfolioPage({ searchParams }: { searchParams: Promise<{ fy?: string }> }) {
   const resolved = await getSessionRole();
-  if (!resolved || !roleSees(resolved.role, 'capital')) notFound();
+  if (!resolved) notFound();
+  // A role that can't see this workspace goes to its own home instead of a 404.
+  if (!roleSees(resolved.role, 'capital')) redirect(homePathFor(resolved.role));
   const { fy } = await searchParams;
 
   const sb = createSupabaseServiceClient();

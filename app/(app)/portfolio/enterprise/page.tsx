@@ -7,10 +7,10 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getSessionRole } from '@/lib/auth';
 import { createSupabaseServiceClient } from '@/lib/supabase';
-import { scopedTypes } from '@/lib/workspace';
+import { scopedTypes, homePathFor } from '@/lib/workspace';
 import { loadEnterpriseView } from '@/lib/cross-type';
 import type { ProjectType } from '@/lib/types';
 import { AskAgentButton } from '@/components/ask-agent-button';
@@ -52,7 +52,9 @@ function TypeChip({ t }: { t: ProjectType }) {
 export default async function EnterprisePortfolioPage() {
   const resolved = await getSessionRole();
   // The cross-type view is for roles that span more than one project type (admin, portfolio executives).
-  if (!resolved || scopedTypes(resolved.role).length < 2) notFound();
+  if (!resolved) notFound();
+  // A role that can't see this workspace goes to its own home instead of a 404.
+  if (scopedTypes(resolved.role).length < 2) redirect(homePathFor(resolved.role));
   const view = await loadEnterpriseView(createSupabaseServiceClient());
   const open = view.attention;
   const awaiting = open.filter((a) => a.signal.startsWith('Awaiting')).length;
@@ -72,8 +74,6 @@ export default async function EnterprisePortfolioPage() {
         <div className="flex flex-wrap gap-2 text-xs">
           {resolved.definition.allowed_agents.includes('executive_briefing_writer') && <AskAgentButton agentType="executive_briefing_writer" prompt="Write this month's enterprise portfolio brief for the leadership meeting." label="✨ Draft the board pack" />}
           {resolved.definition.allowed_agents.includes('governance_health_reviewer') && <AskAgentButton agentType="governance_health_reviewer" prompt="Is our delegation of authority working? Review the last 90 days of decisions." label="✨ Review governance health" />}
-          <Link href="/dashboard" className="rounded-md border px-3 py-1.5 font-medium transition hover:bg-muted">Revenue workspace →</Link>
-          <Link href="/portfolio/it" className="rounded-md border px-3 py-1.5 font-medium transition hover:bg-muted">IT workspace →</Link>
         </div>
       </div>
 
@@ -83,10 +83,7 @@ export default async function EnterprisePortfolioPage() {
           <div>
             <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Projects under governance</p>
             <p className="mt-1 text-6xl font-bold tracking-tight tabular-nums">{totalProjects}</p>
-            <p className="mt-2 text-base text-muted-foreground">{live.length} of 4 PMOs live on the platform · {open.length} items need someone&rsquo;s attention today {live.length < 4 ? ' · PMOs not yet live shown with illustrative demo data' : ''}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {view.types.map((t) => <span key={t.type} className={`rounded-full px-3 py-1 text-xs font-semibold ${t.live ? 'text-white' : 'border border-dashed text-muted-foreground'}`} style={t.live ? { backgroundColor: TYPE_STYLE[t.type].hex } : undefined}>{t.label}{t.live ? '' : ` · ${t.phase}`}</span>)}
+            <p className="mt-2 text-base text-muted-foreground">{open.length} items need someone&rsquo;s attention today{live.length < 4 ? ' · PMOs not yet live shown with illustrative demo data' : ''}</p>
           </div>
         </div>
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -192,7 +189,6 @@ export default async function EnterprisePortfolioPage() {
                     ))}
                   </ul>
                 )}
-                <Link href={t.href} className="mt-3 inline-block pl-2 text-xs font-medium hover:underline">Open the {t.label} workspace →</Link>
               </div>
             );
           })}
@@ -217,7 +213,6 @@ export default async function EnterprisePortfolioPage() {
                 <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Forecast at completion</dt><dd className="font-medium tabular-nums">{r.forecastAtCompletion == null ? '—' : money(r.forecastAtCompletion)}</dd></div>
                 <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Contingency consumed</dt><dd className="font-medium tabular-nums">{pct(r.contingencyConsumedPct, 0)}</dd></div>
               </dl>
-              <Link href="/dashboard" className="mt-3 inline-block pl-2 text-xs font-medium hover:underline">Revenue financial position →</Link>
             </div>
           ); })()}
           {(() => { const f = view.itFin; const st = TYPE_STYLE.it; const fundable = f.envelope - f.reserve; const seg = (v: number) => fundable > 0 ? `${Math.min(100, (v / fundable) * 100)}%` : '0%'; return (
@@ -244,7 +239,6 @@ export default async function EnterprisePortfolioPage() {
                 <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Reserve drawn</dt><dd className="font-medium tabular-nums">{pct(f.reserveDrawnPct, 0)}</dd></div>
                 <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Awaiting a decision</dt><dd className="font-medium tabular-nums">{awaiting}</dd></div>
               </dl>
-              <Link href="/portfolio/it" className="mt-3 inline-block pl-2 text-xs font-medium hover:underline">IT funding position →</Link>
             </div>
           ); })()}
           {(() => { const c = view.capitalFin; const seg = (n: number) => `${c.envelope > 0 ? Math.min(100, (n / c.envelope) * 100) : 0}%`; return (
@@ -263,7 +257,6 @@ export default async function EnterprisePortfolioPage() {
                 <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Supplementary AFEs open</dt><dd className="font-medium tabular-nums">{c.supplementaryOpen}</dd></div>
                 <div className="flex justify-between border-t py-1.5"><dt className="text-muted-foreground">Into service this year</dt><dd className="font-medium tabular-nums">{c.inServiceThisYear} project{c.inServiceThisYear === 1 ? '' : 's'}</dd></div>
               </dl>
-              <Link href="/portfolio/capital" className="mt-3 inline-block pl-2 text-xs font-medium hover:underline">Capital asset chain →</Link>
             </div>
           ); })()}
           {/* Illustrative Phase 3 card — demo data, clearly flagged */}
